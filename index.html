@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Automation Coding Course — Playwright & Robot Framework</title>
+  <meta name="description" content="หลักสูตรเรียนรู้และทดสอบการเขียนโค้ดสำหรับ QA (Playwright TypeScript และ Robot Framework) ผ่านห้องจำลอง Code Sandbox ในเบราว์เซอร์">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #080b11;
+      --bg-secondary: #111622;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --accent-blue: #3b82f6;
+      --accent-orange: #f97316;
+      --accent-emerald: #10b981;
+      --accent-violet: #8b5cf6;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.1) 0px, transparent 50%);
+    }
+
+    .container {
+      max-width: 1280px;
+      width: 100%;
+      text-align: center;
+    }
+
+    header {
+      margin-bottom: 56px;
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #fff 30%, var(--text-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    .course-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      transition: background 0.3s ease;
+    }
+
+    .course-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-playwright:hover::before {
+      background: var(--accent-blue);
+    }
+
+    .card-robot:hover::before {
+      background: var(--accent-orange);
+    }
+
+    .card-api:hover::before {
+      background: var(--accent-violet);
+    }
+
+    .course-icon {
+      font-size: 3rem;
+      margin-bottom: 24px;
+      display: inline-block;
+    }
+
+    .course-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .course-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 28px;
+      flex: 1;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .tag {
+      font-size: 0.725rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.2s ease;
+      display: block;
+    }
+
+    .btn-playwright {
+      background-color: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-playwright:hover {
+      background-color: #2563eb;
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-robot {
+      background-color: var(--accent-orange);
+      color: white;
+    }
+
+    .btn-robot:hover {
+      background-color: #ea580c;
+      box-shadow: 0 0 16px rgba(249, 115, 22, 0.4);
+    }
+
+    .btn-api {
+      background-color: var(--accent-violet);
+      color: white;
+    }
+
+    .btn-api:hover {
+      background-color: #7c3aed;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+    }
+
+    footer {
+      font-size: 0.8rem;
+      color: #4b5563;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 1000px) {
+      .courses-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .courses-grid {
+        grid-template-columns: 1fr;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>QA Automation Coding Course</h1>
+      <p class="subtitle">
+        หลักสูตรเรียนรู้และทดสอบการเขียนโค้ดระบบจำลอง Automation แบบโต้ตอบด้วย Code Sandbox และรันชุดทดสอบเสมือนจริงในเบราว์เซอร์
+      </p>
+    </header>
+
+    <div class="courses-grid">
+      <!-- Playwright Course Card -->
+      <div class="course-card card-playwright" id="card-playwright">
+        <img src="./assets/playwright-logo.svg" alt="Playwright Logo" style="width: 48px; height: 48px; margin-bottom: 24px;">
+        <h2 class="course-title">Playwright (TypeScript)</h2>
+        <p class="course-desc">
+          เรียนรู้การเขียนโค้ดทดสอบแบบ Code-first ด้วย TypeScript ครอบคลุม POM, API Mocking, และ Responsive Testing โดยอิงจากกรณีศึกษาจริงในโปรเจค My-Investment-Port
+        </p>
+        <div class="tags">
+          <span class="tag">TypeScript</span>
+          <span class="tag">Page Object Model</span>
+          <span class="tag">API Mocking</span>
+          <span class="tag">12 Lessons</span>
+        </div>
+        <a href="./Playwright/index.html" class="btn btn-playwright">เข้าสู่บทเรียน →</a>
+      </div>
+
+      <!-- Robot Framework Course Card -->
+      <div class="course-card card-robot" id="card-robot">
+        <img src="./assets/robotframework-logo.svg" alt="Robot Framework Logo" style="width: 48px; height: 48px; margin-bottom: 24px;">
+        <h2 class="course-title">Robot Framework</h2>
+        <p class="course-desc">
+          ฝึกฝนการเขียน Keyword-driven Testing ด้วย Robot Framework ครอบคลุมการประกาศ Settings, Variables, Custom Keywords, UI automation และ OS Processes
+        </p>
+        <div class="tags">
+          <span class="tag">Keyword-driven</span>
+          <span class="tag">Selenium</span>
+          <span class="tag">Operating System</span>
+          <span class="tag">11 Lessons</span>
+        </div>
+        <a href="./Robot-Framework/index.html" class="btn btn-robot">เข้าสู่บทเรียน →</a>
+      </div>
+
+      <!-- API Testing Course Card -->
+      <div class="course-card card-api" id="card-api">
+        <span class="course-icon">🔌</span>
+        <h2 class="course-title">API Testing (Playwright)</h2>
+        <p class="course-desc">
+          เรียนรู้การทดสอบ Backend API โดยตรงด้วย Playwright Request Context ครอบคลุม Status Code, Negative Testing, Auth Headers และ Schema Validation โดยอิงจาก Express API จริงในโปรเจค My-Investment-Port
+        </p>
+        <div class="tags">
+          <span class="tag">Request Context</span>
+          <span class="tag">Auth Headers</span>
+          <span class="tag">Schema Validation</span>
+          <span class="tag">7 Lessons</span>
+        </div>
+        <a href="./API-Testing/index.html" class="btn btn-api">เข้าสู่บทเรียน →</a>
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2026 Personal QA Learning Portal. Built with HTML, CSS, and Vanilla JS.</p>
+    </footer>
+  </div>
+
+</body>
+</html>
