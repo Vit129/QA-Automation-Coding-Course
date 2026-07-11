@@ -688,6 +688,34 @@ body {
   border-left: 4px solid var(--accent-emerald);
   background: rgba(16, 185, 129, 0.03);
 }
+.content-block.syntax {
+  border-left: 4px solid var(--accent-rose);
+}
+.syntax-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.syntax-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.syntax-list code {
+  flex-shrink: 0;
+  background: rgba(244, 63, 94, 0.1);
+  color: var(--accent-rose);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+.syntax-list span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
 .content-block-title {
   font-weight: 700;
   font-size: 0.95rem;
