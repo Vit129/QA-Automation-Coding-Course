@@ -320,6 +320,29 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .progress-panel-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-mini {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-mini:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
     }
 
     .badge-chip {
@@ -488,6 +511,11 @@
       </div>
       <div class="progress-panel-footer" id="overall-text">0 / 0 บทเรียน (0%)</div>
       <div class="badges-row" id="badges-row"></div>
+      <div class="progress-panel-actions">
+        <button class="btn-mini" onclick="exportProgress()">📤 Export Progress</button>
+        <button class="btn-mini" onclick="document.getElementById('import-file-input').click()">📥 Import Progress</button>
+        <input type="file" id="import-file-input" accept="application/json" style="display:none" onchange="importProgress(event)">
+      </div>
     </div>
 
     <div class="completion-banner" id="completion-banner" style="display:none;">
@@ -735,6 +763,49 @@
         document.body.appendChild(piece);
         setTimeout(() => piece.remove(), 4000);
       }
+    }
+
+    // Export all course progress (completion + saved code + badge state) as a JSON file
+    function exportProgress() {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        data[key] = localStorage.getItem(key);
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'qa-course-progress.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Write an exported progress object back into localStorage and refresh the dashboard
+    function applyProgressData(data) {
+      Object.entries(data).forEach(([key, value]) => localStorage.setItem(key, value));
+      renderProgress();
+    }
+
+    function importProgress(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(reader.result);
+        } catch (err) {
+          alert('ไฟล์ไม่ถูกต้อง: ' + err.message);
+          return;
+        }
+        if (confirm('นำเข้าความคืบหน้าจะเขียนทับของเดิมทั้งหมด ต้องการดำเนินการต่อหรือไม่?')) {
+          applyProgressData(data);
+          alert('นำเข้าความคืบหน้าสำเร็จ');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
     }
 
     renderProgress();
