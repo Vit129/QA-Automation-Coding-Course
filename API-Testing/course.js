@@ -518,6 +518,84 @@ expect(response.status()).toBe(200);`,
     1. ยิง GET request ไปที่ <code>/api/calendar/alerts</code> โดย<strong>ไม่ใส่</strong> query param <code>tickers</code><br/>
     2. ตรวจสอบว่า status code ตอบกลับเป็น <code>400</code><br/>
     3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'tickers parameter required (comma-separated)'</code> เป๊ะๆ ตามที่ Dev เขียนไว้`
+  },
+  {
+    id: "rate_limit",
+    meta: "บทที่ 7",
+    title: "Rate-Limit Testing: ยิง Request เกิน Limit",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3008: ยิง Request เกิน 100 ครั้งต่อนาทีต้องโดน Rate Limit', async ({ request }) => {
+  let lastResponse;
+
+  // 1. ใช้ for loop ยิง GET ไปที่ /api/ai/health วนซ้ำ 101 ครั้ง เก็บ response ตัวสุดท้ายไว้ในตัวแปร lastResponse
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่า response ตัวสุดท้ายมี status code เป็น 429
+
+
+  // 3. ตรวจสอบว่า error message ตรงกับ 'Too many requests, please try again later'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Rate-Limit Testing...");
+      const hasLoop = /for\s*\(\s*let\s+\w+\s*=\s*0\s*;\s*\w+\s*<\s*101\s*;\s*\w+\+\+\s*\)/.test(code);
+      const hasGetInLoop = /lastResponse\s*=\s*await\s+request\.get\(['"]\/api\/ai\/health['"]\)/.test(code);
+      if (hasLoop && hasGetInLoop) {
+        log("✓ ขั้นตอนที่ 1: วน for loop 101 ครั้งยิง request.get('/api/ai/health') เก็บลง lastResponse ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบ for loop ที่วนยิง request.get('/api/ai/health') 101 ครั้งแล้วเก็บผลลง lastResponse\nตัวอย่าง: for (let i = 0; i < 101; i++) {\n  lastResponse = await request.get('/api/ai/health');\n}");
+      }
+
+      if (/expect\(lastResponse\.status\(\)\)\.toBe\(429\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 429 ของ lastResponse ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบ status code 429\nตัวอย่าง: expect(lastResponse.status()).toBe(429);");
+      }
+
+      if (/body\.error\)\.toBe\(['"]Too many requests, please try again later['"]\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ของ Rate Limit ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'Too many requests, please try again later'\nตัวอย่าง: expect(body.error).toBe('Too many requests, please try again later');");
+      }
+    },
+    hint: "ใช้ for (let i = 0; i < 101; i++) { lastResponse = await request.get('/api/ai/health'); } แล้ว expect(lastResponse.status()).toBe(429); จากนั้น const body = await lastResponse.json(); expect(body.error).toBe('Too many requests, please try again later');",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3008: ยิง Request เกิน 100 ครั้งต่อนาทีต้องโดน Rate Limit', async ({ request }) => {
+  let lastResponse;
+
+  // 1. ใช้ for loop ยิง GET ไปที่ /api/ai/health วนซ้ำ 101 ครั้ง เก็บ response ตัวสุดท้ายไว้ในตัวแปร lastResponse
+  for (let i = 0; i < 101; i++) {
+    lastResponse = await request.get('/api/ai/health');
+  }
+
+  // 2. ตรวจสอบว่า response ตัวสุดท้ายมี status code เป็น 429
+  expect(lastResponse.status()).toBe(429);
+
+  // 3. ตรวจสอบว่า error message ตรงกับ 'Too many requests, please try again later'
+  const body = await lastResponse.json();
+  expect(body.error).toBe('Too many requests, please try again later');
+});`,
+    theory: `<strong>Rate Limiting</strong> คือการจำกัดจำนวน request ที่ client เดียวกันยิงได้ในช่วงเวลาหนึ่ง ป้องกัน abuse และ DoS เซิร์ฟเวอร์ ในโปรเจก My-Investment-Port เซิร์ฟเวอร์ผูก middleware <code>express-rate-limit</code> ไว้กับทุก route:<br/><br/>
+    <code>const limiter = rateLimit({<br/>
+    &nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/>
+    &nbsp;&nbsp;max: 100, // 100 request ต่อนาทีต่อ IP<br/>
+    &nbsp;&nbsp;message: { error: 'Too many requests, please try again later' }<br/>
+    });<br/>
+    app.use(limiter);</code><br/><br/>
+    เมื่อ IP เดียวกันยิงเกิน <code>max</code> ภายใน <code>windowMs</code> เซิร์ฟเวอร์จะตอบกลับ status <code>429 Too Many Requests</code> พร้อม body ตาม <code>message</code> ที่กำหนดไว้ การทดสอบเคสนี้ต้องยิง request ซ้ำเกิน limit จริงแล้วยืนยันว่า request "ตัวที่เกิน" ถูกปฏิเสธด้วยรูปแบบที่ตรงกับโค้ดจริง ไม่ใช่แค่เดาว่ามันน่าจะ block`,
+    example: `// ตัวอย่างการยิงซ้ำจนชนขีดจำกัดแล้วตรวจสอบ status code
+let res;
+for (let i = 0; i < 101; i++) {
+  res = await request.get('/api/ai/health');
+}
+expect(res.status()).toBe(429);`,
+    task: `จงเขียนสคริปต์ทดสอบ Rate Limit ให้สมบูรณ์ โดยอ้างอิงจาก middleware จริงใน <code>server/index.js</code>:<br/>
+    1. ยิง GET request ไปที่ <code>/api/ai/health</code> วนซ้ำด้วย for loop 101 ครั้ง เก็บ response ตัวสุดท้ายไว้ในตัวแปร <code>lastResponse</code><br/>
+    2. ตรวจสอบว่า <code>lastResponse</code> มี status code เป็น <code>429</code><br/>
+    3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'Too many requests, please try again later'</code> เป๊ะๆ ตามที่ Dev เขียนไว้`
   }
 ];
 

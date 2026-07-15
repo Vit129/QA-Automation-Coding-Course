@@ -534,6 +534,40 @@ Should Be Equal As Integers    \${output.rc}    0`,
     task: `จงพิมพ์ขั้นตอนจำลองรันสคริปต์ควบคุมระบบในเคสการทดสอบ โดย:<br/>
     1. สั่งประมวลผลคำสั่ง <code>osascript</code> ผ่านเมธอด <code>Run Process</code> และจัดเก็บบันทึกผลลัพธ์ไว้ที่ <code>\${result}</code><br/>
     2. เปรียบเทียบตรวจยืนยันความสมบูรณ์ของ exit code ย่อย <code>\${result.rc}</code> ว่ามีสถานะประมวลผลเท่ากับ 0 โดยเลือกใช้งาน <code>Should Be Equal As Integers</code>`
+  },
+  {
+    id: "flaky_retry",
+    meta: "บทที่ 12",
+    title: "Flaky-Test Retry Strategy",
+    template: `*** Test Cases ***
+Retry Flaky Window Check
+    # 1. ใช้ Wait Until Keyword Succeeds วนเรียก keyword 'Verify App Window Ready' สูงสุด 5 ครั้ง ห่างกันครั้งละ 2 วินาที
+    # WRITE YOUR CODE HERE
+
+    `,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Flaky-Test Retry Strategy...");
+
+      const checkRetry = /Wait Until Keyword Succeeds\s{2,}5x\s{2,}2s\s{2,}Verify App Window Ready/.test(code) ||
+                         /Wait Until Keyword Succeeds\t+5x\t+2s\t+Verify App Window Ready/.test(code);
+
+      if (checkRetry) {
+        log("✓ ขั้นตอนที่ 1: เรียกใช้ Wait Until Keyword Succeeds กำหนด 5x/2s เรียก Verify App Window Ready ถูกต้อง");
+      } else {
+        throw new Error("คำสั่ง Wait Until Keyword Succeeds ไม่ถูกต้อง\nตัวอย่าง: Wait Until Keyword Succeeds    5x    2s    Verify App Window Ready");
+      }
+    },
+    hint: "ใช้คำสั่งวนซ้ำเรียก keyword ที่อาจ flaky: Wait Until Keyword Succeeds    5x    2s    Verify App Window Ready",
+    solution: `*** Test Cases ***
+Retry Flaky Window Check
+    Wait Until Keyword Succeeds    5x    2s    Verify App Window Ready`,
+    theory: `UI Automation บน macOS มักเจอ timing issue: หน้าต่างแอปยังไม่ทันเรนเดอร์เสร็จตอนที่ keyword ตรวจสอบทำงาน ทำให้ test fail ทั้งที่แอปทำงานถูกต้อง (Flaky Test) ทางแก้ที่ผิดคือใส่ <code>Sleep</code> ค่าคงที่ยาวๆ ก่อนเช็ค เพราะช้าไปก็เสียเวลาทุก run เร็วไปก็ยัง flaky<br/><br/>
+    Robot Framework มี BuiltIn keyword <strong><code>Wait Until Keyword Succeeds</code></strong> ที่ retry การเรียก keyword ตัวใน (ไม่ใช่ retry ทั้ง test case) ซ้ำไปเรื่อยๆ จนกว่าจะผ่านหรือครบจำนวนครั้ง/เวลาที่กำหนด รูปแบบคือ <code>Wait Until Keyword Succeeds    &lt;จำนวนครั้งหรือเวลารวม&gt;    &lt;ช่วงห่างระหว่างครั้ง&gt;    &lt;keyword&gt;    &lt;args...&gt;</code><br/><br/>
+    ข้อแตกต่างสำคัญกับการ retry ทั้ง suite ด้วย CLI flag <code>--rerunfailed</code>: <code>Wait Until Keyword Succeeds</code> retry เฉพาะจุดที่ flaky จริง (granular, เร็ว) ส่วน <code>--rerunfailed</code> รันทั้ง test case ใหม่ทั้งหมด (coarse, ช้ากว่าแต่ครอบคลุมกรณี setup พังด้วย) ควรเลือก granular ก่อนเสมอถ้ารู้จุดที่ flaky ชัดเจน`,
+    example: `// ตัวอย่าง retry การเช็ค element ที่บางทีโหลดช้าบนหน้าเว็บ
+Wait Until Keyword Succeeds    10x    1s    Element Should Be Visible    id=submit-button`,
+    task: `จงป้อนคำสั่งรับมือกับ keyword ตรวจสอบหน้าต่างแอปที่บางทีทำงานช้า (Flaky) โดย:<br/>
+    1. ใช้ <code>Wait Until Keyword Succeeds</code> วนเรียก keyword <code>Verify App Window Ready</code> สูงสุด <code>5</code> ครั้ง ห่างกันครั้งละ <code>2</code> วินาที`
   }
 ];
 

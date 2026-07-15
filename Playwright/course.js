@@ -672,6 +672,83 @@ await expect(page.getByText(body.geminiConfigured ? 'Connected' : 'Not Connected
     task: `จงเขียนสคริปต์ Hybrid Test ให้สมบูรณ์ โดย:<br/>
     1. ยิง GET request ไปที่ <code>/api/ta/levels?ticker=AAPL</code> แล้วดึงค่า <code>resistance[0]</code> เก็บไว้ในตัวแปร<br/>
     2. เปิดหน้า <code>/holdings</code> แล้วตรวจสอบด้วย <code>getByText()</code> ว่ามีข้อความราคารูปแบบ <code>$XX.XX</code> ที่ตรงกับค่าจาก API ปรากฏอยู่จริงบนหน้าจอ`
+  },
+  {
+    id: "flaky_retry",
+    meta: "บทที่ 12",
+    title: "Flaky-Test Retry Strategy",
+    template: `import { test, expect } from '@playwright/test';
+
+test.describe.configure({ /* 1. กำหนดให้ทุก test ใน describe block นี้ retry ได้สูงสุด 2 ครั้งเมื่อ fail */ });
+
+test('TC-12: หน้า Holdings โหลดราคาแบบ async บางครั้งช้าจนทำให้ test ไม่เสถียร', async ({ page }, testInfo) => {
+  await page.goto('/holdings');
+
+  // 2. ใช้ auto-retry assertion (ห้ามหน่วงเวลาคงที่แบบตายตัว) รอข้อความ 'AAPL' ปรากฏบนหน้าจอ
+  // WRITE YOUR CODE HERE
+
+
+  // 3. ถ้าเป็นการ retry รอบที่ 2 ขึ้นไป (testInfo.retry > 0) ให้ log เตือนผ่าน console.log('Retry attempt: ' + testInfo.retry)
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Flaky-Test Retry Strategy...");
+      const hasRetryConfig = /test\.describe\.configure\(\{\s*retries:\s*2\s*\}\)/.test(code);
+      if (hasRetryConfig) {
+        log("✓ ขั้นตอนที่ 1: กำหนด test.describe.configure({ retries: 2 }) ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบ test.describe.configure({ retries: 2 })\nตัวอย่าง: test.describe.configure({ retries: 2 });");
+      }
+
+      const hasAutoRetryAssertion = /await\s+expect\(page\.getByText\(['"]AAPL['"]\)\)\.toBeVisible\(\)/.test(code);
+      const hasFixedWait = /waitForTimeout/.test(code);
+      if (hasAutoRetryAssertion && !hasFixedWait) {
+        log("✓ ขั้นตอนที่ 2: ใช้ auto-retry assertion toBeVisible() แทน waitForTimeout ถูกต้อง");
+      } else if (hasFixedWait) {
+        throw new Error("ห้ามใช้ waitForTimeout ตายตัว ให้ใช้ await expect(page.getByText('AAPL')).toBeVisible(); แทน (auto-retry จนกว่าจะเจอหรือ timeout)");
+      } else {
+        throw new Error("ไม่พบการรอด้วย auto-retry assertion\nตัวอย่าง: await expect(page.getByText('AAPL')).toBeVisible();");
+      }
+
+      const hasRetryLog = /testInfo\.retry\s*>\s*0/.test(code) && /console\.log\(.*Retry attempt.*testInfo\.retry/.test(code);
+      if (hasRetryLog) {
+        log("✓ ขั้นตอนที่ 3: log เตือนเมื่อ testInfo.retry > 0 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบเงื่อนไข if (testInfo.retry > 0) พร้อม console.log('Retry attempt: ' + testInfo.retry)");
+      }
+    },
+    hint: "เปิดหัวไฟล์ด้วย test.describe.configure({ retries: 2 }); แล้วในตัว test รอด้วย await expect(page.getByText('AAPL')).toBeVisible(); จากนั้นเช็ค if (testInfo.retry > 0) { console.log('Retry attempt: ' + testInfo.retry); }",
+    solution: `import { test, expect } from '@playwright/test';
+
+test.describe.configure({ retries: 2 });
+
+test('TC-12: หน้า Holdings โหลดราคาแบบ async บางครั้งช้าจนทำให้ test ไม่เสถียร', async ({ page }, testInfo) => {
+  await page.goto('/holdings');
+
+  // 2. ใช้ auto-retry assertion (ห้ามหน่วงเวลาคงที่แบบตายตัว) รอข้อความ 'AAPL' ปรากฏบนหน้าจอ
+  await expect(page.getByText('AAPL')).toBeVisible();
+
+  // 3. ถ้าเป็นการ retry รอบที่ 2 ขึ้นไป (testInfo.retry > 0) ให้ log เตือนผ่าน console.log('Retry attempt: ' + testInfo.retry)
+  if (testInfo.retry > 0) {
+    console.log('Retry attempt: ' + testInfo.retry);
+  }
+});`,
+    theory: `Flaky test คือ test ที่บางทีผ่านบางทีไม่ผ่านโดยไม่มีการเปลี่ยนโค้ด root cause ส่วนใหญ่คือ timing (UI โหลดข้อมูล async ช้ากว่าที่ test คาดไว้) ทางแก้ที่ผิดคือใส่ <code>page.waitForTimeout(3000)</code> ตายตัว เพราะช้าไปก็เสียเวลาฟรี เร็วไปก็ยัง flaky อยู่ดี<br/><br/>
+    ทางแก้ที่ถูกต้อง 2 ชั้น: (1) ใช้ <strong>auto-retry assertion</strong> อย่าง <code>expect().toBeVisible()</code> ซึ่ง Playwright จะ poll ซ้ำจนกว่าจะผ่านหรือ timeout เอง ไม่ต้องเดาเวลาที่แน่นอน (2) เมื่อ timing ยังไม่เสถียรจริงๆ (เช่น 3rd-party widget, network jitter) ให้ตั้ง <strong>retry ระดับ test</strong> เป็นทางสำรอง ไม่ใช่ทางหลัก<br/><br/>
+    โปรเจกจริง <code>tests/web-testing/playwright.config.ts</code> ตั้งค่า <code>retries: process.env.CI ? 2 : 0</code> คือ retry เฉพาะบน CI (ที่เครื่องช้ากว่าและ flaky ง่ายกว่า) ไม่ retry ตอน dev เครื่อง local เพื่อให้เห็น failure จริงทันทีเวลาเขียนโค้ด ฟิกซ์เจอร์ <code>testInfo</code> (parameter ตัวที่ 2 ของ test callback) มี property <code>testInfo.retry</code> บอกว่านี่คือการรันครั้งที่เท่าไหร่ (0 = ครั้งแรก) ใช้ log เพื่อสืบสาเหตุว่า test ไหน flaky บ่อยจริงๆ`,
+    example: `// ตัวอย่างตั้ง retry เฉพาะกลุ่ม test ที่รู้ว่า flaky (ไม่ใช่ทั้งไฟล์)
+test.describe('Live price widget (flaky on CI)', () => {
+  test.describe.configure({ retries: 2 });
+
+  test('shows live price', async ({ page }) => {
+    await page.goto('/dashboard');
+    await expect(page.getByTestId('live-price')).toBeVisible();
+  });
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. กำหนด <code>test.describe.configure({ retries: 2 })</code> ให้ suite นี้ retry ได้สูงสุด 2 ครั้ง<br/>
+    2. ใช้ auto-retry assertion <code>await expect(page.getByText('AAPL')).toBeVisible()</code> แทนการ <code>waitForTimeout</code> ตายตัว<br/>
+    3. เช็ค <code>testInfo.retry > 0</code> แล้ว log <code>'Retry attempt: ' + testInfo.retry</code> เพื่อสืบสาเหตุ flaky ภายหลัง`
   }
 ];
 
