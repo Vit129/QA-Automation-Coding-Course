@@ -568,6 +568,60 @@ Retry Flaky Window Check
 Wait Until Keyword Succeeds    10x    1s    Element Should Be Visible    id=submit-button`,
     task: `จงป้อนคำสั่งรับมือกับ keyword ตรวจสอบหน้าต่างแอปที่บางทีทำงานช้า (Flaky) โดย:<br/>
     1. ใช้ <code>Wait Until Keyword Succeeds</code> วนเรียก keyword <code>Verify App Window Ready</code> สูงสุด <code>5</code> ครั้ง ห่างกันครั้งละ <code>2</code> วินาที`
+  },
+  {
+    id: "window_focus_check",
+    meta: "บทที่ 13",
+    title: "หน้าต่างยังไม่พร้อมก่อนพิมพ์: เช็ค Element ก่อน Type ไม่ใช่หน่วงเวลาคงที่",
+    template: `*** Test Cases ***
+Type Into Ready Element Only
+    Click UI Element    search-field
+    # ก่อนพิมพ์ทุกครั้งต้องยืนยันว่า element ชื่อ 'search-field' พร้อมใช้งานจริงด้วยการเช็คสภาพจริง (ห้ามหน่วงเวลาคงที่แทน)
+    # WRITE YOUR CODE HERE
+
+    `,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการเช็ค Element ก่อนพิมพ์...");
+
+      if (/Wait For UI/i.test(code)) {
+        throw new Error("ห้ามใช้ Wait For UI (หน่วงเวลาคงที่) แทนการเช็คสภาพจริง — ข้างในคือ time.sleep() เฉยๆ ไม่รู้ว่า element พร้อมจริงหรือยัง");
+      }
+
+      const checkExist = /Element Should Exist\s{2,}search-field/.test(code) ||
+                         /Element Should Exist\t+search-field/.test(code);
+      if (checkExist) {
+        log("✓ ขั้นตอนที่ 1: เช็ค Element Should Exist    search-field ก่อนพิมพ์ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Element Should Exist    search-field\nตัวอย่าง: Element Should Exist    search-field");
+      }
+
+      const checkType = /Type Text\s{2,}AAPL/.test(code) || /Type Text\t+AAPL/.test(code);
+      if (checkType) {
+        log("✓ ขั้นตอนที่ 2: พิมพ์ข้อความ AAPL ด้วย Type Text หลังยืนยัน element พร้อมแล้วถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Type Text    AAPL\nตัวอย่าง: Type Text    AAPL");
+      }
+    },
+    hint: "เช็คสภาพจริงก่อนด้วย Element Should Exist    search-field แล้วค่อยพิมพ์ด้วย Type Text    AAPL ห้ามหน่วงเวลาคงที่แทนการเช็ค",
+    solution: `*** Test Cases ***
+Type Into Ready Element Only
+    Click UI Element    search-field
+    Element Should Exist    search-field
+    Type Text    AAPL`,
+    theory: `ไม่ใช่ flaky ทุกตัวจะแก้ด้วยการเพิ่มเวลาหน่วง — ใน <code>KouenUILibrary.py</code> จริงมี keyword ชื่อ <strong><code>Wait For UI</code></strong> ที่ข้างในคือ <code>time.sleep(seconds)</code> เฉยๆ (ดูซอร์สจริง: <code>def wait_for_ui(self, seconds=1.0): time.sleep(float(seconds))</code>) — เดาเวลาแบบตายตัว ถ้าเครื่อง CI ช้ากว่าที่เดาไว้ ก็ยัง fail เหมือนเดิม เพิ่มเวลาเท่าไหร่ก็แค่ลดโอกาส ไม่ได้แก้ปัญหาที่ต้นตอ<br/><br/>
+    keyword <code>Element Should Exist</code> ในไลบรารีเดียวกันตรวจสอบสภาพจริงผ่าน macOS Accessibility tree (เดินสคริปต์ <code>osascript</code> หา <code>AXIdentifier</code> จริงบนหน้าจอ) ไม่ใช่การเดาเวลา — ตรงกับแนวคิดเดียวกับ <code>_wait_for_window</code> ที่ <code>Launch Kouen</code> ใช้ภายใน (polling เช็คจำนวนหน้าต่างทุก 0.5 วินาทีจนกว่าจะเจอ แทนที่จะ sleep ค่าคงที่) แต่ library ไม่ได้บังคับเช็คแบบนี้ให้อัตโนมัติก่อน <code>Type Text</code> ทุกครั้ง — ผู้เขียนเทสต้องเรียก <code>Element Should Exist</code> เองก่อนพิมพ์ทุกครั้งที่ element นั้นอาจจะยังโหลดไม่เสร็จ`,
+    example: `// ไม่ควรทำ: Wait For UI คือ time.sleep() ตายตัว เดาเวลาไม่แม่น เครื่อง CI ช้ากว่าปกติก็ยัง fail
+Click UI Element    save-button
+Wait For UI    2
+Type Text    my-file.txt
+
+// ควรทำ: เช็คสภาพจริงผ่าน accessibility tree ก่อนเสมอ ไม่ว่าเครื่องจะช้าหรือเร็ว
+Click UI Element    save-button
+Element Should Exist    filename-field
+Type Text    my-file.txt`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. หลังคลิก <code>search-field</code> แล้ว ให้เช็ค <code>Element Should Exist    search-field</code> ก่อนเสมอ (ห้ามใช้การหน่วงเวลาคงที่)<br/>
+    2. เมื่อมั่นใจว่า element พร้อมแล้ว ให้พิมพ์ <code>Type Text    AAPL</code>`
   }
 ];
 

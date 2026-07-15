@@ -749,6 +749,58 @@ test.describe('Live price widget (flaky on CI)', () => {
     1. กำหนด <code>test.describe.configure({ retries: 2 })</code> ให้ suite นี้ retry ได้สูงสุด 2 ครั้ง<br/>
     2. ใช้ auto-retry assertion <code>await expect(page.getByText('AAPL')).toBeVisible()</code> แทนการ <code>waitForTimeout</code> ตายตัว<br/>
     3. เช็ค <code>testInfo.retry > 0</code> แล้ว log <code>'Retry attempt: ' + testInfo.retry</code> เพื่อสืบสาเหตุ flaky ภายหลัง`
+  },
+  {
+    id: "stale_locator",
+    meta: "บทที่ 13",
+    title: "Stale Locator หลัง UI Refactor: เลือก Locator ที่ทนต่อการเปลี่ยนแปลง",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-13: ค้นหาหุ้นต้องทำงานได้แม้ Dev รีแฟคเตอร์ CSS class ของหน้า UI ใหม่', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // ห้ามค้นหาช่องค้นหาด้วย CSS class เพราะเปลี่ยนได้ทุกครั้งที่ Dev รีแฟคเตอร์ ให้ใช้ Test ID ที่เสถียรกว่าแทน แล้วกรอกคำว่า 'AAPL'
+  // WRITE YOUR CODE HERE
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบความทนทานของ Locator ต่อการรีแฟคเตอร์...");
+      const usesFragileClassLocator = /\.locator\(\s*['"]\./.test(code);
+      if (usesFragileClassLocator) {
+        throw new Error("ห้ามใช้ page.locator('.class-name') เพราะ CSS class เปลี่ยนได้ทุกครั้งที่ Dev รีแฟคเตอร์ ให้ใช้ page.getByTestId('search-input') แทน");
+      }
+
+      const hasTestIdFill = /await\s+page\.getByTestId\(['"]search-input['"]\)\.fill\(['"]AAPL['"]\)/.test(code);
+      if (hasTestIdFill) {
+        log("✓ ใช้ getByTestId('search-input').fill('AAPL') ที่ทนต่อการรีแฟคเตอร์ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง page.getByTestId('search-input').fill('AAPL')\nตัวอย่าง: await page.getByTestId('search-input').fill('AAPL');");
+      }
+    },
+    hint: "ใช้ await page.getByTestId('search-input').fill('AAPL'); ห้ามใช้ page.locator('.some-css-class') เด็ดขาดเพราะเปราะบางต่อการรีแฟคเตอร์",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-13: ค้นหาหุ้นต้องทำงานได้แม้ Dev รีแฟคเตอร์ CSS class ของหน้า UI ใหม่', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // ห้ามค้นหาช่องค้นหาด้วย CSS class เพราะเปลี่ยนได้ทุกครั้งที่ Dev รีแฟคเตอร์ ให้ใช้ Test ID ที่เสถียรกว่าแทน แล้วกรอกคำว่า 'AAPL'
+  await page.getByTestId('search-input').fill('AAPL');
+});`,
+    theory: `ไม่ใช่ flaky test ทุกตัวจะแก้ด้วยการเพิ่ม timeout หรือ retry — บางตัว "เสถียรดี" ตอนเขียนครั้งแรก แต่พังถาวรทันทีที่ Dev รีแฟคเตอร์ CSS class เพราะ locator ผูกติดกับรายละเอียดที่ไม่คงที่ (Stale Locator) ปัญหานี้ retry เท่าไหร่ก็ไม่ผ่าน เพราะ element ตามหาไม่เจอจริงๆ ไม่ใช่แค่ช้า<br/><br/>
+    ในโปรเจก My-Investment-Port หน้า <code>/holdings</code> มีทั้งสอง pattern: บาง element อย่างช่องค้นหามี <code>data-testid="search-input"</code> กำกับไว้ชัดเจน (เสถียร ไม่ผูกกับ CSS/ข้อความ) แต่บาง component อย่าง <code>PivotPoints.jsx</code> (ดูบทที่ 11 Hybrid Testing) ไม่มี <code>data-testid</code> เลย ต้องอาศัย <code>getByText()</code> จับข้อความที่เรนเดอร์แทน ซึ่งเปราะบางกว่ามาก<br/><br/>
+    หลักการเลือก Locator เรียงจากทนทานสุดไปเปราะบางสุด:<br/>
+    1. <code>getByTestId()</code> — ผูกกับ attribute ที่ QA/Dev ตกลงกันไว้ล่วงหน้า ไม่เปลี่ยนตามการรีแฟคเตอร์ style<br/>
+    2. <code>getByRole()</code> / <code>getByLabel()</code> — ผูกกับ semantic ของ element ทนทานพอสมควร<br/>
+    3. <code>getByText()</code> — พังทันทีที่ copy เปลี่ยน<br/>
+    4. <code>page.locator('.css-class')</code> / <code>page.locator('#id')</code> — เปราะบางที่สุด เพราะ Dev เปลี่ยน class/id เวลารีแฟคเตอร์ได้ตลอดเวลาโดยไม่รู้ว่ามันไปกระทบ test`,
+    example: `// ไม่ควรทำ: ผูก locator กับ CSS class ที่ Dev เปลี่ยนได้ทุกเมื่อ
+await page.locator('.stock-search-box').fill('AAPL');
+
+// ควรทำ: ผูกกับ Test ID ที่เสถียรไม่ว่า style จะเปลี่ยนแบบไหน
+await page.getByTestId('search-input').fill('AAPL');`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. เปิดหน้า <code>/holdings</code><br/>
+    2. ค้นหาช่องค้นหาด้วย Test ID <code>'search-input'</code> (ห้ามใช้ CSS class locator) แล้วกรอกคำว่า <code>'AAPL'</code>`
   }
 ];
 

@@ -596,6 +596,83 @@ expect(res.status()).toBe(429);`,
     1. ยิง GET request ไปที่ <code>/api/ai/health</code> วนซ้ำด้วย for loop 101 ครั้ง เก็บ response ตัวสุดท้ายไว้ในตัวแปร <code>lastResponse</code><br/>
     2. ตรวจสอบว่า <code>lastResponse</code> มี status code เป็น <code>429</code><br/>
     3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'Too many requests, please try again later'</code> เป๊ะๆ ตามที่ Dev เขียนไว้`
+  },
+  {
+    id: "state_leak_race",
+    meta: "บทที่ 8",
+    title: "Race Condition: Global State รั่วไหลข้าม Test เมื่อรัน Parallel",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3009: สลับ AI Model แล้วต้องคืนค่าเดิมเสมอ (กัน state รั่วไหลข้าม test อื่น)', async ({ request }) => {
+  // 1. ยิง GET /api/ai/model เก็บค่าโมเดลเดิมไว้ในตัวแปร originalModel ก่อนแก้ไขอะไรทั้งสิ้น
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ยิง POST /api/ai/model/switch พร้อม data: { model: 'gemini-3.5-flash' } แล้วตรวจสอบว่า status code เป็น 200
+
+
+  // 3. คืนค่าโมเดลกลับเป็น originalModel เสมอ ด้วย POST /api/ai/model/switch อีกครั้ง (ไม่ปล่อยให้ test อื่นเจอ state ที่เปลี่ยนไปค้างอยู่)
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Test Isolation สำหรับ Global State...");
+      const hasGet = /await\s+request\.get\(['"]\/api\/ai\/model['"]\)/.test(code);
+      const hasOriginalVar = /originalModel/.test(code);
+      const hasCurrentModelRead = /currentModel/.test(code);
+      if (hasGet && hasOriginalVar && hasCurrentModelRead) {
+        log("✓ ขั้นตอนที่ 1: อ่านค่าโมเดลเดิม (currentModel) เก็บไว้ในตัวแปร originalModel ก่อนแก้ไขถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการยิง GET /api/ai/model เพื่อเก็บค่าเดิมไว้ในตัวแปร originalModel ก่อนแก้ไขอะไร\nตัวอย่าง: const before = await request.get('/api/ai/model');\nconst { currentModel: originalModel } = await before.json();");
+      }
+
+      const hasSwitch = /await\s+request\.post\(['"]\/api\/ai\/model\/switch['"]\s*,\s*\{\s*data:\s*\{\s*model:\s*['"]gemini-3\.5-flash['"]\s*\}\s*\}\s*\)/.test(code);
+      const hasStatusCheck = /expect\(\w+\.status\(\)\)\.toBe\(200\)/.test(code);
+      if (hasSwitch && hasStatusCheck) {
+        log("✓ ขั้นตอนที่ 2: สลับโมเดลเป็น 'gemini-3.5-flash' แล้วตรวจสอบ status 200 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการยิง POST /api/ai/model/switch ด้วย data: { model: 'gemini-3.5-flash' } พร้อมตรวจสอบ status 200\nตัวอย่าง: const res = await request.post('/api/ai/model/switch', { data: { model: 'gemini-3.5-flash' } });\nexpect(res.status()).toBe(200);");
+      }
+
+      const hasRestore = /request\.post\(['"]\/api\/ai\/model\/switch['"]\s*,\s*\{\s*data:\s*\{\s*model:\s*originalModel\s*\}\s*\}\s*\)/.test(code);
+      if (hasRestore) {
+        log("✓ ขั้นตอนที่ 3: คืนค่าโมเดลกลับเป็น originalModel ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการคืนค่าโมเดลกลับเป็น originalModel ด้วย POST /api/ai/model/switch อีกครั้งท้ายเทส\nตัวอย่าง: await request.post('/api/ai/model/switch', { data: { model: originalModel } });");
+      }
+    },
+    hint: "อ่านค่าก่อนด้วย const before = await request.get('/api/ai/model'); const { currentModel: originalModel } = await before.json(); แล้วสลับด้วย await request.post('/api/ai/model/switch', { data: { model: 'gemini-3.5-flash' } }); เช็ค status 200 แล้วคืนค่าท้ายเทสด้วย await request.post('/api/ai/model/switch', { data: { model: originalModel } });",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3009: สลับ AI Model แล้วต้องคืนค่าเดิมเสมอ (กัน state รั่วไหลข้าม test อื่น)', async ({ request }) => {
+  // 1. ยิง GET /api/ai/model เก็บค่าโมเดลเดิมไว้ในตัวแปร originalModel ก่อนแก้ไขอะไรทั้งสิ้น
+  const before = await request.get('/api/ai/model');
+  const { currentModel: originalModel } = await before.json();
+
+  // 2. ยิง POST /api/ai/model/switch พร้อม data: { model: 'gemini-3.5-flash' } แล้วตรวจสอบว่า status code เป็น 200
+  const switchResponse = await request.post('/api/ai/model/switch', {
+    data: { model: 'gemini-3.5-flash' }
+  });
+  expect(switchResponse.status()).toBe(200);
+
+  // 3. คืนค่าโมเดลกลับเป็น originalModel เสมอ ด้วย POST /api/ai/model/switch อีกครั้ง (ไม่ปล่อยให้ test อื่นเจอ state ที่เปลี่ยนไปค้างอยู่)
+  await request.post('/api/ai/model/switch', { data: { model: originalModel } });
+});`,
+    theory: `ไม่ใช่ทุกความไม่เสถียรของ test จะแก้ด้วยการเพิ่ม timeout — บางเคสคือ <strong>Race Condition</strong> จาก Global State ที่ทดสอบหลายตัวแย่งกันแก้ ซึ่งเพิ่มเวลารอเท่าไหร่ก็ไม่ช่วย เพราะปัญหาไม่ได้อยู่ที่ "ช้า" แต่อยู่ที่ "ลำดับการรันแทรกกัน"<br/><br/>
+    ในโค้ดจริงของ <code>packages/ai-core/services/gemini-service.js</code> มีตัวแปรระดับโมดูล:<br/>
+    <code>let currentModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';</code><br/><br/>
+    endpoint <code>/api/ai/model/switch</code> เขียนทับตัวแปรนี้ตรงๆ — เป็น state ที่ใช้ร่วมกัน "ทั้งเซิร์ฟเวอร์" ไม่ใช่ per-request หรือ per-test ถ้ารัน test ขนานกัน (parallel workers) แล้ว test A สลับโมเดลพร้อมกับที่ test B กำลังจะ assert ค่าโมเดลอีกตัว ผลลัพธ์จะขึ้นอยู่กับว่าใครรันก่อนหลัง — flaky แบบที่เพิ่ม <code>timeout</code>/<code>retries</code> เท่าไหร่ก็ไม่มีทางแก้ได้<br/><br/>
+    ทางแก้ที่ถูกต้อง: (1) อ่านค่าก่อนแก้ไขเสมอ (2) คืนค่าเดิมท้าย test เสมอไม่ว่าผลจะผ่านหรือไม่ (ในโค้ดจริงควรใช้ <code>try/finally</code> หรือ <code>test.afterEach</code>) และ/หรือ (3) บังคับให้ test กลุ่มที่แก้ shared state ตัวเดียวกันรันแบบ serial ด้วย <code>test.describe.configure({ mode: 'serial' })</code> แทนการปล่อยให้ parallel worker ชนกัน`,
+    example: `// ตัวอย่างการบังคับ test กลุ่มที่แก้ shared state เดียวกันให้รันเรียงลำดับ ไม่ขนาน
+test.describe('AI Model switching (shares global state)', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  test('...', async ({ request }) => { /* ... */ });
+  test('...', async ({ request }) => { /* ... */ });
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดยยึดหลัก "อ่านก่อน-แก้-คืนค่า" กับ Global State จริงใน <code>gemini-service.js</code>:<br/>
+    1. ยิง GET <code>/api/ai/model</code> เก็บค่าโมเดลเดิมไว้ในตัวแปร <code>originalModel</code><br/>
+    2. ยิง POST <code>/api/ai/model/switch</code> พร้อม <code>data: { model: 'gemini-3.5-flash' }</code> แล้วตรวจสอบ status <code>200</code><br/>
+    3. คืนค่าโมเดลกลับเป็น <code>originalModel</code> ด้วย POST <code>/api/ai/model/switch</code> อีกครั้งเสมอ`
   }
 ];
 
