@@ -21,6 +21,7 @@
       --accent-emerald: #10b981;
       --accent-violet: #8b5cf6;
       --accent-gold: #eab308;
+      --accent-teal: #14b8a6;
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -75,7 +76,7 @@
 
     .courses-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 32px;
       margin-bottom: 48px;
     }
@@ -124,6 +125,10 @@
 
     .card-perf:hover::before {
       background: var(--accent-gold);
+    }
+
+    .card-sql:hover::before {
+      background: var(--accent-teal);
     }
 
     .course-icon {
@@ -212,6 +217,16 @@
     .btn-perf:hover {
       background-color: #ca8a04;
       box-shadow: 0 0 16px rgba(234, 179, 8, 0.4);
+    }
+
+    .btn-sql {
+      background-color: var(--accent-teal);
+      color: white;
+    }
+
+    .btn-sql:hover {
+      background-color: #0d9488;
+      box-shadow: 0 0 16px rgba(20, 184, 166, 0.4);
     }
 
     footer {
@@ -310,6 +325,22 @@
           <span class="tag">5 Lessons</span>
         </div>
         <a href="./Performance-Testing/index.html" class="btn btn-perf">เข้าสู่บทเรียน →</a>
+      </div>
+
+      <!-- Database Design & SQL Course Card -->
+      <div class="course-card card-sql" id="card-sql">
+        <span class="course-icon">🗄️</span>
+        <h2 class="course-title">Database Design & SQL</h2>
+        <p class="course-desc">
+          เรียนรู้ SQL และการออกแบบฐานข้อมูลที่ QA ใช้ทุกวันแต่ลืมได้ง่าย ครอบคลุม SELECT/WHERE, JOIN, GROUP BY, PRIMARY KEY, Data Integrity Check และ NULL Handling — รันคำสั่ง SQL จริงในเบราว์เซอร์ด้วย AlaSQL บนสคีมาที่จำลองจากข้อมูล Holdings จริงของ My-Investment-Port
+        </p>
+        <div class="tags">
+          <span class="tag">SELECT/JOIN</span>
+          <span class="tag">GROUP BY</span>
+          <span class="tag">PRIMARY KEY</span>
+          <span class="tag">7 Lessons</span>
+        </div>
+        <a href="./DB-Design-SQL/index.html" class="btn btn-sql">เข้าสู่บทเรียน →</a>
       </div>
     </div>
 
