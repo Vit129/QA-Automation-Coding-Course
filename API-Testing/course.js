@@ -582,10 +582,12 @@ test('TC-3008: ยิง Request เกิน 100 ครั้งต่อนา
     <code>const limiter = rateLimit({<br/>
     &nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/>
     &nbsp;&nbsp;max: 100, // 100 request ต่อนาทีต่อ IP<br/>
-    &nbsp;&nbsp;message: { error: 'Too many requests, please try again later' }<br/>
+    &nbsp;&nbsp;message: { error: 'Too many requests, please try again later' },<br/>
+    &nbsp;&nbsp;skip: (req) => process.env.NODE_ENV === 'development'<br/>
     });<br/>
     app.use(limiter);</code><br/><br/>
-    เมื่อ IP เดียวกันยิงเกิน <code>max</code> ภายใน <code>windowMs</code> เซิร์ฟเวอร์จะตอบกลับ status <code>429 Too Many Requests</code> พร้อม body ตาม <code>message</code> ที่กำหนดไว้ การทดสอบเคสนี้ต้องยิง request ซ้ำเกิน limit จริงแล้วยืนยันว่า request "ตัวที่เกิน" ถูกปฏิเสธด้วยรูปแบบที่ตรงกับโค้ดจริง ไม่ใช่แค่เดาว่ามันน่าจะ block`,
+    เมื่อ IP เดียวกันยิงเกิน <code>max</code> ภายใน <code>windowMs</code> เซิร์ฟเวอร์จะตอบกลับ status <code>429 Too Many Requests</code> พร้อม body ตาม <code>message</code> ที่กำหนดไว้ การทดสอบเคสนี้ต้องยิง request ซ้ำเกิน limit จริงแล้วยืนยันว่า request "ตัวที่เกิน" ถูกปฏิเสธด้วยรูปแบบที่ตรงกับโค้ดจริง ไม่ใช่แค่เดาว่ามันน่าจะ block<br/><br/>
+    <strong>ข้อควรระวังจริง:</strong> โค้ดจริงมี <code>skip: (req) => process.env.NODE_ENV === 'development'</code> — แปลว่าถ้ารัน server ในโหมด dev (ตามที่ dev ส่วนใหญ่รันตอน develop ปกติ) limiter นี้จะ<strong>ไม่ทำงานเลย</strong> ยิงกี่ครั้งก็ไม่มีวันเจอ 429 ต้องรัน server แบบ <code>NODE_ENV=production</code> เพื่อทดสอบ path นี้ให้เจอผลจริง — บั๊กที่พบบ่อย: ทดสอบผ่านเครื่อง dev แล้วมั่นใจว่า rate limit ทำงาน ทั้งที่จริงมันถูกปิดไว้อยู่ตลอด`,
     example: `// ตัวอย่างการยิงซ้ำจนชนขีดจำกัดแล้วตรวจสอบ status code
 let res;
 for (let i = 0; i < 101; i++) {
@@ -1038,7 +1040,7 @@ function runSandboxCode() {
       terminal.innerHTML += `
         <div class="terminal-line text-muted">...................................................</div>
         <div class="terminal-line error">✕ <strong>ผลการรัน: ล้มเหลว (Failed)</strong></div>
-        <div class="terminal-line error">ข้อผิดพลาด: ${err.message.replace(/\n/g, '<br/>')}</div>
+        <div class="terminal-line error">ข้อผิดพลาด: ${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
         <div class="terminal-line error">1 failed (35ms)</div>
       `;
     }
