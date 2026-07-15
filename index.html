@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QA Automation Coding Course — Playwright & Robot Framework</title>
-  <meta name="description" content="หลักสูตรเรียนรู้และทดสอบการเขียนโค้ดสำหรับ QA (Playwright TypeScript และ Robot Framework) ผ่านห้องจำลอง Code Sandbox ในเบราว์เซอร์">
+  <title>QA Automation Coding Course — Playwright, Robot Framework & k6</title>
+  <meta name="description" content="หลักสูตรเรียนรู้และทดสอบการเขียนโค้ดสำหรับ QA (Playwright TypeScript, Robot Framework และ k6 Performance Testing) ผ่านห้องจำลอง Code Sandbox ในเบราว์เซอร์">
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +20,7 @@
       --accent-orange: #f97316;
       --accent-emerald: #10b981;
       --accent-violet: #8b5cf6;
+      --accent-gold: #eab308;
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -74,7 +75,7 @@
 
     .courses-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 32px;
       margin-bottom: 48px;
     }
@@ -119,6 +120,10 @@
 
     .card-api:hover::before {
       background: var(--accent-violet);
+    }
+
+    .card-perf:hover::before {
+      background: var(--accent-gold);
     }
 
     .course-icon {
@@ -197,6 +202,16 @@
     .btn-api:hover {
       background-color: #7c3aed;
       box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-perf {
+      background-color: var(--accent-gold);
+      color: #1a1400;
+    }
+
+    .btn-perf:hover {
+      background-color: #ca8a04;
+      box-shadow: 0 0 16px rgba(234, 179, 8, 0.4);
     }
 
     footer {
@@ -279,6 +294,22 @@
           <span class="tag">16 Lessons</span>
         </div>
         <a href="./Robot-Framework/index.html" class="btn btn-robot">เข้าสู่บทเรียน →</a>
+      </div>
+
+      <!-- Performance Testing (k6) Course Card -->
+      <div class="course-card card-perf" id="card-perf">
+        <span class="course-icon">⚡</span>
+        <h2 class="course-title">Performance Testing (k6)</h2>
+        <p class="course-desc">
+          เรียนรู้การเขียน Load Test ด้วย k6 ครอบคลุม Virtual Users, Thresholds และ Stages (Ramping) โดยยิงจริงเข้า Express API ของ My-Investment-Port — รวมบทที่สอนให้ออกแบบ check() ให้รู้จัก Rate Limiter จริงของ server แทนที่จะเข้าใจผิดว่า 429 คือบั๊ก
+        </p>
+        <div class="tags">
+          <span class="tag">Virtual Users</span>
+          <span class="tag">Thresholds</span>
+          <span class="tag">Stages</span>
+          <span class="tag">5 Lessons</span>
+        </div>
+        <a href="./Performance-Testing/index.html" class="btn btn-perf">เข้าสู่บทเรียน →</a>
       </div>
     </div>
 
