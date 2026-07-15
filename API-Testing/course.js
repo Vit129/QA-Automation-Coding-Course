@@ -1199,9 +1199,21 @@ function isLessonCompleted(lessonId) {
 
 // Mark lesson completed
 function setLessonCompleted(lessonId) {
+  const alreadyDone = isLessonCompleted(lessonId);
   localStorage.setItem('api_course_completed_' + lessonId, 'true');
   renderLessonList();
   updateProgressBar();
+  if (!alreadyDone) showXPToast();
+}
+
+// Show a floating "+10 XP" toast on first-time lesson completion
+function showXPToast(amount = 10) {
+  const toast = document.createElement('div');
+  toast.className = 'xp-toast';
+  toast.textContent = `⚡ +${amount} XP`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add('xp-toast-out'), 1800);
+  setTimeout(() => toast.remove(), 2200);
 }
 
 // Update overall progress bar

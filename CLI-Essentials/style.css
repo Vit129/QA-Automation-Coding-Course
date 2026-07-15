@@ -719,3 +719,33 @@ body {
   color: var(--text-primary) !important;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
+
+/* XP toast (lesson completion feedback) */
+.xp-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: var(--accent-amber);
+  color: #1a1400;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  animation: xp-toast-in 0.3s ease;
+}
+
+.xp-toast-out {
+  animation: xp-toast-fade 0.4s ease forwards;
+}
+
+@keyframes xp-toast-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes xp-toast-fade {
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
