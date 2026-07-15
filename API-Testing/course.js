@@ -673,6 +673,148 @@ test.describe('AI Model switching (shares global state)', () => {
     1. ยิง GET <code>/api/ai/model</code> เก็บค่าโมเดลเดิมไว้ในตัวแปร <code>originalModel</code><br/>
     2. ยิง POST <code>/api/ai/model/switch</code> พร้อม <code>data: { model: 'gemini-3.5-flash' }</code> แล้วตรวจสอบ status <code>200</code><br/>
     3. คืนค่าโมเดลกลับเป็น <code>originalModel</code> ด้วย POST <code>/api/ai/model/switch</code> อีกครั้งเสมอ`
+  },
+  {
+    id: "pagination_edge_case",
+    meta: "บทที่ 9",
+    title: "Pagination Edge Case: หน้าที่เกินขอบเขต (Mock Endpoint)",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3010: ขอหน้าที่เกินขอบเขตของ Pagination ต้องได้ array ว่าง ไม่ error', async ({ request }) => {
+  // หมายเหตุ: /api/portfolio/history เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Pagination เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง GET /api/portfolio/history?page=999&limit=20 (หน้าที่เกินขอบเขตจริงแน่นอน)
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่า status code เป็น 200 (ไม่ใช่ error แม้จะขอหน้าที่เกินขอบเขต)
+
+
+  // 3. ตรวจสอบว่า body.items เป็น array ว่าง (length 0)
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Pagination Edge Case...");
+      const hasGet = /await\s+request\.get\(['"]\/api\/portfolio\/history\?page=999&limit=20['"]\)/.test(code);
+      if (hasGet) {
+        log("✓ ขั้นตอนที่ 1: ยิง request.get('/api/portfolio/history?page=999&limit=20') ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง request.get('/api/portfolio/history?page=999&limit=20')\nตัวอย่าง: const response = await request.get('/api/portfolio/history?page=999&limit=20');");
+      }
+
+      if (/expect\(response\.status\(\)\)\.toBe\(200\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 200 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบ status code 200\nตัวอย่าง: expect(response.status()).toBe(200);");
+      }
+
+      if (/expect\(body\.items\)\.toHaveLength\(0\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 3: ตรวจสอบว่า body.items เป็น array ว่างถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบว่า body.items มีความยาว 0\nตัวอย่าง: expect(body.items).toHaveLength(0);");
+      }
+    },
+    hint: "ใช้ const response = await request.get('/api/portfolio/history?page=999&limit=20'); แล้ว expect(response.status()).toBe(200); จากนั้น const body = await response.json(); expect(body.items).toHaveLength(0);",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3010: ขอหน้าที่เกินขอบเขตของ Pagination ต้องได้ array ว่าง ไม่ error', async ({ request }) => {
+  // หมายเหตุ: /api/portfolio/history เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Pagination เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง GET /api/portfolio/history?page=999&limit=20 (หน้าที่เกินขอบเขตจริงแน่นอน)
+  const response = await request.get('/api/portfolio/history?page=999&limit=20');
+
+  // 2. ตรวจสอบว่า status code เป็น 200 (ไม่ใช่ error แม้จะขอหน้าที่เกินขอบเขต)
+  expect(response.status()).toBe(200);
+
+  // 3. ตรวจสอบว่า body.items เป็น array ว่าง (length 0)
+  const body = await response.json();
+  expect(body.items).toHaveLength(0);
+});`,
+    theory: `<strong>หมายเหตุสำคัญ:</strong> เช็คแล้ว API จริงของ My-Investment-Port <strong>ไม่มี</strong> endpoint แบบ pagination (<code>page</code>/<code>limit</code>/<code>offset</code>) เลยสักตัว — บทเรียนนี้จำลอง endpoint <code>/api/portfolio/history</code> ขึ้นมาเพื่อสอนแนวคิดที่พบบ่อยมากในระบบจริงทั่วไป ไม่ใช่ endpoint จริงของโปรเจกนี้<br/><br/>
+    บั๊กที่พบบ่อยของ Pagination: เมื่อ client ขอหน้าที่เกินจำนวนหน้าทั้งหมด (เช่น มีข้อมูลแค่ 5 หน้า แต่ขอหน้าที่ 999) Backend ที่เขียนไม่ดีมักพัง 2 แบบ:<br/>
+    1. โยน error 400/500 ทั้งที่ query parameter ถูกต้องตามรูปแบบทุกอย่าง (แค่ "เกินขอบเขต" ไม่ใช่ "ผิดรูปแบบ")<br/>
+    2. แย่กว่านั้นคือ วนกลับไปคืนข้อมูลหน้าแรกซ้ำ (data leak แบบเงียบๆ) ทำให้ client เข้าใจผิดว่ามีข้อมูลจริง<br/><br/>
+    พฤติกรรมที่ถูกต้องตาม REST convention: หน้าที่เกินขอบเขตต้องได้ <code>200</code> พร้อม array ว่าง เพื่อให้ UI แสดง "ไม่มีข้อมูลเพิ่มเติม" ได้อย่างสง่างาม ไม่ต้อง special-case จัดการ error แยก`,
+    example: `// ตัวอย่าง happy path ของ pagination ปกติ (หน้าที่ 1 มีข้อมูลจริง)
+const response = await request.get('/api/portfolio/history?page=1&limit=20');
+const body = await response.json();
+expect(body.items.length).toBeGreaterThan(0);
+expect(body.totalPages).toBeGreaterThanOrEqual(1);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
+    1. ยิง GET <code>/api/portfolio/history?page=999&limit=20</code> (หน้าที่เกินขอบเขต)<br/>
+    2. ตรวจสอบว่า status code เป็น <code>200</code> ไม่ใช่ error<br/>
+    3. ตรวจสอบว่า <code>body.items</code> เป็น array ว่าง (<code>length 0</code>)`
+  },
+  {
+    id: "file_import_validation",
+    meta: "บทที่ 10",
+    title: "File Import: ตรวจสอบไฟล์ผิดรูปแบบก่อนประมวลผล (Mock Endpoint)",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3011: อัปโหลดไฟล์ CSV ว่างเปล่าต้องได้ 400 ไม่ใช่ Server Crash', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด File Import Validation เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ชื่อ empty.csv เนื้อหาว่างเปล่า
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่า status code เป็น 400 (ไม่ใช่ 500 Server Crash)
+
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'CSV file is empty or invalid'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ File Import Validation...");
+      const hasMultipart = /await\s+request\.post\(['"]\/api\/holdings\/import['"][\s\S]*?multipart:\s*\{[\s\S]*?file:\s*\{[\s\S]*?buffer:\s*Buffer\.from\(['"]{2}\)/.test(code);
+      if (hasMultipart) {
+        log("✓ ขั้นตอนที่ 1: ส่งไฟล์ CSV ว่างเปล่าผ่าน multipart ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการยิง POST /api/holdings/import แบบ multipart พร้อมไฟล์เนื้อหาว่างเปล่า\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') } }\n});");
+      }
+
+      if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+      }
+
+      if (/body\.error\)\.toBe\(['"]CSV file is empty or invalid['"]\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'CSV file is empty or invalid'\nตัวอย่าง: expect(body.error).toBe('CSV file is empty or invalid');");
+      }
+    },
+    hint: "ใช้ request.post('/api/holdings/import', { multipart: { file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') } } }); แล้วเช็ค status 400 และ body.error === 'CSV file is empty or invalid'",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3011: อัปโหลดไฟล์ CSV ว่างเปล่าต้องได้ 400 ไม่ใช่ Server Crash', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด File Import Validation เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ชื่อ empty.csv เนื้อหาว่างเปล่า
+  const response = await request.post('/api/holdings/import', {
+    multipart: {
+      file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') }
+    }
+  });
+
+  // 2. ตรวจสอบว่า status code เป็น 400 (ไม่ใช่ 500 Server Crash)
+  expect(response.status()).toBe(400);
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'CSV file is empty or invalid'
+  const body = await response.json();
+  expect(body.error).toBe('CSV file is empty or invalid');
+});`,
+    theory: `<strong>หมายเหตุสำคัญ:</strong> เช็คแล้ว server ของ My-Investment-Port <strong>ไม่มี</strong> multer/express-fileupload หรือ endpoint สำหรับ import ไฟล์เลยสักตัว — บทเรียนนี้จำลอง endpoint <code>/api/holdings/import</code> ขึ้นมาเพื่อสอนแนวคิดที่พบบ่อยมากเมื่อต้องรับไฟล์จาก client จริง ไม่ใช่ endpoint จริงของโปรเจกนี้<br/><br/>
+    บั๊กที่พบบ่อยที่สุดของ endpoint รับไฟล์: Dev เขียนโค้ด parse ไฟล์ (เช่น CSV) โดยเชื่อว่าไฟล์ต้อง "ถูกรูปแบบเสมอ" แล้วส่งตรงเข้า logic ประมวลผลทันที พอเจอไฟล์ว่างเปล่า/format ผิด/encoding แปลกๆ โค้ด parser จะโยน exception ที่ไม่ได้ดักไว้ ทำให้ server ตอบ <code>500 Internal Server Error</code> (หรือแย่กว่านั้นคือ process ล่มทั้งตัว) แทนที่จะเป็น <code>400 Bad Request</code> พร้อมข้อความชัดเจน<br/><br/>
+    หลักการ: endpoint ที่รับไฟล์จาก client ต้อง validate เนื้อหาไฟล์ "ก่อน" ส่งเข้า business logic เสมอ — เช็คว่าไฟล์ไม่ว่างเปล่า มีคอลัมน์ที่คาดหวัง และ parse ได้จริง ก่อนจะประมวลผลต่อ ถ้า validate ไม่ผ่านต้องตอบ 4xx พร้อมเหตุผลที่ผู้ใช้แก้ไขได้ ไม่ใช่ปล่อยให้ crash`,
+    example: `// ตัวอย่าง happy path: ไฟล์ CSV ถูกต้องตามรูปแบบ
+const response = await request.post('/api/holdings/import', {
+  multipart: {
+    file: { name: 'holdings.csv', mimeType: 'text/csv', buffer: Buffer.from('ticker,shares\\nAAPL,10') }
+  }
+});
+expect(response.status()).toBe(200);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
+    1. ยิง POST <code>/api/holdings/import</code> ด้วย multipart ไฟล์ชื่อ <code>empty.csv</code> เนื้อหาว่างเปล่า<br/>
+    2. ตรวจสอบว่า status code เป็น <code>400</code> ไม่ใช่ <code>500</code><br/>
+    3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'CSV file is empty or invalid'</code>`
   }
 ];
 

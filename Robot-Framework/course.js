@@ -622,6 +622,166 @@ Type Text    my-file.txt`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
     1. หลังคลิก <code>search-field</code> แล้ว ให้เช็ค <code>Element Should Exist    search-field</code> ก่อนเสมอ (ห้ามใช้การหน่วงเวลาคงที่)<br/>
     2. เมื่อมั่นใจว่า element พร้อมแล้ว ให้พิมพ์ <code>Type Text    AAPL</code>`
+  },
+  {
+    id: "dialog_confirm_identifier",
+    meta: "บทที่ 14",
+    title: "Confirm Dialog: เช็ค Accessibility Identifier ก่อน Automate เสมอ",
+    template: `*** Test Cases ***
+Confirm Before Closing Session
+    # หมายเหตุ: dialog ปิด session จริงใน confirmCloseSession() ยังไม่มี accessibility identifier บนปุ่มเลย (เช็ค source แล้ว) สมมติว่า Dev เพิ่ม identifier 'dialog-confirm-close' ให้แล้วตามคำแนะนำ
+    # 1. เช็คก่อนเสมอว่าปุ่มยืนยัน 'dialog-confirm-close' มีอยู่จริง ก่อนจะคลิก
+    # WRITE YOUR CODE HERE
+
+    `,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการเช็ค Identifier ก่อน Automate Dialog...");
+
+      const checkExist = /Element Should Exist\s{2,}dialog-confirm-close/.test(code) ||
+                         /Element Should Exist\t+dialog-confirm-close/.test(code);
+      if (checkExist) {
+        log("✓ ขั้นตอนที่ 1: เช็ค Element Should Exist    dialog-confirm-close ก่อนคลิกถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Element Should Exist    dialog-confirm-close\nตัวอย่าง: Element Should Exist    dialog-confirm-close");
+      }
+
+      const checkClick = /Click UI Element\s{2,}dialog-confirm-close/.test(code) ||
+                         /Click UI Element\t+dialog-confirm-close/.test(code);
+      if (checkClick) {
+        log("✓ ขั้นตอนที่ 2: คลิกปุ่มยืนยันถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Click UI Element    dialog-confirm-close\nตัวอย่าง: Click UI Element    dialog-confirm-close");
+      }
+    },
+    hint: "เช็คก่อนด้วย Element Should Exist    dialog-confirm-close แล้วค่อยคลิกด้วย Click UI Element    dialog-confirm-close",
+    solution: `*** Test Cases ***
+Confirm Before Closing Session
+    Element Should Exist    dialog-confirm-close
+    Click UI Element    dialog-confirm-close`,
+    theory: `ในโค้ดจริงของ <code>confirmCloseSession()</code> (<code>KouenSidebarPanelViewController+RecentProjects.swift</code>) มี NSAlert ถามยืนยันก่อนปิด session:<br/><br/>
+    <code>let alert = NSAlert()<br/>
+    alert.addButton(withTitle: "Close Session")<br/>
+    alert.addButton(withTitle: "Cancel")<br/>
+    alert.buttons[0].keyEquivalent = ""<br/>
+    alert.buttons[1].keyEquivalent = ""</code><br/><br/>
+    ตรวจสอบซอร์สทั้ง repo แล้วพบว่า<strong>ไม่มีปุ่ม Alert ตัวไหนเลยที่ตั้งค่า <code>accessibilityIdentifier</code></strong> ไว้ — และ Dev ยังจงใจล้าง <code>keyEquivalent</code> ของทั้งสองปุ่มเป็นค่าว่าง (ปิดทางลัดคีย์บอร์ด Return/Escape ด้วย) ซึ่งหมายความว่า <strong>วันนี้ยังไม่มีทางอัตโนมัติคลิกปุ่มนี้ได้เลยสักทาง</strong> ทั้งผ่าน <code>Click UI Element</code> (หา AXIdentifier ไม่เจอ) และผ่านคีย์ลัด (ถูกปิดไว้)<br/><br/>
+    นี่คือปัญหาจริงที่พบบ่อยในงาน Automation: <strong>ไม่ใช่ทุกปัญหาแก้ได้ด้วยเทคนิค RF ที่ฉลาดขึ้น</strong> บางครั้ง UI ที่ Dev สร้างมายังไม่ได้ "เปิดช่องให้อัตโนมัติ" เลยด้วยซ้ำ ทางแก้ที่ถูกต้องคือ (1) เช็คด้วย <code>Element Should Exist</code> ก่อนคลิกทุกครั้ง ถ้าไม่เจอให้หยุดและแจ้งกลับทีม Dev ให้เพิ่ม <code>accessibilityIdentifier</code> พร้อมเสนอชื่อที่ตกลงกันไว้ล่วงหน้า ไม่ใช่ (2) วน retry คลิกซ้ำๆ ไปเรื่อยๆ เพราะปัญหาไม่ได้อยู่ที่ timing`,
+    example: `// ตัวอย่างเช็คก่อนคลิกปุ่มลบ workspace ที่มี Alert แบบเดียวกัน (deleteWorkspaceFromMenu)
+Element Should Exist    dialog-delete-workspace-confirm
+Click UI Element        dialog-delete-workspace-confirm`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (สมมติว่า Dev เพิ่ม identifier ตามคำแนะนำแล้ว) โดย:<br/>
+    1. เช็คด้วย <code>Element Should Exist    dialog-confirm-close</code> ก่อนคลิกทุกครั้ง<br/>
+    2. คลิกยืนยันด้วย <code>Click UI Element    dialog-confirm-close</code>`
+  },
+  {
+    id: "loading_state_check",
+    meta: "บทที่ 15",
+    title: "Loading State: เช็คให้ Loading หายไปก่อน ไม่ใช่หน่วงเวลาคงที่",
+    template: `*** Test Cases ***
+Wait For Task List Ready
+    # หมายเหตุ: ProgressView ตอน isLoading จริงใน TaskDashboardView.swift ยังไม่มี accessibility identifier (เช็ค source แล้ว) สมมติว่า Dev เพิ่ม identifier 'task-dashboard-loading' ให้แล้วตามคำแนะนำ
+    # 1. วนเช็คด้วย Wait Until Keyword Succeeds สูงสุด 10 ครั้ง ห่างกันครั้งละ 0.5 วินาที จนกว่า element 'task-dashboard-loading' จะหายไปจากจอ (ห้ามหน่วงเวลาคงที่แทน)
+    # WRITE YOUR CODE HERE
+
+    `,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการรอ Loading State หายไป...");
+
+      if (/Wait For UI/i.test(code)) {
+        throw new Error("ห้ามใช้ Wait For UI (หน่วงเวลาคงที่) แทนการเช็คว่า Loading หายไปจริงหรือยัง");
+      }
+
+      const checkWait = /Wait Until Keyword Succeeds\s{2,}10x\s{2,}0\.5s\s{2,}Element Should Not Exist\s{2,}task-dashboard-loading/.test(code) ||
+                        /Wait Until Keyword Succeeds\t+10x\t+0\.5s\t+Element Should Not Exist\t+task-dashboard-loading/.test(code);
+      if (checkWait) {
+        log("✓ วนเช็คด้วย Wait Until Keyword Succeeds 10x/0.5s จนกว่า Loading จะหายไปถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading");
+      }
+    },
+    hint: "ใช้ Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading",
+    solution: `*** Test Cases ***
+Wait For Task List Ready
+    Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading`,
+    theory: `ในโค้ดจริงของ <code>TaskDashboardView.swift</code>:<br/><br/>
+    <code>@State private var isLoading = true<br/>
+    ...<br/>
+    if isLoading {<br/>
+    &nbsp;&nbsp;ProgressView().controlSize(.small)<br/>
+    }</code><br/><br/>
+    Task Dashboard แสดง <code>ProgressView</code> ระหว่างโหลดข้อมูลจริง เวลาโหลดขึ้นอยู่กับจำนวน session/task และความเร็วเครื่อง ไม่คงที่ — ใส่ <code>Wait For UI    2</code> เดาเวลาจึงพังได้ทั้งสองทาง (เร็วไปยัง loading อยู่, ช้าไปเสียเวลาฟรี)<br/><br/>
+    เทคนิคที่ถูกต้อง: รวม <code>Element Should Not Exist</code> (เช็คว่า loading indicator หายไปหรือยัง) เข้ากับ <code>Wait Until Keyword Succeeds</code> (จากบทที่ 12) เพื่อวนเช็คซ้ำจนกว่าจะหายไปจริงหรือครบจำนวนครั้ง — ผสานสองเทคนิคที่เรียนมาแล้วเข้าด้วยกันเป็นรูปแบบมาตรฐานสำหรับรอ Loading State ใดๆ`,
+    example: `// ตัวอย่างรอ Loading หายไปก่อนอ่านค่าจำนวน Task ทั้งหมด
+Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading
+\${count}=    Get Window Count`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (สมมติว่า Dev เพิ่ม identifier ตามคำแนะนำแล้ว) โดย:<br/>
+    1. วนเช็คด้วย <code>Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading</code> จนกว่า Loading จะหายไป`
+  },
+  {
+    id: "file_import_open_panel",
+    meta: "บทที่ 16",
+    title: "File Import: เปิดโฟลเดอร์ผ่าน NSOpenPanel ด้วยคีย์ลัด",
+    template: `*** Test Cases ***
+Import Project Folder Via Open Panel
+    # หมายเหตุ: ปุ่มเปิดโฟลเดอร์ใน addSession() จริงยังไม่มี accessibility identifier (เช็ค source แล้ว) สมมติว่า Dev เพิ่ม identifier 'sidebar-add-session' ให้แล้วตามคำแนะนำ
+    Click UI Element    sidebar-add-session
+    # 1. เปิดช่อง "Go to Folder" ของ Open Panel ด้วยคีย์ลัดมาตรฐาน macOS (ไม่เจาะจง Kouen)
+    # WRITE YOUR CODE HERE
+
+
+    # 2. พิมพ์ path '/tmp/demo-project' แล้วกด Enter เพื่อเปิดโฟลเดอร์นั้น
+
+    `,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการเปิดไฟล์ผ่าน NSOpenPanel...");
+
+      const checkGoToFolder = /Press Shortcut\s{2,}cmd\+shift\+g/.test(code) ||
+                              /Press Shortcut\t+cmd\+shift\+g/.test(code);
+      if (checkGoToFolder) {
+        log("✓ ขั้นตอนที่ 1: เปิดช่อง Go to Folder ด้วย Press Shortcut    cmd+shift+g ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Press Shortcut    cmd+shift+g\nตัวอย่าง: Press Shortcut    cmd+shift+g");
+      }
+
+      const checkType = /Type Text\s{2,}\/tmp\/demo-project/.test(code) ||
+                        /Type Text\t+\/tmp\/demo-project/.test(code);
+      if (checkType) {
+        log("✓ ขั้นตอนที่ 2a: พิมพ์ path /tmp/demo-project ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Type Text    /tmp/demo-project\nตัวอย่าง: Type Text    /tmp/demo-project");
+      }
+
+      const checkReturn = /Press Shortcut\s{2,}return/.test(code) ||
+                          /Press Shortcut\t+return/.test(code);
+      if (checkReturn) {
+        log("✓ ขั้นตอนที่ 2b: กด Enter เพื่อเปิดโฟลเดอร์ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง Press Shortcut    return\nตัวอย่าง: Press Shortcut    return");
+      }
+    },
+    hint: "ใช้ Press Shortcut    cmd+shift+g เปิดช่อง Go to Folder แล้ว Type Text    /tmp/demo-project จากนั้น Press Shortcut    return",
+    solution: `*** Test Cases ***
+Import Project Folder Via Open Panel
+    Click UI Element    sidebar-add-session
+    Press Shortcut    cmd+shift+g
+    Type Text    /tmp/demo-project
+    Press Shortcut    return`,
+    theory: `ในโค้ดจริงของ <code>addSession()</code> (<code>KouenSidebarPanelViewController.swift</code>) การเลือกโฟลเดอร์โปรเจกใหม่ใช้ <code>NSOpenPanel</code> ของระบบปฏิบัติการโดยตรง:<br/><br/>
+    <code>let panel = NSOpenPanel()<br/>
+    panel.canChooseDirectories = true<br/>
+    panel.canChooseFiles = false<br/>
+    panel.prompt = "Open"<br/>
+    panel.message = "Choose a project folder"<br/>
+    panel.begin { response in ... }</code><br/><br/>
+    <code>NSOpenPanel</code> เป็น <strong>system sheet ของ macOS เอง</strong> ไม่ใช่ SwiftUI view ที่ Dev เขียนขึ้นเอง — จะไปตั้งค่า <code>accessibilityIdentifier</code> ให้ปุ่ม/รายการไฟล์ข้างในแบบเดียวกับ UI ของแอปตัวเองไม่ได้ วิธีที่เสถียรที่สุดคือใช้ <strong>คีย์ลัดมาตรฐานของ macOS Open/Save Panel ทุกตัว</strong> (ใช้ได้กับทุกแอปที่ใช้ Open Panel ไม่ใช่แค่ Kouen): กด <code>Cmd+Shift+G</code> เพื่อเปิดช่อง "Go to Folder" พิมพ์ path เต็มลงไปตรงๆ แล้วกด <code>Enter</code> เพื่อยืนยัน — ข้าม UI element ทั้งหมดของ panel ไปเลย ไม่ต้องพึ่ง AXIdentifier ใดๆ<br/><br/>
+    เทคนิคนี้ใช้ทั่วไปได้กับ Native File Picker ของ macOS ทุกตัว ต่างจากปุ่มในแอปเองที่ต้องพึ่ง <code>Click UI Element</code>/<code>AXIdentifier</code> ตามที่เรียนมาในบทก่อนหน้า`,
+    example: `// ตัวอย่างเปิดไฟล์ (ไม่ใช่โฟลเดอร์) ผ่าน Open Panel ด้วยเทคนิคเดียวกัน
+Press Shortcut    cmd+shift+g
+Type Text         /Users/demo/config.yaml
+Press Shortcut    return`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (สมมติว่า Dev เพิ่ม identifier ปุ่มกระตุ้นตามคำแนะนำแล้ว) โดย:<br/>
+    1. เปิดช่อง "Go to Folder" ด้วย <code>Press Shortcut    cmd+shift+g</code><br/>
+    2. พิมพ์ path <code>/tmp/demo-project</code> ด้วย <code>Type Text</code> แล้วกด <code>Press Shortcut    return</code> เพื่อยืนยันเปิดโฟลเดอร์`
   }
 ];
 

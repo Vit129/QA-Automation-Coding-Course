@@ -801,6 +801,197 @@ await page.getByTestId('search-input').fill('AAPL');`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
     1. เปิดหน้า <code>/holdings</code><br/>
     2. ค้นหาช่องค้นหาด้วย Test ID <code>'search-input'</code> (ห้ามใช้ CSS class locator) แล้วกรอกคำว่า <code>'AAPL'</code>`
+  },
+  {
+    id: "dialog_confirm",
+    meta: "บทที่ 14",
+    title: "Confirm Dialog: ลบข้อมูลต้องผ่านการยืนยันก่อนเสมอ",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-14: กดลบ Holdings ต้องเจอ Confirm Dialog ก่อนข้อมูลจะหายจริง', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // 1. คลิกปุ่มลบแถวแรก (Test ID: btn-delete-holding)
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ต้องเจอ Dialog ยืนยันก่อนเสมอ ตรวจสอบว่าปุ่มยืนยัน (Test ID: confirm-dialog-confirm) ปรากฏอยู่จริง
+
+
+  // 3. คลิกปุ่มยืนยันเพื่อลบจริง
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการจัดการ Confirm Dialog...");
+      const hasDeleteClick = /await\s+page\.getByTestId\(['"]btn-delete-holding['"]\)\.first\(\)\.click\(\)/.test(code);
+      if (hasDeleteClick) {
+        log("✓ ขั้นตอนที่ 1: คลิกปุ่มลบ (btn-delete-holding) ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง page.getByTestId('btn-delete-holding').first().click()\nตัวอย่าง: await page.getByTestId('btn-delete-holding').first().click();");
+      }
+
+      const hasDialogCheck = /await\s+expect\(page\.getByTestId\(['"]confirm-dialog-confirm['"]\)\)\.toBeVisible\(\)/.test(code);
+      if (hasDialogCheck) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบว่า Dialog ยืนยันปรากฏจริงก่อนถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบว่า Dialog ยืนยันปรากฏอยู่จริง\nตัวอย่าง: await expect(page.getByTestId('confirm-dialog-confirm')).toBeVisible();");
+      }
+
+      const hasConfirmClick = /await\s+page\.getByTestId\(['"]confirm-dialog-confirm['"]\)\.click\(\)/.test(code);
+      if (hasConfirmClick) {
+        log("✓ ขั้นตอนที่ 3: คลิกยืนยันลบจริงถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่งคลิกยืนยันลบ\nตัวอย่าง: await page.getByTestId('confirm-dialog-confirm').click();");
+      }
+    },
+    hint: "คลิก await page.getByTestId('btn-delete-holding').first().click(); แล้วเช็ค await expect(page.getByTestId('confirm-dialog-confirm')).toBeVisible(); จากนั้นคลิก await page.getByTestId('confirm-dialog-confirm').click();",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-14: กดลบ Holdings ต้องเจอ Confirm Dialog ก่อนข้อมูลจะหายจริง', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // 1. คลิกปุ่มลบแถวแรก (Test ID: btn-delete-holding)
+  await page.getByTestId('btn-delete-holding').first().click();
+
+  // 2. ต้องเจอ Dialog ยืนยันก่อนเสมอ ตรวจสอบว่าปุ่มยืนยัน (Test ID: confirm-dialog-confirm) ปรากฏอยู่จริง
+  await expect(page.getByTestId('confirm-dialog-confirm')).toBeVisible();
+
+  // 3. คลิกปุ่มยืนยันเพื่อลบจริง
+  await page.getByTestId('confirm-dialog-confirm').click();
+});`,
+    theory: `บั๊กอัตโนมัติที่พบบ่อยมากคือ: สคริปต์คลิกปุ่ม "ลบ" แล้วรีบไปตรวจสอบผลลัพธ์ทันที ทั้งที่จริงแล้วแอปมี <strong>Confirm Dialog</strong> คั่นกลางอยู่ก่อนข้อมูลจะถูกลบจริง — ถ้าไม่คลิกยืนยันในไดอะล็อก ข้อมูลจะไม่หายไปไหนเลย แต่เทสอาจ "ผ่าน" แบบหลอกๆ เพราะดันไปจับ error อื่นแทนที่จะรู้ว่าไม่ได้ลบจริง<br/><br/>
+    ในโปรเจก My-Investment-Port หน้า <code>/holdings</code> ปุ่มลบแต่ละแถวมี Test ID <code>btn-delete-holding</code> (ดูจริงใน <code>HoldingsLedger.jsx</code>) กดแล้วจะเปิด <code>ConfirmDialog</code> component (<code>src/components/modals/ConfirmDialog.jsx</code>) ซึ่ง <strong>ใช้ Test ID เดียวกันซ้ำทั้งแอป</strong> ไม่ว่าจะลบ Holdings, RMF Fund, หรือ Passive Income: ปุ่มยืนยันคือ <code>confirm-dialog-confirm</code> ปุ่มยกเลิกคือ <code>confirm-dialog-cancel</code><br/><br/>
+    หลักการ: ก่อนคลิกปุ่มยืนยันในไดอะล็อกใดๆ ต้องยืนยันก่อนด้วย <code>toBeVisible()</code> ว่ามันเปิดขึ้นมาจริงแล้ว (ไม่ใช่คลิกไปมั่วๆ ตำแหน่งเดิมที่เคยมี dialog) เพราะถ้า dialog ยังไม่ทันเปิด การคลิกจะพลาดเป้าและ test จะ fail ด้วยสาเหตุที่เข้าใจผิดได้ง่าย`,
+    example: `// ตัวอย่าง cancel flow: กดลบแล้วเปลี่ยนใจกดยกเลิก ข้อมูลต้องยังอยู่เหมือนเดิม
+await page.getByTestId('btn-delete-holding').first().click();
+await expect(page.getByTestId('confirm-dialog-cancel')).toBeVisible();
+await page.getByTestId('confirm-dialog-cancel').click();
+await expect(page.getByTestId('confirm-dialog-confirm')).toBeHidden();`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. คลิกปุ่มลบแถวแรกด้วย Test ID <code>btn-delete-holding</code><br/>
+    2. ตรวจสอบว่าปุ่มยืนยัน Test ID <code>confirm-dialog-confirm</code> ปรากฏอยู่จริงก่อนดำเนินการต่อ<br/>
+    3. คลิกปุ่มยืนยันเพื่อสั่งลบจริง`
+  },
+  {
+    id: "loading_state_wait",
+    meta: "บทที่ 15",
+    title: "Loading State: รอผลลัพธ์จริง ไม่ใช่เดาเวลา",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-15: ถามคำถาม AI แล้วต้องรอคำตอบจริง ไม่ใช่เดาเวลา', async ({ page }) => {
+  await page.goto('/');
+
+  // 1. กรอกคำถามลงในช่อง Test ID 'ai-overview-chat-input' แล้วกดปุ่มส่ง (Test ID 'ai-overview-chat-send')
+  // WRITE YOUR CODE HERE
+
+
+  // 2. รอจนกว่าปุ่มส่งจะกลับมาพร้อมใช้งานอีกครั้ง (ไม่ disabled ระหว่างรอ AI ตอบ) แทนการเดาเวลาว่า AI จะตอบเมื่อไหร่
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการรอ Loading State...");
+      const hasFill = /await\s+page\.getByTestId\(['"]ai-overview-chat-input['"]\)\.fill\(/.test(code);
+      const hasSendClick = /await\s+page\.getByTestId\(['"]ai-overview-chat-send['"]\)\.click\(\)/.test(code);
+      if (hasFill && hasSendClick) {
+        log("✓ ขั้นตอนที่ 1: กรอกคำถามแล้วกดส่งถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการกรอกคำถามลงในช่อง ai-overview-chat-input แล้วคลิก ai-overview-chat-send\nตัวอย่าง: await page.getByTestId('ai-overview-chat-input').fill('...');\nawait page.getByTestId('ai-overview-chat-send').click();");
+      }
+
+      const hasFixedWait = /waitForTimeout/.test(code);
+      const hasEnabledWait = /await\s+expect\(page\.getByTestId\(['"]ai-overview-chat-send['"]\)\)\.toBeEnabled\(\)/.test(code);
+      if (hasFixedWait) {
+        throw new Error("ห้ามใช้การหน่วงเวลาคงที่แทนการรอผลลัพธ์จริง — เวลาที่ AI ใช้ตอบไม่คงที่ เดาไม่ได้");
+      } else if (hasEnabledWait) {
+        log("✓ ขั้นตอนที่ 2: รอปุ่มส่งกลับมาพร้อมใช้งาน (toBeEnabled) แทนการเดาเวลาถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการรอด้วย auto-retry assertion\nตัวอย่าง: await expect(page.getByTestId('ai-overview-chat-send')).toBeEnabled();");
+      }
+    },
+    hint: "กรอกด้วย await page.getByTestId('ai-overview-chat-input').fill('สรุปพอร์ตให้หน่อย'); แล้วคลิก await page.getByTestId('ai-overview-chat-send').click(); จากนั้นรอด้วย await expect(page.getByTestId('ai-overview-chat-send')).toBeEnabled();",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-15: ถามคำถาม AI แล้วต้องรอคำตอบจริง ไม่ใช่เดาเวลา', async ({ page }) => {
+  await page.goto('/');
+
+  // 1. กรอกคำถามลงในช่อง Test ID 'ai-overview-chat-input' แล้วกดปุ่มส่ง (Test ID 'ai-overview-chat-send')
+  await page.getByTestId('ai-overview-chat-input').fill('สรุปพอร์ตให้หน่อย');
+  await page.getByTestId('ai-overview-chat-send').click();
+
+  // 2. รอจนกว่าปุ่มส่งจะกลับมาพร้อมใช้งานอีกครั้ง (ไม่ disabled ระหว่างรอ AI ตอบ) แทนการเดาเวลาว่า AI จะตอบเมื่อไหร่
+  await expect(page.getByTestId('ai-overview-chat-send')).toBeEnabled();
+});`,
+    theory: `ฟีเจอร์ที่เรียก AI/LLM ตอบคำถาม (เช่น chat panel) มีเวลาตอบสนองที่ "ไม่คงที่" โดยธรรมชาติ — บางครั้งเร็ว บางครั้งช้ากว่าเดิมหลายเท่า การใส่ <code>waitForTimeout(3000)</code> เดาเวลาจึงเป็นทางแก้ที่ผิดเสมอ: เดาน้อยไปก็ flaky เดามากไปก็เสียเวลาทุก run<br/><br/>
+    ในโปรเจก My-Investment-Port หน้าแรก <code>/</code> (route <code>path: '/'</code> ใน <code>src/routes/index.jsx</code>) มี <code>OverviewChatPanel</code> ที่เขียนโค้ดจริงไว้ชัดเจน:<br/>
+    <code>const [loading, setLoading] = useState(false);<br/>
+    ...<br/>
+    disabled={!input.trim() || loading}<br/>
+    {loading ? 'Thinking...' : 'Send'}</code><br/><br/>
+    ปุ่มส่ง (Test ID <code>ai-overview-chat-send</code>) จะ <code>disabled</code> ระหว่างรอ AI ตอบ และกลับมาพร้อมใช้งานเมื่อได้คำตอบแล้วเท่านั้น — นี่คือสัญญาณ "โหลดเสร็จจริง" ที่เชื่อถือได้ 100% ใช้ <code>expect().toBeEnabled()</code> (auto-retry จนกว่าจะผ่านหรือ timeout ของ test เอง) แทนการเดาเวลาแบบตายตัว`,
+    example: `// ตัวอย่างรอ loading indicator หายไปก่อนอ่านผลลัพธ์ (รูปแบบทั่วไป)
+await page.getByTestId('submit-btn').click();
+await expect(page.getByTestId('loading-spinner')).toBeHidden();
+await expect(page.getByTestId('result-panel')).toBeVisible();`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. กรอกคำถามลงในช่อง Test ID <code>ai-overview-chat-input</code> แล้วคลิกปุ่มส่ง Test ID <code>ai-overview-chat-send</code><br/>
+    2. รอด้วย <code>expect(page.getByTestId('ai-overview-chat-send')).toBeEnabled()</code> แทนการหน่วงเวลาคงที่ เพื่อยืนยันว่า AI ตอบกลับมาแล้วจริง`
+  },
+  {
+    id: "file_upload_ui",
+    meta: "บทที่ 16",
+    title: "File Upload UI: ทดสอบ Import ไฟล์ผ่านหน้าจอ",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-16: นำเข้าไฟล์ CSV ผ่านหน้าจอ Holdings (ฟีเจอร์สมมติ)', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // หมายเหตุ: ช่องอัปโหลดนี้เป็นฟีเจอร์สมมติ ยังไม่มีอยู่จริงใน My-Investment-Port ปัจจุบัน (สอนเทคนิค setInputFiles สำหรับตอนที่ต้องเจอฟีเจอร์นี้จริง)
+  // 1. อัปโหลดไฟล์ผ่าน input Test ID 'import-csv-input' ด้วย setInputFiles ส่ง path './fixtures/holdings-sample.csv'
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่าข้อความผลลัพธ์ Test ID 'import-result-message' ปรากฏและมีคำว่า 'Imported'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการอัปโหลดไฟล์ผ่าน UI...");
+      const hasSetInputFiles = /await\s+page\.getByTestId\(['"]import-csv-input['"]\)\.setInputFiles\(['"]\.\/fixtures\/holdings-sample\.csv['"]\)/.test(code);
+      if (hasSetInputFiles) {
+        log("✓ ขั้นตอนที่ 1: อัปโหลดไฟล์ด้วย setInputFiles ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง page.getByTestId('import-csv-input').setInputFiles('./fixtures/holdings-sample.csv')\nตัวอย่าง: await page.getByTestId('import-csv-input').setInputFiles('./fixtures/holdings-sample.csv');");
+      }
+
+      const hasResultCheck = /await\s+expect\(page\.getByTestId\(['"]import-result-message['"]\)\)\.toContainText\(['"]Imported['"]\)/.test(code);
+      if (hasResultCheck) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบข้อความผลลัพธ์การนำเข้าถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความผลลัพธ์\nตัวอย่าง: await expect(page.getByTestId('import-result-message')).toContainText('Imported');");
+      }
+    },
+    hint: "ใช้ await page.getByTestId('import-csv-input').setInputFiles('./fixtures/holdings-sample.csv'); แล้วเช็ค await expect(page.getByTestId('import-result-message')).toContainText('Imported');",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-16: นำเข้าไฟล์ CSV ผ่านหน้าจอ Holdings (ฟีเจอร์สมมติ)', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // หมายเหตุ: ช่องอัปโหลดนี้เป็นฟีเจอร์สมมติ ยังไม่มีอยู่จริงใน My-Investment-Port ปัจจุบัน (สอนเทคนิค setInputFiles สำหรับตอนที่ต้องเจอฟีเจอร์นี้จริง)
+  // 1. อัปโหลดไฟล์ผ่าน input Test ID 'import-csv-input' ด้วย setInputFiles ส่ง path './fixtures/holdings-sample.csv'
+  await page.getByTestId('import-csv-input').setInputFiles('./fixtures/holdings-sample.csv');
+
+  // 2. ตรวจสอบว่าข้อความผลลัพธ์ Test ID 'import-result-message' ปรากฏและมีคำว่า 'Imported'
+  await expect(page.getByTestId('import-result-message')).toContainText('Imported');
+});`,
+    theory: `<strong>หมายเหตุสำคัญ:</strong> โปรเจก My-Investment-Port ปัจจุบัน<strong>ไม่มี</strong> input อัปโหลดไฟล์เลยสักจุด (เช็คแล้วทั้ง repo ไม่พบ <code>&lt;input type="file"&gt;</code> หรือ endpoint สำหรับ import ไฟล์) — บทเรียนนี้จึงสอนเทคนิคที่จำเป็นล่วงหน้า เผื่อวันที่แอปมีฟีเจอร์นี้จริง หรือไปเจอในโปรเจกอื่น<br/><br/>
+    การทดสอบ <code>&lt;input type="file"&gt;</code> ห้ามคลิกเปิดหน้าต่างเลือกไฟล์ของ OS จริง (Native File Picker) เพราะ browser automation ควบคุมหน้าต่าง OS แบบนั้นไม่ได้และไม่เสถียร วิธีที่ถูกต้องคือใช้ <code>page.setInputFiles()</code> ซึ่งจะ "แนบไฟล์" เข้ากับ <code>&lt;input&gt;</code> โดยตรง ข้าม Native Picker ไปเลย ทำให้เทสเร็วและเสถียร 100%<br/><br/>
+    รับ path เดียว (<code>string</code>) สำหรับไฟล์เดียว หรือ array ของ path สำหรับหลายไฟล์พร้อมกัน (<code>setInputFiles(['a.csv', 'b.csv'])</code>) และใช้ <code>setInputFiles([])</code> เพื่อล้างค่าไฟล์ที่เลือกไว้ก่อนหน้า`,
+    example: `// ตัวอย่างอัปโหลดหลายไฟล์พร้อมกัน และล้างค่าไฟล์ที่เลือกไว้
+await page.getByTestId('attachment-input').setInputFiles(['receipt1.pdf', 'receipt2.pdf']);
+// ...
+await page.getByTestId('attachment-input').setInputFiles([]); // ล้างค่า`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (ฟีเจอร์สมมติเพื่อฝึกเทคนิค) โดย:<br/>
+    1. อัปโหลดไฟล์ <code>./fixtures/holdings-sample.csv</code> ผ่าน Test ID <code>import-csv-input</code> ด้วย <code>setInputFiles</code><br/>
+    2. ตรวจสอบว่าข้อความผลลัพธ์ Test ID <code>import-result-message</code> มีคำว่า <code>'Imported'</code>`
   }
 ];
 
