@@ -264,6 +264,153 @@
         font-size: 2rem;
       }
     }
+
+    /* Progress panel */
+    .progress-panel {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 40px;
+      text-align: left;
+    }
+
+    .progress-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .progress-panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .progress-panel-xp {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+    }
+
+    .overall-progress-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 9999px;
+      background-color: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .overall-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-emerald));
+      transition: width 0.4s ease;
+    }
+
+    .progress-panel-footer {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    .badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge-chip {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background-color: rgba(234, 179, 8, 0.12);
+      border: 1px solid rgba(234, 179, 8, 0.3);
+      color: #fde68a;
+    }
+
+    .badge-chip-empty {
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    /* Per-card mini progress */
+    .track-progress {
+      margin-bottom: 20px;
+    }
+
+    .track-progress-bar {
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background-color: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .track-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 9999px;
+      background-color: currentColor;
+      transition: width 0.4s ease;
+    }
+
+    .card-api .track-progress-fill { background-color: var(--accent-violet); }
+    .card-playwright .track-progress-fill { background-color: var(--accent-blue); }
+    .card-robot .track-progress-fill { background-color: var(--accent-orange); }
+    .card-perf .track-progress-fill { background-color: var(--accent-gold); }
+    .card-sql .track-progress-fill { background-color: var(--accent-teal); }
+    .card-cli .track-progress-fill { background-color: var(--accent-slate); }
+
+    .track-progress-text {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* Completion banner */
+    .completion-banner {
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(16, 185, 129, 0.1));
+      border: 1px solid rgba(234, 179, 8, 0.35);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 40px;
+      text-align: left;
+    }
+
+    .completion-banner-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    .completion-banner h2 {
+      font-size: 1.6rem;
+      margin-bottom: 10px;
+    }
+
+    .completion-banner p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .completion-banner ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+      .completion-banner ul {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -275,6 +422,32 @@
         หลักสูตรเรียนรู้และทดสอบการเขียนโค้ดระบบจำลอง Automation แบบโต้ตอบด้วย Code Sandbox และรันชุดทดสอบเสมือนจริงในเบราว์เซอร์
       </p>
     </header>
+
+    <div class="progress-panel" id="progress-panel">
+      <div class="progress-panel-header">
+        <span class="progress-panel-title">📊 ความคืบหน้าของคุณ</span>
+        <span class="progress-panel-xp" id="overall-xp">0 XP</span>
+      </div>
+      <div class="overall-progress-bar">
+        <div class="overall-progress-fill" id="overall-fill"></div>
+      </div>
+      <div class="progress-panel-footer" id="overall-text">0 / 0 บทเรียน (0%)</div>
+      <div class="badges-row" id="badges-row"></div>
+    </div>
+
+    <div class="completion-banner" id="completion-banner" style="display:none;">
+      <div class="completion-banner-icon">🏆</div>
+      <h2>เรียนจบครบทุกบทแล้ว!</h2>
+      <p>คุณผ่านบทเรียนทั้งหมดครบทั้ง 6 สาย QA Automation:</p>
+      <ul>
+        <li>✅ Playwright API Testing — ทดสอบ Backend API ด้วย Request Context, Auth, Schema Validation</li>
+        <li>✅ Playwright UI Testing — POM, API Mocking, TypeScript</li>
+        <li>✅ Robot Framework Native UI Testing — Keyword-driven + macOS Native Automation</li>
+        <li>✅ Performance Testing (k6) — Virtual Users, Thresholds, Stages</li>
+        <li>✅ Database Design & SQL — Schema Design, JOIN, Data Integrity, NULL Handling</li>
+        <li>✅ Git, Vim & Unix Cheat Sheet — เครื่องมือที่ใช้ทุกวัน</li>
+      </ul>
+    </div>
 
     <div class="courses-grid">
       <!-- API Testing Course Card -->
@@ -289,6 +462,10 @@
           <span class="tag">Auth Headers</span>
           <span class="tag">Schema Validation</span>
           <span class="tag">13 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-api">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/13 บทเรียน (0%)</span>
         </div>
         <a href="./API-Testing/index.html" class="btn btn-api">เข้าสู่บทเรียน →</a>
       </div>
@@ -305,6 +482,10 @@
           <span class="tag">Page Object Model</span>
           <span class="tag">API Mocking</span>
           <span class="tag">19 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-playwright">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/19 บทเรียน (0%)</span>
         </div>
         <a href="./Playwright/index.html" class="btn btn-playwright">เข้าสู่บทเรียน →</a>
       </div>
@@ -323,6 +504,10 @@
           <span class="tag">Operating System</span>
           <span class="tag">16 Lessons</span>
         </div>
+        <div class="track-progress" id="progress-robot">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/16 บทเรียน (0%)</span>
+        </div>
         <a href="./Robot-Framework/index.html" class="btn btn-robot">เข้าสู่บทเรียน →</a>
       </div>
 
@@ -338,6 +523,10 @@
           <span class="tag">Thresholds</span>
           <span class="tag">Stages</span>
           <span class="tag">5 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-perf">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/5 บทเรียน (0%)</span>
         </div>
         <a href="./Performance-Testing/index.html" class="btn btn-perf">เข้าสู่บทเรียน →</a>
       </div>
@@ -355,6 +544,10 @@
           <span class="tag">PRIMARY KEY</span>
           <span class="tag">7 Lessons</span>
         </div>
+        <div class="track-progress" id="progress-sql">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/7 บทเรียน (0%)</span>
+        </div>
         <a href="./DB-Design-SQL/index.html" class="btn btn-sql">เข้าสู่บทเรียน →</a>
       </div>
 
@@ -371,6 +564,10 @@
           <span class="tag">Unix Shell</span>
           <span class="tag">6 Lessons</span>
         </div>
+        <div class="track-progress" id="progress-cli">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/6 บทเรียน (0%)</span>
+        </div>
         <a href="./CLI-Essentials/index.html" class="btn btn-cli">เข้าสู่บทเรียน →</a>
       </div>
     </div>
@@ -379,6 +576,69 @@
       <p>© 2026 Personal QA Learning Portal. Built with HTML, CSS, and Vanilla JS.</p>
     </footer>
   </div>
+
+  <script>
+    const TRACKS = [
+      { key: 'api', prefix: 'api', total: 13, label: 'Playwright API Testing' },
+      { key: 'playwright', prefix: 'pw', total: 19, label: 'Playwright UI Testing' },
+      { key: 'robot', prefix: 'rf', total: 16, label: 'Robot Framework Native UI Testing' },
+      { key: 'perf', prefix: 'perf', total: 5, label: 'Performance Testing (k6)' },
+      { key: 'sql', prefix: 'sql', total: 7, label: 'Database Design & SQL' },
+      { key: 'cli', prefix: 'cli', total: 6, label: 'Git, Vim & Unix Cheat Sheet' },
+    ];
+    const XP_PER_LESSON = 10;
+
+    function countCompleted(prefix) {
+      const marker = prefix + '_course_completed_';
+      let count = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(marker) && localStorage.getItem(key) === 'true') count++;
+      }
+      return count;
+    }
+
+    function renderProgress() {
+      let totalCompleted = 0;
+      let totalLessons = 0;
+      const badges = [];
+
+      TRACKS.forEach(track => {
+        const completed = countCompleted(track.prefix);
+        totalCompleted += completed;
+        totalLessons += track.total;
+
+        const panel = document.getElementById('progress-' + track.key);
+        if (panel) {
+          const pct = Math.round((completed / track.total) * 100);
+          panel.querySelector('.track-progress-fill').style.width = pct + '%';
+          panel.querySelector('.track-progress-text').textContent = `${completed}/${track.total} บทเรียน (${pct}%)`;
+        }
+
+        if (completed === track.total) {
+          badges.push(`✅ ${track.label}`);
+        }
+      });
+
+      if (totalCompleted >= 1) badges.unshift('🎯 First Step');
+      if (totalCompleted === totalLessons) badges.push('🏆 Course Master');
+
+      const overallPct = Math.round((totalCompleted / totalLessons) * 100);
+      document.getElementById('overall-fill').style.width = overallPct + '%';
+      document.getElementById('overall-text').textContent = `${totalCompleted} / ${totalLessons} บทเรียน (${overallPct}%)`;
+      document.getElementById('overall-xp').textContent = `${totalCompleted * XP_PER_LESSON} XP`;
+
+      const badgesRow = document.getElementById('badges-row');
+      badgesRow.innerHTML = badges.length
+        ? badges.map(b => `<span class="badge-chip">${b}</span>`).join('')
+        : '<span class="badge-chip badge-chip-empty">เริ่มบทเรียนแรกเพื่อรับ badge แรกของคุณ</span>';
+
+      const banner = document.getElementById('completion-banner');
+      banner.style.display = (totalCompleted === totalLessons && totalLessons > 0) ? 'block' : 'none';
+    }
+
+    renderProgress();
+  </script>
 
 </body>
 </html>
