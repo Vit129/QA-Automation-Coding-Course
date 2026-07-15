@@ -320,6 +320,29 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .progress-panel-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-mini {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-mini:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
     }
 
     .badge-chip {
@@ -411,6 +434,61 @@
         grid-template-columns: 1fr;
       }
     }
+
+    .completion-banner.banner-animate {
+      animation: banner-pop 0.5s ease;
+    }
+
+    @keyframes banner-pop {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Badge unlock toast */
+    .badge-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: rgba(234, 179, 8, 0.15);
+      border: 1px solid rgba(234, 179, 8, 0.4);
+      color: #fde68a;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      animation: badge-toast-in 0.3s ease;
+    }
+
+    .badge-toast-out {
+      animation: badge-toast-fade 0.4s ease forwards;
+    }
+
+    @keyframes badge-toast-in {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes badge-toast-fade {
+      to { opacity: 0; transform: translateY(-10px); }
+    }
+
+    /* Confetti burst on course completion */
+    .confetti-piece {
+      position: fixed;
+      top: -10px;
+      width: 8px;
+      height: 14px;
+      z-index: 9998;
+      animation: confetti-fall linear forwards;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    @keyframes confetti-fall {
+      to { transform: translateY(100vh) rotate(360deg); opacity: 0.6; }
+    }
   </style>
 </head>
 <body>
@@ -433,6 +511,11 @@
       </div>
       <div class="progress-panel-footer" id="overall-text">0 / 0 บทเรียน (0%)</div>
       <div class="badges-row" id="badges-row"></div>
+      <div class="progress-panel-actions">
+        <button class="btn-mini" onclick="exportProgress()">📤 Export Progress</button>
+        <button class="btn-mini" onclick="document.getElementById('import-file-input').click()">📥 Import Progress</button>
+        <input type="file" id="import-file-input" accept="application/json" style="display:none" onchange="importProgress(event)">
+      </div>
     </div>
 
     <div class="completion-banner" id="completion-banner" style="display:none;">
@@ -516,17 +599,17 @@
         <span class="course-icon">⚡</span>
         <h2 class="course-title">Performance Testing (k6)</h2>
         <p class="course-desc">
-          เรียนรู้การเขียน Load Test ด้วย k6 ครอบคลุม Virtual Users, Thresholds และ Stages (Ramping) โดยยิงจริงเข้า Express API ของ My-Investment-Port — รวมบทที่สอนให้ออกแบบ check() ให้รู้จัก Rate Limiter จริงของ server แทนที่จะเข้าใจผิดว่า 429 คือบั๊ก
+          เรียนรู้การเขียน Load Test ด้วย k6 ครอบคลุม Virtual Users, Thresholds, Stages (Ramping), sleep() Think Time, Custom Metrics, group(), Scenarios/Executors และ setup()/teardown() โดยยิงจริงเข้า Express API ของ My-Investment-Port — รวมบทที่สอนให้ออกแบบ check() ให้รู้จัก Rate Limiter จริงของ server แทนที่จะเข้าใจผิดว่า 429 คือบั๊ก
         </p>
         <div class="tags">
           <span class="tag">Virtual Users</span>
           <span class="tag">Thresholds</span>
-          <span class="tag">Stages</span>
-          <span class="tag">5 Lessons</span>
+          <span class="tag">Scenarios</span>
+          <span class="tag">10 Lessons</span>
         </div>
         <div class="track-progress" id="progress-perf">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/5 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/10 บทเรียน (0%)</span>
         </div>
         <a href="./Performance-Testing/index.html" class="btn btn-perf">เข้าสู่บทเรียน →</a>
       </div>
@@ -536,17 +619,17 @@
         <span class="course-icon">🗄️</span>
         <h2 class="course-title">Database Design & SQL</h2>
         <p class="course-desc">
-          เรียนรู้ SQL และการออกแบบฐานข้อมูลที่ QA ใช้ทุกวันแต่ลืมได้ง่าย ครอบคลุม SELECT/WHERE, JOIN, GROUP BY, PRIMARY KEY, Data Integrity Check และ NULL Handling — รันคำสั่ง SQL จริงในเบราว์เซอร์ด้วย AlaSQL บนสคีมาที่จำลองจากข้อมูล Holdings จริงของ My-Investment-Port
+          เรียนรู้ SQL และการออกแบบฐานข้อมูลที่ QA ใช้ทุกวันแต่ลืมได้ง่าย ครอบคลุม SELECT/WHERE, PRIMARY KEY, FOREIGN KEY, Normalization, JOIN (INNER/LEFT), Data Type/BOOLEAN, GROUP BY, Data Integrity Check และ NULL Handling — รันคำสั่ง SQL จริงในเบราว์เซอร์ด้วย AlaSQL บนสคีมาที่จำลองจากข้อมูล Holdings จริงของ My-Investment-Port
         </p>
         <div class="tags">
-          <span class="tag">SELECT/JOIN</span>
-          <span class="tag">GROUP BY</span>
-          <span class="tag">PRIMARY KEY</span>
-          <span class="tag">7 Lessons</span>
+          <span class="tag">FOREIGN KEY</span>
+          <span class="tag">Normalization</span>
+          <span class="tag">JOIN</span>
+          <span class="tag">11 Lessons</span>
         </div>
         <div class="track-progress" id="progress-sql">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/7 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/11 บทเรียน (0%)</span>
         </div>
         <a href="./DB-Design-SQL/index.html" class="btn btn-sql">เข้าสู่บทเรียน →</a>
       </div>
@@ -562,11 +645,11 @@
           <span class="tag">Git</span>
           <span class="tag">Vim</span>
           <span class="tag">Unix Shell</span>
-          <span class="tag">6 Lessons</span>
+          <span class="tag">16 Lessons</span>
         </div>
         <div class="track-progress" id="progress-cli">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/6 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/16 บทเรียน (0%)</span>
         </div>
         <a href="./CLI-Essentials/index.html" class="btn btn-cli">เข้าสู่บทเรียน →</a>
       </div>
@@ -582,9 +665,9 @@
       { key: 'api', prefix: 'api', total: 13, label: 'Playwright API Testing' },
       { key: 'playwright', prefix: 'pw', total: 19, label: 'Playwright UI Testing' },
       { key: 'robot', prefix: 'rf', total: 16, label: 'Robot Framework Native UI Testing' },
-      { key: 'perf', prefix: 'perf', total: 5, label: 'Performance Testing (k6)' },
-      { key: 'sql', prefix: 'sql', total: 7, label: 'Database Design & SQL' },
-      { key: 'cli', prefix: 'cli', total: 6, label: 'Git, Vim & Unix Cheat Sheet' },
+      { key: 'perf', prefix: 'perf', total: 10, label: 'Performance Testing (k6)' },
+      { key: 'sql', prefix: 'sql', total: 11, label: 'Database Design & SQL' },
+      { key: 'cli', prefix: 'cli', total: 16, label: 'Git, Vim & Unix Cheat Sheet' },
     ];
     const XP_PER_LESSON = 10;
 
@@ -633,8 +716,96 @@
         ? badges.map(b => `<span class="badge-chip">${b}</span>`).join('')
         : '<span class="badge-chip badge-chip-empty">เริ่มบทเรียนแรกเพื่อรับ badge แรกของคุณ</span>';
 
+      notifyNewBadges(badges);
+
+      const isComplete = totalCompleted === totalLessons && totalLessons > 0;
+      const alreadyCelebrated = localStorage.getItem('qa_course_completion_celebrated') === 'true';
       const banner = document.getElementById('completion-banner');
-      banner.style.display = (totalCompleted === totalLessons && totalLessons > 0) ? 'block' : 'none';
+      banner.style.display = isComplete ? 'block' : 'none';
+      banner.classList.toggle('banner-animate', isComplete && !alreadyCelebrated);
+
+      if (isComplete && !alreadyCelebrated) {
+        fireConfetti();
+        localStorage.setItem('qa_course_completion_celebrated', 'true');
+      }
+    }
+
+    // Toast any badge(s) earned since the last visit (de-duped via localStorage)
+    function notifyNewBadges(currentBadges) {
+      const seen = JSON.parse(localStorage.getItem('qa_course_seen_badges') || '[]');
+      const fresh = currentBadges.filter(b => !seen.includes(b));
+      if (fresh.length === 1) {
+        showBadgeToast(`ปลดล็อคแล้ว: ${fresh[0]}`);
+      } else if (fresh.length > 1) {
+        showBadgeToast(`ปลดล็อค ${fresh.length} badge ใหม่พร้อมกัน! 🎉`);
+      }
+      localStorage.setItem('qa_course_seen_badges', JSON.stringify(currentBadges));
+    }
+
+    function showBadgeToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'badge-toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.classList.add('badge-toast-out'), 2200);
+      setTimeout(() => toast.remove(), 2600);
+    }
+
+    function fireConfetti() {
+      const colors = ['#3b82f6', '#f97316', '#8b5cf6', '#eab308', '#14b8a6', '#10b981'];
+      for (let i = 0; i < 30; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = (Math.random() * 0.4) + 's';
+        piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 4000);
+      }
+    }
+
+    // Export all course progress (completion + saved code + badge state) as a JSON file
+    function exportProgress() {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        data[key] = localStorage.getItem(key);
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'qa-course-progress.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Write an exported progress object back into localStorage and refresh the dashboard
+    function applyProgressData(data) {
+      Object.entries(data).forEach(([key, value]) => localStorage.setItem(key, value));
+      renderProgress();
+    }
+
+    function importProgress(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(reader.result);
+        } catch (err) {
+          alert('ไฟล์ไม่ถูกต้อง: ' + err.message);
+          return;
+        }
+        if (confirm('นำเข้าความคืบหน้าจะเขียนทับของเดิมทั้งหมด ต้องการดำเนินการต่อหรือไม่?')) {
+          applyProgressData(data);
+          alert('นำเข้าความคืบหน้าสำเร็จ');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
     }
 
     renderProgress();

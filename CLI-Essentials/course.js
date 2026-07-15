@@ -71,8 +71,171 @@ fi`,
     1. ตั้งค่า <code>core.hooksPath</code> ให้ชี้ไปที่โฟลเดอร์ <code>.githooks</code> แทน default`
   },
   {
-    id: "vim_survival",
+    id: "git_init",
     meta: "บทที่ 2",
+    title: "Git Init: เริ่มต้น Repository ใหม่",
+    template: `# สถานการณ์: มีโฟลเดอร์โปรเจคใหม่ ยังไม่มี git track อยู่เลย
+# 1. เริ่มต้น git repository ในโฟลเดอร์ปัจจุบัน
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git init...");
+      const hasInit = /git init\b/.test(code);
+      if (hasInit) {
+        log("✓ ใช้ git init ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git init\nตัวอย่าง: git init");
+      }
+    },
+    hint: "ใช้ git init",
+    solution: `git init`,
+    theory: `<strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน<br/><br/>
+    ถ้าโปรเจคมี remote (GitHub/GitLab) อยู่แล้วและต้องการโค้ดที่มีอยู่ ให้ใช้ <code>git clone &lt;url&gt;</code> แทน — ไม่ใช่ <code>git init</code> ตามด้วย <code>git remote add</code> เอง (clone ทำสองอย่างในคำสั่งเดียว: init + ผูก remote + ดึงโค้ดมาครบ)<br/><br/>
+    หลัง <code>git init</code> repo จะยังไม่มี commit ใดๆ เลย (<code>git status</code> จะบอกว่า "No commits yet") — git สมัยใหม่ (2.28+) จะตั้งชื่อ default branch เป็น <code>main</code> ให้อัตโนมัติ`,
+    example: `# เช็คว่า repo เพิ่ง init เสร็จ ยังไม่มี commit ใดๆ
+git status`,
+    task: `จงเขียนคำสั่งเริ่มต้น git repository ใหม่ในโฟลเดอร์ปัจจุบัน`
+  },
+  {
+    id: "git_fetch",
+    meta: "บทที่ 3",
+    title: "Git Fetch: ดึงข้อมูลใหม่จาก Remote แบบปลอดภัย (ไม่ Merge อัตโนมัติ)",
+    template: `# สถานการณ์: อยากรู้ว่า origin/main มีการเปลี่ยนแปลงใหม่มั้ย ก่อนจะ merge เข้าโค้ดตัวเอง
+# 1. ดึงข้อมูลล่าสุดของ branch main จาก origin (ไม่ merge เข้า branch ปัจจุบัน)
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git fetch...");
+      const hasFetch = /git fetch\s+origin\s+main/.test(code);
+      if (hasFetch) {
+        log("✓ ใช้ git fetch origin main ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git fetch origin main\nตัวอย่าง: git fetch origin main");
+      }
+    },
+    hint: "ใช้ git fetch origin main",
+    solution: `git fetch origin main`,
+    theory: `<strong>git fetch</strong> ดึงข้อมูล commit/ref ใหม่จาก remote มาเก็บไว้ (เช่น <code>origin/main</code>) แต่<strong>ไม่แตะ branch ปัจจุบันเลย</strong> — ต่างจาก <code>git pull</code> ที่ fetch+merge ในคำสั่งเดียว ปลอดภัยกว่าเวลาต้องการแค่ "ดูก่อนว่ามีอะไรเปลี่ยนไป" โดยไม่กระทบงานที่ทำค้างอยู่<br/><br/>
+    <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/commit-push-merge.sh</code> (ใช้จริงตอน merge worktree เข้า main) เขียนไว้ตรงๆ ว่า <code>git fetch origin main</code> ก่อนจะ <code>git rebase origin/main</code> เสมอ — แยกขั้นตอน "ดึงข้อมูลมาดูก่อน" ออกจาก "เอาไปรวมจริง" ชัดเจน`,
+    example: `git fetch origin main
+git log HEAD..origin/main --oneline  # ดูว่า main มี commit ใหม่อะไรบ้างที่เรายังไม่มี`,
+    task: `จงดึงข้อมูลล่าสุดของ branch main จาก origin โดยไม่ merge เข้า branch ปัจจุบัน`
+  },
+  {
+    id: "git_pull",
+    meta: "บทที่ 4",
+    title: "Git Pull: Fetch + Rebase ในคำสั่งเดียว",
+    template: `# สถานการณ์: push ถูก remote ปฏิเสธเพราะมีคนอื่น push ก่อน ต้องดึงงานใหม่มารวมก่อนค่อย push ซ้ำ
+# 1. pull จาก origin branch ชื่อ 'feature/login-fix' แบบ rebase (ไม่สร้าง merge commit)
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git pull...");
+      const hasPull = /git pull\s+--rebase\s+origin\s+feature\/login-fix/.test(code);
+      if (hasPull) {
+        log("✓ ใช้ git pull --rebase origin feature/login-fix ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git pull --rebase origin feature/login-fix\nตัวอย่าง: git pull --rebase origin feature/login-fix");
+      }
+    },
+    hint: "ใช้ git pull --rebase origin feature/login-fix",
+    solution: `git pull --rebase origin feature/login-fix`,
+    theory: `<code>git pull</code> = <code>git fetch</code> + <code>git merge</code> (default) รวมในคำสั่งเดียว — แต่ merge แบบ default สร้าง merge commit พิเศษทุกครั้งที่ history แตกกัน ทำให้ log รกถ้า pull บ่อยๆ ใช้ <code>--rebase</code> แทนเพื่อเอา commit ของเรามาวางต่อจาก origin ใหม่ (history เรียบเป็นเส้นตรง ไม่มี merge commit ปลอมๆ)<br/><br/>
+    <strong>Real grounding:</strong> <code>Scripts/commit-push-merge.sh</code> ของ kouen-terminal ใช้จริงตอน push ถูก remote reject (มีคนอื่น push ก่อน):
+    <pre><code>if ! git push origin "HEAD:$branch" --force-with-lease; then
+  git pull --rebase origin "$branch"
+  git push origin "HEAD:$branch" --force-with-lease
+fi</code></pre>
+    pattern มาตรฐานสำหรับ "sync แล้วลอง push ใหม่"`,
+    example: `# ถ้า rebase เจอ conflict ระหว่างทาง แก้ไฟล์แล้ว git add ต่อด้วย
+git rebase --continue
+# หรือยกเลิกกลับไปจุดก่อน rebase ทั้งหมด
+git rebase --abort`,
+    task: `จง pull จาก origin branch 'feature/login-fix' แบบ rebase ไม่สร้าง merge commit`
+  },
+  {
+    id: "git_switch",
+    meta: "บทที่ 5",
+    title: "Git Switch: สลับ/สร้าง Branch แบบสมัยใหม่",
+    template: `# สถานการณ์: ต้องเริ่มงานฟีเจอร์ใหม่ อยากสร้าง branch แยกจาก main แล้วสลับเข้าไปทำทันที
+# 1. สร้าง branch ใหม่ชื่อ 'feature/login-fix' แล้วสลับเข้าไปทำในคำสั่งเดียว
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git switch...");
+      const hasSwitch = /git switch\s+-c\s+feature\/login-fix/.test(code);
+      if (hasSwitch) {
+        log("✓ ใช้ git switch -c feature/login-fix ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git switch -c feature/login-fix\nตัวอย่าง: git switch -c feature/login-fix");
+      }
+    },
+    hint: "ใช้ git switch -c feature/login-fix",
+    solution: `git switch -c feature/login-fix`,
+    theory: `<strong>git switch</strong> (git 2.23+) คือคำสั่งใหม่แยกหน้าที่ออกจาก <code>git checkout</code> เดิม — checkout เก่าทำได้ทั้ง "สลับ branch" และ "restore ไฟล์" ในคำสั่งเดียวกัน ทำให้สับสน/พิมพ์ path ผิดพลาดกลายเป็นสลับ branch แทนโดยไม่ตั้งใจ <code>switch</code> ทำหน้าที่เดียวชัดเจน: สลับ branch เท่านั้น<br/><br/>
+    • <code>git switch &lt;branch&gt;</code> — สลับไป branch ที่มีอยู่แล้ว<br/>
+    • <code>git switch -c &lt;new-branch&gt;</code> — สร้างใหม่แล้วสลับเข้าไปทันที (<code>-c</code> = <code>--create</code>)<br/><br/>
+    คู่กันกับ <code>git restore &lt;file&gt;</code> ที่แยกหน้าที่ "คืนค่าไฟล์" ออกมาต่างหาก (เดิม <code>git checkout &lt;file&gt;</code> ทำหน้าที่นี้)`,
+    example: `git switch main  # สลับกลับไป main (ไม่สร้างใหม่ ไม่มี -c)`,
+    task: `จงสร้าง branch ใหม่ชื่อ 'feature/login-fix' แล้วสลับเข้าไปในคำสั่งเดียว`
+  },
+  {
+    id: "git_merge",
+    meta: "บทที่ 6",
+    title: "Git Merge: รวม Branch เข้าด้วยกัน",
+    template: `# สถานการณ์: ทำงานใน feature/login-fix เสร็จแล้ว (สมมติสลับมาอยู่ main แล้ว) ต้องการรวมกลับเข้า main
+# 1. merge เอา feature/login-fix เข้ามาที่ branch ปัจจุบัน
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git merge...");
+      const hasMerge = /git merge\s+feature\/login-fix/.test(code);
+      if (hasMerge) {
+        log("✓ ใช้ git merge feature/login-fix ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git merge feature/login-fix\nตัวอย่าง: git merge feature/login-fix");
+      }
+    },
+    hint: "ใช้ git merge feature/login-fix",
+    solution: `git merge feature/login-fix`,
+    theory: `<strong>git merge</strong> เอา commit จาก branch อื่นมารวมเข้า branch ปัจจุบัน (ต้องสลับไปอยู่ branch ปลายทางก่อนเสมอ — คำสั่ง merge วิ่ง "เอาเข้ามา" ไม่ใช่ "ส่งออกไป")<br/><br/>
+    • <strong>Fast-forward merge:</strong> ถ้า branch ปัจจุบันไม่มี commit ใหม่เลยตั้งแต่แยก branch ออกไป git จะแค่เลื่อน pointer ไปข้างหน้า ไม่มี merge commit เกิดขึ้น<br/>
+    • <strong>3-way merge:</strong> ถ้าทั้งสอง branch ต่างมี commit ใหม่ของตัวเอง git จะสร้าง merge commit พิเศษ (มี 2 parent) เพื่อรวม history ทั้งสองเข้าด้วยกัน<br/>
+    • ถ้ามีคนแก้ไฟล์บรรทัดเดียวกันจากทั้งสองฝั่ง เกิด <strong>merge conflict</strong> ต้องแก้เองแล้ว <code>git add</code> + <code>git commit</code> ต่อให้จบ`,
+    example: `# เช็คว่า merge จะ fast-forward หรือสร้าง merge commit ก่อนรวมจริง
+git merge --no-commit --no-ff feature/login-fix
+git merge --abort  # ยกเลิกถ้าแค่อยากลองดูก่อน`,
+    task: `จง merge branch feature/login-fix เข้ามาที่ branch ปัจจุบัน`
+  },
+  {
+    id: "git_push",
+    meta: "บทที่ 7",
+    title: "Git Push: ส่ง Commit ขึ้น Remote พร้อมตั้ง Upstream ครั้งแรก",
+    template: `# สถานการณ์: push branch 'feature/login-fix' ขึ้น origin เป็นครั้งแรก (ยังไม่เคยตั้ง upstream)
+# 1. push พร้อมตั้งค่า upstream ในคำสั่งเดียว
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git push...");
+      const hasPush = /git push\s+-u\s+origin\s+feature\/login-fix/.test(code);
+      if (hasPush) {
+        log("✓ ใช้ git push -u origin feature/login-fix ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git push -u origin feature/login-fix\nตัวอย่าง: git push -u origin feature/login-fix");
+      }
+    },
+    hint: "ใช้ git push -u origin feature/login-fix",
+    solution: `git push -u origin feature/login-fix`,
+    theory: `push ครั้งแรกของ branch ใหม่ต้องระบุ remote+branch ชัดเจน แล้วใช้ <code>-u</code> (<code>--set-upstream</code>) ผูก local branch กับ remote branch ไว้ — หลังจากนั้น <code>git push</code>/<code>git pull</code> เปล่าๆ (ไม่ต้องพิมพ์ origin/branch ซ้ำ) จะรู้เองว่าต้องไปที่ไหน<br/><br/>
+    <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/commit-push.sh</code> ใช้เป๊ะแบบนี้ทุก commit: <code>git push -u origin "$branch"</code><br/><br/>
+    <strong>คำเตือนสำคัญ</strong> (จากกฎ core.md ของ session นี้เอง): ห้าม force-push ไปที่ main/master โดยไม่ได้รับอนุญาต — ถ้าจำเป็นต้อง force push branch ตัวเอง (เช่นหลัง rebase) ให้ใช้ <code>--force-with-lease</code> แทน <code>--force</code> เปล่าๆ เพราะ force-with-lease จะเช็คก่อนว่า remote ไม่ได้ถูกคนอื่น push ทับระหว่างที่เรายังไม่ได้ fetch ล่าสุด (กันเผลอเขียนทับงานคนอื่นโดยไม่รู้ตัว) — <code>Scripts/commit-push-merge.sh</code> ของ kouen ใช้จริง: <code>git push origin "HEAD:$branch" --force-with-lease</code>`,
+    example: `# หลัง branch มี upstream แล้ว push เปล่าๆ พอ ไม่ต้องพิมพ์ origin/branch ซ้ำ
+git push`,
+    task: `จง push branch feature/login-fix ขึ้น origin พร้อมตั้งค่า upstream (-u) ในคำสั่งเดียว`
+  },
+  {
+    id: "vim_survival",
+    meta: "บทที่ 8",
     title: "Vim Survival: ติดอยู่ใน Editor ตอน git commit ทำไง",
     template: `# สถานการณ์: พิมพ์ git commit เฉยๆ (ไม่ใส่ -m) แล้วหลุดเข้า Vim โดยไม่ได้ตั้งใจ
 # 1. เข้าสู่โหมด Insert แล้วพิมพ์ข้อความ commit message ว่า 'fix: correct typo'
@@ -123,7 +286,7 @@ fix: correct typo
   },
   {
     id: "vim_search_replace",
-    meta: "บทที่ 3",
+    meta: "บทที่ 9",
     title: "Vim Search & Replace: แก้ Config ไฟล์เร็วๆ ผ่าน SSH",
     template: `# สถานการณ์: ต้องเปลี่ยนค่า port ทุกจุดในไฟล์ config จาก 3000 เป็น 3001 ผ่าน SSH (ไม่มี GUI editor)
 # 1. เขียนคำสั่ง Vim แบบ Ex command แทนที่คำว่า 3000 เป็น 3001 ทุกจุด ทั้งไฟล์
@@ -154,8 +317,80 @@ fix: correct typo
     1. แทนที่ <code>3000</code> เป็น <code>3001</code> ทุกจุด ทั้งไฟล์ ด้วย <code>:%s/.../.../g</code>`
   },
   {
+    id: "vim_delete_yank",
+    meta: "บทที่ 10",
+    title: "Vim ลบ/คัดลอกบรรทัด: dd, yy, p",
+    template: `# สถานการณ์: cursor อยู่บรรทัดที่ไม่ต้องการ อยากลบทิ้งแล้ววางกลับที่อื่น
+# 1. ลบทั้งบรรทัดที่ cursor อยู่ (เก็บเข้า register อัตโนมัติ)
+# WRITE YOUR CODE HERE
+
+
+# 2. วาง (paste) สิ่งที่เพิ่งลบไปกลับคืนที่บรรทัดถัดจาก cursor
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบลำดับคีย์ Vim...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasDelete = lines.some(l => l === 'dd');
+      const hasPaste = lines.some(l => l === 'p');
+
+      if (!hasDelete) {
+        throw new Error("ไม่พบคำสั่งลบทั้งบรรทัด\nตัวอย่าง: พิมพ์ dd ใน Normal mode");
+      }
+      if (!hasPaste) {
+        throw new Error("ไม่พบคำสั่งวาง (paste)\nตัวอย่าง: พิมพ์ p ใน Normal mode");
+      }
+      log("✓ ลำดับคีย์ dd → p ถูกต้อง");
+    },
+    hint: "พิมพ์ dd เพื่อลบทั้งบรรทัด แล้วพิมพ์ p เพื่อวาง",
+    solution: `dd
+p`,
+    theory: `ใน Normal mode, <code>dd</code> คือคำสั่งลบทั้งบรรทัดที่ cursor อยู่ — ข้อความที่ถูกลบจะเก็บเข้า <strong>register เริ่มต้น</strong> (unnamed register) เหมือน clipboard ชั่วคราว แล้วใช้ <code>p</code> (put/paste) วางกลับได้ทันทีที่บรรทัดถัดจาก cursor (ใช้ <code>P</code> ตัวใหญ่ถ้าอยากวาง<strong>ก่อน</strong>บรรทัด cursor แทน)<br/><br/>
+    คำสั่งลบรูปแบบเดียวกันที่ใช้บ่อย: <code>dw</code> (ลบทั้งคำ), <code>d$</code> (ลบถึงท้ายบรรทัด), <code>3dd</code> (ลบ 3 บรรทัดรวด — ใส่ตัวเลขนำหน้าคำสั่งซ้ำกี่รอบก็ได้เกือบทุกคำสั่ง Normal mode)<br/><br/>
+    <code>yy</code> (yank) คือคัดลอกทั้งบรรทัดแบบไม่ลบ (เก็บเข้า register เดียวกับ dd) แล้ว <code>p</code> วางได้เหมือนกัน — ต่างจาก <code>dd</code> แค่ตรงที่ต้นฉบับไม่หายไป`,
+    example: `# คัดลอก (ไม่ลบ) บรรทัดปัจจุบัน แล้ววาง 2 ครั้งติดกัน
+yy
+p
+p`,
+    task: `จงลบทั้งบรรทัดที่ cursor อยู่ด้วย dd แล้ววางกลับด้วย p`
+  },
+  {
+    id: "vim_undo_redo",
+    meta: "บทที่ 11",
+    title: "Vim Undo/Redo: ย้อนกลับเมื่อพิมพ์ผิด",
+    template: `# สถานการณ์: เพิ่งลบ/แก้ไขผิดบรรทัด อยากย้อนกลับ แล้วเปลี่ยนใจอยากทำต่อใหม่
+# 1. ย้อนกลับการแก้ไขล่าสุด (undo)
+# WRITE YOUR CODE HERE
+
+
+# 2. เปลี่ยนใจ อยากทำสิ่งที่เพิ่ง undo ไปซ้ำอีกครั้ง (redo)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบลำดับคีย์ Vim...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasUndo = lines.some(l => l === 'u');
+      const hasRedo = lines.some(l => /^(ctrl-r|<c-r>|ctrl\+r)$/i.test(l));
+
+      if (!hasUndo) {
+        throw new Error("ไม่พบคำสั่ง undo\nตัวอย่าง: พิมพ์ u ใน Normal mode");
+      }
+      if (!hasRedo) {
+        throw new Error("ไม่พบคำสั่ง redo\nตัวอย่าง: พิมพ์ Ctrl+r ใน Normal mode");
+      }
+      log("✓ ลำดับคีย์ u → Ctrl+r ถูกต้อง");
+    },
+    hint: "พิมพ์ u เพื่อ undo แล้วพิมพ์ Ctrl+r เพื่อ redo",
+    solution: `u
+Ctrl+r`,
+    theory: `<code>u</code> (undo) ย้อนการแก้ไขล่าสุดกลับไปทีละขั้น ทำซ้ำได้เรื่อยๆ (กด <code>u</code> หลายครั้ง = ย้อนหลายขั้น) — ต่างจาก editor ทั่วไปที่ใช้ Ctrl+Z, Vim ใช้ปุ่ม <code>u</code> เดี่ยวๆ ใน Normal mode<br/><br/>
+    <code>Ctrl+r</code> (redo) คือทำสิ่งที่เพิ่ง undo ไปซ้ำอีกครั้ง (ตรงข้ามกับ undo) — สลับ undo/redo ไปมาได้จนกว่าจะแก้ไขอะไรใหม่ (พอพิมพ์อะไรใหม่ history ฝั่ง redo จะถูกล้างทิ้ง)<br/><br/>
+    ทั้งสองคำสั่งทำงานได้เฉพาะตอนอยู่ <strong>Normal mode</strong> เท่านั้น (เหมือนคำสั่งอื่นๆ ที่ไม่ใช่ Insert mode)`,
+    example: `# undo ย้อนกลับ 3 ขั้นรวดเดียว (ใส่ตัวเลขนำหน้าได้เหมือนคำสั่งอื่น)
+3u`,
+    task: `จง undo การแก้ไขล่าสุดด้วย u แล้ว redo กลับมาด้วย Ctrl+r`
+  },
+  {
     id: "unix_safe_script",
-    meta: "บทที่ 4",
+    meta: "บทที่ 12",
     title: "Unix Shell: Safe Script Header ที่ควรมีทุกไฟล์",
     template: `#!/usr/bin/env bash
 # 1. เพิ่ม safety header ที่ทำให้ script หยุดทันทีเมื่อเจอ error, ตัวแปรไม่ได้ประกาศ, หรือ pipe ล้มเหลว
@@ -189,7 +424,7 @@ cd "$ROOT"
   },
   {
     id: "unix_grep_pipe",
-    meta: "บทที่ 5",
+    meta: "บทที่ 13",
     title: "Unix Pipe + grep: เช็คว่าไฟล์อันตรายถูก Stage ไว้ไหม",
     template: `# หมายเหตุ: บรรทัดนี้ปรับจาก .githooks/commit-msg จริงของ kouen-terminal
 # 1. เช็คว่าไฟล์ที่ staged ไว้ (git diff --cached --name-only) มีคำว่า "Info.plist" อยู่หรือไม่
@@ -220,260 +455,70 @@ if git diff --cached --name-only | grep -q "Info.plist"; then
 fi`,
     task: `จงเขียนคำสั่งให้สมบูรณ์ โดย:<br/>
     1. ต่อ <code>git diff --cached --name-only</code> ด้วย pipe เข้า <code>grep -q "Info.plist"</code> เพื่อเช็คแบบเงียบว่าไฟล์นี้ถูก stage ไว้หรือไม่`
-  }
+  },
+  {
+    id: "unix_find_files",
+    meta: "บทที่ 14",
+    title: "Unix find: ค้นหาไฟล์ตามชื่อ/ประเภท (ใช้จริงใน Kouen Build Scripts)",
+    template: `# หมายเหตุ: Scripts/run.sh จริงของ kouen-terminal ใช้ find ลบไฟล์ .html ที่ generate ไว้ในโฟลเดอร์ graphify-out ทั้งหมด
+# 1. ค้นหาไฟล์ (-type f) ที่ชื่อลงท้าย .html ในโฟลเดอร์ graphify-out แล้วลบทิ้งทันที (-delete)
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง find...");
+      const hasFind = /find\s+graphify-out\s+-type\s+f\s+-name\s+['"]?\*\.html['"]?\s+-delete/.test(code);
+      if (hasFind) {
+        log("✓ ใช้ find graphify-out -type f -name '*.html' -delete ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง find graphify-out -type f -name '*.html' -delete\nตัวอย่าง: find graphify-out -type f -name '*.html' -delete");
+      }
+    },
+    hint: "ใช้ find graphify-out -type f -name '*.html' -delete",
+    solution: `find graphify-out -type f -name '*.html' -delete`,
+    theory: `<code>find &lt;path&gt; &lt;เงื่อนไข&gt;</code> ค้นหาไฟล์/โฟลเดอร์แบบวนลึกเข้าไปทุก subdirectory — เงื่อนไขที่ใช้บ่อยสุด:<br/><br/>
+    • <code>-type f</code> เอาเฉพาะไฟล์ (ไม่เอาโฟลเดอร์), <code>-type d</code> เอาเฉพาะโฟลเดอร์<br/>
+    • <code>-name '&lt;pattern&gt;'</code> กรองด้วยชื่อไฟล์ (รองรับ wildcard <code>*</code> แบบเดียวกับ shell แต่ต้องใส่ quote กันไม่ให้ shell ขยาย <code>*</code> เองก่อนส่งให้ find)<br/>
+    • <code>-delete</code> ลบไฟล์ที่เจอทันที (<strong>อันตราย!</strong> ทดสอบด้วย <code>-print</code> ก่อนเสมอถ้าไม่มั่นใจ)<br/><br/>
+    <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/run.sh</code> ใช้เป๊ะแบบนี้ตอน refresh graphify: <code>find graphify-out -type f -name '*.html' -delete</code> — ลบไฟล์ report .html เก่าทั้งหมดก่อน generate ใหม่ (ป้องกันของเก่าค้าง)`,
+    example: `# ปลอดภัยกว่า: ดูก่อนว่าจะลบอะไรบ้าง ก่อนใส่ -delete จริง
+find graphify-out -type f -name '*.html' -print`,
+    task: `จงเขียนคำสั่ง find ค้นหาไฟล์ (-type f) ชื่อลงท้าย .html ในโฟลเดอร์ graphify-out แล้วลบทิ้ง (-delete)`
+  },
+  {
+    id: "unix_trap_cleanup",
+    meta: "บทที่ 15",
+    title: "Unix trap: ล้างไฟล์ชั่วคราวอัตโนมัติแม้สคริปต์ล้มเหลว",
+    template: `# หมายเหตุ: Scripts/generate-app-icon.sh จริงของ kouen-terminal สร้างโฟลเดอร์ temp ไว้ประมวลผล icon
+# แล้วต้องการลบโฟลเดอร์ temp นั้นทิ้งเสมอไม่ว่าสคริปต์จะจบแบบสำเร็จหรือ error กลางทาง
+TMP_STAGE=$(mktemp -d)
+# 1. ตั้ง trap ให้ลบโฟลเดอร์ $TMP_STAGE ทิ้งทุกครั้งที่สคริปต์จบการทำงาน (ไม่ว่าสำเร็จหรือพัง)
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง trap...");
+      const hasTrap = /trap\s+'rm -rf "\$TMP_STAGE"'\s+EXIT/.test(code);
+      if (hasTrap) {
+        log("✓ ใช้ trap 'rm -rf \"$TMP_STAGE\"' EXIT ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง trap 'rm -rf \"$TMP_STAGE\"' EXIT\nตัวอย่าง: trap 'rm -rf \"$TMP_STAGE\"' EXIT");
+      }
+    },
+    hint: `ใช้ trap 'rm -rf "$TMP_STAGE"' EXIT`,
+    solution: `trap 'rm -rf "$TMP_STAGE"' EXIT`,
+    theory: `<code>trap '&lt;คำสั่ง&gt;' &lt;สัญญาณ&gt;</code> สั่งให้ shell รันคำสั่งที่กำหนดอัตโนมัติเมื่อเกิดสัญญาณนั้น — <code>EXIT</code> คือ "สคริปต์กำลังจะจบการทำงาน" <strong>ไม่ว่าจะจบแบบปกติ, error (exit code ไม่ใช่ 0), หรือโดน Ctrl+C</strong> ก็ตาม ทำให้เหมาะมากสำหรับ "cleanup ที่ต้องเกิดขึ้นเสมอ" เช่น ลบไฟล์ temp<br/><br/>
+    ถ้าไม่ตั้ง trap แล้วสคริปต์ error กลางทางก่อนถึงบรรทัด rm ท้ายสุด ไฟล์ temp จะค้างอยู่ตลอดไป — trap แก้ปัญหานี้โดยผูก cleanup ไว้ล่วงหน้าตั้งแต่ต้น ไม่ต้องพึ่งว่าสคริปต์จะรันจบถึงบรรทัดสุดท้ายจริงหรือเปล่า<br/><br/>
+    <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/generate-app-icon.sh</code>, <code>mobile-web.sh</code>, <code>smoke-dmg.sh</code> ใช้ pattern เดียวกันนี้ทั้งหมด — สร้าง resource ชั่วคราว (temp dir, background process) แล้ว <code>trap '&lt;cleanup&gt;' EXIT</code> ทันทีหลังสร้างเสร็จ ก่อนจะทำงานต่อ`,
+    example: `# ใช้ trap คู่กับหลาย signal พร้อมกันได้ (เช่นเผื่อโดน Ctrl+C หรือ kill ด้วย)
+trap cleanup EXIT INT TERM`,
+    task: `จงตั้ง trap ให้รันคำสั่ง rm -rf "$TMP_STAGE" ทุกครั้งที่สคริปต์จบการทำงาน (EXIT)`
+  },
 ];
 
 // Application state
-let currentLessonIndex = 0;
-let completedLessons = {}; // tracks lessonId -> boolean
 
-// Initialize the app
-function initApp() {
-  renderLessonList();
-  loadLesson(currentLessonIndex);
-  updateProgressBar();
+const PREFIX = 'cli';
+const TAB_WIDTH = 2;
 
-  // Set up lesson menu toggle (overlay drawer)
-  const toggleBtn = document.getElementById('menu-toggle');
-  const sidebar = document.getElementById('sidebar');
-  if (toggleBtn && sidebar) {
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('show');
-    });
-
-    // Close the drawer when clicking outside of it
-    document.addEventListener('click', (e) => {
-      if (!sidebar.classList.contains('show')) return;
-      if (sidebar.contains(e.target) || toggleBtn.contains(e.target)) return;
-      sidebar.classList.remove('show');
-    });
-  }
-
-  // Sync tab focus and prevent tab exit
-  const textarea = document.getElementById('editor-textarea');
-  if (textarea) {
-    textarea.addEventListener('keydown', handleTextareaKeydown);
-    textarea.addEventListener('input', updateGutter);
-    textarea.addEventListener('scroll', syncGutterScroll);
-  }
-}
-
-// Keydown handler to prevent tab key escaping the editor
-function handleTextareaKeydown(e) {
-  const textarea = e.target;
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-
-    // Insert 2 spaces
-    textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
-
-    // Move cursor
-    textarea.selectionStart = textarea.selectionEnd = start + 2;
-    updateGutter();
-  }
-
-  // CMD/Ctrl + Enter shortcut to run tests
-  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault();
-    runSandboxCode();
-  }
-}
-
-// Synced scroll between textarea and line numbers gutter
-function syncGutterScroll(e) {
-  const gutter = document.getElementById('editor-gutter');
-  if (gutter) gutter.scrollTop = e.target.scrollTop;
-}
-
-// Render line numbers in the gutter
-function updateGutter() {
-  const textarea = document.getElementById('editor-textarea');
-  const gutter = document.getElementById('editor-gutter');
-  if (!textarea || !gutter) return;
-
-  const lineCount = textarea.value.split('\n').length;
-  const numbers = [];
-  for (let i = 1; i <= lineCount; i++) {
-    numbers.push(`<div>${i}</div>`);
-  }
-  gutter.innerHTML = numbers.join('');
-}
-
-// Render the sidebar list
-function renderLessonList() {
-  const listContainer = document.getElementById('lesson-list');
-  if (!listContainer) return;
-
-  listContainer.innerHTML = LESSONS.map((lesson, idx) => {
-    const isCompleted = isLessonCompleted(lesson.id);
-    const activeClass = idx === currentLessonIndex ? 'active' : '';
-    const completedClass = isCompleted ? 'completed' : '';
-
-    return `
-      <button class="lesson-item ${activeClass} ${completedClass}" onclick="selectLesson(${idx})">
-        <div class="lesson-item-meta">
-          <span>${lesson.meta}</span>
-          <span class="check-icon">✓ ผ่านการประเมิน</span>
-        </div>
-        <div class="lesson-item-title">${lesson.title}</div>
-      </button>
-    `;
-  }).join('');
-}
-
-// Select a lesson from sidebar
-function selectLesson(idx) {
-  currentLessonIndex = idx;
-  renderLessonList();
-  loadLesson(idx);
-
-  // Hide sidebar after selection (always an overlay drawer now)
-  const sidebar = document.getElementById('sidebar');
-  if (sidebar) {
-    sidebar.classList.remove('show');
-  }
-}
-
-// Load lesson content and reset editor
-function loadLesson(idx) {
-  const lesson = LESSONS[idx];
-  const titleContainer = document.getElementById('current-lesson-title');
-  const bodyContainer = document.getElementById('lesson-body');
-  const textarea = document.getElementById('editor-textarea');
-  const overlay = document.getElementById('lesson-overlay');
-
-  if (titleContainer) titleContainer.innerText = lesson.title;
-
-  // Build premium structured explain-demonstrate-practice blocks
-  if (bodyContainer) {
-    bodyContainer.innerHTML = `
-      <div class="content-block theory">
-        <div class="content-block-title">📘 คำอธิบาย (Theory)</div>
-        <div class="content-text">${lesson.theory}</div>
-      </div>
-      <div class="content-block example">
-        <div class="content-block-title">💻 โค้ดตัวอย่าง (Example)</div>
-        <div class="content-text"><pre><code>${escapeHtml(lesson.example)}</code></pre></div>
-      </div>
-      <div class="content-block task">
-        <div class="content-block-title">🎯 โจทย์ปฏิบัติการ (Challenge Task)</div>
-        <div class="content-text">${lesson.task}</div>
-      </div>
-    `;
-  }
-
-  // Reset overlay
-  if (overlay) overlay.classList.remove('show');
-
-  // Restore code if edited or load default template
-  const savedCode = localStorage.getItem(`cli_sandbox_code_${lesson.id}`);
-  if (textarea) {
-    textarea.value = savedCode !== null ? savedCode : lesson.template;
-    updateGutter();
-  }
-
-  // Reset Terminal output
-  const terminal = document.getElementById('terminal-body');
-  if (terminal) {
-    terminal.innerHTML = `<div class="terminal-line text-muted">พร้อมสำหรับรันการทดสอบ... เขียนโค้ดด้านบนแล้วกด Run Tests</div>`;
-  }
-}
-
-// Helper to escape HTML tags inside code blocks
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-// Show lesson Hint
-function showLessonHint() {
-  const lesson = LESSONS[currentLessonIndex];
-  showDialog("💡 คำแนะนำช่วยเหลือ (Hint)", lesson.hint, false);
-}
-
-// Show lesson Solution
-function showLessonSolution() {
-  const lesson = LESSONS[currentLessonIndex];
-  showDialog("🔑 เฉลยคำตอบ (Solution)", lesson.solution, true);
-}
-
-// Show custom dialog modal
-function showDialog(title, content, showAction) {
-  const overlay = document.getElementById('dialog-overlay');
-  const titleEl = document.getElementById('dialog-title');
-  const contentEl = document.getElementById('dialog-content');
-  const actionBtn = document.getElementById('dialog-action-btn');
-
-  if (!overlay || !titleEl || !contentEl || !actionBtn) return;
-
-  titleEl.innerText = title;
-  contentEl.innerText = content;
-
-  if (showAction) {
-    actionBtn.style.display = 'block';
-    actionBtn.onclick = () => {
-      applySolution(content);
-      closeDialog();
-    };
-  } else {
-    actionBtn.style.display = 'none';
-  }
-
-  overlay.classList.add('show');
-}
-
-// Close dialog modal
-function closeDialog() {
-  const overlay = document.getElementById('dialog-overlay');
-  if (overlay) overlay.classList.remove('show');
-}
-
-// Paste the solution directly into the editor
-function applySolution(code) {
-  const textarea = document.getElementById('editor-textarea');
-  if (textarea) {
-    textarea.value = code;
-    updateGutter();
-
-    const terminal = document.getElementById('terminal-body');
-    if (terminal) {
-      terminal.innerHTML += `<div class="terminal-line info">[System] ทำการป้อนโค้ดเฉลยลงใน Editor อัตโนมัติเรียบร้อยแล้ว</div>`;
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-  }
-}
-
-// Check if lesson is marked completed in localStorage
-function isLessonCompleted(lessonId) {
-  return localStorage.getItem('cli_course_completed_' + lessonId) === 'true';
-}
-
-// Mark lesson completed
-function setLessonCompleted(lessonId) {
-  localStorage.setItem('cli_course_completed_' + lessonId, 'true');
-  renderLessonList();
-  updateProgressBar();
-}
-
-// Update overall progress bar
-function updateProgressBar() {
-  const completedCount = LESSONS.filter(l => isLessonCompleted(l.id)).length;
-  const percent = Math.round((completedCount / LESSONS.length) * 100);
-
-  const fill = document.getElementById('progress-bar-fill');
-  const label = document.getElementById('progress-label');
-
-  if (fill) fill.style.width = percent + '%';
-  if (label) label.innerText = `${completedCount} / ${LESSONS.length} บทเรียน`;
-}
-
-// Sandbox compilation and execution evaluation
 function runSandboxCode() {
   const lesson = LESSONS[currentLessonIndex];
   const textarea = document.getElementById('editor-textarea');
@@ -486,7 +531,7 @@ function runSandboxCode() {
   const userCode = textarea.value;
 
   // Save user code state
-  localStorage.setItem(`cli_sandbox_code_${lesson.id}`, userCode);
+  localStorage.setItem(`${PREFIX}_sandbox_code_${lesson.id}`, userCode);
 
   // Start compiling animation log in terminal
   terminal.innerHTML = `
@@ -548,19 +593,6 @@ function runSandboxCode() {
   }, 600);
 }
 
-// Reset course progress
-function resetCourse() {
-  if (confirm("คุณต้องการล้างประวัติการเขียนและล้างความคืบหน้าทั้งหมดเพื่อเริ่มต้นใหม่ใช่หรือไม่?")) {
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('cli_course_completed_') || key.startsWith('cli_sandbox_code_'))) {
-        localStorage.removeItem(key);
-      }
-    }
-    currentLessonIndex = 0;
-    initApp();
-  }
-}
 
 // Show graduation final messages
 function showGraduationMessage() {
@@ -580,4 +612,3 @@ function showGraduationMessage() {
 }
 
 // Run on window boot
-window.onload = initApp;

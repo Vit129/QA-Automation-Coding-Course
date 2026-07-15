@@ -337,260 +337,355 @@ export default function () {
 }`,
     task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
     1. เช็คด้วย <code>check()</code> ว่า status เป็น <code>200</code> หรือ <code>429</code> เท่านั้น (ไม่ใช่ error อื่น) เพราะ 20 VU ยิงต่อเนื่องจะชน Rate Limiter จริงของ <code>server/index.js</code> แน่นอน`
+  },
+  {
+    id: "sleep_think_time",
+    meta: "บทที่ 5",
+    title: "sleep(): จำลอง Think Time ของผู้ใช้จริง",
+    template: `import http from 'k6/http';
+import { sleep } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  vus: 10,
+  duration: '30s',
+};
+
+export default function () {
+  http.get(\`\${BASE_URL}/api/ai/health\`);
+  // 1. หน่วงเวลา 1 วินาทีก่อนเริ่ม iteration ถัดไป (จำลองเวลาที่ผู้ใช้จริงใช้อ่าน/คิดก่อนกดต่อ)
+  // WRITE YOUR CODE HERE
+
+}`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการใช้ sleep()...");
+      const hasImport = /import\s*\{\s*sleep\s*\}\s*from\s*['"]k6['"]/.test(code);
+      const hasSleep = /sleep\(1\)/.test(code);
+      if (!hasImport) {
+        throw new Error("ไม่พบ import { sleep } from 'k6'\nตัวอย่าง: import { sleep } from 'k6';");
+      }
+      if (!hasSleep) {
+        throw new Error("ไม่พบคำสั่ง sleep(1)\nตัวอย่าง: sleep(1);");
+      }
+      log("✓ ใช้ sleep(1) จำลอง think time ถูกต้อง");
+    },
+    hint: "import { sleep } from 'k6'; แล้วเรียก sleep(1); ท้าย default function",
+    solution: `import http from 'k6/http';
+import { sleep } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  vus: 10,
+  duration: '30s',
+};
+
+export default function () {
+  http.get(\`\${BASE_URL}/api/ai/health\`);
+  // 1. หน่วงเวลา 1 วินาทีก่อนเริ่ม iteration ถัดไป (จำลองเวลาที่ผู้ใช้จริงใช้อ่าน/คิดก่อนกดต่อ)
+  sleep(1);
+}`,
+    theory: `ถ้าไม่ใส่ <code>sleep()</code> เลย แต่ละ Virtual User จะวน <code>default function</code> ซ้ำเร็วที่สุดเท่าที่ทำได้แบบไม่หยุดพัก — ไม่สมจริงเลย เพราะผู้ใช้จริงไม่ได้กดรีเฟรชหน้าเว็บรัวๆ ไม่มีจังหวะหยุดคิด<br/><br/>
+    <code>sleep(&lt;วินาที&gt;)</code> หยุดพัก VU นั้นก่อนเริ่ม iteration ถัดไป จำลอง "think time" — เวลาที่ผู้ใช้จริงใช้อ่านข้อมูลบนหน้าจอหรือตัดสินใจก่อนกดต่อ ทำให้จำนวน request/วินาทีที่เกิดจริงใกล้เคียงพฤติกรรมผู้ใช้จริงมากขึ้น แทนที่จะยิงถี่เกินจริงจนอาจชน Rate Limiter เร็วกว่าที่ผู้ใช้จริงจะทำได้ (เทียบกับบท Rate Limit ก่อนหน้า)`,
+    example: `// think time แบบสุ่มช่วง 1-3 วินาที สมจริงกว่าค่าคงที่ตายตัว
+sleep(Math.random() * 2 + 1);`,
+    task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
+    1. import <code>sleep</code> จาก <code>k6</code><br/>
+    2. เรียก <code>sleep(1)</code> หลังยิง request ในแต่ละ iteration`
+  },
+  {
+    id: "custom_metrics",
+    meta: "บทที่ 6",
+    title: "Custom Metrics: นับเหตุการณ์เฉพาะที่ k6 ไม่ได้วัดให้อัตโนมัติ",
+    template: `import http from 'k6/http';
+import { Counter } from 'k6/metrics';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+// 1. สร้าง Custom Counter ชื่อ 'rate_limit_count' เพื่อนับจำนวนครั้งที่เจอ 429 โดยเฉพาะ
+// WRITE YOUR CODE HERE
+
+
+export const options = {
+  vus: 20,
+  duration: '10s',
+};
+
+export default function () {
+  const res = http.get(\`\${BASE_URL}/api/ai/health\`);
+  // 2. เพิ่มค่า Counter ทีละ 1 เฉพาะตอน status เป็น 429
+
+}`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการสร้าง Custom Counter...");
+      const hasImport = /import\s*\{\s*Counter\s*\}\s*from\s*['"]k6\/metrics['"]/.test(code);
+      const hasDeclare = /new Counter\(\s*['"]rate_limit_count['"]\s*\)/.test(code);
+      const hasAdd = /\.add\(1\)/.test(code);
+
+      if (!hasImport) {
+        throw new Error("ไม่พบ import { Counter } from 'k6/metrics'\nตัวอย่าง: import { Counter } from 'k6/metrics';");
+      }
+      if (!hasDeclare) {
+        throw new Error("ไม่พบการสร้าง Counter ชื่อ 'rate_limit_count'\nตัวอย่าง: const rateLimitCount = new Counter('rate_limit_count');");
+      }
+      if (!hasAdd) {
+        throw new Error("ไม่พบการเพิ่มค่า Counter ด้วย .add(1)\nตัวอย่าง: if (res.status === 429) { rateLimitCount.add(1); }");
+      }
+      log("✓ สร้างและใช้งาน Custom Counter ถูกต้อง");
+    },
+    hint: "import { Counter } from 'k6/metrics'; const rateLimitCount = new Counter('rate_limit_count'); แล้ว if (res.status === 429) rateLimitCount.add(1);",
+    solution: `import http from 'k6/http';
+import { Counter } from 'k6/metrics';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+const rateLimitCount = new Counter('rate_limit_count');
+
+export const options = {
+  vus: 20,
+  duration: '10s',
+};
+
+export default function () {
+  const res = http.get(\`\${BASE_URL}/api/ai/health\`);
+  if (res.status === 429) {
+    rateLimitCount.add(1);
   }
+}`,
+    theory: `k6 มี metric มาตรฐานให้อัตโนมัติอยู่แล้ว (<code>http_req_duration</code>, <code>http_req_failed</code> ที่ใช้ในบท Thresholds) แต่บางครั้งต้องการนับ "เหตุการณ์เฉพาะเจาะจง" ที่ metric มาตรฐานไม่แยกให้ — เช่นบท Rate Limit ก่อนหน้าที่ 429 ถือเป็นผลลัพธ์ที่คาดหวัง (ไม่ใช่ failure) การรู้ว่า "โดน Rate Limit กี่ครั้งกันแน่" แยกออกมาต่างหากจึงมีประโยชน์กว่าดูแค่ตัวเลข failed รวมๆ<br/><br/>
+    <strong>Custom Metrics</strong> ที่ใช้บ่อย:<br/>
+    • <strong>Counter</strong> — นับจำนวนสะสม (ใช้ในบทนี้: นับจำนวนครั้งที่เจอ 429)<br/>
+    • <strong>Trend</strong> — เก็บการกระจายตัวของค่าตัวเลข (เช่น เวลาที่ใช้เฉพาะขั้นตอน business logic หนึ่งๆ) คำนวณ min/max/avg/percentile ให้อัตโนมัติ<br/>
+    • <strong>Rate</strong> — สัดส่วน true/false (ตัวอย่างเคยเห็นในบท Rate Limit ก่อนหน้า)<br/>
+    • <strong>Gauge</strong> — เก็บแค่ค่าล่าสุด<br/><br/>
+    ค่าที่นับผ่าน Custom Metric จะไปโผล่ในสรุปผลตอนจบการทดสอบ (k6 summary) แยกต่างหากจาก metric มาตรฐาน ทำให้อ่านรายงานได้ตรงประเด็นกว่า`,
+    example: `// Trend ใช้วัดการกระจายตัวของเวลาที่ใช้เฉพาะขั้นตอนหนึ่ง
+import { Trend } from 'k6/metrics';
+const aiPanelDuration = new Trend('ai_panel_duration');
+
+export default function () {
+  const res = http.get(\`\${BASE_URL}/api/ai/panel\`);
+  aiPanelDuration.add(res.timings.duration);
+}`,
+    task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
+    1. สร้าง Custom Counter ชื่อ <code>rate_limit_count</code><br/>
+    2. เพิ่มค่า Counter ทีละ 1 เฉพาะตอน <code>res.status === 429</code>`
+  },
+  {
+    id: "group_transactions",
+    meta: "บทที่ 7",
+    title: "group(): จัดกลุ่ม Multi-step Transaction ในรายงานผล",
+    template: `import http from 'k6/http';
+import { group } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  vus: 5,
+  duration: '15s',
+};
+
+export default function () {
+  // 1. จัดกลุ่มขั้นตอน "AI Model Check" ให้ครอบคลุมการยิง GET /api/ai/health และ GET /api/ai/model ไว้ด้วยกัน
+  // WRITE YOUR CODE HERE
+
+}`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการใช้ group()...");
+      const hasImport = /import\s*\{\s*group\s*\}\s*from\s*['"]k6['"]/.test(code);
+      const hasGroup = /group\(\s*['"]AI Model Check['"]/.test(code);
+      const hasHealth = /\/api\/ai\/health/.test(code);
+      const hasModel = /\/api\/ai\/model[`'"]/.test(code);
+
+      if (!hasImport) {
+        throw new Error("ไม่พบ import { group } from 'k6'\nตัวอย่าง: import { group } from 'k6';");
+      }
+      if (!hasGroup) {
+        throw new Error("ไม่พบ group('AI Model Check', ...)\nตัวอย่าง: group('AI Model Check', () => { ... });");
+      }
+      if (!hasHealth || !hasModel) {
+        throw new Error("ต้องยิงทั้ง /api/ai/health และ /api/ai/model ไว้ภายใน group เดียวกัน");
+      }
+      log("✓ ใช้ group() จัดกลุ่ม transaction ถูกต้อง");
+    },
+    hint: "import { group } from 'k6'; แล้วห่อ http.get สองอันด้วย group('AI Model Check', () => { ... });",
+    solution: `import http from 'k6/http';
+import { group } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  vus: 5,
+  duration: '15s',
+};
+
+export default function () {
+  group('AI Model Check', () => {
+    http.get(\`\${BASE_URL}/api/ai/health\`);
+    http.get(\`\${BASE_URL}/api/ai/model\`);
+  });
+}`,
+    theory: `บทเรียนก่อนหน้าทุกบทมี <strong>request เดียว</strong>ต่อ 1 iteration — แต่ user journey จริงมักมีหลายขั้นตอนต่อเนื่องกัน (เปิดหน้าเว็บ → โหลดข้อมูลหลายชุด → กดปุ่มทำ action) <code>group()</code> ห่อกลุ่ม request ที่เป็น "ขั้นตอนเดียวกันในทางธุรกิจ" เข้าด้วยกัน แล้วตั้งชื่อให้อ่านง่าย<br/><br/>
+    ประโยชน์หลัก: รายงานสรุปผลของ k6 (summary output) จะแยกแสดงผลตาม group แทนที่จะกองรวมทุก request เป็น list แบนราบเดียว ทำให้เห็นชัดว่า "ขั้นตอนไหนช้า" แทนที่จะต้องไล่เดารายชื่อ URL เอง — ยิ่งสคริปต์มีหลายสิบ request ต่อ iteration ยิ่งจำเป็นต้องจัดกลุ่มแบบนี้`,
+    example: `// จัดหลาย group ในสคริปต์เดียว แยกแต่ละขั้นตอนของ user journey
+group('Health Check', () => {
+  http.get(\`\${BASE_URL}/api/ai/health\`);
+});
+group('Model Switch', () => {
+  http.get(\`\${BASE_URL}/api/ai/model\`);
+  http.post(\`\${BASE_URL}/api/ai/model/switch\`, JSON.stringify({ model: 'gpt-4' }));
+});`,
+    task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
+    1. import <code>group</code> จาก <code>k6</code><br/>
+    2. ห่อการยิง <code>/api/ai/health</code> และ <code>/api/ai/model</code> ไว้ใน <code>group('AI Model Check', ...)</code>`
+  },
+  {
+    id: "scenarios_executors",
+    meta: "บทที่ 8",
+    title: "Scenarios & Executors: ควบคุมรูปแบบโหลดแบบ Explicit",
+    template: `import http from 'k6/http';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  // 1. กำหนด scenarios ชื่อ 'steady_load' ใช้ executor แบบ 'constant-vus' จำนวน 15 VU นาน '20s'
+  // WRITE YOUR CODE HERE
+
+};
+
+export default function () {
+  http.get(\`\${BASE_URL}/api/ai/health\`);
+}`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการตั้งค่า scenarios...");
+      const hasScenarios = /scenarios:\s*\{/.test(code);
+      const hasName = /steady_load:\s*\{/.test(code);
+      const hasExecutor = /executor:\s*['"]constant-vus['"]/.test(code);
+      const hasVus = /vus:\s*15/.test(code);
+      const hasDuration = /duration:\s*['"]20s['"]/.test(code);
+
+      if (!hasScenarios || !hasName) {
+        throw new Error("ไม่พบ scenarios ชื่อ 'steady_load'\nตัวอย่าง: scenarios: { steady_load: { ... } }");
+      }
+      if (!hasExecutor) {
+        throw new Error("ไม่พบ executor: 'constant-vus'");
+      }
+      if (!hasVus || !hasDuration) {
+        throw new Error("ไม่พบ vus: 15 และ duration: '20s' ใน scenario");
+      }
+      log("✓ ตั้งค่า scenarios แบบ constant-vus ถูกต้อง");
+    },
+    hint: "ใส่ scenarios: { steady_load: { executor: 'constant-vus', vus: 15, duration: '20s' } }",
+    solution: `import http from 'k6/http';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  scenarios: {
+    steady_load: {
+      executor: 'constant-vus',
+      vus: 15,
+      duration: '20s',
+    },
+  },
+};
+
+export default function () {
+  http.get(\`\${BASE_URL}/api/ai/health\`);
+}`,
+    theory: `<code>vus</code>/<code>duration</code> (บทที่ 1) และ <code>stages</code> (บทที่ 3) ที่เคยเขียนมาทั้งหมด แท้จริงแล้วคือ<strong>รูปแบบย่อ</strong>ของ <code>scenarios</code> — k6 แปลงมันเป็น scenario เดียวที่ไม่มีชื่อให้อัตโนมัติเบื้องหลัง <code>scenarios</code> คือรูปแบบเต็มที่เปิดให้ควบคุมได้ละเอียดกว่า:<br/><br/>
+    1. <strong>ตั้งชื่อ scenario ได้</strong> (เช่น <code>steady_load</code>) ทำให้อ่านรายงานง่ายขึ้นว่าผลลัพธ์มาจาก load pattern ไหน<br/>
+    2. <strong>รันหลาย scenario พร้อมกันได้ในการทดสอบเดียว</strong> (เช่น โหลดคงที่พื้นหลัง + spike แทรกเข้ามาช่วงสั้นๆ พร้อมกัน) ซึ่งทำไม่ได้ถ้าใช้แค่ <code>vus</code>/<code>stages</code> เดี่ยวๆ<br/>
+    3. <strong>เลือก executor ได้เต็มรูปแบบ</strong> — <code>constant-vus</code> (VU คงที่ตลอด, ใช้ในบทนี้), <code>ramping-vus</code> (เท่ากับ stages), <code>constant-arrival-rate</code> (คุม "จำนวน request/วินาที" ตรงๆ แทนที่จะคุมผ่านจำนวน VU), <code>per-vu-iterations</code> (แต่ละ VU วนตามจำนวนรอบที่กำหนด ไม่ใช่ตามเวลา)`,
+    example: `// รัน 2 scenario พร้อมกัน: โหลดคงที่พื้นหลัง + spike แทรกเข้ามาช่วงสั้นๆ
+export const options = {
+  scenarios: {
+    steady_load: { executor: 'constant-vus', vus: 15, duration: '30s' },
+    traffic_spike: { executor: 'ramping-vus', startVUs: 0, stages: [{ duration: '5s', target: 50 }, { duration: '5s', target: 0 }], startTime: '10s' },
+  },
+};`,
+    task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดยกำหนด <code>scenarios</code>:<br/>
+    1. ตั้งชื่อ scenario ว่า <code>steady_load</code><br/>
+    2. ใช้ <code>executor: 'constant-vus'</code>, <code>vus: 15</code>, <code>duration: '20s'</code>`
+  },
+  {
+    id: "setup_teardown",
+    meta: "บทที่ 9",
+    title: "setup() / teardown(): เตรียมและเก็บกวาดก่อน-หลัง Load Test",
+    template: `import http from 'k6/http';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  vus: 10,
+  duration: '10s',
+};
+
+// 1. เขียนฟังก์ชัน setup() ให้ยิง GET /api/ai/health ก่อนเริ่มโหลดจริง แล้ว return { healthCheckStatus: res.status }
+// WRITE YOUR CODE HERE
+
+
+export default function (data) {
+  http.get(\`\${BASE_URL}/api/ai/health\`);
+}
+
+// 2. เขียนฟังก์ชัน teardown() ให้ console.log('Load test เสร็จสมบูรณ์')
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ setup() และ teardown()...");
+      const hasSetup = /export function setup\s*\(\s*\)\s*\{[\s\S]*?http\.get[\s\S]*?return[\s\S]*?\}/.test(code);
+      const hasTeardown = /export function teardown\s*\(\s*\)\s*\{[\s\S]*?console\.log\(['"]Load test เสร็จสมบูรณ์['"]\)/.test(code);
+
+      if (!hasSetup) {
+        throw new Error("ไม่พบ setup() ที่ยิง http.get แล้ว return ค่า\nตัวอย่าง: export function setup() { const res = http.get(...); return { healthCheckStatus: res.status }; }");
+      }
+      if (!hasTeardown) {
+        throw new Error("ไม่พบ teardown() ที่ console.log('Load test เสร็จสมบูรณ์')\nตัวอย่าง: export function teardown() { console.log('Load test เสร็จสมบูรณ์'); }");
+      }
+      log("✓ เขียน setup() และ teardown() ถูกต้อง");
+    },
+    hint: "export function setup() { const res = http.get(...); return { healthCheckStatus: res.status }; } และ export function teardown() { console.log('Load test เสร็จสมบูรณ์'); }",
+    solution: `import http from 'k6/http';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  vus: 10,
+  duration: '10s',
+};
+
+export function setup() {
+  const res = http.get(\`\${BASE_URL}/api/ai/health\`);
+  return { healthCheckStatus: res.status };
+}
+
+export default function (data) {
+  http.get(\`\${BASE_URL}/api/ai/health\`);
+}
+
+export function teardown() {
+  console.log('Load test เสร็จสมบูรณ์');
+}`,
+    theory: `<code>setup()</code> รันแค่<strong>ครั้งเดียว</strong>ก่อนที่ VU ตัวไหนจะเริ่ม iterate เลย — เหมาะสำหรับเช็ค health ก่อนยิงโหลดจริง, เตรียม/seed ข้อมูลทดสอบ, หรือเก็บ baseline state ไว้เทียบภายหลัง ค่าที่ <code>return</code> ออกมาจาก <code>setup()</code> จะถูกส่งเป็น argument <code>data</code> เข้าไปใน <code>default function</code> ทุกครั้งที่ทุก VU เรียก (ในเทมเพลตนี้ยังไม่ได้ใช้ <code>data</code> แต่รับไว้เป็น parameter แล้ว)<br/><br/>
+    <code>teardown()</code> รันแค่<strong>ครั้งเดียว</strong>หลังทุก VU จบการทดสอบทั้งหมดแล้ว — เหมาะสำหรับ log สรุปผล หรือ<strong>คืนค่าสถานะที่ระบบใช้ร่วมกันกลับเป็นค่าเริ่มต้น</strong><br/><br/>
+    เชื่อมโยงกับบท "State Leak / Race Condition" ของ track API Testing: เอนด์พอยต์ <code>/api/ai/model/switch</code> ของ My-Investment-Port เปลี่ยนโมเดล AI แบบ global mutable state (ไม่ผูกกับ user คนใดคนหนึ่ง) ถ้า load test สคริปต์หนึ่งสลับโมเดลไปมาระหว่างทดสอบ แล้วจบการทดสอบโดยไม่คืนค่ากลับ โมเดลที่ค้างอยู่จะกระทบการทดสอบ/การใช้งานจริงครั้งถัดไปทันที — <code>teardown()</code> คือจุดที่ถูกต้องสำหรับสั่ง reset ค่านั้นกลับเป็นค่า default ก่อนจบสคริปต์`,
+    example: `// ตัวอย่าง teardown() ที่ reset shared state กลับเป็นค่า default จริง
+export function teardown() {
+  http.post(\`\${BASE_URL}/api/ai/model/switch\`, JSON.stringify({ model: 'default' }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  console.log('รีเซ็ต AI model กลับเป็นค่า default แล้ว');
+}`,
+    task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
+    1. เขียน <code>setup()</code> ให้ยิง <code>http.get</code> ไปที่ <code>/api/ai/health</code> แล้ว <code>return</code> ค่า status<br/>
+    2. เขียน <code>teardown()</code> ให้ <code>console.log('Load test เสร็จสมบูรณ์')</code>`
+  },
 ];
 
 // Application state
-let currentLessonIndex = 0;
-let completedLessons = {}; // tracks lessonId -> boolean
 
-// Initialize the app
-function initApp() {
-  renderLessonList();
-  loadLesson(currentLessonIndex);
-  updateProgressBar();
+const PREFIX = 'perf';
+const TAB_WIDTH = 2;
 
-  // Set up lesson menu toggle (overlay drawer)
-  const toggleBtn = document.getElementById('menu-toggle');
-  const sidebar = document.getElementById('sidebar');
-  if (toggleBtn && sidebar) {
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('show');
-    });
-
-    // Close the drawer when clicking outside of it
-    document.addEventListener('click', (e) => {
-      if (!sidebar.classList.contains('show')) return;
-      if (sidebar.contains(e.target) || toggleBtn.contains(e.target)) return;
-      sidebar.classList.remove('show');
-    });
-  }
-
-  // Sync tab focus and prevent tab exit
-  const textarea = document.getElementById('editor-textarea');
-  if (textarea) {
-    textarea.addEventListener('keydown', handleTextareaKeydown);
-    textarea.addEventListener('input', updateGutter);
-    textarea.addEventListener('scroll', syncGutterScroll);
-  }
-}
-
-// Keydown handler to prevent tab key escaping the editor
-function handleTextareaKeydown(e) {
-  const textarea = e.target;
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-
-    // Insert 2 spaces
-    textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
-
-    // Move cursor
-    textarea.selectionStart = textarea.selectionEnd = start + 2;
-    updateGutter();
-  }
-
-  // CMD/Ctrl + Enter shortcut to run tests
-  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault();
-    runSandboxCode();
-  }
-}
-
-// Synced scroll between textarea and line numbers gutter
-function syncGutterScroll(e) {
-  const gutter = document.getElementById('editor-gutter');
-  if (gutter) gutter.scrollTop = e.target.scrollTop;
-}
-
-// Render line numbers in the gutter
-function updateGutter() {
-  const textarea = document.getElementById('editor-textarea');
-  const gutter = document.getElementById('editor-gutter');
-  if (!textarea || !gutter) return;
-
-  const lineCount = textarea.value.split('\n').length;
-  const numbers = [];
-  for (let i = 1; i <= lineCount; i++) {
-    numbers.push(`<div>${i}</div>`);
-  }
-  gutter.innerHTML = numbers.join('');
-}
-
-// Render the sidebar list
-function renderLessonList() {
-  const listContainer = document.getElementById('lesson-list');
-  if (!listContainer) return;
-
-  listContainer.innerHTML = LESSONS.map((lesson, idx) => {
-    const isCompleted = isLessonCompleted(lesson.id);
-    const activeClass = idx === currentLessonIndex ? 'active' : '';
-    const completedClass = isCompleted ? 'completed' : '';
-
-    return `
-      <button class="lesson-item ${activeClass} ${completedClass}" onclick="selectLesson(${idx})">
-        <div class="lesson-item-meta">
-          <span>${lesson.meta}</span>
-          <span class="check-icon">✓ ผ่านการประเมิน</span>
-        </div>
-        <div class="lesson-item-title">${lesson.title}</div>
-      </button>
-    `;
-  }).join('');
-}
-
-// Select a lesson from sidebar
-function selectLesson(idx) {
-  currentLessonIndex = idx;
-  renderLessonList();
-  loadLesson(idx);
-
-  // Hide sidebar after selection (always an overlay drawer now)
-  const sidebar = document.getElementById('sidebar');
-  if (sidebar) {
-    sidebar.classList.remove('show');
-  }
-}
-
-// Load lesson content and reset editor
-function loadLesson(idx) {
-  const lesson = LESSONS[idx];
-  const titleContainer = document.getElementById('current-lesson-title');
-  const bodyContainer = document.getElementById('lesson-body');
-  const textarea = document.getElementById('editor-textarea');
-  const overlay = document.getElementById('lesson-overlay');
-
-  if (titleContainer) titleContainer.innerText = lesson.title;
-
-  // Build premium structured explain-demonstrate-practice blocks
-  if (bodyContainer) {
-    bodyContainer.innerHTML = `
-      <div class="content-block theory">
-        <div class="content-block-title">📘 คำอธิบาย (Theory)</div>
-        <div class="content-text">${lesson.theory}</div>
-      </div>
-      <div class="content-block example">
-        <div class="content-block-title">💻 โค้ดตัวอย่าง (Example)</div>
-        <div class="content-text"><pre><code>${escapeHtml(lesson.example)}</code></pre></div>
-      </div>
-      <div class="content-block task">
-        <div class="content-block-title">🎯 โจทย์ปฏิบัติการ (Challenge Task)</div>
-        <div class="content-text">${lesson.task}</div>
-      </div>
-    `;
-  }
-
-  // Reset overlay
-  if (overlay) overlay.classList.remove('show');
-
-  // Restore code if edited or load default template
-  const savedCode = localStorage.getItem(`perf_sandbox_code_${lesson.id}`);
-  if (textarea) {
-    textarea.value = savedCode !== null ? savedCode : lesson.template;
-    updateGutter();
-  }
-
-  // Reset Terminal output
-  const terminal = document.getElementById('terminal-body');
-  if (terminal) {
-    terminal.innerHTML = `<div class="terminal-line text-muted">พร้อมสำหรับรันการทดสอบ... เขียนโค้ดด้านบนแล้วกด Run Tests</div>`;
-  }
-}
-
-// Helper to escape HTML tags inside code blocks
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-// Show lesson Hint
-function showLessonHint() {
-  const lesson = LESSONS[currentLessonIndex];
-  showDialog("💡 คำแนะนำช่วยเหลือ (Hint)", lesson.hint, false);
-}
-
-// Show lesson Solution
-function showLessonSolution() {
-  const lesson = LESSONS[currentLessonIndex];
-  showDialog("🔑 เฉลยคำตอบ (Solution)", lesson.solution, true);
-}
-
-// Show custom dialog modal
-function showDialog(title, content, showAction) {
-  const overlay = document.getElementById('dialog-overlay');
-  const titleEl = document.getElementById('dialog-title');
-  const contentEl = document.getElementById('dialog-content');
-  const actionBtn = document.getElementById('dialog-action-btn');
-
-  if (!overlay || !titleEl || !contentEl || !actionBtn) return;
-
-  titleEl.innerText = title;
-  contentEl.innerText = content;
-
-  if (showAction) {
-    actionBtn.style.display = 'block';
-    actionBtn.onclick = () => {
-      applySolution(content);
-      closeDialog();
-    };
-  } else {
-    actionBtn.style.display = 'none';
-  }
-
-  overlay.classList.add('show');
-}
-
-// Close dialog modal
-function closeDialog() {
-  const overlay = document.getElementById('dialog-overlay');
-  if (overlay) overlay.classList.remove('show');
-}
-
-// Paste the solution directly into the editor
-function applySolution(code) {
-  const textarea = document.getElementById('editor-textarea');
-  if (textarea) {
-    textarea.value = code;
-    updateGutter();
-
-    const terminal = document.getElementById('terminal-body');
-    if (terminal) {
-      terminal.innerHTML += `<div class="terminal-line info">[System] ทำการป้อนโค้ดเฉลยลงใน Editor อัตโนมัติเรียบร้อยแล้ว</div>`;
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-  }
-}
-
-// Check if lesson is marked completed in localStorage
-function isLessonCompleted(lessonId) {
-  return localStorage.getItem('perf_course_completed_' + lessonId) === 'true';
-}
-
-// Mark lesson completed
-function setLessonCompleted(lessonId) {
-  localStorage.setItem('perf_course_completed_' + lessonId, 'true');
-  renderLessonList();
-  updateProgressBar();
-}
-
-// Update overall progress bar
-function updateProgressBar() {
-  const completedCount = LESSONS.filter(l => isLessonCompleted(l.id)).length;
-  const percent = Math.round((completedCount / LESSONS.length) * 100);
-
-  const fill = document.getElementById('progress-bar-fill');
-  const label = document.getElementById('progress-label');
-
-  if (fill) fill.style.width = percent + '%';
-  if (label) label.innerText = `${completedCount} / ${LESSONS.length} บทเรียน`;
-}
-
-// Sandbox compilation and execution evaluation
 function runSandboxCode() {
   const lesson = LESSONS[currentLessonIndex];
   const textarea = document.getElementById('editor-textarea');
@@ -603,7 +698,7 @@ function runSandboxCode() {
   const userCode = textarea.value;
 
   // Save user code state
-  localStorage.setItem(`perf_sandbox_code_${lesson.id}`, userCode);
+  localStorage.setItem(`${PREFIX}_sandbox_code_${lesson.id}`, userCode);
 
   // Start compiling animation log in terminal
   terminal.innerHTML = `
@@ -667,19 +762,6 @@ function runSandboxCode() {
   }, 600);
 }
 
-// Reset course progress
-function resetCourse() {
-  if (confirm("คุณต้องการล้างประวัติการเขียนและล้างความคืบหน้าทั้งหมดเพื่อเริ่มต้นใหม่ใช่หรือไม่?")) {
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('perf_course_completed_') || key.startsWith('perf_sandbox_code_'))) {
-        localStorage.removeItem(key);
-      }
-    }
-    currentLessonIndex = 0;
-    initApp();
-  }
-}
 
 // Show graduation final messages
 function showGraduationMessage() {
@@ -699,4 +781,3 @@ function showGraduationMessage() {
 }
 
 // Run on window boot
-window.onload = initApp;
