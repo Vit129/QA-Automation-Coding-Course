@@ -815,6 +815,154 @@ expect(response.status()).toBe(200);`,
     1. ยิง POST <code>/api/holdings/import</code> ด้วย multipart ไฟล์ชื่อ <code>empty.csv</code> เนื้อหาว่างเปล่า<br/>
     2. ตรวจสอบว่า status code เป็น <code>400</code> ไม่ใช่ <code>500</code><br/>
     3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'CSV file is empty or invalid'</code>`
+  },
+  {
+    id: "file_type_validation",
+    meta: "บทที่ 11",
+    title: "File Type Validation: ปฏิเสธไฟล์ผิดประเภทก่อนประมวลผล (Mock Endpoint)",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3012: อัปโหลดไฟล์ .exe อ้างว่าเป็น CSV ต้องโดนบล็อกด้วย 400', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) ต่อยอดจากบทที่ 10
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ชื่อ malware.exe mimeType application/x-msdownload
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่า status code เป็น 400
+
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'Only CSV files are allowed'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ File Type Validation...");
+      const hasMultipart = /await\s+request\.post\(['"]\/api\/holdings\/import['"][\s\S]*?multipart:\s*\{[\s\S]*?file:\s*\{[\s\S]*?mimeType:\s*['"]application\/x-msdownload['"][\s\S]*?\}/.test(code);
+      if (hasMultipart) {
+        log("✓ ขั้นตอนที่ 1: ส่งไฟล์ .exe ผ่าน multipart พร้อม mimeType ผิดประเภทถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการยิง POST /api/holdings/import แบบ multipart พร้อมไฟล์ mimeType 'application/x-msdownload'\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'malware.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('fake binary') } }\n});");
+      }
+
+      if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+      }
+
+      if (/body\.error\)\.toBe\(['"]Only CSV files are allowed['"]\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'Only CSV files are allowed'\nตัวอย่าง: expect(body.error).toBe('Only CSV files are allowed');");
+      }
+    },
+    hint: "ใช้ request.post('/api/holdings/import', { multipart: { file: { name: 'malware.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('fake binary') } } }); แล้วเช็ค status 400 และ body.error === 'Only CSV files are allowed'",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3012: อัปโหลดไฟล์ .exe อ้างว่าเป็น CSV ต้องโดนบล็อกด้วย 400', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) ต่อยอดจากบทที่ 10
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ชื่อ malware.exe mimeType application/x-msdownload
+  const response = await request.post('/api/holdings/import', {
+    multipart: {
+      file: { name: 'malware.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('fake binary') }
+    }
+  });
+
+  // 2. ตรวจสอบว่า status code เป็น 400
+  expect(response.status()).toBe(400);
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'Only CSV files are allowed'
+  const body = await response.json();
+  expect(body.error).toBe('Only CSV files are allowed');
+});`,
+    theory: `บทที่แล้วเช็คแค่ "ไฟล์ว่างเปล่า" แต่ในระบบจริงยังมีอีกเคสที่พบบ่อยไม่แพ้กัน: <strong>ไฟล์ผิดประเภท</strong> — ผู้ใช้ (หรือคนร้าย) อาจแนบไฟล์ <code>.exe</code>, <code>.png</code>, หรือ script ใดๆ แล้วตั้งชื่อ/พยายามหลอกว่าเป็น <code>.csv</code><br/><br/>
+    หลักการตรวจสอบที่ถูกต้อง: <strong>ห้ามเชื่อแค่ชื่อไฟล์ (นามสกุล)</strong> เพราะเปลี่ยนชื่อไฟล์ยังไงก็ได้ ต้องเช็ค <code>mimeType</code> ที่ client ส่งมาประกอบด้วย (แม้ <code>mimeType</code> เองก็ยัง spoof ได้ในทางทฤษฎี แต่เป็นด่านแรกที่ป้องกัน mistake ทั่วไปได้ดี) และในระบบที่ต้องการความปลอดภัยสูงกว่านี้ควรตรวจ "magic bytes" ต้นไฟล์จริงด้วย (เช่นไฟล์ CSV จริงต้องไม่มี PE header ของ .exe)<br/><br/>
+    บั๊กที่พบบ่อย: Backend เช็คแค่นามสกุลไฟล์จาก field name ที่ client กำหนดเอง (<code>filename.endsWith('.csv')</code>) โดยไม่เช็ค <code>mimeType</code>/เนื้อหาจริงเลย — ผ่านการเช็คปลอมๆ ได้ง่ายๆ แค่เปลี่ยนชื่อไฟล์`,
+    example: `// ตัวอย่างเช็คไฟล์ที่ mimeType ถูกต้องแต่ชื่อไฟล์แปลก (ยังต้องผ่าน เพราะ Backend เช็ค mimeType ไม่ใช่นามสกุล)
+const response = await request.post('/api/holdings/import', {
+  multipart: {
+    file: { name: 'my_data_file', mimeType: 'text/csv', buffer: Buffer.from('ticker,shares\\nAAPL,10') }
+  }
+});
+expect(response.status()).toBe(200);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
+    1. ยิง POST <code>/api/holdings/import</code> ด้วย multipart ไฟล์ชื่อ <code>malware.exe</code> mimeType <code>application/x-msdownload</code><br/>
+    2. ตรวจสอบว่า status code เป็น <code>400</code><br/>
+    3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'Only CSV files are allowed'</code>`
+  },
+  {
+    id: "file_size_validation",
+    meta: "บทที่ 12",
+    title: "File Size Validation: ปฏิเสธไฟล์ใหญ่เกินก่อนจะกินหน่วยความจำ (Mock Endpoint)",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3013: อัปโหลดไฟล์ใหญ่เกิน 5MB ต้องโดนบล็อกด้วย 413', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) ต่อยอดจากบทที่ 10-11
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ขนาด 6MB (เกิน limit 5MB)
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่า status code เป็น 413
+
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'File size exceeds 5MB limit'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ File Size Validation...");
+      const hasBigBuffer = /Buffer\.alloc\(\s*6\s*\*\s*1024\s*\*\s*1024\s*\)/.test(code);
+      const hasMultipart = /await\s+request\.post\(['"]\/api\/holdings\/import['"][\s\S]*?multipart:/.test(code);
+      if (hasBigBuffer && hasMultipart) {
+        log("✓ ขั้นตอนที่ 1: ส่งไฟล์ขนาด 6MB (Buffer.alloc(6 * 1024 * 1024)) ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการยิง POST /api/holdings/import พร้อมไฟล์ขนาด 6MB\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) } }\n});");
+      }
+
+      if (/expect\(response\.status\(\)\)\.toBe\(413\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 413 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบ status code 413\nตัวอย่าง: expect(response.status()).toBe(413);");
+      }
+
+      if (/body\.error\)\.toBe\(['"]File size exceeds 5MB limit['"]\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'File size exceeds 5MB limit'\nตัวอย่าง: expect(body.error).toBe('File size exceeds 5MB limit');");
+      }
+    },
+    hint: "ใช้ request.post('/api/holdings/import', { multipart: { file: { name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) } } }); แล้วเช็ค status 413 และ body.error === 'File size exceeds 5MB limit'",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3013: อัปโหลดไฟล์ใหญ่เกิน 5MB ต้องโดนบล็อกด้วย 413', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) ต่อยอดจากบทที่ 10-11
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ขนาด 6MB (เกิน limit 5MB)
+  const response = await request.post('/api/holdings/import', {
+    multipart: {
+      file: { name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) }
+    }
+  });
+
+  // 2. ตรวจสอบว่า status code เป็น 413
+  expect(response.status()).toBe(413);
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'File size exceeds 5MB limit'
+  const body = await response.json();
+  expect(body.error).toBe('File size exceeds 5MB limit');
+});`,
+    theory: `นอกจากประเภทไฟล์ผิด อีกเคสที่ระบบรับไฟล์ต้องป้องกันคือ <strong>ไฟล์ใหญ่เกินไป</strong> — ถ้าไม่จำกัดขนาดไว้ ผู้ใช้ (หรือคนร้าย) ส่งไฟล์ขนาดหลาย GB มาได้ ทำให้ server กินหน่วยความจำจนล่ม (Denial of Service แบบไม่ตั้งใจหรือตั้งใจก็ได้)<br/><br/>
+    Status code ที่ถูกต้องตาม HTTP spec สำหรับเคสนี้คือ <strong><code>413 Payload Too Large</code></strong> (ไม่ใช่ 400 ธรรมดา) — บอกชัดเจนว่าปัญหาคือ "ขนาด" ไม่ใช่ "รูปแบบข้อมูล"<br/><br/>
+    ในการทดสอบจริง ไม่จำเป็นต้องมีไฟล์ 6MB เก็บไว้ในเครื่องจริงๆ — ใช้ <code>Buffer.alloc(6 * 1024 * 1024)</code> สร้าง buffer ขนาด 6MB ขึ้นมาในหน่วยความจำตรงๆ ตอนรัน test ได้เลย (เร็วกว่าและไม่ต้อง commit ไฟล์ใหญ่ๆ ติดไปกับ test repo)<br/><br/>
+    ลำดับการตรวจสอบที่ถูกต้องของ Backend: เช็ค "ขนาดไฟล์" ก่อนเช็ค "เนื้อหาไฟล์" เสมอ (เช็คขนาดเร็วและถูกกว่ามาก ไม่ต้องอ่าน/parse เนื้อหาทั้งไฟล์ก่อนถึงจะรู้ว่ามันใหญ่เกินไป) — บั๊กที่พบบ่อยคือเขียนโค้ด parse ไฟล์ก่อนแล้วค่อยเช็คขนาดทีหลัง ทำให้ยังเสีย CPU/Memory ไปกับการ parse ไฟล์ใหญ่ๆ อยู่ดีก่อนจะถูกปฏิเสธ`,
+    example: `// ตัวอย่างไฟล์ขนาดพอดี limit (5MB เป๊ะ) ต้องผ่าน ไม่ใช่โดนบล็อก
+const response = await request.post('/api/holdings/import', {
+  multipart: {
+    file: { name: 'ok.csv', mimeType: 'text/csv', buffer: Buffer.alloc(5 * 1024 * 1024, 'a') }
+  }
+});
+expect(response.status()).not.toBe(413);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
+    1. ยิง POST <code>/api/holdings/import</code> ด้วยไฟล์ขนาด <code>6MB</code> (<code>Buffer.alloc(6 * 1024 * 1024)</code>)<br/>
+    2. ตรวจสอบว่า status code เป็น <code>413</code><br/>
+    3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'File size exceeds 5MB limit'</code>`
   }
 ];
 

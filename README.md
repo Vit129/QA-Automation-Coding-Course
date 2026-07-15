@@ -7,6 +7,9 @@ Browser-based code sandbox course for learning QA automation. No backend, no bui
 - **Playwright** — TypeScript end-to-end testing
 - **Robot-Framework** — keyword-driven automation
 - **API-Testing** — API test scenarios
+- **Performance-Testing** — k6 load testing
+- **DB-Design-SQL** — SQL + database design, runs real queries in-browser via AlaSQL
+- **CLI-Essentials** — Git, Vim & Unix cheat sheet
 
 Each track is a static HTML/CSS/JS page: theory → code template (`WRITE YOUR CODE HERE`) → validation → hint → solution. Progress saves to `localStorage`.
 
