@@ -580,12 +580,19 @@ function initApp() {
   loadLesson(currentLessonIndex);
   updateProgressBar();
   
-  // Set up mobile menu toggle
+  // Set up lesson menu toggle (overlay drawer)
   const toggleBtn = document.getElementById('menu-toggle');
   const sidebar = document.getElementById('sidebar');
   if (toggleBtn && sidebar) {
     toggleBtn.addEventListener('click', () => {
       sidebar.classList.toggle('show');
+    });
+
+    // Close the drawer when clicking outside of it
+    document.addEventListener('click', (e) => {
+      if (!sidebar.classList.contains('show')) return;
+      if (sidebar.contains(e.target) || toggleBtn.contains(e.target)) return;
+      sidebar.classList.remove('show');
     });
   }
   
@@ -669,9 +676,9 @@ function selectLesson(idx) {
   renderLessonList();
   loadLesson(idx);
   
-  // Hide sidebar on mobile after selection
+  // Hide sidebar after selection (always an overlay drawer now)
   const sidebar = document.getElementById('sidebar');
-  if (sidebar && window.innerWidth <= 768) {
+  if (sidebar) {
     sidebar.classList.remove('show');
   }
 }
