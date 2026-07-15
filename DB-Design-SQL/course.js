@@ -23,7 +23,7 @@ function resetDatabase() {
     ('MSFT','Dime',25,320.50,'Technology'),
     ('TLT','Dime',70,92.15,'Bonds')`);
 
-  alasql('CREATE TABLE brokers (name STRING, displayName STRING, country STRING)');
+  alasql('CREATE TABLE brokers (name STRING PRIMARY KEY, displayName STRING, country STRING)');
   alasql(`INSERT INTO brokers (name, displayName, country) VALUES
     ('Webull','Webull Financial','US'),
     ('Dime','Dime Technologies','US')`);
@@ -149,8 +149,94 @@ CREATE TABLE holdings_v2 (ticker STRING, broker STRING, shares NUMBER, PRIMARY K
     2. เพิ่มแถว <code>ticker = 'TSLA'</code>, <code>note = 'รอราคาย่อ'</code>`
   },
   {
-    id: "joins",
+    id: "foreign_key_design",
     meta: "บทที่ 3",
+    title: "FOREIGN KEY: บังคับให้ข้อมูลอ้างอิงต้องมีอยู่จริง",
+    template: `-- ตาราง brokers มีอยู่แล้ว (name เป็น PRIMARY KEY)
+-- 1. สร้างตาราง orders ใหม่: id (NUMBER), ticker (STRING), broker (STRING)
+--    กำหนด FOREIGN KEY (broker) ให้อ้างอิงไปที่ brokers(name)
+-- WRITE YOUR CODE HERE
+
+
+-- 2. เพิ่มแถวใหม่: id=1, ticker='AMZN', broker='Webull' (Broker ที่มีอยู่จริง)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ FOREIGN KEY constraint...");
+      resetDatabase();
+      runQuery(code);
+
+      let rows;
+      try {
+        rows = alasql("SELECT * FROM orders");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง orders — ตรวจสอบว่าสร้างด้วย CREATE TABLE orders (...) หรือยัง");
+      }
+      if (rows.length !== 1 || rows[0].broker !== 'Webull') {
+        throw new Error(`คาดว่าตาราง orders จะมี 1 แถวที่ broker = 'Webull' แต่ได้: ${JSON.stringify(rows)}`);
+      }
+
+      let blocked = false;
+      try {
+        alasql("INSERT INTO orders VALUES (2, 'FAKE', 'NoSuchBroker')");
+      } catch (err) {
+        blocked = true;
+      }
+      if (!blocked) {
+        throw new Error("ตาราง orders ยอมรับค่า broker ที่ไม่มีอยู่จริงใน brokers ได้ — ตรวจสอบว่าใส่ FOREIGN KEY (broker) REFERENCES brokers(name) ตอนสร้างตารางหรือยัง");
+      }
+      log("✓ สร้างตาราง orders พร้อม FOREIGN KEY ถูกต้อง — ทดสอบแล้วว่า block ค่า broker ปลอมได้จริง");
+    },
+    hint: "ใช้ CREATE TABLE orders (id NUMBER, ticker STRING, broker STRING, FOREIGN KEY (broker) REFERENCES brokers(name)); แล้ว INSERT INTO orders VALUES (1, 'AMZN', 'Webull');",
+    solution: `CREATE TABLE orders (id NUMBER, ticker STRING, broker STRING, FOREIGN KEY (broker) REFERENCES brokers(name));
+INSERT INTO orders VALUES (1, 'AMZN', 'Webull');`,
+    theory: `<strong>FOREIGN KEY</strong> คือคอลัมน์ที่บังคับว่าค่าที่ใส่เข้าไปต้อง<strong>มีอยู่จริง</strong>ในตารางอื่นที่อ้างอิงถึง (referenced table) — ต่อยอดจากบท JOIN ก่อนหน้าที่เรา JOIN <code>holdings.broker = brokers.name</code> โดยไม่มีอะไรบังคับเลยว่าค่า <code>broker</code> ต้องมีจริงใน <code>brokers</code> บทนี้ทำให้มันเป็นกฎบังคับจริงระดับฐานข้อมูล ไม่ใช่แค่ความหวังว่าข้อมูลจะสอดคล้องกันเอง<br/><br/>
+    <code>FOREIGN KEY (broker) REFERENCES brokers(name)</code> แปลว่า: ทุกค่าที่ใส่ในคอลัมน์ <code>orders.broker</code> ต้องตรงกับค่าใดค่าหนึ่งในคอลัมน์ <code>brokers.name</code> เท่านั้น — ถ้าลองใส่ชื่อ Broker ที่ไม่มีจริง ฐานข้อมูลจะ<strong>ปฏิเสธการ INSERT ทันที</strong> (พิสูจน์แล้วในบทนี้: sandbox รัน AlaSQL จริง ไม่ใช่ mock)<br/><br/>
+    ในงาน QA เทคนิคนี้ช่วยตอบคำถาม "ข้อมูลมีสิทธิ์เพี้ยนจนอ้างอิงของที่ไม่มีจริงได้มั้ย" — ถ้า schema มี FOREIGN KEY ถูกต้อง คำตอบคือ "ไม่มีทาง" เพราะ DB บังคับเอง ไม่ต้องพึ่งให้ทุกจุดของโค้ด Backend เขียน validation ซ้ำเอง`,
+    example: `-- ถ้าลองใส่ broker ปลอมเข้าไปตรงๆ จะได้ error ทันที (ลองรันดูได้)
+INSERT INTO orders VALUES (99, 'FAKE', 'ThisBrokerDoesNotExist');
+-- Error: Foreign key "ThisBrokerDoesNotExist" not found in table "brokers"`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. สร้างตาราง <code>orders</code> ด้วยคอลัมน์ <code>id</code> (NUMBER), <code>ticker</code> (STRING), <code>broker</code> (STRING) พร้อม <code>FOREIGN KEY (broker) REFERENCES brokers(name)</code><br/>
+    2. เพิ่มแถว <code>id=1, ticker='AMZN', broker='Webull'</code>`
+  },
+  {
+    id: "normalization_basics",
+    meta: "บทที่ 4",
+    title: "Normalization: ทำไมต้องแยกตาราง ไม่ยัดทุกอย่างลงตารางเดียว",
+    template: `-- สถานการณ์: ถ้าเราเก็บชื่อเต็มของ Broker ("Webull Financial") ซ้ำไว้ในทุกแถวของ holdings
+-- แทนที่จะแยกตาราง brokers ต่างหาก จะเกิดข้อมูลซ้ำซ้อนมากแค่ไหน?
+-- 1. หาจำนวนแถวทั้งหมดใน holdings (ตั้งชื่อคอลัมน์ totalRows)
+-- 2. หาจำนวน Broker ที่ไม่ซ้ำกัน (ตั้งชื่อคอลัมน์ distinctBrokers)
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการพิสูจน์ความซ้ำซ้อนของข้อมูล...");
+      resetDatabase();
+      const result = runQuery(code);
+      if (!Array.isArray(result) || result.length !== 1) {
+        throw new Error(`คาดว่าจะได้ 1 แถวสรุปผล แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว
+ตัวอย่าง: SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;`);
+      }
+      const row = result[0];
+      if (Number(row.totalRows) !== 8 || Number(row.distinctBrokers) !== 2) {
+        throw new Error(`คาดว่า totalRows=8, distinctBrokers=2 แต่ได้ totalRows=${row.totalRows}, distinctBrokers=${row.distinctBrokers}`);
+      }
+      log("✓ พิสูจน์ได้ว่า holdings มี 8 แถว แต่ Broker จริงมีแค่ 2 ราย — ถ้าเก็บชื่อเต็ม Broker ซ้ำในทุกแถวจะซ้ำซ้อนถึง 8 ครั้งโดยไม่จำเป็น");
+    },
+    hint: "ใช้ SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;",
+    solution: `SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;`,
+    theory: `<strong>Normalization</strong> คือหลักการออกแบบฐานข้อมูลเพื่อลดข้อมูลซ้ำซ้อน โดยแยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางต่างหาก แล้วใช้ FOREIGN KEY เชื่อมกลับมา<br/><br/>
+    ผลลัพธ์ของ query นี้พิสูจน์ปัญหาให้เห็นเป็นตัวเลขจริง: <code>holdings</code> มี 8 แถว แต่มี Broker ที่ไม่ซ้ำกันแค่ 2 ราย (Webull, Dime) — ถ้าเราเก็บ <code>displayName</code> ("Webull Financial") และ <code>country</code> ("US") ซ้ำไว้ในทุกแถวของ <code>holdings</code> โดยตรงแทนที่จะแยกตาราง <code>brokers</code> ต่างหาก ข้อมูลชุดเดียวกันนี้จะถูกเก็บซ้ำถึง 5 ครั้ง (Webull) และ 3 ครั้ง (Dime) โดยไม่จำเป็น<br/><br/>
+    ปัญหาจริงที่ตามมาถ้าไม่ Normalize: ถ้า Webull เปลี่ยนชื่อเป็น "Webull Corp" ต้อง <code>UPDATE</code> ทั้ง 5 แถวให้ตรงกัน — พลาดแม้แถวเดียวจะทำให้ข้อมูล<strong>ไม่สอดคล้องกันเอง</strong> (inconsistent) ทันที การแยกเป็นตาราง <code>brokers</code> (ตามที่ทำไว้ในบท "Database Design: PRIMARY KEY") ทำให้แก้ที่เดียวจบ แล้วใช้ JOIN (บทก่อนหน้า) ดึงข้อมูลกลับมาต่อกันตอนต้องใช้จริง`,
+    example: `-- ตัวอย่างเช็คความซ้ำซ้อนแบบเดียวกันกับคอลัมน์อื่น
+SELECT COUNT(*) AS totalRows, COUNT(DISTINCT sector) AS distinctSectors FROM holdings;`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. หา <code>COUNT(*)</code> ตั้งชื่อคอลัมน์ <code>totalRows</code><br/>
+    2. หา <code>COUNT(DISTINCT broker)</code> ตั้งชื่อคอลัมน์ <code>distinctBrokers</code>`
+  },
+  {
+    id: "joins",
+    meta: "บทที่ 5",
     title: "JOIN: รวมข้อมูลจาก 2 ตารางเข้าด้วยกัน",
     template: `-- ตาราง brokers มีคอลัมน์: name, displayName, country
 -- 1. ดึง ticker, broker และชื่อเต็มของโบรกเกอร์ (displayName) เฉพาะแถวที่ ticker = 'AMZN'
@@ -182,8 +268,90 @@ SELECT h.ticker, b.country FROM holdings h JOIN brokers b ON h.broker = b.name W
     2. ดึง <code>ticker</code>, <code>broker</code>, <code>displayName</code> เฉพาะแถว <code>ticker = 'AMZN'</code>`
   },
   {
+    id: "data_types_boolean",
+    meta: "บทที่ 6",
+    title: "เลือก Data Type ให้ถูกงาน: BOOLEAN สำหรับค่าใช่/ไม่ใช่",
+    template: `-- สถานการณ์: อยากกันแจ้งเตือนซ้ำสำหรับ ticker ใน price_alerts ต้องมีคอลัมน์เก็บว่า "แจ้งเตือนไปแล้วหรือยัง"
+-- 1. สร้างตาราง price_alerts ใหม่: ticker (STRING PRIMARY KEY), note (STRING), notified (BOOLEAN)
+-- WRITE YOUR CODE HERE
+
+
+-- 2. เพิ่มแถว: ticker='TSLA', note='รอราคาย่อ', notified=FALSE
+
+
+-- 3. อัปเดตว่า TSLA ถูกแจ้งเตือนไปแล้ว: SET notified = TRUE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการออกแบบคอลัมน์ BOOLEAN...");
+      resetDatabase();
+      runQuery(code);
+      let rows;
+      try {
+        rows = alasql("SELECT * FROM price_alerts");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง price_alerts — ตรวจสอบว่าสร้างด้วย CREATE TABLE price_alerts (...) หรือยัง");
+      }
+      if (rows.length !== 1 || rows[0].ticker !== 'TSLA') {
+        throw new Error(`คาดว่าตาราง price_alerts จะมี 1 แถวที่ ticker='TSLA' แต่ได้: ${JSON.stringify(rows)}`);
+      }
+      if (rows[0].notified !== true) {
+        throw new Error(`คาดว่า notified จะเป็น TRUE (boolean จริง ไม่ใช่ string 'true') หลัง UPDATE แต่ได้: ${JSON.stringify(rows[0].notified)}`);
+      }
+      log("✓ ออกแบบคอลัมน์ BOOLEAN และอัปเดตค่าถูกต้อง (notified = true)");
+    },
+    hint: "ใช้ CREATE TABLE price_alerts (ticker STRING PRIMARY KEY, note STRING, notified BOOLEAN); แล้ว INSERT ด้วย notified=FALSE แล้ว UPDATE ... SET notified = TRUE",
+    solution: `CREATE TABLE price_alerts (ticker STRING PRIMARY KEY, note STRING, notified BOOLEAN);
+INSERT INTO price_alerts (ticker, note, notified) VALUES ('TSLA', 'รอราคาย่อ', FALSE);
+UPDATE price_alerts SET notified = TRUE WHERE ticker = 'TSLA';`,
+    theory: `การออกแบบตารางไม่ใช่แค่ "มี column อะไรบ้าง" แต่ต้องเลือก <strong>Data Type</strong> ให้ตรงกับความหมายจริงของข้อมูลด้วย — คอลัมน์ที่มีค่าได้แค่ 2 แบบ (ใช่/ไม่ใช่, เปิด/ปิด, จริง/เท็จ) ควรเป็น <strong>BOOLEAN</strong> ไม่ใช่ STRING ("yes"/"no") หรือ NUMBER (1/0) เพราะ:<br/><br/>
+    1. <strong>ชัดเจนกว่า:</strong> อ่าน schema แล้วรู้ทันทีว่าคอลัมน์นี้มีค่าได้แค่ true/false ไม่ต้องเดาว่า string ไหน "ถือว่าใช่"<br/>
+    2. <strong>ป้องกันค่าผิดรูปแบบ:</strong> STRING เปิดช่องให้พิมพ์ "Yes", "yes", "Y", "true" ปนกันได้ในแต่ละแถว ทำให้ query <code>WHERE notified = 'yes'</code> พลาดแถวที่พิมพ์ "Yes" ไป — BOOLEAN ไม่มีปัญหานี้เพราะมีแค่ true/false เท่านั้นจริงๆ<br/><br/>
+    หมายเหตุ: คอลัมน์ <code>notified</code> ในบทนี้เป็นตัวอย่างสมมติต่อยอดจากตาราง <code>price_alerts</code> (บทที่ 2) เพื่อสอนหลักการเลือก data type — ไม่ได้มีอยู่จริงในโค้ดของ My-Investment-Port`,
+    example: `-- ตัวอย่าง query กรองด้วย BOOLEAN ตรงๆ ไม่ต้องเทียบ string
+SELECT ticker FROM price_alerts WHERE notified = FALSE;`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. สร้างตาราง <code>price_alerts</code> ด้วยคอลัมน์ <code>ticker</code> (STRING PRIMARY KEY), <code>note</code> (STRING), <code>notified</code> (BOOLEAN)<br/>
+    2. เพิ่มแถว <code>ticker='TSLA', note='รอราคาย่อ', notified=FALSE</code><br/>
+    3. อัปเดตเป็น <code>notified = TRUE</code> สำหรับ <code>ticker = 'TSLA'</code>`
+  },
+  {
+    id: "left_join_vs_inner",
+    meta: "บทที่ 7",
+    title: "LEFT JOIN vs INNER JOIN: หา Foreign Key ที่อ้างอิงของไม่มีจริง",
+    template: `-- หมายเหตุ: มีแถว Holdings ของ ticker 'ORPHAN' ที่ broker เป็น 'GhostBroker' (ไม่มีอยู่จริงใน brokers) เตรียมไว้ให้แล้ว
+-- 1. หา ticker ทั้งหมดที่ broker ไม่มีอยู่จริงในตาราง brokers (ข้อมูลกำพร้า)
+--    ใช้ LEFT JOIN แล้วกรองด้วย WHERE brokers.name IS NULL
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ LEFT JOIN + IS NULL...");
+      resetDatabase();
+      alasql("INSERT INTO holdings (ticker, broker, shares, avgCost, sector) VALUES ('ORPHAN','GhostBroker',10,50,'Technology')");
+      const result = runQuery(code);
+      if (!Array.isArray(result) || result.length !== 1) {
+        throw new Error(`คาดว่าจะได้ 1 แถว (ORPHAN) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว
+ตัวอย่าง: SELECT h.ticker FROM holdings h LEFT JOIN brokers b ON h.broker = b.name WHERE b.name IS NULL;`);
+      }
+      if (result[0].ticker !== 'ORPHAN') {
+        throw new Error(`คาดว่าจะได้ ticker='ORPHAN' แต่ได้ ${JSON.stringify(result[0])}`);
+      }
+      log("✓ เจอ Holdings ที่ broker อ้างอิงของไม่มีจริง (ORPHAN/GhostBroker) ถูกต้อง");
+    },
+    hint: "ใช้ SELECT h.ticker FROM holdings h LEFT JOIN brokers b ON h.broker = b.name WHERE b.name IS NULL;",
+    solution: `SELECT h.ticker FROM holdings h LEFT JOIN brokers b ON h.broker = b.name WHERE b.name IS NULL;`,
+    theory: `บท JOIN ก่อนหน้าเคยบอกไว้ว่า: ถ้าไม่มีแถวไหนใน <code>brokers</code> ตรงกับค่า <code>broker</code> เลย แถวนั้นจะ<strong>หายไปจากผลลัพธ์เงียบๆ</strong> เพราะ <code>JOIN</code> เฉยๆ คือ <strong>INNER JOIN</strong> (ค่า default) — บทนี้ทำให้ปัญหานั้น "มองเห็นได้" แทนที่จะถูกซ่อนไว้<br/><br/>
+    <strong>LEFT JOIN</strong> เก็บ<strong>ทุกแถว</strong>จากตารางฝั่งซ้าย (<code>holdings</code>) ไว้เสมอ ไม่ว่าจะจับคู่กับฝั่งขวา (<code>brokers</code>) ได้หรือไม่ก็ตาม — ถ้าจับคู่ไม่ได้ คอลัมน์จากฝั่งขวาทั้งหมดจะเป็น <code>NULL</code><br/><br/>
+    เทคนิคมาตรฐาน: <code>LEFT JOIN ... WHERE &lt;ฝั่งขวา&gt;.&lt;key&gt; IS NULL</code> คือวิธีหา "ข้อมูลกำพร้า" (orphaned data) — แถวที่อ้างอิง Foreign Key ไปยังของที่ไม่มีอยู่จริง ในงาน QA เทคนิคนี้ใช้ตรวจสอบ Data Integrity จริงเวลาสงสัยว่าระบบมีข้อมูลอ้างอิงพังหลุดรอดออกมาบ้างหรือไม่ (เช่น หลัง migration หรือหลัง bug ที่ปล่อยให้ข้าม FOREIGN KEY constraint ไปได้)`,
+    example: `-- INNER JOIN แบบเดิมจะไม่เจอ ORPHAN เลย (หายไปเงียบๆ) — ลองเทียบกันดู
+SELECT h.ticker FROM holdings h JOIN brokers b ON h.broker = b.name;
+-- ไม่มี ORPHAN ในผลลัพธ์ ทั้งที่ ORPHAN มีอยู่จริงในตาราง holdings`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. LEFT JOIN ตาราง <code>holdings</code> กับ <code>brokers</code><br/>
+    2. กรองด้วย <code>WHERE brokers.name IS NULL</code> เพื่อหา Holdings ที่ broker ไม่มีอยู่จริง`
+  },
+  {
     id: "aggregation",
-    meta: "บทที่ 4",
+    meta: "บทที่ 8",
     title: "Aggregate Function: รวมมูลค่าพอร์ตต่อ Broker",
     template: `-- 1. รวมมูลค่าพอร์ต (shares * avgCost) ของแต่ละ Broker ตั้งชื่อคอลัมน์ผลลัพธ์ว่า totalValue
 -- WRITE YOUR CODE HERE
@@ -214,7 +382,7 @@ SELECT sector, COUNT(*) AS numHoldings, AVG(avgCost) AS avgPrice FROM holdings G
   },
   {
     id: "data_integrity_check",
-    meta: "บทที่ 5",
+    meta: "บทที่ 9",
     title: "Data Integrity Check: ยืนยันว่าลบข้อมูลจริงหลัง Action",
     template: `-- 1. ลบ Holdings ที่ ticker = 'QQQI' และ broker = 'Webull'
 -- WRITE YOUR CODE HERE
@@ -255,7 +423,7 @@ SELECT shares FROM holdings WHERE ticker = 'GOOGL';
   },
   {
     id: "null_handling",
-    meta: "บทที่ 6",
+    meta: "บทที่ 10",
     title: "NULL Handling: ทำไม column = NULL ถึงไม่เจออะไรเลย",
     template: `-- หมายเหตุ: มีแถวชื่อ NEWCO ที่ sector ยังไม่ได้จัดหมวดหมู่ (เป็น NULL) เตรียมไว้ให้แล้ว
 -- 1. ดึง ticker ของ Holdings ทั้งหมดที่ยังไม่มี sector

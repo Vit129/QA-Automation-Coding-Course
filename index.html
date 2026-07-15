@@ -599,17 +599,17 @@
         <span class="course-icon">⚡</span>
         <h2 class="course-title">Performance Testing (k6)</h2>
         <p class="course-desc">
-          เรียนรู้การเขียน Load Test ด้วย k6 ครอบคลุม Virtual Users, Thresholds และ Stages (Ramping) โดยยิงจริงเข้า Express API ของ My-Investment-Port — รวมบทที่สอนให้ออกแบบ check() ให้รู้จัก Rate Limiter จริงของ server แทนที่จะเข้าใจผิดว่า 429 คือบั๊ก
+          เรียนรู้การเขียน Load Test ด้วย k6 ครอบคลุม Virtual Users, Thresholds, Stages (Ramping), sleep() Think Time, Custom Metrics, group(), Scenarios/Executors และ setup()/teardown() โดยยิงจริงเข้า Express API ของ My-Investment-Port — รวมบทที่สอนให้ออกแบบ check() ให้รู้จัก Rate Limiter จริงของ server แทนที่จะเข้าใจผิดว่า 429 คือบั๊ก
         </p>
         <div class="tags">
           <span class="tag">Virtual Users</span>
           <span class="tag">Thresholds</span>
-          <span class="tag">Stages</span>
-          <span class="tag">5 Lessons</span>
+          <span class="tag">Scenarios</span>
+          <span class="tag">10 Lessons</span>
         </div>
         <div class="track-progress" id="progress-perf">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/5 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/10 บทเรียน (0%)</span>
         </div>
         <a href="./Performance-Testing/index.html" class="btn btn-perf">เข้าสู่บทเรียน →</a>
       </div>
@@ -619,17 +619,17 @@
         <span class="course-icon">🗄️</span>
         <h2 class="course-title">Database Design & SQL</h2>
         <p class="course-desc">
-          เรียนรู้ SQL และการออกแบบฐานข้อมูลที่ QA ใช้ทุกวันแต่ลืมได้ง่าย ครอบคลุม SELECT/WHERE, JOIN, GROUP BY, PRIMARY KEY, Data Integrity Check และ NULL Handling — รันคำสั่ง SQL จริงในเบราว์เซอร์ด้วย AlaSQL บนสคีมาที่จำลองจากข้อมูล Holdings จริงของ My-Investment-Port
+          เรียนรู้ SQL และการออกแบบฐานข้อมูลที่ QA ใช้ทุกวันแต่ลืมได้ง่าย ครอบคลุม SELECT/WHERE, PRIMARY KEY, FOREIGN KEY, Normalization, JOIN (INNER/LEFT), Data Type/BOOLEAN, GROUP BY, Data Integrity Check และ NULL Handling — รันคำสั่ง SQL จริงในเบราว์เซอร์ด้วย AlaSQL บนสคีมาที่จำลองจากข้อมูล Holdings จริงของ My-Investment-Port
         </p>
         <div class="tags">
-          <span class="tag">SELECT/JOIN</span>
-          <span class="tag">GROUP BY</span>
-          <span class="tag">PRIMARY KEY</span>
-          <span class="tag">7 Lessons</span>
+          <span class="tag">FOREIGN KEY</span>
+          <span class="tag">Normalization</span>
+          <span class="tag">JOIN</span>
+          <span class="tag">11 Lessons</span>
         </div>
         <div class="track-progress" id="progress-sql">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/7 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/11 บทเรียน (0%)</span>
         </div>
         <a href="./DB-Design-SQL/index.html" class="btn btn-sql">เข้าสู่บทเรียน →</a>
       </div>
@@ -665,8 +665,8 @@
       { key: 'api', prefix: 'api', total: 13, label: 'Playwright API Testing' },
       { key: 'playwright', prefix: 'pw', total: 19, label: 'Playwright UI Testing' },
       { key: 'robot', prefix: 'rf', total: 16, label: 'Robot Framework Native UI Testing' },
-      { key: 'perf', prefix: 'perf', total: 5, label: 'Performance Testing (k6)' },
-      { key: 'sql', prefix: 'sql', total: 7, label: 'Database Design & SQL' },
+      { key: 'perf', prefix: 'perf', total: 10, label: 'Performance Testing (k6)' },
+      { key: 'sql', prefix: 'sql', total: 11, label: 'Database Design & SQL' },
       { key: 'cli', prefix: 'cli', total: 16, label: 'Git, Vim & Unix Cheat Sheet' },
     ];
     const XP_PER_LESSON = 10;
