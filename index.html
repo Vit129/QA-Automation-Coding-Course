@@ -22,6 +22,7 @@
       --accent-violet: #8b5cf6;
       --accent-gold: #eab308;
       --accent-teal: #14b8a6;
+      --accent-slate: #64748b;
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -131,6 +132,10 @@
       background: var(--accent-teal);
     }
 
+    .card-cli:hover::before {
+      background: var(--accent-slate);
+    }
+
     .course-icon {
       font-size: 3rem;
       margin-bottom: 24px;
@@ -227,6 +232,16 @@
     .btn-sql:hover {
       background-color: #0d9488;
       box-shadow: 0 0 16px rgba(20, 184, 166, 0.4);
+    }
+
+    .btn-cli {
+      background-color: var(--accent-slate);
+      color: white;
+    }
+
+    .btn-cli:hover {
+      background-color: #475569;
+      box-shadow: 0 0 16px rgba(100, 116, 139, 0.4);
     }
 
     footer {
@@ -341,6 +356,22 @@
           <span class="tag">7 Lessons</span>
         </div>
         <a href="./DB-Design-SQL/index.html" class="btn btn-sql">เข้าสู่บทเรียน →</a>
+      </div>
+
+      <!-- Git, Vim & Unix Cheat Sheet Course Card -->
+      <div class="course-card card-cli" id="card-cli">
+        <span class="course-icon">⌨️</span>
+        <h2 class="course-title">Git, Vim & Unix Cheat Sheet</h2>
+        <p class="course-desc">
+          คำสั่ง Git, Vim และ Unix ที่ QA ใช้บ่อยแต่ลืมง่าย — git stash แบบมีป้ายกำกับ, เปิดใช้ custom git hooks, เอาตัวรอดใน Vim ตอนหลุดเข้า editor, และ safe script header (set -euo pipefail) ที่ใช้จริงในทุกสคริปต์ของ Kouen
+        </p>
+        <div class="tags">
+          <span class="tag">Git</span>
+          <span class="tag">Vim</span>
+          <span class="tag">Unix Shell</span>
+          <span class="tag">6 Lessons</span>
+        </div>
+        <a href="./CLI-Essentials/index.html" class="btn btn-cli">เข้าสู่บทเรียน →</a>
       </div>
     </div>
 
