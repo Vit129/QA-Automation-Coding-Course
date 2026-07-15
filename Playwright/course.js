@@ -992,6 +992,128 @@ await page.getByTestId('attachment-input').setInputFiles([]); // ล้างค
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (ฟีเจอร์สมมติเพื่อฝึกเทคนิค) โดย:<br/>
     1. อัปโหลดไฟล์ <code>./fixtures/holdings-sample.csv</code> ผ่าน Test ID <code>import-csv-input</code> ด้วย <code>setInputFiles</code><br/>
     2. ตรวจสอบว่าข้อความผลลัพธ์ Test ID <code>import-result-message</code> มีคำว่า <code>'Imported'</code>`
+  },
+  {
+    id: "file_type_validation",
+    meta: "บทที่ 17",
+    title: "File Type Validation: UI ต้องแจ้ง Error เมื่ออัปโหลดไฟล์ผิดประเภท",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-17: อัปโหลดไฟล์ .exe ต้องขึ้น Error ไม่ใช่ Import สำเร็จ (ฟีเจอร์สมมติ)', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // หมายเหตุ: ฟีเจอร์สมมติต่อยอดจากบทที่ 16
+  // 1. อัปโหลดไฟล์ 'malware.exe' ผ่าน input Test ID 'import-csv-input' ด้วย setInputFiles
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่าข้อความ Test ID 'import-result-message' มีคำว่า 'Only CSV files are allowed'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ File Type Validation ฝั่ง UI...");
+      const hasSetInputFiles = /await\s+page\.getByTestId\(['"]import-csv-input['"]\)\.setInputFiles\(['"]\.\/fixtures\/malware\.exe['"]\)/.test(code);
+      if (hasSetInputFiles) {
+        log("✓ ขั้นตอนที่ 1: อัปโหลดไฟล์ malware.exe ด้วย setInputFiles ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง page.getByTestId('import-csv-input').setInputFiles('./fixtures/malware.exe')\nตัวอย่าง: await page.getByTestId('import-csv-input').setInputFiles('./fixtures/malware.exe');");
+      }
+
+      const hasResultCheck = /await\s+expect\(page\.getByTestId\(['"]import-result-message['"]\)\)\.toContainText\(['"]Only CSV files are allowed['"]\)/.test(code);
+      if (hasResultCheck) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบข้อความ error ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความ error\nตัวอย่าง: await expect(page.getByTestId('import-result-message')).toContainText('Only CSV files are allowed');");
+      }
+    },
+    hint: "ใช้ await page.getByTestId('import-csv-input').setInputFiles('./fixtures/malware.exe'); แล้วเช็ค await expect(page.getByTestId('import-result-message')).toContainText('Only CSV files are allowed');",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-17: อัปโหลดไฟล์ .exe ต้องขึ้น Error ไม่ใช่ Import สำเร็จ (ฟีเจอร์สมมติ)', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // หมายเหตุ: ฟีเจอร์สมมติต่อยอดจากบทที่ 16
+  // 1. อัปโหลดไฟล์ 'malware.exe' ผ่าน input Test ID 'import-csv-input' ด้วย setInputFiles
+  await page.getByTestId('import-csv-input').setInputFiles('./fixtures/malware.exe');
+
+  // 2. ตรวจสอบว่าข้อความ Test ID 'import-result-message' มีคำว่า 'Only CSV files are allowed'
+  await expect(page.getByTestId('import-result-message')).toContainText('Only CSV files are allowed');
+});`,
+    theory: `บทที่แล้วสอน happy path ของการอัปโหลด บทนี้ต่อยอดเช็คว่า UI แจ้งเตือนถูกต้องเมื่อผู้ใช้เลือกไฟล์ผิดประเภทหรือเปล่า — จุดสำคัญคือ<strong>การ Validate ควรเกิดตั้งแต่ฝั่ง Client</strong> (ก่อนแม้แต่จะส่งไปหา Backend) เพื่อ feedback ผู้ใช้ทันทีโดยไม่ต้องรอ round-trip เครือข่าย ถึงแม้ว่า Backend เองก็ต้อง validate ซ้ำอีกชั้นเสมอ (Client-side validation หลอกได้ ห้ามเชื่อฝั่งเดียว ดู track API Testing บทที่ 11)<br/><br/>
+    เทคนิคสำคัญ: <code>page.setInputFiles()</code> ไม่จำเป็นต้องมีไฟล์จริงอยู่บนดิสก์เสมอไป — รับ <code>string</code> path ก็ได้ (ต้องมีไฟล์จริงตามที่ระบุ) แต่ก็รับ object <code>{ name, mimeType, buffer }</code> ได้ด้วย (สร้างไฟล์จำลองขึ้นในหน่วยความจำตรงๆ ไม่ต้องมีไฟล์จริง) — บทถัดไปจะสอนรูปแบบหลังสำหรับทดสอบไฟล์ขนาดใหญ่โดยไม่ต้อง commit ไฟล์จริงติด repo`,
+    example: `// ตัวอย่างสร้างไฟล์จำลองในหน่วยความจำแทนการอ้างอิง path จริง (ไม่ต้องมีไฟล์จริงบนดิสก์)
+await page.getByTestId('import-csv-input').setInputFiles({
+  name: 'notes.txt',
+  mimeType: 'text/plain',
+  buffer: Buffer.from('this is not a csv file'),
+});
+await expect(page.getByTestId('import-result-message')).toContainText('Only CSV files are allowed');`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (ฟีเจอร์สมมติต่อยอดจากบทที่ 16) โดย:<br/>
+    1. อัปโหลดไฟล์ <code>./fixtures/malware.exe</code> ผ่าน Test ID <code>import-csv-input</code><br/>
+    2. ตรวจสอบว่าข้อความ Test ID <code>import-result-message</code> มีคำว่า <code>'Only CSV files are allowed'</code>`
+  },
+  {
+    id: "file_size_validation",
+    meta: "บทที่ 18",
+    title: "File Size Validation: UI ต้องปฏิเสธไฟล์ใหญ่เกินโดยไม่ต้องมีไฟล์จริง",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-18: อัปโหลดไฟล์ใหญ่เกิน 5MB ต้องขึ้น Error (ฟีเจอร์สมมติ)', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // หมายเหตุ: ฟีเจอร์สมมติต่อยอดจากบทที่ 16-17
+  // 1. อัปโหลดไฟล์จำลองขนาด 6MB ผ่าน input Test ID 'import-csv-input' ด้วย setInputFiles แบบ object (ไม่ต้องมีไฟล์จริง)
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่าข้อความ Test ID 'import-result-message' มีคำว่า 'File size exceeds 5MB limit'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ File Size Validation ฝั่ง UI...");
+      const hasSetInputFiles = /await\s+page\.getByTestId\(['"]import-csv-input['"]\)\.setInputFiles\(\{[\s\S]*?buffer:\s*Buffer\.alloc\(\s*6\s*\*\s*1024\s*\*\s*1024\s*\)[\s\S]*?\}\)/.test(code);
+      if (hasSetInputFiles) {
+        log("✓ ขั้นตอนที่ 1: อัปโหลดไฟล์จำลองขนาด 6MB ด้วย setInputFiles แบบ object ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการอัปโหลดไฟล์จำลองขนาด 6MB\nตัวอย่าง: await page.getByTestId('import-csv-input').setInputFiles({ name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) });");
+      }
+
+      const hasResultCheck = /await\s+expect\(page\.getByTestId\(['"]import-result-message['"]\)\)\.toContainText\(['"]File size exceeds 5MB limit['"]\)/.test(code);
+      if (hasResultCheck) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบข้อความ error ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความ error\nตัวอย่าง: await expect(page.getByTestId('import-result-message')).toContainText('File size exceeds 5MB limit');");
+      }
+    },
+    hint: "ใช้ await page.getByTestId('import-csv-input').setInputFiles({ name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) }); แล้วเช็ค toContainText('File size exceeds 5MB limit')",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-18: อัปโหลดไฟล์ใหญ่เกิน 5MB ต้องขึ้น Error (ฟีเจอร์สมมติ)', async ({ page }) => {
+  await page.goto('/holdings');
+
+  // หมายเหตุ: ฟีเจอร์สมมติต่อยอดจากบทที่ 16-17
+  // 1. อัปโหลดไฟล์จำลองขนาด 6MB ผ่าน input Test ID 'import-csv-input' ด้วย setInputFiles แบบ object (ไม่ต้องมีไฟล์จริง)
+  await page.getByTestId('import-csv-input').setInputFiles({
+    name: 'huge.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.alloc(6 * 1024 * 1024)
+  });
+
+  // 2. ตรวจสอบว่าข้อความ Test ID 'import-result-message' มีคำว่า 'File size exceeds 5MB limit'
+  await expect(page.getByTestId('import-result-message')).toContainText('File size exceeds 5MB limit');
+});`,
+    theory: `การทดสอบไฟล์ขนาดใหญ่ไม่จำเป็นต้อง commit ไฟล์ 6MB ติด test repo จริงๆ — ใช้รูปแบบ object ของ <code>setInputFiles({ name, mimeType, buffer })</code> สร้างไฟล์จำลองขึ้นในหน่วยความจำแทน (<code>Buffer.alloc(6 * 1024 * 1024)</code> จองพื้นที่ 6MB เปล่าๆ ในหน่วยความจำตอนรัน ไม่ต้องมีไฟล์จริงบนดิสก์เลย) — เร็วกว่า ไม่ทำให้ repo บวม และ reproducible 100% ทุกเครื่องที่รัน<br/><br/>
+    UI ที่ดีควรเช็คขนาดไฟล์<strong>ฝั่ง Client ทันทีที่เลือกไฟล์</strong> (ผ่าน <code>File.size</code> ใน JavaScript) ก่อนจะอัปโหลดขึ้น Backend ด้วยซ้ำ — ประหยัด bandwidth และให้ feedback ผู้ใช้เร็วกว่ารอ round-trip เครือข่ายไปเจอ 413 กลับมา (แต่ฝั่ง Backend ก็ต้องเช็คซ้ำเสมอ เพราะ client-side validation ข้ามได้เสมอถ้ายิง request ตรงแบบ track API Testing บทที่ 12)`,
+    example: `// ตัวอย่างไฟล์ขนาดพอดี limit ต้องผ่าน ไม่ใช่โดนบล็อก
+await page.getByTestId('import-csv-input').setInputFiles({
+  name: 'ok.csv',
+  mimeType: 'text/csv',
+  buffer: Buffer.alloc(1024) // 1KB เล็กมาก ไม่เกิน limit แน่นอน
+});
+await expect(page.getByTestId('import-result-message')).toContainText('Imported');`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (ฟีเจอร์สมมติต่อยอดจากบทที่ 16-17) โดย:<br/>
+    1. อัปโหลดไฟล์จำลองขนาด <code>6MB</code> ผ่าน Test ID <code>import-csv-input</code> ด้วย <code>setInputFiles({ name, mimeType, buffer: Buffer.alloc(6 * 1024 * 1024) })</code><br/>
+    2. ตรวจสอบว่าข้อความ Test ID <code>import-result-message</code> มีคำว่า <code>'File size exceeds 5MB limit'</code>`
   }
 ];
 
