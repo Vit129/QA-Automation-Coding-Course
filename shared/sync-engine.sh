@@ -8,7 +8,7 @@ set -euo pipefail
 # engine.js copy directly, it will be overwritten.
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TRACKS=(API-Testing Playwright Robot-Framework Performance-Testing DB-Design-SQL CLI-Essentials)
+TRACKS=(API-Testing Playwright Robot-Framework Performance-Testing DB-Design-SQL CLI-Essentials Security-Testing Accessibility-Testing Visual-Regression-Testing CI-CD-Pipeline Framework-Design)
 
 for track in "${TRACKS[@]}"; do
   cp "$DIR/engine.js" "$DIR/../$track/engine.js"
