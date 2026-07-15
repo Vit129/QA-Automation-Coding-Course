@@ -270,7 +270,7 @@ function runSandboxCode() {
       terminal.innerHTML += `
         <div class="terminal-line text-muted">...................................................</div>
         <div class="terminal-line error">✕ <strong>ผลการรัน: ล้มเหลว (Failed)</strong></div>
-        <div class="terminal-line error">${err.message.replace(/\n/g, '<br/>')}</div>
+        <div class="terminal-line error">${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
         <div class="terminal-line error">1 failed (44ms)</div>
       `;
     }

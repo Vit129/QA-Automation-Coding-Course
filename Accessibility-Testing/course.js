@@ -190,40 +190,99 @@ const finalTag = await page.evaluate(() => document.activeElement.tagName);`,
     meta: "บทที่ 4",
     title: "Semantic Heading: ลำดับ h1-h6 ต้องไม่กระโดดข้าม",
     template: `// สถานการณ์: AiTeamTab.jsx จริงมี <h2> เป็นหัวข้อ section (ไม่มี h1 ในไฟล์นี้เพราะเป็น component ย่อย)
-// 1. ดึง heading ทั้งหมดในหน้าด้วย page.locator('h1, h2, h3, h4, h5, h6')
-// 2. ตรวจสอบว่ามี heading อย่างน้อย 1 อันในหน้า (count มากกว่า 0)
+// 1. ดึงลำดับ level ของ heading ทั้งหมดในหน้า (h1=1, h2=2, ...) ด้วย page.evaluate()
+// 2. ตรวจสอบว่าไม่มีคู่ heading ที่ติดกันกระโดดข้ามระดับมากกว่า 1 (เช่น h1 ต่อด้วย h4 เลยถือว่าผิด)
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบโครงสร้าง Heading...");
-      const hasLocator = /page\.locator\(['"]h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6['"]\)/.test(code);
-      const hasCountCheck = /toBeGreaterThan\(0\)/.test(code);
-      if (!hasLocator) {
-        throw new Error("ไม่พบการดึง heading ทั้งหมดด้วย page.locator('h1, h2, h3, h4, h5, h6')");
+      log("🔍 ตรวจสอบลำดับ Heading ว่าไม่กระโดดข้าม...");
+      const hasEvaluate = /page\.evaluate\(/.test(code);
+      const hasQuerySelectorAll = /querySelectorAll\(['"]h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6['"]\)/.test(code);
+      const hasTagNameLevel = /tagName\[1\]/.test(code);
+      const hasStepCheck = /toBeLessThanOrEqual\(1\)/.test(code);
+      if (!hasEvaluate || !hasQuerySelectorAll) {
+        throw new Error("ไม่พบการดึง heading ทั้งหมดผ่าน page.evaluate() ด้วย document.querySelectorAll('h1, h2, h3, h4, h5, h6')");
       }
-      if (!hasCountCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า count มากกว่า 0\nตัวอย่าง: expect(count).toBeGreaterThan(0);");
+      if (!hasTagNameLevel) {
+        throw new Error("ไม่พบการแปลง tagName เป็นตัวเลข level\nตัวอย่าง: Number(h.tagName[1])");
       }
-      log("✓ ตรวจสอบโครงสร้าง Heading ถูกต้อง");
+      if (!hasStepCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่าความต่างระหว่าง heading ที่ติดกันไม่เกิน 1\nตัวอย่าง: expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1);");
+      }
+      log("✓ ยืนยันได้ว่าลำดับ heading ไม่กระโดดข้ามระดับจริง");
     },
-    hint: "const headings = page.locator('h1, h2, h3, h4, h5, h6'); const count = await headings.count(); expect(count).toBeGreaterThan(0);",
+    hint: "const levels = await page.evaluate(() => Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(h => Number(h.tagName[1]))); แล้ววนลูปเช็ค expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1);",
     solution: `import { test, expect } from '@playwright/test';
 
-test('หน้าเว็บมี semantic heading อย่างน้อย 1 อัน', async ({ page }) => {
+test('ลำดับ heading ไม่กระโดดข้ามระดับ', async ({ page }) => {
   await page.goto('/');
-  const headings = page.locator('h1, h2, h3, h4, h5, h6');
-  const count = await headings.count();
-  expect(count).toBeGreaterThan(0);
+  const levels = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(h => Number(h.tagName[1]))
+  );
+
+  for (let i = 1; i < levels.length; i++) {
+    expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1);
+  }
 });`,
     theory: `<strong>Semantic HTML heading</strong> (<code>&lt;h1&gt;</code> ถึง <code>&lt;h6&gt;</code>) ไม่ใช่แค่เรื่องขนาดตัวอักษร — screen reader ใช้ heading เป็น "สารบัญ" ให้ผู้ใช้กระโดดข้ามไปยัง section ที่สนใจได้ทันที (กด shortcut คีย์เพื่อ "ไป heading ถัดไป" โดยไม่ต้องอ่านทุกอย่างตั้งแต่ต้น)<br/><br/>
-    กฎสำคัญ: ลำดับ heading ต้อง<strong>ไม่กระโดดข้าม</strong> เช่นมี <code>&lt;h1&gt;</code> แล้วกระโดดไป <code>&lt;h4&gt;</code> เลยโดยไม่มี <code>h2</code>/<code>h3</code> คั่น — ทำให้โครงสร้าง "สารบัญ" ที่ screen reader สร้างให้อัตโนมัติดูสับสน ไม่สื่อความสัมพันธ์ของเนื้อหาจริง<br/><br/>
+    กฎสำคัญ: ลำดับ heading ต้อง<strong>ไม่กระโดดข้าม</strong> เช่นมี <code>&lt;h1&gt;</code> แล้วกระโดดไป <code>&lt;h4&gt;</code> เลยโดยไม่มี <code>h2</code>/<code>h3</code> คั่น — ทำให้โครงสร้าง "สารบัญ" ที่ screen reader สร้างให้อัตโนมัติดูสับสน ไม่สื่อความสัมพันธ์ของเนื้อหาจริง บทนี้พิสูจน์กฎข้อนี้จริงๆ ด้วยการดึง level ของทุก heading ในหน้า (<code>h1</code>→1, <code>h2</code>→2, ...) แล้วเช็คว่าความต่างระหว่างคู่ที่ติดกัน<strong>ไม่เกิน 1</strong> เสมอ (นับแค่ "ลึกลงไปมากขึ้น" ทีละระดับ — ถอยขึ้นข้ามหลายระดับทำได้ปกติ เช่น h3→h1 ไม่ผิดกฎนี้)<br/><br/>
     <strong>Real grounding:</strong> <code>AiTeamTab.jsx</code> ของ My-Investment-Port มี <code>&lt;h2 className="text-gradient-mint"&gt;{UI_STRINGS.AI_INV_TEAM_STUDIO_TITLE}&lt;/h2&gt;</code> เป็นหัวข้อ section จริง — ใช้ <code>h2</code> (ไม่ใช่ <code>h1</code>) เพราะ component นี้เป็น section ย่อยของหน้าใหญ่กว่า ซึ่งถูกต้องตามหลัก semantic hierarchy (มี <code>h1</code> เดียวของทั้งหน้าอยู่ระดับบนสุด แล้ว section ย่อยๆ ใช้ <code>h2</code>/<code>h3</code> ไล่ลงมา)`,
     example: `// ตัวอย่างเช็คว่ามี h1 แค่อันเดียวในหน้า (กฎที่เข้มงวดกว่า)
 const h1Count = await page.locator('h1').count();
 expect(h1Count).toBe(1);`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
-    1. ดึง heading ทั้งหมดด้วย <code>page.locator('h1, h2, h3, h4, h5, h6')</code><br/>
-    2. ตรวจสอบว่า count มากกว่า <code>0</code>`
+    1. ดึง level ของ heading ทั้งหมดผ่าน <code>page.evaluate()</code> ด้วย <code>document.querySelectorAll('h1, h2, h3, h4, h5, h6')</code> แล้วแปลง tagName เป็นตัวเลข (<code>Number(h.tagName[1])</code>)<br/>
+    2. วนลูปตรวจสอบว่าความต่างระหว่าง heading ที่ติดกันไม่เกิน <code>1</code>`
+  },
+  {
+    id: "color_contrast",
+    meta: "บทที่ 5",
+    title: "Color Contrast: WCAG Failure ที่พบบ่อยที่สุด",
+    template: `// สถานการณ์: axe-core มี rule เฉพาะสำหรับเช็คความต่างสีระหว่างตัวอักษรกับพื้นหลัง (color-contrast)
+// การสแกนแบบเต็ม (บทนำ) ครอบคลุมกฎนี้อยู่แล้ว แต่บทนี้เจาะจงสแกนเฉพาะกฎนี้กฎเดียว
+// 1. ใช้ AxeBuilder จำกัดให้สแกนเฉพาะ rule 'color-contrast' ด้วย withRules(['color-contrast'])
+// 2. ตรวจสอบว่า violations ต้องว่างเปล่า (length === 0)
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการสแกน Color Contrast...");
+      const hasImport = /import\s+AxeBuilder\s+from\s+['"]@axe-core\/playwright['"]/.test(code);
+      const hasWithRules = /withRules\(\s*\[\s*['"]color-contrast['"]\s*\]\s*\)/.test(code);
+      const hasAnalyze = /\.analyze\(\)/.test(code);
+      const hasLengthCheck = /violations\.length\)\.toBe\(0\)/.test(code) || /expect\(.*violations.*\)\.toHaveLength\(0\)/.test(code);
+      if (!hasImport) {
+        throw new Error("ไม่พบ import AxeBuilder from '@axe-core/playwright'");
+      }
+      if (!hasWithRules) {
+        throw new Error("ไม่พบการจำกัด rule ด้วย withRules(['color-contrast'])");
+      }
+      if (!hasAnalyze) {
+        throw new Error("ไม่พบการรัน analyze()");
+      }
+      if (!hasLengthCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่า violations.length เป็น 0");
+      }
+      log("✓ สแกน Color Contrast เฉพาะจุดถูกต้อง (ไม่มี violation)");
+    },
+    hint: "const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze(); expect(results.violations.length).toBe(0);",
+    solution: `import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+test('ไม่มี Color Contrast violation', async ({ page }) => {
+  await page.goto('/');
+  const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+  expect(results.violations.length).toBe(0);
+});`,
+    theory: `<strong>Color Contrast</strong> คือสัดส่วนความต่างระหว่างสีตัวอักษรกับสีพื้นหลัง — WCAG กำหนดขั้นต่ำไว้ชัดเจน (ระดับ AA: ตัวอักษรปกติต้องมีสัดส่วนอย่างน้อย <strong>4.5:1</strong>, ตัวอักษรใหญ่/หนาต้องอย่างน้อย <strong>3:1</strong>) เพื่อให้ผู้ใช้สายตาเลือนราง/ตาบอดสีอ่านออกได้จริง<br/><br/>
+    <strong>นี่คือ WCAG violation ที่ automated scan เจอบ่อยที่สุดในโลกจริง</strong> (สำรวจโดย WebAIM ปีต่อปีพบว่า color contrast ติดอันดับ 1 ของปัญหา a11y ที่เจอบนเว็บสาธารณะเสมอ) เพราะดีไซน์เนอร์มักเลือกสีจากความสวยงามอย่างเดียว โดยไม่ได้เช็คสัดส่วนตัวเลขจริง — สีเทาอ่อนบนพื้นขาว หรือสีพาสเทลที่ดูทันสมัย มักตกมาตรฐาน WCAG โดยไม่รู้ตัว<br/><br/>
+    <code>AxeBuilder</code> (ที่ใช้สแกนทั้งหน้าไปแล้วในบทนำ) รองรับ <code>withRules([...])</code> จำกัดการสแกนให้เหลือแค่กฎที่ต้องการ — มีประโยชน์เวลาต้องการรายงานเจาะจงเฉพาะปัญหาเดียว (เช่น ทีมออกแบบเพิ่งแก้เรื่องสี อยากเช็คเฉพาะจุดนี้ซ้ำไว ๆ โดยไม่ต้องรอผลสแกนเต็มทุกกฎ)`,
+    example: `// ตัวอย่างจำกัดหลาย rule พร้อมกัน (ไม่ใช่แค่ rule เดียว)
+const results = await new AxeBuilder({ page })
+  .withRules(['color-contrast', 'image-alt', 'label'])
+  .analyze();`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ใช้ <code>AxeBuilder</code> จำกัดให้สแกนเฉพาะ <code>withRules(['color-contrast'])</code><br/>
+    2. ตรวจสอบว่า <code>violations.length</code> เป็น <code>0</code>`
   }
 ];
 
@@ -290,7 +349,7 @@ function runSandboxCode() {
       terminal.innerHTML += `
         <div class="terminal-line text-muted">...................................................</div>
         <div class="terminal-line error">✕ <strong>ผลการรัน: ล้มเหลว (Failed)</strong></div>
-        <div class="terminal-line error">${err.message.replace(/\n/g, '<br/>')}</div>
+        <div class="terminal-line error">${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
         <div class="terminal-line error">1 failed (37ms)</div>
       `;
     }

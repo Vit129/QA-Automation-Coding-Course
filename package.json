@@ -1,0 +1,11 @@
+{
+  "name": "qa-automation-coding-course",
+  "private": true,
+  "description": "Dev-only tooling for maintaining this course (self-test harness). End users never need this - open index.html directly, no install required.",
+  "scripts": {
+    "test": "node shared/selftest.mjs"
+  },
+  "devDependencies": {
+    "alasql": "^4.6.4"
+  }
+}

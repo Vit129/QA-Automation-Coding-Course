@@ -283,6 +283,58 @@ jobs:
     task: `จงเขียน YAML ให้สมบูรณ์ โดย:<br/>
     1. สร้าง job ชื่อ <code>lint</code><br/>
     2. ตั้งค่า <code>continue-on-error: true</code>`
+  },
+  {
+    id: "artifact_upload_on_failure",
+    meta: "บทที่ 6",
+    title: "Artifact Upload: เอาหลักฐาน Test ที่ Fail ออกมาจาก CI ให้ได้",
+    template: `# สถานการณ์: test fail ใน CI แต่รายงาน HTML + trace ที่ Playwright สร้างไว้ถูกลบทิ้งไปพร้อม runner
+# ถ้าไม่ upload ออกมาก่อน ไม่มีทางเห็นว่า fail เพราะอะไร ต้องเดาแล้วรันซ้ำเอง
+# 1. เพิ่ม step upload-artifact ให้ทำงานแม้ step ก่อนหน้าจะ fail (if: always())
+#    อัปโหลดโฟลเดอร์ playwright-report ชื่อ 'playwright-report'
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการตั้งค่า Artifact Upload...");
+      const hasUploadAction = /uses:\s*actions\/upload-artifact@v4/.test(code);
+      const hasAlways = /if:\s*always\(\)/.test(code);
+      const hasName = /name:\s*playwright-report/.test(code);
+      const hasPath = /path:\s*playwright-report/.test(code);
+      if (!hasUploadAction) {
+        throw new Error("ไม่พบ uses: actions/upload-artifact@v4");
+      }
+      if (!hasAlways) {
+        throw new Error("ไม่พบ if: always() — ถ้าไม่ใส่ step นี้จะไม่รันเลยเมื่อ test ก่อนหน้า fail");
+      }
+      if (!hasName || !hasPath) {
+        throw new Error("ต้องตั้งค่า name: playwright-report และ path: playwright-report");
+      }
+      log("✓ ตั้งค่า Artifact Upload ถูกต้อง");
+    },
+    hint: "- uses: actions/upload-artifact@v4\n  if: always()\n  with:\n    name: playwright-report\n    path: playwright-report",
+    solution: `jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report`,
+    theory: `ตั้งค่า Trigger, Caching, Matrix ให้ test รันอัตโนมัติได้ครบแล้ว (บทก่อนหน้า) — แต่ถ้า test fail ใน CI แล้วไม่มีใครเอาหลักฐาน (screenshot, trace, HTML report ที่ Playwright สร้างให้อัตโนมัติ) ออกมาดูได้ ก็เท่ากับรู้แค่ว่า "แดง" แต่ไม่รู้ว่าทำไม ต้อง clone มารันซ้ำบนเครื่องตัวเองอีกรอบเพื่อไล่ดู<br/><br/>
+    <code>actions/upload-artifact</code> เก็บไฟล์จาก CI runner (ที่ปกติหายไปพร้อม runner หลังจบงาน) ไว้ให้ดาวน์โหลดผ่านหน้า GitHub Actions ได้ทีหลัง — จุดสำคัญที่สุดคือ <code>if: always()</code>: ค่า default ของทุก step คือ<strong>รันเฉพาะตอน step ก่อนหน้าผ่านเท่านั้น</strong> ถ้าไม่ใส่ <code>if: always()</code> แล้ว <code>npx playwright test</code> fail ก่อนหน้า step upload จะถูก<strong>ข้ามไปเลย</strong> — กลายเป็นว่ายิ่ง test fail (ตอนที่ต้องการหลักฐานมากที่สุด) กลับยิ่งไม่มีหลักฐานให้ดู<br/><br/>
+    <code>name</code> ตั้งชื่อ artifact ที่จะเห็นในหน้า GitHub Actions, <code>path</code> ระบุโฟลเดอร์ที่ Playwright เขียนรายงานไว้ (ค่า default คือ <code>playwright-report/</code>) — ดาวน์โหลดมาเปิดดู HTML report ได้เหมือนรันบนเครื่องตัวเองทุกประการ รวม screenshot/trace ของจุดที่ fail`,
+    example: `# ตัวอย่างอัปโหลด trace แยกต่างหากด้วย (ละเอียดกว่า HTML report เฉยๆ)
+- uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: playwright-traces
+    path: test-results/`,
+    task: `จงเขียน YAML ให้สมบูรณ์ โดย:<br/>
+    1. เพิ่ม step ใช้ <code>actions/upload-artifact@v4</code> พร้อม <code>if: always()</code><br/>
+    2. ตั้งค่า <code>name: playwright-report</code> และ <code>path: playwright-report</code>`
   }
 ];
 
@@ -349,7 +401,7 @@ function runSandboxCode() {
       terminal.innerHTML += `
         <div class="terminal-line text-muted">...................................................</div>
         <div class="terminal-line error">✕ <strong>YAML ไม่ถูกต้อง (Invalid)</strong></div>
-        <div class="terminal-line error">${err.message.replace(/\n/g, '<br/>')}</div>
+        <div class="terminal-line error">${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
       `;
     }
     terminal.scrollTop = terminal.scrollHeight;
