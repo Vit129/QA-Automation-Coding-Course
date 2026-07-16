@@ -4,6 +4,38 @@
 // axe-core scan and keyboard-navigation lessons teach universal technique (no project-specific
 // axe-core setup exists yet in the reference project).
 
+// ponytail: naive strip (no real JS/HTML parser) — good enough to stop the "answer pasted
+// inside a comment" cheese in validate() checks below; not proof against gaming via string
+// literals containing the same text (would need a real parser to close that gap).
+function stripComments(code) {
+  return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+}
+
+// WCAG 1.4.3 contrast-ratio math (relative luminance formula), used by the ขั้นสูง 1 lesson
+// to genuinely compute contrast instead of pattern-matching a hex value.
+function hexToRgb(hex) {
+  const clean = hex.replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const num = parseInt(full, 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function relativeLuminance({ r, g, b }) {
+  const channel = (c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+function contrastRatio(hex1, hex2) {
+  const l1 = relativeLuminance(hexToRgb(hex1));
+  const l2 = relativeLuminance(hexToRgb(hex2));
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 const LESSONS = [
   {
     id: "intro",
@@ -16,9 +48,10 @@ const LESSONS = [
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการใช้ AxeBuilder...");
-      const hasImport = /import\s+AxeBuilder\s+from\s+['"]@axe-core\/playwright['"]/.test(code);
-      const hasAnalyze = /new AxeBuilder\(\{\s*page\s*\}\)\s*\.analyze\(\)/.test(code);
-      const hasLengthCheck = /violations\.length\)\.toBe\(0\)/.test(code) || /expect\(.*violations.*\)\.toHaveLength\(0\)/.test(code);
+      const clean = stripComments(code);
+      const hasImport = /import\s+AxeBuilder\s+from\s+['"]@axe-core\/playwright['"]/.test(clean);
+      const hasAnalyze = /new AxeBuilder\(\{\s*page\s*\}\)\s*\.analyze\(\)/.test(clean);
+      const hasLengthCheck = /violations\.length\)\.toBe\(0\)/.test(clean) || /expect\(.*violations.*\)\.toHaveLength\(0\)/.test(clean);
       if (!hasImport) {
         throw new Error("ไม่พบ import AxeBuilder from '@axe-core/playwright'");
       }
@@ -30,7 +63,7 @@ const LESSONS = [
       }
       log("✓ สแกน Accessibility อัตโนมัติถูกต้อง (ไม่มี violation)");
     },
-    hint: "import AxeBuilder from '@axe-core/playwright'; แล้ว const results = await new AxeBuilder({ page }).analyze(); expect(results.violations.length).toBe(0);",
+    hint: "axe-core ให้ class ที่ต้องสร้าง instance โดยส่ง { page } เข้าไปในตัวสร้าง แล้วเรียกเมธอดสแกนแบบ asynchronous บน instance นั้น ผลลัพธ์ที่ได้จะมี array ของปัญหาที่เจอ — ตรวจสอบว่า array นั้นมีความยาวเป็น 0",
     solution: `import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -61,10 +94,13 @@ const results = await new AxeBuilder({ page })
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการเช็ค alt text ของรูปภาพ...");
-      const hasLocator = /page\.locator\(['"]img['"]\)/.test(code);
-      const hasCount = /\.count\(\)/.test(code);
-      const hasAltCheck = /getAttribute\(['"]alt['"]\)/.test(code);
-      const hasTruthyCheck = /toBeTruthy|not\.toBe\(['"]['"]\)/.test(code);
+      const clean = stripComments(code);
+      const hasLocator = /page\.locator\(['"]img['"]\)/.test(clean);
+      const hasCount = /\.count\(\)/.test(clean);
+      const hasAltCheck = /getAttribute\(['"]alt['"]\)/.test(clean);
+      // ต้องผูก toBeTruthy()/not.toBe('') เข้ากับตัวแปรที่มาจาก getAttribute('alt') จริง ไม่ใช่แค่คำว่า
+      // toBeTruthy() ปรากฏอยู่ที่ไหนก็ได้ในโค้ด (ของเดิมแค่เช็ค substring ลอยๆ ไม่ผูกกับ alt เลย)
+      const hasTruthyCheck = /expect\([^)]*\)\.(toBeTruthy\(\)|not\.toBe\(['"]['"]\))/.test(clean);
       if (!hasLocator || !hasCount) {
         throw new Error("ไม่พบการดึงรูปภาพทั้งหมดด้วย page.locator('img') และ .count()");
       }
@@ -76,7 +112,7 @@ const results = await new AxeBuilder({ page })
       }
       log("✓ ตรวจสอบ alt text ของรูปภาพทั้งหมดถูกต้อง");
     },
-    hint: "const images = page.locator('img'); const count = await images.count(); วนลูปเช็ค await images.nth(i).getAttribute('alt') ต้อง toBeTruthy()",
+    hint: "ต้องวนลูปตามจำนวนรูปภาพที่เจอทั้งหมด แล้วดึงค่า attribute ที่เก็บคำอธิบายรูปของแต่ละรูปออกมาทีละรูป จากนั้นตรวจสอบด้วย expect ว่าค่าที่ได้ไม่ใช่ค่าว่างเปล่า",
     solution: `import { test, expect } from '@playwright/test';
 
 test('รูปภาพทุกรูปต้องมี alt text', async ({ page }) => {
@@ -112,17 +148,20 @@ const meaningfulImages = page.locator('img:not([alt=""])');`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการใช้ aria-label หา element...");
-      const hasGetByLabel = /page\.getByLabel\(['"]Select month['"]\)/.test(code);
-      const hasVisibleCheck = /toBeVisible\(\)/.test(code);
+      const clean = stripComments(code);
+      const hasGetByLabel = /page\.getByLabel\(['"]Select month['"]\)/.test(clean);
+      // ผูก toBeVisible() เข้ากับ expect(...getByLabel...) โดยตรง ไม่ใช่แค่เช็คว่ามีคำว่า toBeVisible()
+      // ปรากฏลอยๆ ที่ไหนในโค้ดก็ได้ (ของเดิมไม่ผูกกับ element ที่หาเจอเลย)
+      const hasVisibleCheck = /expect\(\s*page\.getByLabel\(['"]Select month['"]\)\s*\)\.toBeVisible\(\)/.test(clean);
       if (!hasGetByLabel) {
         throw new Error("ไม่พบการใช้ page.getByLabel('Select month')");
       }
       if (!hasVisibleCheck) {
-        throw new Error("ไม่พบการตรวจสอบ toBeVisible()");
+        throw new Error("ไม่พบการตรวจสอบ toBeVisible() บน element ที่หาเจอผ่าน getByLabel('Select month')");
       }
       log("✓ หา element ผ่าน aria-label ถูกต้อง");
     },
-    hint: "await expect(page.getByLabel('Select month')).toBeVisible();",
+    hint: "Playwright มีวิธีค้นหา element ผ่านชื่อที่เข้าถึงได้ (accessible name) โดยตรง แทนที่จะใช้ CSS selector ทั่วไป — ถ้าใช้แล้วหา element เจอและมันแสดงผลอยู่จริง แปลว่า attribute ที่ให้ชื่อกับ element นั้นถูกตั้งค่าไว้ถูกต้อง",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ปุ่ม dropdown เดือนมี aria-label ที่ถูกต้อง', async ({ page }) => {
@@ -149,9 +188,12 @@ await expect(page.getByLabel('ค้นหา ticker ในประวัติ
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการทดสอบ Keyboard Navigation...");
-      const hasTabPress = /page\.keyboard\.press\(['"]Tab['"]\)/.test(code);
-      const hasActiveElementCheck = /document\.activeElement\.tagName/.test(code);
-      const hasNotBodyCheck = /not\.toBe\(['"]BODY['"]\)/.test(code);
+      const clean = stripComments(code);
+      const hasTabPress = /page\.keyboard\.press\(['"]Tab['"]\)/.test(clean);
+      const hasActiveElementCheck = /document\.activeElement\.tagName/.test(clean);
+      // ผูก not.toBe('BODY') ให้ต้องตามหลัง document.activeElement.tagName ในลำดับเดียวกัน (ไม่ใช่แค่
+      // สองคำนี้ปรากฏแยกกันคนละที่ในโค้ดโดยไม่เกี่ยวข้องกันเลย)
+      const hasNotBodyCheck = /document\.activeElement\.tagName[\s\S]*?\.not\.toBe\(['"]BODY['"]\)/.test(clean);
       if (!hasTabPress) {
         throw new Error("ไม่พบการกด Tab ด้วย page.keyboard.press('Tab')");
       }
@@ -159,11 +201,11 @@ await expect(page.getByLabel('ค้นหา ticker ในประวัติ
         throw new Error("ไม่พบการเช็ค document.activeElement.tagName\nตัวอย่าง: await page.evaluate(() => document.activeElement.tagName)");
       }
       if (!hasNotBodyCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า activeElement ไม่ใช่ BODY\nตัวอย่าง: expect(tagName).not.toBe('BODY');");
+        throw new Error("ไม่พบการตรวจสอบว่า activeElement ไม่ใช่ BODY ต่อเนื่องจากค่าที่ดึงมา\nตัวอย่าง: expect(tagName).not.toBe('BODY');");
       }
       log("✓ ทดสอบ Keyboard Navigation ถูกต้อง (focus เลื่อนไปยัง element จริง)");
     },
-    hint: "await page.keyboard.press('Tab'); const tagName = await page.evaluate(() => document.activeElement.tagName); expect(tagName).not.toBe('BODY');",
+    hint: "ต้องจำลองการกดปุ่มเลื่อน focus ด้วยคีย์บอร์ด แล้วอ่านว่า element ไหนกำลังถูก focus อยู่ในขณะนั้นผ่านการรันโค้ดฝั่ง browser จากนั้นเทียบว่า tag ของ element นั้นไม่ใช่ tag เริ่มต้นของหน้า (body)",
     solution: `import { test, expect } from '@playwright/test';
 
 test('กด Tab แล้ว focus เลื่อนไปยัง element ที่ใช้งานได้', async ({ page }) => {
@@ -196,22 +238,22 @@ const finalTag = await page.evaluate(() => document.activeElement.tagName);`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบลำดับ Heading ว่าไม่กระโดดข้าม...");
-      const hasEvaluate = /page\.evaluate\(/.test(code);
-      const hasQuerySelectorAll = /querySelectorAll\(['"]h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6['"]\)/.test(code);
-      const hasTagNameLevel = /tagName\[1\]/.test(code);
-      const hasStepCheck = /toBeLessThanOrEqual\(1\)/.test(code);
-      if (!hasEvaluate || !hasQuerySelectorAll) {
-        throw new Error("ไม่พบการดึง heading ทั้งหมดผ่าน page.evaluate() ด้วย document.querySelectorAll('h1, h2, h3, h4, h5, h6')");
-      }
-      if (!hasTagNameLevel) {
-        throw new Error("ไม่พบการแปลง tagName เป็นตัวเลข level\nตัวอย่าง: Number(h.tagName[1])");
+      const clean = stripComments(code);
+      // ผูก page.evaluate() + querySelectorAll(...) + tagName[1] เข้าด้วยกันเป็นสายเดียว (ของเดิมเช็คแยก
+      // อิสระจากกัน ทำให้ผ่านได้แม้สามอย่างนี้ไม่ได้เกี่ยวข้องกันเลยในโค้ดจริง)
+      const hasEvaluateChain = /page\.evaluate\(\s*\(\)\s*=>[\s\S]*?querySelectorAll\(['"]h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6['"]\)[\s\S]*?tagName\[1\]/.test(clean);
+      // ผูกการลบกันของสอง index ที่ติดกัน [i] และ [i - 1] เข้ากับ toBeLessThanOrEqual(1) โดยตรง (ของเดิมแค่
+      // เช็คว่ามีคำว่า toBeLessThanOrEqual(1) อยู่ที่ไหนก็ได้ในโค้ด ไม่ผูกกับการเทียบ level เลย)
+      const hasStepCheck = /\w+\[i\]\s*-\s*\w+\[i\s*-\s*1\]\)\.toBeLessThanOrEqual\(1\)/.test(clean);
+      if (!hasEvaluateChain) {
+        throw new Error("ไม่พบการดึง heading ทั้งหมดผ่าน page.evaluate() ด้วย document.querySelectorAll('h1, h2, h3, h4, h5, h6') แล้วแปลงเป็นตัวเลข level ด้วย tagName[1]");
       }
       if (!hasStepCheck) {
         throw new Error("ไม่พบการตรวจสอบว่าความต่างระหว่าง heading ที่ติดกันไม่เกิน 1\nตัวอย่าง: expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1);");
       }
       log("✓ ยืนยันได้ว่าลำดับ heading ไม่กระโดดข้ามระดับจริง");
     },
-    hint: "const levels = await page.evaluate(() => Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(h => Number(h.tagName[1]))); แล้ววนลูปเช็ค expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1);",
+    hint: "ต้องดึงลำดับ heading ทั้งหมดจากหน้าโดยรันโค้ดฝั่ง browser แปลงแต่ละ tag เป็นตัวเลขระดับ แล้ววนลูปเทียบผลต่างระหว่าง level ของ heading ที่ติดกันสองอันว่าต้องไม่มากกว่าหนึ่งระดับ",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ลำดับ heading ไม่กระโดดข้ามระดับ', async ({ page }) => {
@@ -246,25 +288,24 @@ expect(h1Count).toBe(1);`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการสแกน Color Contrast...");
-      const hasImport = /import\s+AxeBuilder\s+from\s+['"]@axe-core\/playwright['"]/.test(code);
-      const hasWithRules = /withRules\(\s*\[\s*['"]color-contrast['"]\s*\]\s*\)/.test(code);
-      const hasAnalyze = /\.analyze\(\)/.test(code);
-      const hasLengthCheck = /violations\.length\)\.toBe\(0\)/.test(code) || /expect\(.*violations.*\)\.toHaveLength\(0\)/.test(code);
+      const clean = stripComments(code);
+      const hasImport = /import\s+AxeBuilder\s+from\s+['"]@axe-core\/playwright['"]/.test(clean);
+      // ผูก withRules(['color-contrast']) ให้ต้องต่อด้วย .analyze() โดยตรงในสายเดียวกัน (ของเดิมเช็ค
+      // .analyze() แบบลอยๆ ซึ่งจับคู่กับ analyze() ของอะไรก็ได้ในโค้ด ไม่จำเป็นต้องเป็นตัวที่ถูก withRules มาก่อน)
+      const hasScopedAnalyze = /withRules\(\s*\[\s*['"]color-contrast['"]\s*\]\s*\)\s*\.analyze\(\)/.test(clean);
+      const hasLengthCheck = /violations\.length\)\.toBe\(0\)/.test(clean) || /expect\(.*violations.*\)\.toHaveLength\(0\)/.test(clean);
       if (!hasImport) {
         throw new Error("ไม่พบ import AxeBuilder from '@axe-core/playwright'");
       }
-      if (!hasWithRules) {
-        throw new Error("ไม่พบการจำกัด rule ด้วย withRules(['color-contrast'])");
-      }
-      if (!hasAnalyze) {
-        throw new Error("ไม่พบการรัน analyze()");
+      if (!hasScopedAnalyze) {
+        throw new Error("ไม่พบการจำกัด rule ด้วย withRules(['color-contrast']) ต่อด้วย analyze() ในสายเดียวกัน");
       }
       if (!hasLengthCheck) {
         throw new Error("ไม่พบการตรวจสอบว่า violations.length เป็น 0");
       }
       log("✓ สแกน Color Contrast เฉพาะจุดถูกต้อง (ไม่มี violation)");
     },
-    hint: "const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze(); expect(results.violations.length).toBe(0);",
+    hint: "เหมือนบทนำ แต่ใช้ตัวเลือกของ instance สแกนที่จำกัดขอบเขตให้เหลือแค่กฎเดียวก่อนเรียกเมธอดสแกนต่อท้าย แล้วตรวจสอบความยาวผลลัพธ์เหมือนเดิม",
     solution: `import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -282,6 +323,133 @@ const results = await new AxeBuilder({ page })
   .analyze();`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
     1. ใช้ <code>AxeBuilder</code> จำกัดให้สแกนเฉพาะ <code>withRules(['color-contrast'])</code><br/>
+    2. ตรวจสอบว่า <code>violations.length</code> เป็น <code>0</code>`
+  },
+  {
+    id: "advanced_multi_issue_fix",
+    meta: "ขั้นสูง 1",
+    title: "รวมปัญหา: แก้ Accessibility Violations พร้อมกันหลายจุด",
+    template: `<!-- สถานการณ์: หน้าฟอร์มสมัครสมาชิกนี้มี Accessibility violations พร้อมกัน 3 จุด ต้องแก้ให้ครบทุกจุด -->
+<div class="signup-form">
+  <img src="/assets/team-photo.jpg">
+  <!-- (1) รูปนี้สื่อความหมาย (ภาพทีมงานจริง) ไม่ใช่รูปตกแต่งล้วนๆ -->
+
+  <label>อีเมล</label>
+  <input type="email" id="email-input" name="email">
+  <!-- (2) label กับ input ด้านบนยังไม่ถูกผูกเข้าด้วยกันอย่างเป็นทางการ -->
+
+  <p style="color: #999999; background-color: #ffffff;">กรุณากรอกอีเมลที่ใช้งานจริงเพื่อรับลิงก์ยืนยัน</p>
+  <!-- (3) สีตัวอักษรกับพื้นหลังคู่นี้ contrast ประมาณ 2.85:1 ต่ำกว่ามาตรฐาน WCAG AA -->
+</div>
+<!-- แก้ไข HTML ด้านบนให้ผ่านทั้ง 3 จุด -->
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Accessibility violations ทั้ง 3 จุด...");
+      const clean = stripComments(code);
+      const missing = [];
+
+      // (1) alt text ต้องมีเนื้อหาจริง ไม่ใช่แค่ attribute ว่างหรือไม่มีเลย
+      const imgTag = (clean.match(/<img\b[^>]*>/i) || [])[0];
+      const altValue = imgTag ? (imgTag.match(/\balt\s*=\s*(['"])(.*?)\1/i) || [])[2] : null;
+      if (!imgTag || !altValue || !altValue.trim()) {
+        missing.push("รูปภาพ &lt;img&gt; ยังไม่มี alt text ที่มีเนื้อหา (WCAG 1.1.1 Non-text Content)");
+      }
+
+      // (2) label ต้องผูกกับ input ด้วย for/id ที่ตรงกันจริง (เช็คแยกจากกันคนละ tag เพื่อกันการ hardcode
+      // ข้อความ for="..." ลอยๆ ไว้ในที่อื่นที่ไม่ใช่ label จริง)
+      const labelFor = (clean.match(/<label\b[^>]*\bfor\s*=\s*(['"])(.*?)\1[^>]*>/i) || [])[2];
+      const inputId = (clean.match(/<input\b[^>]*\bid\s*=\s*(['"])(.*?)\1[^>]*>/i) || [])[2];
+      if (!labelFor || !inputId || labelFor !== inputId) {
+        missing.push("&lt;label&gt; ยังไม่ผูกกับ &lt;input&gt; ด้วย for/id ที่ตรงกัน (WCAG 1.3.1 Info and Relationships)");
+      }
+
+      // (3) contrast ratio คำนวณจริงจากค่าสีที่อยู่ใน style ของ <p> เท่านั้น (ไม่ใช่ regex match สีที่อาจ
+      // หลุดมาจากคอมเมนต์หรือที่อื่นในไฟล์ที่ไม่เกี่ยวกับ text จริง)
+      const pOpenTag = (clean.match(/<p\b([^>]*)>/i) || [])[1] || '';
+      const styleAttr = (pOpenTag.match(/style\s*=\s*(['"])(.*?)\1/i) || [])[2] || '';
+      const textColor = (styleAttr.match(/(?<!background-)color:\s*(#[0-9a-fA-F]{3,6})/i) || [])[1];
+      const bgColor = (styleAttr.match(/background-color:\s*(#[0-9a-fA-F]{3,6})/i) || [])[1];
+      if (!textColor || !bgColor || contrastRatio(textColor, bgColor) < 4.5) {
+        missing.push("สีตัวอักษรกับพื้นหลังยัง contrast ไม่ถึง 4.5:1 ตามมาตรฐาน WCAG 1.4.3 Contrast (Minimum)");
+      }
+
+      if (missing.length > 0) {
+        throw new Error(`ยังมี Accessibility violation ที่ไม่ได้แก้ ${missing.length} จุด:\n- ${missing.join("\n- ")}`);
+      }
+      log("✓ แก้ไข Accessibility violations ครบทั้ง 3 จุด (alt text, label association, color contrast)");
+    },
+    hint: "แต่ละปัญหาต้องแก้แยกกันตามหลัก WCAG คนละข้อ: (1) รูปที่สื่อความหมายต้องมีคำอธิบายให้ screen reader อ่านออกเสียงแทนได้ (2) label กับ input ต้องผูกกันด้วย attribute ที่ระบุ id เดียวกันทั้งสองฝั่ง ไม่ใช่แค่วางข้อความไว้ใกล้ๆ กัน (3) ลองคำนวณสัดส่วนความต่างของสีตัวอักษรกับพื้นหลังจริง แล้วเทียบกับเกณฑ์ขั้นต่ำของ WCAG AA สำหรับตัวอักษรขนาดปกติ",
+    solution: `<div class="signup-form">
+  <img src="/assets/team-photo.jpg" alt="ทีมงานผู้ก่อตั้งบริษัทถ่ายภาพรวมกันที่ออฟฟิศ">
+
+  <label for="email-input">อีเมล</label>
+  <input type="email" id="email-input" name="email">
+
+  <p style="color: #595959; background-color: #ffffff;">กรุณากรอกอีเมลที่ใช้งานจริงเพื่อรับลิงก์ยืนยัน</p>
+</div>`,
+    theory: `ในงานจริง Accessibility violation แทบไม่เคยมาทีละจุดเดียว — หน้าเว็บหนึ่งหน้ามักมีหลายปัญหาซ้อนกันพร้อมกัน และแต่ละปัญหาก็อ้างอิงกฎ WCAG คนละข้อ:<br/><br/>
+    <strong>WCAG 1.1.1 Non-text Content (Level A)</strong> — รูปภาพที่สื่อความหมายต้องมี text alternative ให้ screen reader อ่านแทนได้<br/><br/>
+    <strong>WCAG 1.3.1 Info and Relationships (Level A)</strong> — ความสัมพันธ์เชิงโครงสร้าง (เช่น label กับ input ไหนคู่กัน) ต้องสื่อสารผ่านโค้ดจริง ไม่ใช่แค่การจัดวางให้ดูใกล้กันด้วยสายตา — screen reader อ่านโครงสร้าง DOM ไม่ได้ "เห็น" ว่าอะไรอยู่ใกล้อะไร<br/><br/>
+    <strong>WCAG 1.4.3 Contrast (Minimum) (Level AA)</strong> — ตัวอักษรขนาดปกติต้องมีสัดส่วนความต่างของสีอย่างน้อย 4.5:1 กับพื้นหลัง<br/><br/>
+    บทนี้ฝึกการ "อ่านโค้ดจริงแล้วหาว่าอะไรผิดกี่จุด" ซึ่งใกล้เคียงงาน QA จริงมากกว่าการแก้ปัญหาเดียวโดดๆ — และ validate ของบทนี้ตรวจแต่ละจุดแยกกันอิสระ ถ้าแก้ไม่ครบจะบอกเจาะจงว่าเหลือจุดไหนบ้าง ไม่ใช่แค่ "ผิด" เฉยๆ`,
+    example: `// ตัวอย่างคำนวณ contrast ratio เองแบบง่ายๆ (หลักการเดียวกับที่ axe-core ใช้ภายใน)
+function relativeLuminance(r, g, b) {
+  const ch = c => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b);
+}
+// contrast = (lighter + 0.05) / (darker + 0.05)`,
+    task: `จงแก้ไข HTML ด้านบนให้ผ่านทั้ง 3 จุดพร้อมกัน:<br/>
+    1. เพิ่มคำอธิบายที่มีเนื้อหาจริงให้รูปภาพ (ไม่ใช่ค่าว่าง)<br/>
+    2. ผูก <code>&lt;label&gt;</code> กับ <code>&lt;input&gt;</code> ด้วย attribute ที่ระบุ id เดียวกันทั้งสองฝั่ง<br/>
+    3. เปลี่ยนสีตัวอักษรให้ contrast กับพื้นหลังอย่างน้อย 4.5:1 ตามเกณฑ์ WCAG AA`
+  },
+  {
+    id: "advanced_axe_scoped_aria_rule",
+    meta: "ขั้นสูง 2",
+    title: "เจาะจงกฎ ARIA: สแกนเฉพาะ aria-required-attr ด้วย axe-core",
+    template: `// สถานการณ์: custom dropdown widget ใช้ role="combobox" ซึ่งตาม ARIA spec ต้องมี attribute ที่จำเป็นครบ
+// (เช่น aria-expanded) ไม่งั้น screen reader จะไม่รู้สถานะเปิด/ปิดของ dropdown นั้นเลย
+// axe-core มี rule 'aria-required-attr' เจาะจงตรวจสอบเรื่องนี้โดยเฉพาะ ไม่ต้องสแกนกฎอื่นทั้งหมด
+// 1. ใช้ AxeBuilder จำกัดให้สแกนเฉพาะ rule 'aria-required-attr' ด้วย withRules(['aria-required-attr'])
+// 2. ตรวจสอบว่า violations ต้องว่างเปล่า (length === 0)
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการสแกนเฉพาะ aria-required-attr...");
+      const clean = stripComments(code);
+      const hasImport = /import\s+AxeBuilder\s+from\s+['"]@axe-core\/playwright['"]/.test(clean);
+      // ผูก withRules(['aria-required-attr']) ให้ต้องต่อด้วย .analyze() โดยตรงในสายเดียวกัน เหมือนบทที่แล้ว
+      const hasScopedAnalyze = /new AxeBuilder\(\{\s*page\s*\}\)\s*\.withRules\(\s*\[\s*['"]aria-required-attr['"]\s*\]\s*\)\s*\.analyze\(\)/.test(clean);
+      const hasLengthCheck = /violations\.length\)\.toBe\(0\)/.test(clean) || /expect\(.*violations.*\)\.toHaveLength\(0\)/.test(clean);
+      if (!hasImport) {
+        throw new Error("ไม่พบ import AxeBuilder from '@axe-core/playwright'");
+      }
+      if (!hasScopedAnalyze) {
+        throw new Error("ไม่พบการสร้าง new AxeBuilder({ page }) แล้วจำกัดด้วย withRules(['aria-required-attr']) ต่อด้วย analyze() ในสายเดียวกัน");
+      }
+      if (!hasLengthCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่า violations.length เป็น 0");
+      }
+      log("✓ สแกนเฉพาะ aria-required-attr ถูกต้อง (ไม่มี violation)");
+    },
+    hint: "axe-core มีตัวเลือกจำกัด rule ที่จะสแกนเหมือนบทที่แล้ว (color-contrast) — ครั้งนี้ให้หา rule id ของ axe-core ที่ตรงกับปัญหา ARIA attribute ที่ขาดหายไปบน widget แทน แล้วต่อท้ายด้วยการรัน analyze() และตรวจสอบผลลัพธ์แบบเดียวกัน",
+    solution: `import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+test('ไม่มี aria-required-attr violation บน custom combobox widget', async ({ page }) => {
+  await page.goto('/');
+  const results = await new AxeBuilder({ page }).withRules(['aria-required-attr']).analyze();
+  expect(results.violations.length).toBe(0);
+});`,
+    theory: `<strong>WCAG 4.1.2 Name, Role, Value (Level A)</strong> กำหนดว่า custom UI component (ที่ไม่ใช่ HTML element มาตรฐานอย่าง <code>&lt;select&gt;</code>) ต้องประกาศ role, state และ property ผ่าน ARIA attribute ให้ assistive technology อ่านได้ครบถ้วน — เช่น <code>role="combobox"</code> ต้องมาพร้อม <code>aria-expanded</code> เพื่อบอกว่า dropdown เปิดอยู่หรือปิดอยู่ ถ้าขาด attribute ที่จำเป็นไป screen reader จะไม่รู้สถานะปัจจุบันของ widget เลย<br/><br/>
+    axe-core มี rule <code>aria-required-attr</code> เจาะจงตรวจสอบเรื่องนี้: แต่ละ ARIA role มี "required attribute" ตาม spec ของมันเอง (เช่น <code>role="checkbox"</code> ต้องมี <code>aria-checked</code>, <code>role="combobox"</code> ต้องมี <code>aria-expanded</code>) — rule นี้จะ fail ทันทีถ้า element ที่ประกาศ role นั้นขาด attribute ที่จำเป็นไป<br/><br/>
+    เหมือนบทที่แล้ว (color-contrast) การจำกัดสแกนเฉพาะ rule เดียวมีประโยชน์เวลาต้องการ regression test เจาะจงหลังทีม frontend เพิ่งแก้ widget ตัวใดตัวหนึ่ง โดยไม่ต้องรอผลสแกนเต็มรูปแบบทุกกฎ`,
+    example: `// ตัวอย่างจำกัดสแกนเฉพาะกลุ่ม role อื่น เช่น aria-valid-attr-value (ค่า attribute ต้องถูกต้องตาม spec)
+const results = await new AxeBuilder({ page })
+  .withRules(['aria-valid-attr-value'])
+  .analyze();`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ใช้ <code>AxeBuilder</code> จำกัดให้สแกนเฉพาะ <code>withRules(['aria-required-attr'])</code><br/>
     2. ตรวจสอบว่า <code>violations.length</code> เป็น <code>0</code>`
   }
 ];

@@ -2,6 +2,15 @@
 // Grounded in the /Users/supavit.cho/Git/Personal/My-Investment-Port/server/index.js Express API
 // (same real endpoints and rate-limiter used by the API-Testing track's functional tests)
 
+// ตัดคอมเมนต์ (// และ /* */) ออกจากโค้ดก่อนตรวจสอบด้วย validate() ทุกบทเรียน
+// ป้องกันการเขียนคำตอบ/โค้ดที่ต้องการไว้ในคอมเมนต์เพื่อหลอกให้ regex ตรวจผ่าน
+// หมายเหตุ: ไม่ตัด "//" ที่ตามหลัง ":" (เช่น http://, https://) เพื่อไม่ทำลาย URL ในโค้ดจริง
+function stripComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(?<!:)\/\/.*$/gm, '');
+}
+
 const LESSONS = [
   {
     id: "intro",
@@ -22,21 +31,22 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 กำลังตรวจสอบไวยากรณ์...");
-      const hasGet = /const\s+res\s*=\s*http\.get\(`\$\{BASE_URL\}\/api\/ai\/health`\)/.test(code);
+      const src = stripComments(code);
+      const hasGet = /const\s+res\s*=\s*http\.get\(`\$\{BASE_URL\}\/api\/ai\/health`\)/.test(src);
       if (hasGet) {
         log("✓ ขั้นตอนที่ 1: ยิง http.get(`${BASE_URL}/api/ai/health`) ถูกต้อง");
       } else {
         throw new Error("ไม่พบคำสั่ง http.get(`${BASE_URL}/api/ai/health`)\nตัวอย่าง: const res = http.get(`${BASE_URL}/api/ai/health`);");
       }
 
-      const hasCheck = /check\(res,\s*\{[\s\S]*?status\s*===\s*200[\s\S]*?\}\)/.test(code);
+      const hasCheck = /check\(res,\s*\{[\s\S]*?status\s*===\s*200[\s\S]*?\}\)/.test(src);
       if (hasCheck) {
         log("✓ ขั้นตอนที่ 2: ใช้ check() ตรวจสอบ status 200 ถูกต้อง");
       } else {
         throw new Error("ไม่พบการตรวจสอบด้วย check()\nตัวอย่าง: check(res, { 'status is 200': (r) => r.status === 200 });");
       }
     },
-    hint: "ใช้ const res = http.get(`${BASE_URL}/api/ai/health`); แล้ว check(res, { 'status is 200': (r) => r.status === 200 });",
+    hint: "ใช้ http.get() ของ k6 ยิงไปที่ endpoint /api/ai/health ผ่านตัวแปร BASE_URL แล้วเก็บผลลัพธ์ไว้ในตัวแปร จากนั้นใช้ check() ตรวจสอบว่าค่า status ของ response ตรงกับ 200 หรือไม่",
     solution: `import http from 'k6/http';
 import { check } from 'k6';
 
@@ -82,15 +92,16 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Options...");
-      const hasOptions = /export\s+const\s+options\s*=\s*\{[\s\S]*?vus:\s*10[\s\S]*?duration:\s*['"]30s['"][\s\S]*?\}/.test(code) ||
-                         /export\s+const\s+options\s*=\s*\{[\s\S]*?duration:\s*['"]30s['"][\s\S]*?vus:\s*10[\s\S]*?\}/.test(code);
+      const src = stripComments(code);
+      const hasOptions = /export\s+const\s+options\s*=\s*\{[\s\S]*?vus:\s*10[\s\S]*?duration:\s*['"]30s['"][\s\S]*?\}/.test(src) ||
+                         /export\s+const\s+options\s*=\s*\{[\s\S]*?duration:\s*['"]30s['"][\s\S]*?vus:\s*10[\s\S]*?\}/.test(src);
       if (hasOptions) {
         log("✓ ตั้งค่า options ด้วย vus: 10 และ duration: '30s' ถูกต้อง");
       } else {
         throw new Error("ไม่พบ export const options ที่มี vus: 10 และ duration: '30s'\nตัวอย่าง: export const options = { vus: 10, duration: '30s' };");
       }
     },
-    hint: "ใช้ export const options = { vus: 10, duration: '30s' };",
+    hint: "กำหนด object ชื่อ options แล้ว export ออกไป โดยใส่ key สำหรับจำนวน Virtual User และ key สำหรับระยะเวลาการทดสอบตามค่าที่โจทย์กำหนด",
     solution: `import http from 'k6/http';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
@@ -137,21 +148,22 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Thresholds...");
-      const hasDuration = /http_req_duration:\s*\[\s*['"]p\(95\)<500['"]\s*\]/.test(code);
+      const src = stripComments(code);
+      const hasDuration = /http_req_duration:\s*\[\s*['"]p\(95\)<500['"]\s*\]/.test(src);
       if (hasDuration) {
         log("✓ ขั้นตอนที่ 1: ตั้ง threshold http_req_duration p(95)<500 ถูกต้อง");
       } else {
         throw new Error("ไม่พบ threshold http_req_duration: ['p(95)<500']\nตัวอย่าง: http_req_duration: ['p(95)<500'],");
       }
 
-      const hasFailed = /http_req_failed:\s*\[\s*['"]rate<0\.01['"]\s*\]/.test(code);
+      const hasFailed = /http_req_failed:\s*\[\s*['"]rate<0\.01['"]\s*\]/.test(src);
       if (hasFailed) {
         log("✓ ขั้นตอนที่ 2: ตั้ง threshold http_req_failed rate<0.01 ถูกต้อง");
       } else {
         throw new Error("ไม่พบ threshold http_req_failed: ['rate<0.01']\nตัวอย่าง: http_req_failed: ['rate<0.01'],");
       }
     },
-    hint: "ใส่ thresholds: { http_req_duration: ['p(95)<500'], http_req_failed: ['rate<0.01'] } ใน options",
+    hint: "เพิ่ม key thresholds เข้าไปใน options โดยใช้ชื่อ metric http_req_duration และ http_req_failed เป็น key แต่ละตัวรับค่าเป็น array ของเงื่อนไขในรูปแบบ string ตามไวยากรณ์ percentile/rate ของ k6",
     solution: `import http from 'k6/http';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
@@ -204,9 +216,10 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Stages...");
-      const hasRampUp = /\{\s*duration:\s*['"]10s['"]\s*,\s*target:\s*20\s*\}/.test(code);
-      const hasPlateau = /\{\s*duration:\s*['"]30s['"]\s*,\s*target:\s*20\s*\}/.test(code);
-      const hasRampDown = /\{\s*duration:\s*['"]10s['"]\s*,\s*target:\s*0\s*\}/.test(code);
+      const src = stripComments(code);
+      const hasRampUp = /\{\s*duration:\s*['"]10s['"]\s*,\s*target:\s*20\s*\}/.test(src);
+      const hasPlateau = /\{\s*duration:\s*['"]30s['"]\s*,\s*target:\s*20\s*\}/.test(src);
+      const hasRampDown = /\{\s*duration:\s*['"]10s['"]\s*,\s*target:\s*0\s*\}/.test(src);
 
       if (hasRampUp) {
         log("✓ ขั้นตอนที่ 1: ramp up 0→20 VU ใน 10s ถูกต้อง");
@@ -226,7 +239,7 @@ export default function () {
         throw new Error("ไม่พบ stage ramp down { duration: '10s', target: 0 }");
       }
     },
-    hint: "ใส่ stages: [ { duration: '10s', target: 20 }, { duration: '30s', target: 20 }, { duration: '10s', target: 0 } ]",
+    hint: "แทนที่จะใช้ vus/duration ตรงๆ ให้ใช้ key stages ซึ่งเป็น array ของ object { duration, target } เรียงต่อกัน 3 ช่วงตามลำดับที่โจทย์อธิบาย (ไต่ขึ้น, คงที่, ไต่ลง)",
     solution: `import http from 'k6/http';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
@@ -287,8 +300,9 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการออกแบบ check() ให้รองรับ Rate Limit จริง...");
-      const hasCorrectCheck = /check\(res,\s*\{[\s\S]*?r\.status\s*===\s*200\s*\|\|\s*r\.status\s*===\s*429[\s\S]*?\}\)/.test(code);
-      const hasWrongCheck = /check\(res,\s*\{[\s\S]*?r\.status\s*===\s*200[\s\S]*?\}\)/.test(code) && !hasCorrectCheck;
+      const src = stripComments(code);
+      const hasCorrectCheck = /check\(res,\s*\{[\s\S]*?r\.status\s*===\s*200\s*\|\|\s*r\.status\s*===\s*429[\s\S]*?\}\)/.test(src);
+      const hasWrongCheck = /check\(res,\s*\{[\s\S]*?r\.status\s*===\s*200[\s\S]*?\}\)/.test(src) && !hasCorrectCheck;
 
       if (hasCorrectCheck) {
         log("✓ ใช้ check() ที่ยอมรับทั้ง 200 และ 429 ถูกต้อง (รองรับ Rate Limit จริงของ server)");
@@ -298,7 +312,7 @@ export default function () {
         throw new Error("ไม่พบการเช็คด้วย check()\nตัวอย่าง: check(res, { 'status is 200 or 429': (r) => r.status === 200 || r.status === 429 });");
       }
     },
-    hint: "ใช้ check(res, { 'status is 200 or 429': (r) => r.status === 200 || r.status === 429 }); เพราะ 429 คือพฤติกรรมที่ถูกต้องของ Rate Limiter จริง ไม่ใช่บั๊ก",
+    hint: "ออกแบบเงื่อนไขใน check() ให้ยอมรับได้มากกว่าหนึ่ง status code โดยใช้ operator OR (||) ระหว่างเงื่อนไข status 200 กับเงื่อนไข status 429 เพราะ Rate Limiter จริงจะตอบ 429 เมื่อโดนจำกัด ไม่ใช่ error",
     solution: `import http from 'k6/http';
 import { check } from 'k6';
 
@@ -360,8 +374,9 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการใช้ sleep()...");
-      const hasImport = /import\s*\{\s*sleep\s*\}\s*from\s*['"]k6['"]/.test(code);
-      const hasSleep = /sleep\(1\)/.test(code);
+      const src = stripComments(code);
+      const hasImport = /import\s*\{\s*sleep\s*\}\s*from\s*['"]k6['"]/.test(src);
+      const hasSleep = /sleep\(1\)/.test(src);
       if (!hasImport) {
         throw new Error("ไม่พบ import { sleep } from 'k6'\nตัวอย่าง: import { sleep } from 'k6';");
       }
@@ -370,7 +385,7 @@ export default function () {
       }
       log("✓ ใช้ sleep(1) จำลอง think time ถูกต้อง");
     },
-    hint: "import { sleep } from 'k6'; แล้วเรียก sleep(1); ท้าย default function",
+    hint: "import ฟังก์ชันสำหรับหน่วงเวลาจาก k6 (ไม่ใช่ k6/http) แล้วเรียกใช้พร้อมระบุจำนวนวินาทีตามโจทย์ ต่อท้ายการยิง request ใน default function",
     solution: `import http from 'k6/http';
 import { sleep } from 'k6';
 
@@ -418,9 +433,11 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการสร้าง Custom Counter...");
-      const hasImport = /import\s*\{\s*Counter\s*\}\s*from\s*['"]k6\/metrics['"]/.test(code);
-      const hasDeclare = /new Counter\(\s*['"]rate_limit_count['"]\s*\)/.test(code);
-      const hasAdd = /\.add\(1\)/.test(code);
+      const src = stripComments(code);
+      const hasImport = /import\s*\{\s*Counter\s*\}\s*from\s*['"]k6\/metrics['"]/.test(src);
+      const hasDeclare = /new Counter\(\s*['"]rate_limit_count['"]\s*\)/.test(src);
+      // ต้องเพิ่มค่าเฉพาะภายในเงื่อนไข res.status === 429 เท่านั้น ไม่ใช่ .add(1) ลอยๆ ที่ไหนก็ได้ในไฟล์
+      const hasConditionalAdd = /if\s*\(\s*res\.status\s*===\s*429\s*\)\s*\{[\s\S]*?\.add\(1\)[\s\S]*?\}/.test(src);
 
       if (!hasImport) {
         throw new Error("ไม่พบ import { Counter } from 'k6/metrics'\nตัวอย่าง: import { Counter } from 'k6/metrics';");
@@ -428,12 +445,12 @@ export default function () {
       if (!hasDeclare) {
         throw new Error("ไม่พบการสร้าง Counter ชื่อ 'rate_limit_count'\nตัวอย่าง: const rateLimitCount = new Counter('rate_limit_count');");
       }
-      if (!hasAdd) {
-        throw new Error("ไม่พบการเพิ่มค่า Counter ด้วย .add(1)\nตัวอย่าง: if (res.status === 429) { rateLimitCount.add(1); }");
+      if (!hasConditionalAdd) {
+        throw new Error("ต้องเพิ่มค่า Counter ด้วย .add(1) เฉพาะภายในเงื่อนไขที่ตรวจสอบ res.status === 429 เท่านั้น (ไม่ใช่เพิ่มแบบไม่มีเงื่อนไข)\nตัวอย่างโครงสร้าง: if (res.status === 429) { rateLimitCount.add(1); }");
       }
       log("✓ สร้างและใช้งาน Custom Counter ถูกต้อง");
     },
-    hint: "import { Counter } from 'k6/metrics'; const rateLimitCount = new Counter('rate_limit_count'); แล้ว if (res.status === 429) rateLimitCount.add(1);",
+    hint: "import ชนิด metric ที่ใช้นับจำนวนสะสมจาก k6/metrics แล้วสร้าง instance ด้วยชื่อที่โจทย์กำหนด จากนั้นเพิ่มค่าให้ metric นั้นเฉพาะเมื่อ response status ตรงกับ 429 (ใช้ if ครอบเงื่อนไข ไม่ใช่เพิ่มทุกครั้ง)",
     solution: `import http from 'k6/http';
 import { Counter } from 'k6/metrics';
 
@@ -491,23 +508,27 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการใช้ group()...");
-      const hasImport = /import\s*\{\s*group\s*\}\s*from\s*['"]k6['"]/.test(code);
-      const hasGroup = /group\(\s*['"]AI Model Check['"]/.test(code);
-      const hasHealth = /\/api\/ai\/health/.test(code);
-      const hasModel = /\/api\/ai\/model[`'"]/.test(code);
+      const src = stripComments(code);
+      const hasImport = /import\s*\{\s*group\s*\}\s*from\s*['"]k6['"]/.test(src);
+      // ต้องดึงเฉพาะเนื้อหาภายใน callback ของ group('AI Model Check', ...) มาตรวจ
+      // ไม่ใช่แค่เช็คว่า endpoint สองตัวปรากฏอยู่ที่ไหนก็ได้ในไฟล์ (อาจอยู่นอก group ก็ยังผ่าน)
+      const groupMatch = src.match(/group\(\s*['"]AI Model Check['"]\s*,\s*\(\)\s*=>\s*\{([\s\S]*?)\}\s*\)/);
+      const groupBody = groupMatch ? groupMatch[1] : '';
+      const hasHealth = /\/api\/ai\/health/.test(groupBody);
+      const hasModel = /\/api\/ai\/model[`'"]/.test(groupBody);
 
       if (!hasImport) {
         throw new Error("ไม่พบ import { group } from 'k6'\nตัวอย่าง: import { group } from 'k6';");
       }
-      if (!hasGroup) {
+      if (!groupMatch) {
         throw new Error("ไม่พบ group('AI Model Check', ...)\nตัวอย่าง: group('AI Model Check', () => { ... });");
       }
       if (!hasHealth || !hasModel) {
-        throw new Error("ต้องยิงทั้ง /api/ai/health และ /api/ai/model ไว้ภายใน group เดียวกัน");
+        throw new Error("ต้องยิงทั้ง /api/ai/health และ /api/ai/model ไว้ภายใน callback ของ group('AI Model Check', ...) เดียวกัน ไม่ใช่นอก group");
       }
       log("✓ ใช้ group() จัดกลุ่ม transaction ถูกต้อง");
     },
-    hint: "import { group } from 'k6'; แล้วห่อ http.get สองอันด้วย group('AI Model Check', () => { ... });",
+    hint: "import ฟังก์ชันจัดกลุ่มจาก k6 แล้วเรียกใช้งานโดยส่งชื่อกลุ่มเป็น argument แรก และฟังก์ชัน callback เป็น argument ที่สอง วาง http.get() ทั้งสองคำสั่งไว้ภายใน callback นั้น",
     solution: `import http from 'k6/http';
 import { group } from 'k6';
 
@@ -557,24 +578,28 @@ export default function () {
 }`,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า scenarios...");
-      const hasScenarios = /scenarios:\s*\{/.test(code);
-      const hasName = /steady_load:\s*\{/.test(code);
-      const hasExecutor = /executor:\s*['"]constant-vus['"]/.test(code);
-      const hasVus = /vus:\s*15/.test(code);
-      const hasDuration = /duration:\s*['"]20s['"]/.test(code);
+      const src = stripComments(code);
+      const hasScenarios = /scenarios:\s*\{/.test(src);
+      // ต้องดึงเฉพาะเนื้อหาภายใน object ของ steady_load มาตรวจ executor/vus/duration
+      // ไม่ใช่แค่เช็คว่าค่าเหล่านั้นปรากฏอยู่ที่ไหนก็ได้ใน options (อาจมาจาก block อื่นก็ยังผ่าน)
+      const scenarioMatch = src.match(/steady_load:\s*\{([\s\S]*?)\}/);
+      const scenarioBody = scenarioMatch ? scenarioMatch[1] : '';
+      const hasExecutor = /executor:\s*['"]constant-vus['"]/.test(scenarioBody);
+      const hasVus = /vus:\s*15\b/.test(scenarioBody);
+      const hasDuration = /duration:\s*['"]20s['"]/.test(scenarioBody);
 
-      if (!hasScenarios || !hasName) {
+      if (!hasScenarios || !scenarioMatch) {
         throw new Error("ไม่พบ scenarios ชื่อ 'steady_load'\nตัวอย่าง: scenarios: { steady_load: { ... } }");
       }
       if (!hasExecutor) {
-        throw new Error("ไม่พบ executor: 'constant-vus'");
+        throw new Error("ไม่พบ executor: 'constant-vus' ภายใน scenario steady_load");
       }
       if (!hasVus || !hasDuration) {
-        throw new Error("ไม่พบ vus: 15 และ duration: '20s' ใน scenario");
+        throw new Error("ไม่พบ vus: 15 และ duration: '20s' ภายใน scenario steady_load");
       }
       log("✓ ตั้งค่า scenarios แบบ constant-vus ถูกต้อง");
     },
-    hint: "ใส่ scenarios: { steady_load: { executor: 'constant-vus', vus: 15, duration: '20s' } }",
+    hint: "แทนที่ vus/duration ตรงๆ ด้วย key scenarios ซึ่งเป็น object ที่มี key เป็นชื่อ scenario แต่ละ scenario เป็น object ย่อยที่ระบุ executor และ parameter ควบคุมโหลด (จำนวน VU, ระยะเวลา) ตามชนิด executor ที่เลือก",
     solution: `import http from 'k6/http';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
@@ -632,8 +657,9 @@ export default function (data) {
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบ setup() และ teardown()...");
-      const hasSetup = /export function setup\s*\(\s*\)\s*\{[\s\S]*?http\.get[\s\S]*?return[\s\S]*?\}/.test(code);
-      const hasTeardown = /export function teardown\s*\(\s*\)\s*\{[\s\S]*?console\.log\(['"]Load test เสร็จสมบูรณ์['"]\)/.test(code);
+      const src = stripComments(code);
+      const hasSetup = /export function setup\s*\(\s*\)\s*\{[\s\S]*?http\.get[\s\S]*?return[\s\S]*?\}/.test(src);
+      const hasTeardown = /export function teardown\s*\(\s*\)\s*\{[\s\S]*?console\.log\(['"]Load test เสร็จสมบูรณ์['"]\)/.test(src);
 
       if (!hasSetup) {
         throw new Error("ไม่พบ setup() ที่ยิง http.get แล้ว return ค่า\nตัวอย่าง: export function setup() { const res = http.get(...); return { healthCheckStatus: res.status }; }");
@@ -643,7 +669,7 @@ export default function (data) {
       }
       log("✓ เขียน setup() และ teardown() ถูกต้อง");
     },
-    hint: "export function setup() { const res = http.get(...); return { healthCheckStatus: res.status }; } และ export function teardown() { console.log('Load test เสร็จสมบูรณ์'); }",
+    hint: "เขียนฟังก์ชันชื่อ setup แบบ export ที่ยิง request ตรวจ health แล้ว return object เก็บผลลัพธ์ที่ต้องใช้ต่อ และเขียนฟังก์ชันชื่อ teardown แบบ export แยกต่างหาก ที่ทำงานหลังทดสอบเสร็จเพื่อพิมพ์ข้อความสรุป",
     solution: `import http from 'k6/http';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
@@ -678,6 +704,202 @@ export function teardown() {
     task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
     1. เขียน <code>setup()</code> ให้ยิง <code>http.get</code> ไปที่ <code>/api/ai/health</code> แล้ว <code>return</code> ค่า status<br/>
     2. เขียน <code>teardown()</code> ให้ <code>console.log('Load test เสร็จสมบูรณ์')</code>`
+  },
+  {
+    id: "advanced_stages_thresholds",
+    meta: "ขั้นสูง 1",
+    title: "รวม Stages กับ Thresholds แบบ Compound: ต้องผ่านทั้ง Latency และ Error Rate พร้อมกัน",
+    template: `import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  // 1. กำหนด stages ให้ไต่จาก 0 ขึ้นไป 30 VU ภายใน 10 วินาที, คงที่ 30 VU นาน 20 วินาที, แล้วไต่ลงกลับ 0 ภายใน 10 วินาที
+  // WRITE YOUR CODE HERE
+
+
+  // 2. กำหนด thresholds ให้ http_req_duration ต้องมี p(95) ต่ำกว่า 400ms และ http_req_failed ต้องต่ำกว่า 2% พร้อมกันทั้งสองเงื่อนไข
+  // WRITE YOUR CODE HERE
+
+};
+
+export default function () {
+  const res = http.get(\`\${BASE_URL}/api/ai/health\`);
+  check(res, {
+    'status is 200 or 429': (r) => r.status === 200 || r.status === 429,
+  });
+}`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Stages + Thresholds ร่วมกัน...");
+      const src = stripComments(code);
+
+      const stagesMatch = src.match(/stages:\s*\[([\s\S]*?)\]/);
+      const stagesBody = stagesMatch ? stagesMatch[1] : '';
+      const hasRampUp = /\{\s*duration:\s*['"]10s['"]\s*,\s*target:\s*30\s*\}/.test(stagesBody);
+      const hasPlateau = /\{\s*duration:\s*['"]20s['"]\s*,\s*target:\s*30\s*\}/.test(stagesBody);
+      const hasRampDown = /\{\s*duration:\s*['"]10s['"]\s*,\s*target:\s*0\s*\}/.test(stagesBody);
+
+      if (!stagesMatch) {
+        throw new Error("ไม่พบ stages array\nตัวอย่างรูปแบบ: stages: [ { duration: '10s', target: 30 }, ... ]");
+      }
+      if (!hasRampUp || !hasPlateau || !hasRampDown) {
+        throw new Error("stages ต้องมีครบ 3 ช่วง: ไต่ขึ้น 0→30 VU ใน 10s, คงที่ 30 VU นาน 20s, ไต่ลง 30→0 VU ใน 10s");
+      }
+      log("✓ ขั้นตอนที่ 1: stages ไต่ขึ้น-คงที่-ไต่ลงถูกต้อง");
+
+      const thresholdsMatch = src.match(/thresholds:\s*\{([\s\S]*?)\}/);
+      const thresholdsBody = thresholdsMatch ? thresholdsMatch[1] : '';
+      const hasDuration = /http_req_duration:\s*\[\s*['"]p\(95\)<400['"]\s*\]/.test(thresholdsBody);
+      const hasFailed = /http_req_failed:\s*\[\s*['"]rate<0\.02['"]\s*\]/.test(thresholdsBody);
+
+      if (!thresholdsMatch || !hasDuration || !hasFailed) {
+        throw new Error("thresholds ต้องมีทั้ง http_req_duration: ['p(95)<400'] และ http_req_failed: ['rate<0.02'] พร้อมกันในเงื่อนไขเดียว");
+      }
+      log("✓ ขั้นตอนที่ 2: thresholds ครอบคลุมทั้ง p95 latency และ error rate ถูกต้อง");
+    },
+    hint: "รวมสองรูปแบบที่เคยเรียนแยกกันมาไว้ใน options เดียวกัน: ใช้ stages เป็น array ของ { duration, target } ตามลำดับที่โจทย์อธิบายเพื่อไต่โหลด และใช้ thresholds ที่มี key http_req_duration กับ http_req_failed พร้อมกันสองตัว โดยแต่ละตัวเป็น array ของเงื่อนไข string ตามไวยากรณ์ที่เคยใช้ในบท Thresholds",
+    solution: `import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  stages: [
+    { duration: '10s', target: 30 },
+    { duration: '20s', target: 30 },
+    { duration: '10s', target: 0 },
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<400'],
+    http_req_failed: ['rate<0.02'],
+  },
+};
+
+export default function () {
+  const res = http.get(\`\${BASE_URL}/api/ai/health\`);
+  check(res, {
+    'status is 200 or 429': (r) => r.status === 200 || r.status === 429,
+  });
+}`,
+    theory: `บทเรียนนี้รวมสองแนวคิดที่เคยแยกเรียนมาก่อนหน้าเข้าด้วยกันในสคริปต์เดียว: <code>stages</code> (บทที่ 3) ควบคุม "รูปแบบโหลด" ที่เปลี่ยนแปลงตามเวลา ส่วน <code>thresholds</code> (บทที่ 2) ควบคุม "เกณฑ์ผ่าน/ไม่ผ่าน" ของผลลัพธ์ — ในการทดสอบจริง แทบไม่มีทีมไหนตั้ง threshold แค่ตัวเดียวเวลาทำ ramping load test เพราะ p95 latency เพียงอย่างเดียวไม่บอกว่า request ที่เหลือ fail ไปกี่ % และในทางกลับกัน error rate เพียงอย่างเดียวก็ไม่บอกว่า request ที่ผ่านนั้นช้าแค่ไหน<br/><br/>
+    เกณฑ์ผ่านที่รัดกุมของการทดสอบ load แบบ ramping ต้องดูทั้งสองมุมพร้อมกัน: <code>http_req_duration</code> (ความเร็ว) และ <code>http_req_failed</code> (ความสำเร็จ) — ถ้าตั้ง threshold แค่ตัวเดียว k6 อาจรายงานผ่านทั้งที่ระบบมีปัญหาจริงในอีกมุมหนึ่งที่ threshold ไม่ได้ตรวจ ยิ่งช่วง ramp-up/ramp-down ที่โหลดเปลี่ยนแปลงตลอดเวลา ยิ่งมีโอกาสเจอปัญหาแค่มุมใดมุมหนึ่งสูงกว่าช่วง steady state ปกติ`,
+    example: `// ตัวอย่าง threshold ที่ผูกกับ tag เฉพาะ แทนที่จะเป็น global metric ตรงๆ
+export const options = {
+  stages: [{ duration: '30s', target: 50 }],
+  thresholds: {
+    'http_req_duration{scenario:default}': ['p(90)<250'],
+    http_req_failed: ['rate<0.005'],
+  },
+};`,
+    task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดยกำหนด <code>options</code> ให้มีทั้งสองส่วนพร้อมกัน:<br/>
+    1. <code>stages</code>: ไต่ขึ้นจาก 0 ไป <code>30</code> VU ภายใน <code>10s</code>, คงที่ <code>30</code> VU นาน <code>20s</code>, แล้วไต่ลงกลับ <code>0</code> ภายใน <code>10s</code><br/>
+    2. <code>thresholds</code>: <code>http_req_duration</code> ต้องมี <code>p(95)&lt;400</code> และ <code>http_req_failed</code> ต้องมี <code>rate&lt;0.02</code> พร้อมกันทั้งสองเงื่อนไข`
+  },
+  {
+    id: "advanced_scenarios_compound_check",
+    meta: "ขั้นสูง 2",
+    title: "หลาย Scenarios พร้อมกัน + Compound check(): ตรวจทั้ง Status และ Body พร้อมกัน",
+    template: `import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  // 1. กำหนด scenarios สองตัว: 'baseline_load' ใช้ executor 'constant-vus' จำนวน 10 VU นาน '20s'
+  //    และ 'stress_spike' ใช้ executor 'ramping-vus' เริ่มที่ startVUs: 0 มี stages ไต่ขึ้น 0→40 VU ภายใน 5s
+  //    แล้วไต่ลงกลับ 0 ภายใน 5s โดยเริ่มหลัง baseline_load ผ่านไปแล้ว 10 วินาที (startTime: '10s')
+  // WRITE YOUR CODE HERE
+
+};
+
+export default function () {
+  const res = http.get(\`\${BASE_URL}/api/ai/health\`);
+
+  // 2. ใช้ check() ตรวจสอบพร้อมกัน 2 เงื่อนไขในเงื่อนไขเดียว: status ต้องเป็น 200 และ res.body ต้องมีคำว่า "ok" ปรากฏอยู่
+  // WRITE YOUR CODE HERE
+
+}`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ scenarios หลายตัว + compound check()...");
+      const src = stripComments(code);
+
+      const baselineMatch = src.match(/baseline_load:\s*\{([\s\S]*?)\}/);
+      const baselineBody = baselineMatch ? baselineMatch[1] : '';
+      const hasBaselineExecutor = /executor:\s*['"]constant-vus['"]/.test(baselineBody);
+      const hasBaselineVus = /vus:\s*10\b/.test(baselineBody);
+      const hasBaselineDuration = /duration:\s*['"]20s['"]/.test(baselineBody);
+
+      if (!baselineMatch || !hasBaselineExecutor || !hasBaselineVus || !hasBaselineDuration) {
+        throw new Error("ไม่พบ scenario 'baseline_load' ที่ถูกต้อง (ต้องมี executor: 'constant-vus', vus: 10, duration: '20s')");
+      }
+      log("✓ ขั้นตอนที่ 1: scenario baseline_load ถูกต้อง");
+
+      const spikeMatch = src.match(/stress_spike:\s*\{([\s\S]*?startTime:\s*['"]10s['"][\s\S]*?)\}/);
+      const spikeBody = spikeMatch ? spikeMatch[0] : '';
+      const hasSpikeExecutor = /executor:\s*['"]ramping-vus['"]/.test(spikeBody);
+      const hasStartVUs = /startVUs:\s*0\b/.test(spikeBody);
+      const hasRampUp = /\{\s*duration:\s*['"]5s['"]\s*,\s*target:\s*40\s*\}/.test(spikeBody);
+      const hasRampDown = /\{\s*duration:\s*['"]5s['"]\s*,\s*target:\s*0\s*\}/.test(spikeBody);
+
+      if (!spikeMatch || !hasSpikeExecutor || !hasStartVUs || !hasRampUp || !hasRampDown) {
+        throw new Error("ไม่พบ scenario 'stress_spike' ที่ถูกต้อง (ต้องมี executor: 'ramping-vus', startVUs: 0, stages ไต่ขึ้น 0→40 ใน 5s แล้วลงกลับ 0 ใน 5s, และ startTime: '10s')");
+      }
+      log("✓ ขั้นตอนที่ 2: scenario stress_spike ถูกต้อง");
+
+      const checkMatch = src.match(/check\(res,\s*\{([\s\S]*?)\}\)/);
+      const checkBody = checkMatch ? checkMatch[1] : '';
+      const hasStatusCheck = /status\s*===\s*200/.test(checkBody);
+      const hasBodyCheck = /body\.includes\(\s*['"]ok['"]\s*\)/.test(checkBody);
+
+      if (!checkMatch || !hasStatusCheck || !hasBodyCheck) {
+        throw new Error("check() ต้องตรวจสอบทั้ง status === 200 และ body.includes('ok') พร้อมกันในเงื่อนไขเดียวกัน");
+      }
+      log("✓ ขั้นตอนที่ 3: check() แบบ compound (status + body) ถูกต้อง");
+    },
+    hint: "แยกคิดเป็นสองส่วน: (1) scenarios ต้องมีสอง entry ชื่อต่างกัน แต่ละ entry เลือก executor ที่เหมาะกับรูปแบบโหลดของมันเอง — โหลดคงที่ตลอดใช้ executor ที่เคยเรียนในบท Scenarios, ส่วนโหลดที่ต้องไล่ขึ้น-ลงในช่วงสั้นๆ ใช้ executor แบบมี stages ของตัวเอง พร้อมระบุเวลาเริ่มให้เหลื่อมกับ scenario แรก (2) check() ให้ใส่เงื่อนไขสองอันไว้ใน object เดียวกัน อันหนึ่งตรวจ status อีกอันตรวจเนื้อหาใน res.body ด้วยเมธอดของ string ที่ใช้ค้นหาคำในข้อความ",
+    solution: `import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+
+export const options = {
+  scenarios: {
+    baseline_load: {
+      executor: 'constant-vus',
+      vus: 10,
+      duration: '20s',
+    },
+    stress_spike: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        { duration: '5s', target: 40 },
+        { duration: '5s', target: 0 },
+      ],
+      startTime: '10s',
+    },
+  },
+};
+
+export default function () {
+  const res = http.get(\`\${BASE_URL}/api/ai/health\`);
+
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'body contains ok': (r) => r.body.includes('ok'),
+  });
+}`,
+    theory: `การทดสอบจริงมักไม่ได้มีแค่โหลดคงที่รูปแบบเดียว — ระบบอาจต้องรับ traffic พื้นหลังปกติไปพร้อมๆ กับ spike สั้นๆ แทรกเข้ามา (เช่น แคมเปญการตลาดที่ยิง notification พร้อมกันช่วงสั้นๆ ระหว่างที่ traffic ปกติยังเดินอยู่) การจำลองสถานการณ์นี้ต้องใช้ <code>scenarios</code> หลายตัวพร้อมกัน โดยแต่ละตัวมี <code>executor</code> ต่างชนิดกันได้ (เช่น <code>constant-vus</code> คู่กับ <code>ramping-vus</code>) และ <code>startTime</code> กำหนดว่า scenario ไหนเริ่มช้ากว่ากันเท่าไหร่ ทำให้ทั้งสองรูปแบบโหลดวิ่งซ้อนทับกันในการทดสอบครั้งเดียว<br/><br/>
+    อีกด้านหนึ่ง <code>check()</code> ที่ตรวจแค่ status code อย่างเดียวบางครั้งไม่พอ — server อาจตอบ 200 กลับมาแต่เนื้อหาใน body ผิดพลาด (เช่น error message ที่ wrap มาเป็น 200 แทนที่จะเป็น error status จริง) การตรวจสอบที่รัดกุมกว่าจึงต้องดูทั้ง status code และเนื้อหาของ response พร้อมกันในเงื่อนไขเดียว — ถ้าเงื่อนไขใดเงื่อนไขหนึ่งไม่ผ่าน check() นั้นจะถูกนับเป็น fail ทันที ต่างจากการแยก check เป็นคนละรายการที่แต่ละอันจะถูกนับผ่าน/ไม่ผ่านแยกกันเอง`,
+    example: `// ตัวอย่าง compound check ที่ตรวจ header กับ response time พร้อมกัน
+check(res, {
+  'has content-type json': (r) => r.headers['Content-Type'].includes('application/json'),
+  'responded fast enough': (r) => r.timings.duration < 200,
+});`,
+    task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
+    1. กำหนด <code>scenarios</code> สองตัว: <code>baseline_load</code> ใช้ <code>executor: 'constant-vus'</code>, <code>vus: 10</code>, <code>duration: '20s'</code> และ <code>stress_spike</code> ใช้ <code>executor: 'ramping-vus'</code>, <code>startVUs: 0</code>, มี <code>stages</code> ไต่ขึ้นจาก 0 ไป <code>40</code> VU ภายใน <code>5s</code> แล้วไต่ลงกลับ <code>0</code> ภายใน <code>5s</code>, และ <code>startTime: '10s'</code><br/>
+    2. ใช้ <code>check()</code> ตรวจสอบพร้อมกัน 2 เงื่อนไขในเงื่อนไขเดียวกัน: <code>status</code> ต้องเป็น <code>200</code> และ <code>res.body</code> ต้องมีคำว่า <code>'ok'</code> อยู่ด้วย`
   },
 ];
 

@@ -8,6 +8,17 @@
 // NODE_ENV, /api/ai/panel does not). XSS/Watchlist scenario and the missing security-headers state
 // are honestly labeled where not grounded in real project code.
 
+// Strips // line comments and /* */ block comments before pattern-matching student code, so
+// wrapping the "correct" line inside a comment can't fool validate() into a false pass.
+// ponytail: naive regex-based stripper - doesn't understand string literals, so a code sample
+// containing a literal "//" or "/* */" inside a string would get mangled. None of the solutions
+// below do that; if a future lesson needs it, swap in a real tokenizer instead of extending this.
+function stripComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*$/gm, '');
+}
+
 const LESSONS = [
   {
     id: "intro",
@@ -21,8 +32,9 @@ const LESSONS = [
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการยิง request แบบไม่มี API Key...");
-      const hasPost = /request\.post\(['"`].*\/api\/ai\/recommend['"`]/.test(code);
-      const has401 = /expect\(response\.status\(\)\)\.toBe\(401\)/.test(code);
+      const stripped = stripComments(code);
+      const hasPost = /request\.post\(['"`].*\/api\/ai\/recommend['"`]/.test(stripped);
+      const has401 = /expect\(response\.status\(\)\)\.toBe\(401\)/.test(stripped);
       if (!hasPost) {
         throw new Error("ไม่พบการยิง POST ไปที่ /api/ai/recommend\nตัวอย่าง: const response = await request.post('/api/ai/recommend', { data: {} });");
       }
@@ -31,7 +43,7 @@ const LESSONS = [
       }
       log("✓ ยืนยันได้ว่า endpoint ปฏิเสธ request ที่ไม่มี API Key ถูกต้อง");
     },
-    hint: "ใช้ await request.post('/api/ai/recommend', { data: {} }); แล้ว expect(response.status()).toBe(401);",
+    hint: "Playwright's request fixture ยิง POST ได้โดยไม่ต้องใส่ headers เลย (เท่ากับไม่มี key) ลองดูว่า method ไหนใช้ยิง POST และ method ไหนใช้อ่าน status code จาก response ที่ได้กลับมา แล้วเทียบค่าด้วย expect()",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ปฏิเสธ request ที่ไม่มี API Key', async ({ request }) => {
@@ -73,10 +85,11 @@ expect(response.status()).toBe(401);`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการทดสอบด้วย Injection-like Input...");
-      const hasInjectionString = /DROP TABLE|--|;--/.test(code);
-      const hasErrorRead = /body\.error/.test(code);
-      const hasSafeCheck = /not\.toMatch\(.*(?:at Object|stack|axios|ENOENT)/.test(code) ||
-                            /toBe\(['"]Failed to calculate levels['"]\)/.test(code);
+      const stripped = stripComments(code);
+      const hasInjectionString = /DROP TABLE|--|;--/.test(stripped);
+      const hasErrorRead = /body\.error/.test(stripped);
+      const hasSafeCheck = /not\.toMatch\(.*(?:at Object|stack|axios|ENOENT)/.test(stripped) ||
+                            /toBe\(['"]Failed to calculate levels['"]\)/.test(stripped);
       if (!hasInjectionString) {
         throw new Error("ไม่พบการทดสอบด้วย input แบบ injection-like\nตัวอย่าง: ticker=AAPL'; DROP TABLE users;--");
       }
@@ -88,7 +101,7 @@ expect(response.status()).toBe(401);`,
       }
       log("✓ ยืนยันได้ว่า error message ยังปลอดภัยแม้ยิง input แปลกปลอมเข้าไป");
     },
-    hint: "ยิง ticker=AAPL'; DROP TABLE users;-- แล้วเช็ค const body = await response.json(); expect(body.error).toBe('Failed to calculate levels');",
+    hint: "ต่อ query string ที่มีอักขระ injection-like เข้าไปใน URL ตรงๆ ได้เลยตอนยิง GET จากนั้นแปลง response เป็น JSON แล้วดูใน theory ว่า server ควบคุมข้อความ error ที่ส่งกลับมาให้เป็นค่าคงที่อะไร",
     solution: `import { test, expect } from '@playwright/test';
 
 test('error message ยังปลอดภัยแม้ยิง input แบบ injection-like', async ({ request }) => {
@@ -122,9 +135,10 @@ expect(body2.error).not.toMatch(/at Object|stack|axios/);`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการทดสอบ XSS Prevention...");
-      const hasScriptPayload = /<script>window\.__xss/.test(code);
-      const hasEvaluateCheck = /page\.evaluate\(\(\)\s*=>\s*window\.__xss\)/.test(code);
-      const hasFalsyCheck = /toBeFalsy|toBeUndefined|not\.toBe\(true\)/.test(code);
+      const stripped = stripComments(code);
+      const hasScriptPayload = /<script>window\.__xss/.test(stripped);
+      const hasEvaluateCheck = /page\.evaluate\(\(\)\s*=>\s*window\.__xss\)/.test(stripped);
+      const hasFalsyCheck = /toBeFalsy|toBeUndefined|not\.toBe\(true\)/.test(stripped);
       if (!hasScriptPayload) {
         throw new Error("ไม่พบการกรอกข้อความที่มี <script>window.__xss = true</script>");
       }
@@ -136,7 +150,7 @@ expect(body2.error).not.toMatch(/at Object|stack|axios/);`,
       }
       log("✓ ยืนยันได้ว่าข้อความไม่ถูกรันเป็นโค้ดจริง (ป้องกัน XSS)");
     },
-    hint: "กรอก '<script>window.__xss = true</script>' ในช่อง note แล้วเช็ค const xssRan = await page.evaluate(() => window.__xss); expect(xssRan).toBeFalsy();",
+    hint: "กรอกข้อความผ่าน locator ปกติ (fill แล้ว click เพื่อบันทึก) จากนั้นใช้ page.evaluate() เพื่ออ่านค่าตัวแปร global ฝั่ง browser ที่ payload พยายามตั้งค่า — ถ้าอ่านได้เป็นค่า falsy แปลว่าสคริปต์ไม่ถูกรันจริง",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ป้องกัน XSS: ข้อความที่พิมพ์ไม่ถูกรันเป็นโค้ด', async ({ page }) => {
@@ -168,9 +182,10 @@ expect(scriptTagCount).toBe(0);`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการทดสอบด้วย API Key ปลอม...");
-      const hasWrongKey = /X-API-Key['"]?\s*:\s*['"]wrong-key/.test(code);
-      const has401 = /expect\(response\.status\(\)\)\.toBe\(401\)/.test(code);
-      const hasMessageCheck = /Unauthorized/.test(code) && /body\.error|toContain/.test(code);
+      const stripped = stripComments(code);
+      const hasWrongKey = /X-API-Key['"]?\s*:\s*['"]wrong-key/.test(stripped);
+      const has401 = /expect\(response\.status\(\)\)\.toBe\(401\)/.test(stripped);
+      const hasMessageCheck = /Unauthorized/.test(stripped) && /body\.error|toContain/.test(stripped);
       if (!hasWrongKey) {
         throw new Error("ไม่พบการยิง request พร้อม header X-API-Key เป็นค่าผิด\nตัวอย่าง: headers: { 'X-API-Key': 'wrong-key-12345' }");
       }
@@ -182,7 +197,7 @@ expect(scriptTagCount).toBe(0);`,
       }
       log("✓ ยืนยันได้ว่า API Key ปลอมถูกปฏิเสธพร้อม error message ที่ถูกต้อง");
     },
-    hint: "headers: { 'X-API-Key': 'wrong-key-12345' } แล้วเช็ค status 401 และ body.error ต้อง toContain('Unauthorized')",
+    hint: "คล้ายบทนำ แต่คราวนี้ใส่ header ที่มีค่าผิดแทนการไม่ใส่เลย แล้วอย่าตรวจแค่ status code เฉยๆ — ต้องอ่าน body เป็น JSON ด้วยแล้วตรวจสอบว่าข้อความ error สื่อถึงเหตุผลการถูกปฏิเสธด้วย",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ปฏิเสธ API Key ปลอม พร้อม error message ที่ถูกต้อง', async ({ request }) => {
@@ -224,9 +239,10 @@ expect(response2.status()).not.toBe(401);`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการเช็ค Sensitive Data ใน error response...");
-      const hasErrorCheck = /body\.error/.test(code);
-      const hasLeakPatternCheck = /not\.toMatch|not\.toContain/.test(code) &&
-                                  (/at Object|ENOENT|ECONNREFUSED|stack/.test(code));
+      const stripped = stripComments(code);
+      const hasErrorCheck = /body\.error/.test(stripped);
+      const hasLeakPatternCheck = /not\.toMatch|not\.toContain/.test(stripped) &&
+                                  (/at Object|ENOENT|ECONNREFUSED|stack/.test(stripped));
       if (!hasErrorCheck) {
         throw new Error("ไม่พบการอ่านค่า body.error จาก response");
       }
@@ -235,7 +251,7 @@ expect(response2.status()).not.toBe(401);`,
       }
       log("✓ ยืนยันได้ว่า error message ไม่หลุดรายละเอียดภายในของระบบ");
     },
-    hint: "expect(body.error).not.toMatch(/at Object|ENOENT|ECONNREFUSED/);",
+    hint: "อ่าน body.error แล้วนึกถึงว่า pattern แบบไหนที่บ่งบอกว่าเป็น stack trace หรือ system-level error (ไม่ใช่ข้อความควบคุมปกติ) จากนั้นใช้ assertion ฝั่ง negative (not...) เพื่อยืนยันว่า pattern เหล่านั้นไม่ปรากฏ",
     solution: `import { test, expect } from '@playwright/test';
 
 test('error response ไม่หลุดรายละเอียดภายในของระบบ', async ({ request }) => {
@@ -265,42 +281,154 @@ for (const field of forbiddenFields) {
     template: `// สถานการณ์: server/index.js จริงของ My-Investment-Port ไม่ได้ตั้งค่า security header เพิ่มเติม
 // (ไม่มี helmet middleware หรือ header พวก X-Content-Type-Options เลย)
 // 1. ยิง GET ไปที่ /api/ai/health แล้วอ่าน response headers
-// 2. ตรวจสอบว่ามี header 'x-content-type-options' หรือไม่ (คาดว่า "ยังไม่มี" ตามสภาพจริงตอนนี้)
+// 2. เขียน assertion จริงว่า header 'x-content-type-options' ต้องมีค่าเป็น 'nosniff'
+//    หมายเหตุ: ถ้ารันจริงตอนนี้ test นี้จะ FAIL เพราะระบบยังไม่ได้ตั้งค่า header นี้เลย —
+//    นั่นคือผลลัพธ์ที่ถูกต้องของบทนี้ assertion ต้องยืนยันสถานะที่ "ควรจะเป็น" แล้วปล่อยให้แดง
+//    เพื่อรายงาน gap จริงกลับไปให้ทีม Dev ไม่ใช่เขียน test ที่ผ่านเสมอโดยไม่ตรวจสอบอะไรจริง
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบการอ่าน Security Headers...");
-      const hasHeadersRead = /response\.headers\(\)/.test(code);
-      const hasHeaderCheck = /x-content-type-options/.test(code);
+      log("🔍 ตรวจสอบการเขียน assertion จริงสำหรับ Security Headers...");
+      const stripped = stripComments(code);
+      const hasHeadersRead = /response\.headers\(\)/.test(stripped);
+      const hasRealAssertion = /expect\(\s*headers\[['"]x-content-type-options['"]\]\s*\)\.toBe\(['"]nosniff['"]\)/.test(stripped);
       if (!hasHeadersRead) {
         throw new Error("ไม่พบการอ่าน response.headers()\nตัวอย่าง: const headers = response.headers();");
       }
-      if (!hasHeaderCheck) {
-        throw new Error("ไม่พบการตรวจสอบ header 'x-content-type-options'");
+      if (!hasRealAssertion) {
+        throw new Error("ไม่พบการ assert ค่าจริงของ header 'x-content-type-options' — แค่ log ออกมาดูไม่นับ ต้องมี expect() ที่ยืนยันค่าที่คาดหวังจริง\nตัวอย่าง: expect(headers['x-content-type-options']).toBe('nosniff');");
       }
-      log("✓ ตรวจสอบ Security Header ถูกต้อง (พบว่ายังไม่มีการตั้งค่านี้จริงในระบบปัจจุบัน)");
+      log("✓ ยืนยันได้ด้วย assertion จริงว่า header ถูกตรวจสอบตามที่คาดหวัง (ไม่ใช่แค่รายงานสถานะเฉยๆ)");
     },
-    hint: "const headers = response.headers(); console.log(headers['x-content-type-options']);",
+    hint: "อ่าน headers จาก response.headers() แล้วดูใน theory ว่า header ที่ปลอดภัยควรมีค่าอะไร จากนั้นเขียน assertion ที่ยืนยันค่านั้นตรงๆ แทนการแค่ log ออกมาดูเฉยๆ — ใช่ ต่อให้รู้ว่ามันจะ fail ก็ต้องเขียนให้ fail จริง",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ตรวจสอบ Security Header x-content-type-options', async ({ request }) => {
   const response = await request.get('/api/ai/health');
   const headers = response.headers();
 
-  console.log('x-content-type-options:', headers['x-content-type-options']);
-  // หมายเหตุ: ระบบปัจจุบันยังไม่ตั้งค่า header นี้ — test นี้แค่ "รายงานสถานะ" ให้เห็น ไม่ fail
+  expect(headers['x-content-type-options']).toBe('nosniff');
 });`,
     theory: `<strong>Security Headers</strong> คือ HTTP response header พิเศษที่บอกเบราว์เซอร์ให้เปิดใช้กลไกป้องกันเพิ่มเติม เช่น:<br/><br/>
     • <code>X-Content-Type-Options: nosniff</code> — ห้ามเบราว์เซอร์เดา MIME type เอง (ป้องกันไฟล์ที่แอบอ้างเป็นชนิดอื่น)<br/>
     • <code>X-Frame-Options: DENY</code> — ห้ามเว็บถูกฝังใน <code>&lt;iframe&gt;</code> ของเว็บอื่น (ป้องกัน Clickjacking)<br/>
     • <code>Content-Security-Policy</code> — จำกัดว่าสคริปต์/ทรัพยากรใดโหลดได้จากที่ไหนบ้าง (ป้องกัน XSS อีกชั้น)<br/><br/>
     <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ด <code>server/index.js</code> ของ My-Investment-Port จริงแล้ว<strong>ไม่พบ</strong> middleware อย่าง <code>helmet</code> หรือการตั้งค่า header เหล่านี้เลย — โปรเจกนี้มี CORS whitelist + API Key + Rate Limiter (ที่เจอในบทก่อนหน้า) แต่ยังไม่มี security header ชั้นนี้<br/><br/>
-    บทเรียนนี้จึงไม่ได้สอน "พิสูจน์ว่ามันทำงาน" (เพราะมันยังไม่มี) แต่สอน<strong>เทคนิคการตรวจสอบ</strong> — เขียน test ที่ log ค่า header ปัจจุบันออกมาให้เห็นสถานะจริง เป็นวิธีที่ QA ใช้รายงานช่องว่างด้าน security กลับไปให้ทีม Dev พิจารณาเพิ่ม (เช่น แนะนำให้ติดตั้ง <code>helmet</code> npm package) แทนที่จะ assert ผ่าน/ไม่ผ่านทันที เพราะยังไม่มี requirement ที่ตกลงกันไว้ว่า "ต้องมี"`,
-    example: `// ถ้าทีมตกลงกันแล้วว่าต้องมี header นี้ ค่อยเปลี่ยนจาก console.log เป็น assert จริง
-expect(headers['x-content-type-options']).toBe('nosniff');`,
+    <strong>ทำไมบทนี้ถึงบังคับให้เขียน assertion จริง ทั้งที่รู้อยู่แล้วว่ามันจะ fail:</strong> เวอร์ชันก่อนหน้าของบทเรียนนี้สอนให้แค่ <code>console.log</code> ค่า header ออกมาดูโดยไม่ assert อะไรเลย — นั่นคือ test ที่ "เขียนแล้วผ่านเสมอ" ไม่ว่าระบบจะปลอดภัยหรือไม่ ซึ่งเป็นนิสัยที่อันตรายมากสำหรับ QA เพราะทำให้ทีมเข้าใจผิดว่า "มี test ครอบคลุมแล้ว" ทั้งที่ test นั้นไม่เคยตรวจสอบอะไรจริงสักครั้ง<br/><br/>
+    แนวทางที่ถูกต้องคือ<strong>ยืนยันสถานะที่ควรจะเป็น</strong> (header ต้องมีค่า <code>nosniff</code>) แล้วปล่อยให้ test รันแล้ว<strong>แดง (fail)</strong> ถ้าความจริงยังไม่ตรงตามที่ควรจะเป็น — test ที่ fail แบบมีเหตุผลชัดเจนคือหลักฐานที่มีประโยชน์กว่า test ที่ผ่านเสมอโดยไม่ตรวจสอบอะไร เพราะมันสื่อสารช่องว่างด้าน security กลับไปให้ทีม Dev เห็นเป็นรูปธรรม (เช่น แนะนำให้ติดตั้ง <code>helmet</code> npm package) แทนที่จะซ่อนปัญหาไว้เบื้องหลัง test สีเขียวปลอมๆ`,
+    example: `// อีกตัวอย่าง: assert header ป้องกัน Clickjacking ด้วยแนวคิดเดียวกัน
+expect(headers['x-frame-options']).toBe('DENY');`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
     1. ยิง GET ไปที่ <code>/api/ai/health</code> แล้วอ่าน <code>response.headers()</code><br/>
-    2. ตรวจสอบ (log) ค่า header <code>x-content-type-options</code>`
+    2. เขียน assertion จริงว่า <code>headers['x-content-type-options']</code> ต้องเท่ากับ <code>'nosniff'</code> (ห้ามแค่ log ออกมาดู) — ถ้ารันจริงตอนนี้ test จะ fail เพราะระบบยังไม่ได้ตั้งค่า header นี้ นั่นคือผลลัพธ์ที่ถูกต้องของบทเรียนนี้`
+  },
+  {
+    id: "advanced_stack_trace_leak",
+    meta: "ขั้นสูง 1",
+    title: "ขั้นสูง 1: Stack Trace ต้องไม่หลุดออกมาใน Error Response",
+    template: `// สถานการณ์ (สมมติ เพื่อฝึกเทคนิค ไม่ใช่ endpoint จริงใน My-Investment-Port เหมือนบทอื่นๆ):
+// มี endpoint ใหม่ /api/reports/generate ที่ error handling ยังไม่รัดกุมพอ
+// เมื่อเกิด error ภายใน (เช่น อ่านไฟล์รายงานไม่สำเร็จ) endpoint นี้อาจหลุด stack trace เต็มรูปแบบ
+// ออกมาใน body.error — stack trace ของ Node.js มีรูปแบบตายตัวคือ
+//   "at functionName (/absolute/path/to/file.js:12:34)"
+// ซึ่งเผยทั้ง path ไฟล์จริงบนเครื่อง server และเลขบรรทัด/คอลัมน์ที่ error เกิดขึ้น
+// บทที่ 4 (Sensitive Data Exposure) เช็คแค่คำเฉพาะ (เช่น "ENOENT") บทนี้ต้องคิดกว้างกว่านั้น:
+// ต้องจับ "รูปแบบ" ของ stack trace ทั้งเส้น ไม่ใช่แค่คำใดคำหนึ่ง
+// 1. ยิง request ที่ทำให้เกิด error ที่ /api/reports/generate
+// 2. เขียน assertion จริงว่า body.error ต้อง "ไม่" ตรงกับรูปแบบ stack trace แบบนี้
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการทดสอบ Stack Trace Leak (ขั้นสูง)...");
+      const stripped = stripComments(code);
+      const hasRequest = /request\.(get|post)\(['"`].*\/api\/reports\/generate['"`]/.test(stripped);
+      const hasBodyRead = /body\.error/.test(stripped);
+      const hasNegativeAssertion = /expect\(\s*body\.error\s*\)\.not\.(toMatch|toContain)\(/.test(stripped);
+      const hasLineColPattern = /:\\d\+.*:\\d\+/.test(stripped);
+      if (!hasRequest) {
+        throw new Error("ไม่พบการยิง request ไปที่ /api/reports/generate\nตัวอย่าง: const response = await request.post('/api/reports/generate', { data: { reportId: 'invalid' } });");
+      }
+      if (!hasBodyRead) {
+        throw new Error("ไม่พบการอ่านค่า body.error จาก response");
+      }
+      if (!hasNegativeAssertion) {
+        throw new Error("ไม่พบ negative assertion บน body.error\nตัวอย่าง: expect(body.error).not.toMatch(...);");
+      }
+      if (!hasLineColPattern) {
+        throw new Error("assertion ที่มีต้องจับรูปแบบ 'path:เลขบรรทัด:เลขคอลัมน์' ของ stack trace จริงๆ ไม่ใช่แค่คำเฉพาะคำเดียว\nตัวอย่าง: expect(body.error).not.toMatch(/at .*\\(.*:\\d+:\\d+\\)/);");
+      }
+      log("✓ ยืนยันได้ว่า error message ไม่หลุด stack trace ที่มี path และเลขบรรทัดจริง");
+    },
+    hint: "Node.js stack trace มีรูปแบบตายตัวคือ 'at <function> (<path>:<บรรทัด>:<คอลัมน์>)' ลองคิดว่าจะเขียน pattern อย่างไรให้จับได้ทั้งส่วน path และตัวเลขสองชุดที่คั่นด้วย colon ท้ายบรรทัด แล้วใช้ negative assertion ยืนยันว่า body.error ไม่ตรงกับ pattern นั้น",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('error response ไม่หลุด stack trace ที่มี path และเลขบรรทัด', async ({ request }) => {
+  const response = await request.post('/api/reports/generate', { data: { reportId: 'invalid' } });
+  const body = await response.json();
+
+  expect(body.error).not.toMatch(/at .*\\(.*:\\d+:\\d+\\)/);
+});`,
+    theory: `บทที่ 4 (Sensitive Data Exposure) สอนให้เช็คคำเฉพาะที่บ่งบอกรายละเอียดภายใน เช่น <code>ENOENT</code>, <code>ECONNREFUSED</code>, <code>at Object</code> — วิธีนั้นใช้ได้ดีเมื่อรู้ล่วงหน้าว่าคำเหล่านั้นจะปรากฏ แต่ stack trace จริงมีรูปแบบที่หลากหลายกว่านั้นมาก (ชื่อฟังก์ชัน, ชื่อไฟล์, เลขบรรทัดที่เปลี่ยนไปเรื่อยๆ)<br/><br/>
+    สิ่งที่<strong>คงที่เสมอ</strong>ในทุก stack trace ของ Node.js/V8 คือรูปแบบโครงสร้าง: <code>at &lt;function or &lt;anonymous&gt;&gt; (&lt;absolute path&gt;:&lt;line&gt;:&lt;column&gt;)</code> — path ตามด้วยเลขบรรทัดและเลขคอลัมน์ คั่นด้วย colon เสมอ นี่คือ "ลายเซ็น" ของ stack trace ที่ QA ระดับสูงควรจับด้วย pattern มากกว่าคำใดคำหนึ่ง เพราะครอบคลุมทุกกรณีของ error ภายในที่หลุดออกมาโดยไม่ต้องรู้ล่วงหน้าว่า error message จะเขียนว่าอะไร<br/><br/>
+    <em>หมายเหตุ: <code>/api/reports/generate</code> เป็น endpoint สมมติสำหรับฝึกเทคนิคนี้ ไม่ใช่ endpoint จริงใน My-Investment-Port</em>`,
+    example: `// อีกวิธีตรวจสอบแบบใกล้เคียงกัน: เช็คว่า response body ทั้งก้อนไม่มี field ชื่อ stack เปิดเผยตรงๆ เลย
+expect(body).not.toHaveProperty('stack');`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ยิง request ที่ทำให้เกิด error ที่ <code>/api/reports/generate</code><br/>
+    2. เขียน negative assertion ว่า <code>body.error</code> ต้อง "ไม่" ตรงกับ pattern ของ stack trace ที่มีรูปแบบ <code>path:เลขบรรทัด:เลขคอลัมน์</code> (เช่น <code>/at .*\\(.*:\\d+:\\d+\\)/</code>) — การเช็คแค่คำใดคำหนึ่งไม่พอสำหรับบทนี้`
+  },
+  {
+    id: "advanced_auth_coverage",
+    meta: "ขั้นสูง 2",
+    title: "ขั้นสูง 2: Auth Middleware ต้องถูกบังคับใช้ครบทุก Endpoint ที่ควรป้องกัน",
+    template: `// สถานการณ์ขั้นสูง: บทนำและบทที่ 3 ทดสอบไปแล้วว่า /api/ai/recommend ปฏิเสธ request
+// ที่ไม่มี/มี API Key ผิด — แต่ validateApiKey middleware จริงผูกไว้กับทั้งหมด 4 endpoint
+// (ดู comment บนสุดของไฟล์นี้): portfolio-snapshot, recommend, price-history, model/switch
+// การทดสอบแค่ endpoint เดียวไม่พิสูจน์ว่า middleware ถูกผูกไว้ถูกต้องกับ endpoint ที่เหลือด้วย
+// (บั๊กจริงที่พบบ่อย: เพิ่ม endpoint ใหม่แล้วลืมผูก middleware ป้องกันไว้)
+// 1. ยิง POST ไปยัง endpoint ที่เหลืออีก 3 ตัว (portfolio-snapshot, price-history, model/switch)
+//    แบบไม่ใส่ API Key
+// 2. เขียน assertion จริงว่าทุก endpoint ต้องตอบกลับ 401 ไม่มีข้อยกเว้น
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบความครอบคลุมของการทดสอบ Auth ในทุก endpoint ที่ควรป้องกัน...");
+      const stripped = stripComments(code);
+      const requiredEndpoints = ['/api/ai/portfolio-snapshot', '/api/ai/price-history', '/api/ai/model/switch'];
+      const missingEndpoints = requiredEndpoints.filter((ep) => !stripped.includes(ep));
+      const has401Assertion = /expect\(response\.status\(\)\)\.toBe\(401\)/.test(stripped);
+      if (missingEndpoints.length > 0) {
+        throw new Error(`ยังไม่ได้ทดสอบ endpoint ที่ต้องมี API Key ครบทั้งหมด — ขาด: ${missingEndpoints.join(', ')}`);
+      }
+      if (!has401Assertion) {
+        throw new Error("ไม่พบการตรวจสอบ status 401 จริง\nตัวอย่าง: expect(response.status()).toBe(401);");
+      }
+      log("✓ ยืนยันได้ว่า endpoint ที่ควรถูกป้องกันทั้งหมดถูกทดสอบและปฏิเสธ request ที่ไม่มี API Key จริง");
+    },
+    hint: "ลองนึกถึง array ของ endpoint ที่ควรถูกป้องกันทั้งหมด (ดูจาก comment บนสุดของไฟล์นี้ว่ามีอะไรบ้าง) แล้ววนลูปยิง POST แบบไม่ใส่ API Key ไปทีละตัว จากนั้นยืนยัน status code ในแต่ละรอบ",
+    solution: `import { test, expect } from '@playwright/test';
+
+const protectedEndpoints = [
+  '/api/ai/portfolio-snapshot',
+  '/api/ai/price-history',
+  '/api/ai/model/switch',
+];
+
+test('endpoint ที่ต้องมี API Key ทั้งหมดปฏิเสธ request ที่ไม่มี key', async ({ request }) => {
+  for (const endpoint of protectedEndpoints) {
+    const response = await request.post(endpoint, { data: {} });
+    expect(response.status()).toBe(401);
+  }
+});`,
+    theory: `บทนำและบทที่ 3 พิสูจน์แล้วว่า <code>/api/ai/recommend</code> ปฏิเสธ request ที่ไม่มี/มี API Key ผิดจริง — แต่นั่นพิสูจน์แค่ endpoint เดียว การสรุปว่า "middleware ทำงานถูกต้อง" จาก endpoint เดียวเป็นการสรุปที่เร็วเกินไป เพราะ middleware ใน Express ต้องถูก<strong>ผูก (attach) แยกทีละ route</strong> — การลืมผูก middleware กับ route ใหม่ที่เพิ่มเข้ามาทีหลังเป็นบั๊กที่พบได้จริงบ่อยมาก และจะไม่ถูกจับได้เลยถ้า QA ทดสอบซ้ำแค่ endpoint เดิมที่รู้อยู่แล้วว่าทำงานถูก<br/><br/>
+    <strong>ความครอบคลุม (coverage) คือหัวใจของบทนี้:</strong> ต้องยืนยันว่า<strong>ทุก</strong>endpoint ที่ควรมี auth (ตามที่ยืนยันจากโค้ดจริงไว้ในบทนำ) ปฏิเสธ request ที่ไม่มี key จริง ไม่ใช่แค่ตัวใดตัวหนึ่ง — ในทางกลับกัน ก็ต้องรู้ด้วยว่า <code>/api/ai/panel</code> (บทที่ 4) ไม่ได้อยู่ในกลุ่มนี้ เพราะไม่มี middleware ผูกไว้จริง การรู้ว่า "endpoint ไหนควรป้องกันและไหนไม่ควร" สำคัญพอๆ กับการทดสอบว่ามันป้องกันจริง`,
+    example: `// ตัวอย่างเช็คด้านตรงข้าม: ยืนยันว่า endpoint ที่ไม่ได้ผูก middleware จริง (เช่น /api/ai/panel)
+// ไม่ตอบ 401 แม้ไม่มี API Key เลย (เพื่อยืนยันความเข้าใจที่ถูกต้องเกี่ยวกับขอบเขตของ middleware)
+const panelResponse = await request.get('/api/ai/panel');
+expect(panelResponse.status()).not.toBe(401);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ยิง POST ไปยัง endpoint ทั้ง 3 ตัวที่เหลือซึ่งต้องมี API Key: <code>/api/ai/portfolio-snapshot</code>, <code>/api/ai/price-history</code>, <code>/api/ai/model/switch</code> แบบไม่ใส่ header <code>X-API-Key</code><br/>
+    2. เขียน assertion จริงว่าทุก endpoint ต้องตอบกลับ status <code>401</code>`
   }
 ];
 

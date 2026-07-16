@@ -34,15 +34,13 @@ const TRACKS = [
 ];
 
 function extractLessons(src, sandbox) {
-  const startMarker = 'const LESSONS = [';
-  const endMarker = '\n// Application state';
-  const start = src.indexOf(startMarker) + 'const LESSONS = '.length;
-  const end = src.indexOf(endMarker);
-  if (start < 0 || end < 0) {
-    throw new Error('Could not locate LESSONS array boundaries (missing "// Application state" marker?)');
-  }
-  const arrayText = src.slice(start, end).trim().replace(/;$/, '');
-  return vm.runInContext(`(${arrayText})`, sandbox);
+  // Run the WHOLE file in the sandbox (not just a slice of the LESSONS array literal) so that
+  // any top-level helper function a lesson's validate() closes over (e.g. stripComments(),
+  // rfLineMatch(), execLearnerCode(), resetDatabase()/runQuery()) is actually in scope — this
+  // matches how the file really runs in the browser (course.js loaded as one <script>, engine.js
+  // referencing its top-level bindings afterward in the same global scope).
+  vm.runInContext(src, sandbox);
+  return vm.runInContext('LESSONS', sandbox);
 }
 
 let totalPass = 0;
@@ -54,18 +52,16 @@ for (const track of TRACKS) {
   const filePath = path.join(ROOT, track, 'course.js');
   const src = fs.readFileSync(filePath, 'utf8');
 
-  const sandbox = { console };
+  const sandbox = {
+    console,
+    document: { getElementById: () => null, addEventListener: () => {}, querySelector: () => null },
+    localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+  };
+  sandbox.window = sandbox;
   if (track === 'DB-Design-SQL') {
     sandbox.alasql = require('alasql');
   }
   vm.createContext(sandbox);
-
-  if (track === 'DB-Design-SQL') {
-    // resetDatabase()/runQuery() live before the LESSONS array in this track's course.js
-    const lines = src.split('\n');
-    const helper = lines.slice(9, 40).join('\n');
-    vm.runInContext(helper, sandbox);
-  }
 
   const lessons = extractLessons(src, sandbox);
   let pass = 0;

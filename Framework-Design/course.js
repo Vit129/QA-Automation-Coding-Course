@@ -5,6 +5,101 @@
 // lessons use standard Playwright API conventions; folder-structure follows the pattern
 // already used by the Playwright UI Testing track's own POM lesson.
 
+// --- Sandbox execution helpers --------------------------------------------------
+// Some validate() checks below need to verify learner code actually BEHAVES
+// correctly (calls a real function with real inputs and inspects the real output),
+// not just that certain keywords appear in the submitted text. These helpers run
+// the learner's code inside an isolated `Function` scope so validate() can call
+// into whatever it defines, with controlled fake inputs, without touching this
+// module's own state or the real browser globals.
+
+function stripComments(code) {
+  // A regex-only strip breaks on strings that themselves contain '//' (e.g. the
+  // 'http://localhost:5173' URL literal this course's own lessons use) — it would
+  // treat the URL's '//' as a line-comment start and truncate the string. This
+  // scans char-by-char, tracking string state, so '//'/'/*' are only treated as
+  // comments when they appear outside a string literal.
+  // ponytail: doesn't special-case '/regex/' literals containing '/' — not used
+  // in this course's solutions, upgrade if that ever changes.
+  let result = "";
+  let i = 0;
+  const n = code.length;
+  while (i < n) {
+    const ch = code[i];
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      let str = ch;
+      i++;
+      while (i < n && code[i] !== quote) {
+        if (code[i] === "\\" && i + 1 < n) {
+          str += code[i] + code[i + 1];
+          i += 2;
+        } else {
+          str += code[i];
+          i++;
+        }
+      }
+      str += code[i] || "";
+      i++;
+      result += str;
+      continue;
+    }
+    if (ch === "/" && code[i + 1] === "/") {
+      while (i < n && code[i] !== "\n") i++;
+      continue;
+    }
+    if (ch === "/" && code[i + 1] === "*") {
+      i += 2;
+      while (i < n && !(code[i] === "*" && code[i + 1] === "/")) i++;
+      i += 2;
+      continue;
+    }
+    result += ch;
+    i++;
+  }
+  return result;
+}
+
+function makeFakeLocalStorage(data) {
+  const keys = Object.keys(data);
+  return {
+    length: keys.length,
+    key: (i) => keys[i],
+    getItem: (k) => (Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null),
+  };
+}
+
+// Runs `code` (the learner's snippet) inside a fresh Function scope with `params`
+// injected as parameters (so e.g. a fake `localStorage` shadows the real global),
+// then evaluates `expr` in that same scope and returns its value. Throws if `code`
+// itself throws while being defined/executed.
+function execLearnerCode(code, params, expr) {
+  const names = Object.keys(params);
+  const values = names.map((n) => params[n]);
+  const factory = new Function(...names, `${code}\nreturn (${expr});`);
+  return factory(...values);
+}
+
+// Extracts the balanced `{...}`/`[...]` block that immediately follows the first
+// match of `keyRegex` (e.g. /reporter:\s*\[/), so later checks can be anchored to
+// "inside this specific object/array" instead of "anywhere in the whole file"
+// (which a stray comment or unrelated line could otherwise satisfy).
+function extractBalancedBlock(code, keyRegex, openChar, closeChar) {
+  const m = keyRegex.exec(code);
+  if (!m) return null;
+  const start = m.index + m[0].length - 1;
+  if (code[start] !== openChar) return null;
+  let depth = 0;
+  for (let i = start; i < code.length; i++) {
+    if (code[i] === openChar) depth++;
+    else if (code[i] === closeChar) {
+      depth--;
+      if (depth === 0) return code.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 const LESSONS = [
   {
     id: "intro",
@@ -16,13 +111,14 @@ const LESSONS = [
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า baseURL...");
-      const hasBaseURL = /baseURL:\s*['"]http:\/\/localhost:5173['"]/.test(code);
+      const clean = stripComments(code);
+      const hasBaseURL = /use\s*:\s*\{[\s\S]*?baseURL:\s*['"]http:\/\/localhost:5173['"][\s\S]*?\}/.test(clean);
       if (!hasBaseURL) {
-        throw new Error("ไม่พบการตั้งค่า baseURL: 'http://localhost:5173'\nตัวอย่าง: use: { baseURL: 'http://localhost:5173' }");
+        throw new Error("ไม่พบการตั้งค่า baseURL: 'http://localhost:5173' ภายใน use: { ... } block\nตัวอย่าง: use: { baseURL: 'http://localhost:5173' }");
       }
       log("✓ ตั้งค่า baseURL ถูกต้อง");
     },
-    hint: "use: { baseURL: 'http://localhost:5173' }",
+    hint: "ค่า baseURL เป็น property หนึ่งภายใน use: { } ของ defineConfig() ต้องเป็น string URL ที่ล้อมด้วย quote ให้ตรงกับ URL ของ dev server เป๊ะ",
     solution: `import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
@@ -56,25 +152,27 @@ export default defineConfig({
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการสร้าง Custom Fixture...");
-      const hasExtend = /\.extend\(/.test(code);
-      const hasFixtureName = /watchlistPage:/.test(code);
-      const hasGoto = /goto\(['"]\/watchlist['"]\)/.test(code);
-      const hasUse = /await use\(/.test(code);
+      const clean = stripComments(code);
+      const hasExtend = /\.extend\(/.test(clean);
       if (!hasExtend) {
         throw new Error("ไม่พบการใช้ test.extend()");
       }
-      if (!hasFixtureName) {
-        throw new Error("ไม่พบ fixture ชื่อ watchlistPage");
+      // Anchor goto/use to be INSIDE the watchlistPage fixture body itself, not just
+      // floating anywhere else in the file — prevents passing via scattered snippets.
+      const fixtureMatch = /watchlistPage\s*:\s*async\s*\(\s*\{[^)]*page[^)]*\}\s*,\s*use\s*\)\s*=>\s*\{([\s\S]*?)\}/.exec(clean);
+      if (!fixtureMatch) {
+        throw new Error("ไม่พบ fixture ชื่อ watchlistPage ที่เป็นรูปแบบ async ({ page }, use) => { ... }");
       }
-      if (!hasGoto) {
-        throw new Error("fixture ต้องยิง goto('/watchlist')");
+      const body = fixtureMatch[1];
+      if (!/goto\(\s*['"]\/watchlist['"]\s*\)/.test(body)) {
+        throw new Error("fixture watchlistPage ต้องยิง goto('/watchlist') ภายในตัว fixture เอง");
       }
-      if (!hasUse) {
-        throw new Error("ไม่พบการเรียก await use(...) เพื่อส่งค่าต่อให้ test");
+      if (!/await\s+use\(/.test(body)) {
+        throw new Error("fixture watchlistPage ต้องเรียก await use(...) ภายในตัว fixture เอง เพื่อส่งค่าต่อให้ test");
       }
       log("✓ สร้าง Custom Fixture ถูกต้อง");
     },
-    hint: "export const test = base.extend({ watchlistPage: async ({ page }, use) => { await page.goto('/watchlist'); await use(page); } });",
+    hint: "ใช้ pattern base.extend({ ชื่อ fixture: async ({ page }, use) => { ... } }) — ภายใน fixture ให้ goto หน้าที่ต้องการก่อน แล้วค่อย await use(page) เพื่อส่งค่าต่อให้ test ใช้งาน",
     solution: `import { test as base } from '@playwright/test';
 
 export const test = base.extend({
@@ -108,16 +206,16 @@ test('เพิ่ม ticker ใหม่ใน watchlist', async ({ watchlistPa
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบโครงสร้างโฟลเดอร์ที่ระบุ...");
-      const hasTests = /tests\//.test(code);
-      const hasPages = /pages\//.test(code);
-      const hasFixtures = /fixtures\//.test(code);
-      const hasUtils = /utils\//.test(code);
+      const hasTests = /\btests\//.test(code);
+      const hasPages = /\bpages\//.test(code);
+      const hasFixtures = /\bfixtures\//.test(code);
+      const hasUtils = /\butils\//.test(code);
       if (!hasTests || !hasPages || !hasFixtures || !hasUtils) {
         throw new Error("ต้องระบุครบทั้ง 4 โฟลเดอร์: tests/, pages/, fixtures/, utils/");
       }
       log("✓ ระบุโครงสร้างโฟลเดอร์ครบถ้วนถูกต้อง");
     },
-    hint: "// tests/     - ไฟล์ .spec.ts ที่มีแต่ test case\n// pages/     - Page Object class ของแต่ละหน้า\n// fixtures/  - custom fixture และ test data\n// utils/     - helper function ที่ใช้ร่วมกันข้ามไฟล์",
+    hint: "นึกถึง 4 หน้าที่หลักของโปรเจก test: ที่เก็บตัว test เอง, ที่เก็บ Page Object ของแต่ละหน้า, ที่เก็บของที่ share ข้ามไฟล์แบบ fixture/seed data, และที่เก็บ helper function ทั่วไปที่ไม่ผูกกับหน้าไหน — ตั้งชื่อโฟลเดอร์ให้ตรงหน้าที่ อย่าลืมใส่ / ต่อท้ายทุกชื่อ",
     solution: `// โครงสร้างโฟลเดอร์มาตรฐานของ automation project
 // tests/     - ไฟล์ .spec.ts ที่มีแต่ test case (สั้น อ่านง่าย ไม่มี logic ซับซ้อน)
 // pages/     - Page Object class ของแต่ละหน้า (WatchlistPage.ts, LoginPage.ts)
@@ -158,27 +256,41 @@ test('เพิ่ม ticker ใหม่ใน watchlist', async ({ watchlistPa
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบฟังก์ชัน countCompletedLessons...");
-      const hasFunctionDecl = /function\s+countCompletedLessons\s*\(\s*prefix\s*\)/.test(code);
-      const hasLoop = /for\s*\(\s*let\s+i\s*=\s*0\s*;\s*i\s*<\s*localStorage\.length/.test(code);
-      const hasMarker = /_course_completed_/.test(code);
-      const hasStartsWith = /startsWith\(/.test(code);
-      const hasTrueCheck = /===\s*['"]true['"]/.test(code);
-      if (!hasFunctionDecl) {
-        throw new Error("ไม่พบการประกาศ function countCompletedLessons(prefix)");
+      log("🔍 ตรวจสอบฟังก์ชัน countCompletedLessons (รันจริงเพื่อตรวจพฤติกรรม)...");
+      // Real execution instead of keyword-matching: a function that hard-codes a
+      // return value or checks the wrong variable would pass a text-only regex
+      // check, but fails here because we actually call it against fake data.
+      const data = {
+        fwk_course_completed_intro: "true",
+        fwk_course_completed_custom_fixtures: "true",
+        fwk_course_completed_folder_organization: "false",
+        other_course_completed_intro: "true",
+        fwk_course_completed_reporting_config: "true",
+      };
+      let fn;
+      try {
+        fn = execLearnerCode(
+          code,
+          { localStorage: makeFakeLocalStorage(data) },
+          'typeof countCompletedLessons === "function" ? countCompletedLessons : undefined'
+        );
+      } catch (err) {
+        throw new Error(`โค้ดมี error ขณะรัน: ${err.message}`);
       }
-      if (!hasLoop) {
-        throw new Error("ไม่พบการวนลูปทุก key ด้วย for (let i = 0; i < localStorage.length; i++)");
+      if (typeof fn !== "function") {
+        throw new Error("ไม่พบการประกาศ function countCompletedLessons(prefix) ที่ทำงานได้จริง");
       }
-      if (!hasMarker || !hasStartsWith) {
-        throw new Error("ไม่พบการเช็คว่า key ขึ้นต้นด้วย `${prefix}_course_completed_` ผ่าน .startsWith(...)");
+      const fwkCount = fn("fwk");
+      if (fwkCount !== 3) {
+        throw new Error(`countCompletedLessons('fwk') ควรได้ 3 (นับเฉพาะ key ที่ขึ้นต้นด้วย fwk_course_completed_ และค่าเป็น 'true') แต่ได้ ${fwkCount}`);
       }
-      if (!hasTrueCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่าค่าของ key เป็น 'true'");
+      const otherCount = fn("other");
+      if (otherCount !== 1) {
+        throw new Error(`countCompletedLessons('other') ควรได้ 1 แต่ได้ ${otherCount}`);
       }
-      log("✓ เขียนฟังก์ชัน DRY ที่ reuse ข้าม track ได้จริงถูกต้อง");
+      log("✓ ฟังก์ชันทำงานถูกต้องกับข้อมูลจำลอง (ตรวจจากผลลัพธ์จริง ไม่ใช่แค่รูปแบบข้อความ)");
     },
-    hint: "function countCompletedLessons(prefix) { const marker = `${prefix}_course_completed_`; let count = 0; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key && key.startsWith(marker) && localStorage.getItem(key) === 'true') count++; } return count; }",
+    hint: "วนลูปด้วย for และดึงชื่อ key แต่ละตัวด้วย localStorage.key(i) เทียบว่าขึ้นต้นด้วย marker ที่ประกอบจาก prefix ด้วย .startsWith(...) แล้วเช็คค่าด้วย localStorage.getItem(key) ให้เท่ากับ 'true' แบบ strict equality (===) ก่อนนับ",
     solution: `function countCompletedLessons(prefix) {
   const marker = \`\${prefix}_course_completed_\`;
   let count = 0;
@@ -218,19 +330,23 @@ for (const t of tracks) {
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการแยก Test Data...");
-      const hasObjectDecl = /(?:const|export const)\s+testHoldings\s*=\s*\{/.test(code);
-      const hasTicker = /ticker:\s*['"]AAPL['"]/.test(code);
-      const hasShares = /shares:\s*40/.test(code);
-      const hasAvgCost = /avgCost:\s*178(\.0+)?/.test(code);
-      if (!hasObjectDecl) {
+      const clean = stripComments(code);
+      // Extract the actual object body so ticker/shares/avgCost must appear INSIDE
+      // testHoldings itself — not merely somewhere else in the file (e.g. a stray
+      // comment or an unrelated line) while testHoldings stays an empty object.
+      const block = extractBalancedBlock(clean, /(?:const|export const)\s+testHoldings\s*=\s*\{/, "{", "}");
+      if (!block) {
         throw new Error("ไม่พบการประกาศ testHoldings object");
       }
+      const hasTicker = /ticker:\s*['"]AAPL['"]/.test(block);
+      const hasShares = /shares:\s*40\b/.test(block);
+      const hasAvgCost = /avgCost:\s*178(\.0+)?\b/.test(block);
       if (!hasTicker || !hasShares || !hasAvgCost) {
-        throw new Error("testHoldings ต้องมี ticker='AAPL', shares=40, avgCost=178.00 ครบ");
+        throw new Error("testHoldings ต้องมี ticker: 'AAPL', shares: 40, avgCost: 178.00 อยู่ภายใน object เดียวกันจริง");
       }
       log("✓ แยก Test Data ออกจาก Logic ถูกต้อง");
     },
-    hint: "export const testHoldings = { ticker: 'AAPL', shares: 40, avgCost: 178.00 };",
+    hint: "แยกข้อมูลออกจาก logic การทดสอบ — ประกาศค่าคงที่เป็น object เดียวเก็บทุก field ที่ test ต้องใช้ซ้ำ",
     solution: `export const testHoldings = {
   ticker: 'AAPL',
   shares: 40,
@@ -261,22 +377,25 @@ test('เพิ่ม Holding ใหม่', async ({ page }) => {
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Reporter...");
-      const hasReporterArray = /reporter:\s*\[/.test(code);
-      const hasHtml = /\[\s*['"]html['"]/.test(code) || /['"]html['"]\s*\]/.test(code);
-      const hasJson = /['"]json['"]/.test(code);
-      const hasOutputFile = /outputFile:\s*['"]results\.json['"]/.test(code);
-      if (!hasReporterArray) {
+      const clean = stripComments(code);
+      // Anchor 'html'/'json'/outputFile to be inside the reporter: [...] array itself,
+      // not just present anywhere in the file.
+      const block = extractBalancedBlock(clean, /reporter:\s*\[/, "[", "]");
+      if (!block) {
         throw new Error("ไม่พบการตั้งค่า reporter: [...]");
       }
+      const hasHtml = /['"]html['"]/.test(block);
+      const hasJson = /['"]json['"]/.test(block);
+      const hasOutputFile = /outputFile:\s*['"]results\.json['"]/.test(block);
       if (!hasHtml || !hasJson) {
-        throw new Error("reporter ต้องมีทั้ง 'html' และ 'json'");
+        throw new Error("reporter ต้องมีทั้ง 'html' และ 'json' อยู่ภายใน reporter: [...] เดียวกันจริง");
       }
       if (!hasOutputFile) {
-        throw new Error("ไม่พบ outputFile: 'results.json'");
+        throw new Error("ไม่พบ outputFile: 'results.json' ภายใน reporter: [...]");
       }
       log("✓ ตั้งค่า Reporter ถูกต้อง");
     },
-    hint: "reporter: [['html'], ['json', { outputFile: 'results.json' }]]",
+    hint: "reporter รับ array ของ [ชื่อ reporter, options] ได้หลายตัวพร้อมกัน ตัวที่มี option เพิ่มเติมให้ใส่เป็น tuple [name, { ... }]",
     solution: `import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
@@ -299,6 +418,186 @@ reporter: [
     task: `จงเขียนสคริปต์ให้สมบูรณ์ โดย:<br/>
     1. ตั้งค่า <code>reporter</code> ให้มีทั้ง <code>'html'</code> และ <code>'json'</code><br/>
     2. <code>json</code> reporter ตั้ง <code>outputFile: 'results.json'</code>`
+  },
+  {
+    id: "advanced_retry_wrapper",
+    meta: "ขั้นสูง 1",
+    title: "Retry Wrapper: ห่อฟังก์ชัน Async ให้ลองใหม่อัตโนมัติเมื่อ Fail",
+    template: `// สถานการณ์: บาง test เรียกของที่ flaky โดยธรรมชาติ (เช่น API เช็คสถานะ, WebSocket connect)
+// เขียน try/catch วนลองใหม่ซ้ำในทุกไฟล์ test เป็นภาระ — ต้องการ wrapper กลางที่ใช้ซ้ำได้
+//
+// สเปค:
+// 1. ประกาศ async function ชื่อ retry รับ 3 พารามิเตอร์ (fn, retries, delayMs)
+//    - fn คือ async function ที่ไม่รับ argument (เรียกแค่ fn())
+//    - retries คือจำนวนครั้งสูงสุดที่ "เรียก fn" ทั้งหมด (นับรวมครั้งแรก)
+//    - delayMs คือเวลาหน่วง (ms) ก่อนลองเรียกใหม่ทุกครั้งที่ fail
+// 2. เรียก fn() ถ้าสำเร็จ ให้ return ค่านั้นออกไปทันที ไม่ต้องลองซ้ำอีก
+// 3. ถ้า fn() throw ให้รอ delayMs แล้วเรียก fn() ใหม่ (นับเป็นอีก 1 ครั้ง)
+// 4. ถ้าเรียกครบ retries ครั้งแล้วยัง fail ทุกครั้ง ให้ throw error ล่าสุดออกไป
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ retry() wrapper...");
+      let retryFn;
+      // Shadow setTimeout with an immediate-callback stand-in: keeps the test fast
+      // (no real waiting) and keeps it working even in a bare execution context
+      // that has no host-provided timer API of its own (unlike the real browser).
+      const instantSetTimeout = (cb) => {
+        cb();
+        return 0;
+      };
+      try {
+        retryFn = execLearnerCode(code, { setTimeout: instantSetTimeout }, 'typeof retry === "function" ? retry : undefined');
+      } catch (err) {
+        throw new Error(`โค้ดมี error ขณะโหลด: ${err.message}`);
+      }
+      if (typeof retryFn !== "function") {
+        throw new Error("ไม่พบการประกาศ function retry(fn, retries, delayMs)");
+      }
+      log("✓ พบฟังก์ชัน retry แล้ว กำลังทดสอบพฤติกรรมจริงแบบ async...");
+      // retry() is inherently asynchronous (it must await the wrapped fn and any
+      // delay), so real behavioral verification can't finish synchronously. We do
+      // a synchronous structural gate above (so a missing/broken retry fails
+      // immediately, as this playground's engine expects), then hand back a
+      // Promise that actually calls the learner's function with fake async
+      // dependencies and checks the real outcome.
+      return (async () => {
+        let calls = 0;
+        const fakeFn = async () => {
+          calls++;
+          if (calls < 3) throw new Error(`fail#${calls}`);
+          return "success-value";
+        };
+        const result = await retryFn(fakeFn, 5, 0);
+        if (calls !== 3) {
+          throw new Error(`fn ควรถูกเรียกจนสำเร็จรวม 3 ครั้ง (fail 2 ครั้งแรก, สำเร็จครั้งที่ 3) แต่ถูกเรียก ${calls} ครั้ง`);
+        }
+        if (result !== "success-value") {
+          throw new Error(`retry() ต้อง return ค่าที่ fn() คืนตอนสำเร็จ ('success-value') แต่ได้ ${result}`);
+        }
+
+        let calls2 = 0;
+        const alwaysFail = async () => {
+          calls2++;
+          throw new Error("always-fail");
+        };
+        let threw = false;
+        let thrownMessage = "";
+        try {
+          await retryFn(alwaysFail, 3, 0);
+        } catch (e) {
+          threw = true;
+          thrownMessage = e.message;
+        }
+        if (!threw) {
+          throw new Error("เมื่อ fn fail ทุกครั้งจนครบ retries แล้ว retry() ต้อง throw error ล่าสุดออกไป ไม่ใช่ resolve เงียบๆ");
+        }
+        if (thrownMessage !== "always-fail") {
+          throw new Error(`error ที่ throw ออกมาควรเป็น error ล่าสุดจาก fn() ('always-fail') แต่ได้ '${thrownMessage}'`);
+        }
+        if (calls2 !== 3) {
+          throw new Error(`เมื่อ retries=3 และ fn fail ทุกครั้ง ต้องเรียก fn ทั้งหมด 3 ครั้งพอดี แต่ถูกเรียก ${calls2} ครั้ง`);
+        }
+        log("✓ retry() ทำงานถูกต้องจริง: ลองใหม่จนสำเร็จได้ และ throw เมื่อ fail ครบจำนวนครั้ง");
+      })();
+    },
+    hint: "ใช้ for loop นับจำนวนครั้งที่ลอง ในแต่ละรอบ await fn() ภายใน try/catch — สำเร็จก็ return ค่าออกไปทันที, fail ก็เก็บ error ล่าสุดไว้แล้ว await การหน่วงเวลาด้วย Promise + setTimeout ก่อนวนรอบถัดไป พอครบจำนวนรอบที่กำหนดแล้วยัง fail ให้ throw error ที่เก็บไว้ล่าสุด",
+    solution: `async function retry(fn, retries, delayMs) {
+  let lastError;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  throw lastError;
+}`,
+    theory: `Automation ที่คุยกับระบบภายนอก (API เรียกเช็คสถานะ, WebSocket, third-party service) มักเจอ<strong>ความ flaky ตามธรรมชาติ</strong> ที่ไม่ใช่บั๊กของแอปเรา (network glitch ชั่วคราว, service ยังไม่พร้อมตอบ) — เขียน <code>try/catch</code> วนลองใหม่ในทุกจุดที่เรียกของแบบนี้เป็นโค้ดซ้ำที่ scale ไม่ได้ (DRY เดิมจากบทก่อนหน้า ใช้หลักการเดียวกัน)<br/><br/>
+    <strong>Retry wrapper</strong> คือฟังก์ชันกลางที่ "ห่อ" ฟังก์ชัน async ใดๆ ให้มีพฤติกรรม ลองใหม่อัตโนมัติเมื่อ fail โดยรับพารามิเตอร์ควบคุม: จำนวนครั้งสูงสุด (<code>retries</code>) และเวลาหน่วงระหว่างรอบ (<code>delayMs</code>) — การหน่วงเวลาสำคัญเพราะถ้าลองซ้ำทันทีไม่หน่วงเลย อาจยิงถล่ม service ที่กำลังมีปัญหาซ้ำเข้าไปอีก (thundering herd)<br/><br/>
+    หลักการสำคัญที่ทำให้ wrapper นี้ "ถูกต้อง": (1) สำเร็จเมื่อไหร่ต้องหยุดทันที ไม่ลองต่อให้เสียเวลา (2) ต้องนับจำนวนครั้งให้ตรงตาม <code>retries</code> พอดี ไม่มากไม่น้อยกว่าที่กำหนด (3) เมื่อหมดโอกาสแล้วต้อง throw error ตัวล่าสุดออกไป ไม่ใช่กลืน error เงียบๆ (เพราะ test framework ต้องรู้ว่าสุดท้ายแล้วมันยัง fail อยู่จริง)`,
+    example: `// ตัวอย่างใช้ retry ห่อ API call ที่ flaky ในไฟล์ test จริง
+const health = await retry(
+  () => fetch('/api/health').then((r) => r.json()),
+  3,
+  500
+);
+expect(health.status).toBe('ok');`,
+    task: `จงเขียนฟังก์ชันให้สมบูรณ์ โดย:<br/>
+    1. ประกาศ <code>async function retry(fn, retries, delayMs)</code><br/>
+    2. เรียก <code>fn()</code> สำเร็จเมื่อไหร่ให้ return ค่าออกไปทันที<br/>
+    3. fail ให้รอ <code>delayMs</code> แล้วลองใหม่ นับรวมไม่เกิน <code>retries</code> ครั้ง<br/>
+    4. ครบจำนวนครั้งแล้วยัง fail ให้ throw error ล่าสุดออกไป`
+  },
+  {
+    id: "advanced_test_data_factory",
+    meta: "ขั้นสูง 2",
+    title: "Test Data Factory: สร้าง Mock Object ใหม่ทุกครั้งพร้อม Unique ID",
+    template: `// สถานการณ์: หลาย test ต้องการ "ผลลัพธ์ test case" ปลอมไว้ mock ข้อมูล
+// ถ้าทุก test ใช้ object เดิมซ้ำ อาจชนกัน (id ซ้ำ, test หนึ่ง mutate ค่าไปกระทบอีก test)
+// จึงต้องมี factory function ที่สร้าง object ใหม่ให้ทุกครั้งที่เรียก
+//
+// สเปค:
+// 1. ประกาศ function ชื่อ createTestCaseResult ไม่รับ argument
+// 2. ทุกครั้งที่เรียก ต้อง return object ใหม่ (คนละ reference กัน) ที่มีอย่างน้อย field:
+//    - id: ต้อง unique ไม่ซ้ำกันในแต่ละครั้งที่เรียก (เช่น counter ที่เพิ่มขึ้นเรื่อยๆ)
+//    - status: ตั้งค่าเริ่มต้นเป็น 'pending'
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ createTestCaseResult() factory (เรียกจริงหลายครั้งเพื่อเช็ค id ไม่ซ้ำ)...");
+      let factoryFn;
+      try {
+        factoryFn = execLearnerCode(code, {}, 'typeof createTestCaseResult === "function" ? createTestCaseResult : undefined');
+      } catch (err) {
+        throw new Error(`โค้ดมี error ขณะรัน: ${err.message}`);
+      }
+      if (typeof factoryFn !== "function") {
+        throw new Error("ไม่พบการประกาศ function createTestCaseResult()");
+      }
+      const results = [factoryFn(), factoryFn(), factoryFn()];
+      results.forEach((r, idx) => {
+        if (!r || typeof r !== "object") {
+          throw new Error(`การเรียกครั้งที่ ${idx + 1} ต้อง return object`);
+        }
+        if (r.status !== "pending") {
+          throw new Error(`การเรียกครั้งที่ ${idx + 1} ต้องมี status เป็น 'pending' เป็นค่าเริ่มต้น`);
+        }
+      });
+      if (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) {
+        throw new Error("แต่ละครั้งที่เรียก createTestCaseResult() ต้อง return object ใหม่ (คนละ reference) ไม่ใช่ object เดิมซ้ำ");
+      }
+      const ids = results.map((r) => r.id);
+      const uniqueIds = new Set(ids);
+      if (uniqueIds.size !== ids.length) {
+        throw new Error(`id ต้อง unique ทุกครั้งที่เรียก แต่ได้ id ซ้ำกัน: ${ids.join(", ")}`);
+      }
+      log("✓ factory สร้าง object ใหม่พร้อม id ไม่ซ้ำกันได้จริง");
+    },
+    hint: "เก็บตัวนับ (counter) ไว้นอกฟังก์ชันในตัวแปรที่ persist ข้ามการเรียก แล้วเพิ่มค่าก่อน return object ใหม่ทุกครั้ง (หรือใช้ timestamp/random ที่การันตีไม่ซ้ำก็ได้) — อย่าลืม return object literal ใหม่ทุกครั้ง ห้าม return ตัวแปร object เดิมซ้ำ",
+    solution: `let __testCaseCounter = 0;
+
+function createTestCaseResult() {
+  __testCaseCounter += 1;
+  return {
+    id: __testCaseCounter,
+    status: 'pending',
+  };
+}`,
+    theory: `<strong>Test Data Factory</strong> คือรูปแบบหนึ่งของ Test Data Management (บทที่ 4) ที่ลึกกว่าการแยกค่าคงที่ธรรมดา — เมื่อ test ต้องการ "ของปลอม" ที่มีสถานะเปลี่ยนแปลงได้ (mutate ได้ระหว่าง test) การใช้ object เดิมซ้ำๆ ข้ามหลาย test เป็นบ่อเกิดของบั๊กที่ตามยากที่สุดแบบหนึ่ง: <strong>test A แก้ค่าใน object แล้ว test B ที่รันทีหลังเจอค่าที่เพี้ยนไปจาก test A โดยไม่รู้ตัว (state leak ข้าม test)</strong><br/><br/>
+    Factory function แก้ปัญหานี้ด้วยการ<strong>สร้าง object ใหม่ทุกครั้งที่ถูกเรียก</strong> (ไม่ return reference เดิมซ้ำ) พร้อม<strong>ค่า id ที่ไม่ซ้ำกัน</strong> — id ที่ unique สำคัญเพราะเวลา assert หรือ track ผลลัพธ์หลาย test case พร้อมกัน (เช่นรัน parallel) การมี id ชนกันจะทำให้แยกไม่ออกว่าผลลัพธ์ไหนเป็นของ test ไหน<br/><br/>
+    วิธีการันตี unique ที่ใช้บ่อย:ตัวนับ (counter) ที่เพิ่มค่าทุกครั้ง (เรียบง่าย คาดเดาลำดับได้) หรือค่าสุ่ม/timestamp ที่ชนกันยากมาก (เหมาะกับกระจาย test ข้ามหลาย process/worker ที่ไม่แชร์ตัวนับกัน)`,
+    example: `// ตัวอย่างใช้ factory สร้าง test case ปลอมหลายตัวไม่ชนกันในไฟล์ test จริง
+const tc1 = createTestCaseResult();
+const tc2 = createTestCaseResult();
+console.log(tc1.id, tc2.id); // ตัวเลขต่างกันเสมอ ไม่ว่าจะเรียกกี่ครั้ง`,
+    task: `จงเขียนฟังก์ชันให้สมบูรณ์ โดย:<br/>
+    1. ประกาศ <code>function createTestCaseResult()</code><br/>
+    2. ทุกครั้งที่เรียก ต้อง return object ใหม่ (คนละ reference)<br/>
+    3. object ต้องมี <code>id</code> ที่ไม่ซ้ำกันในแต่ละครั้ง และ <code>status: 'pending'</code>`
   }
 ];
 
@@ -332,14 +631,13 @@ function runSandboxCode() {
       terminal.scrollTop = terminal.scrollHeight;
     };
 
-    try {
-      lesson.validate(userCode, log);
-
+    const onPassed = () => {
       terminal.innerHTML += `
         <div class="terminal-line text-muted">...................................................</div>
         <div class="terminal-line success">✓ <strong>ผลการรัน: สำเร็จ (Passed)</strong></div>
         <div class="terminal-line success">1 passed (89ms)</div>
       `;
+      terminal.scrollTop = terminal.scrollHeight;
 
       setLessonCompleted(lesson.id);
 
@@ -360,16 +658,27 @@ function runSandboxCode() {
           };
         }
       }, 1000);
+    };
 
-    } catch (err) {
+    const onFailed = (err) => {
       terminal.innerHTML += `
         <div class="terminal-line text-muted">...................................................</div>
         <div class="terminal-line error">✕ <strong>ผลการรัน: ล้มเหลว (Failed)</strong></div>
         <div class="terminal-line error">${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
         <div class="terminal-line error">1 failed (31ms)</div>
       `;
+      terminal.scrollTop = terminal.scrollHeight;
+    };
+
+    try {
+      // validate() is normally synchronous, but a lesson whose real behavior is
+      // inherently async (e.g. testing a retry() wrapper) returns a Promise from
+      // its own async check instead. Promise.resolve(...) handles both: a plain
+      // return value resolves immediately, a real Promise is awaited properly.
+      Promise.resolve(lesson.validate(userCode, log)).then(onPassed).catch(onFailed);
+    } catch (err) {
+      onFailed(err);
     }
-    terminal.scrollTop = terminal.scrollHeight;
   }, 600);
 }
 

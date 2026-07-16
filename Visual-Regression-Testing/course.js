@@ -4,6 +4,13 @@
 // positive an unmasked visual diff. Threshold-tuning callback references the same CI-
 // baseline gotcha already noted in the Playwright UI Testing track's own references.
 
+// Strips // line comments and /* */ block comments before validation regexes run,
+// so a learner cannot pass a check merely by leaving the task's own instructional
+// comment text (which often echoes the target API/testId) sitting unused in their code.
+function stripComments(code) {
+  return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+}
+
 const LESSONS = [
   {
     id: "intro",
@@ -15,13 +22,14 @@ const LESSONS = [
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการใช้ toHaveScreenshot()...");
-      const hasScreenshot = /await expect\(page\)\.toHaveScreenshot\(\)/.test(code);
+      const src = stripComments(code);
+      const hasScreenshot = /await expect\(page\)\.toHaveScreenshot\(\)/.test(src);
       if (!hasScreenshot) {
         throw new Error("ไม่พบการเรียก toHaveScreenshot()\nตัวอย่าง: await expect(page).toHaveScreenshot();");
       }
       log("✓ ถ่ายภาพหน้าจอเปรียบเทียบกับ baseline ถูกต้อง");
     },
-    hint: "await expect(page).toHaveScreenshot();",
+    hint: "ใช้ assertion ของ Playwright ที่เทียบภาพทั้งหน้ากับ baseline โดยตรง ไม่ต้องส่ง argument ใดๆ เข้าไป — ชื่อ method สื่อความหมายตรงตัวว่า 'ต้องมีภาพหน้าจอ (เทียบกับ baseline)'",
     solution: `import { test, expect } from '@playwright/test';
 
 test('หน้าเว็บไม่มีการเปลี่ยนแปลงทาง visual โดยไม่ตั้งใจ', async ({ page }) => {
@@ -49,9 +57,10 @@ await expect(page.getByTestId('watchlist-panel')).toHaveScreenshot();`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการใช้ mask()...");
-      const hasMaskOption = /mask:\s*\[/.test(code);
-      const hasCorrectTestId = /watchlist-current-price/.test(code);
-      const hasScreenshot = /toHaveScreenshot\(/.test(code);
+      const src = stripComments(code);
+      const hasMaskOption = /mask:\s*\[/.test(src);
+      const hasCorrectTestId = /getByTestId\(\s*['"]watchlist-current-price['"]\s*\)/.test(src);
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
       if (!hasScreenshot) {
         throw new Error("ไม่พบการเรียก toHaveScreenshot()");
       }
@@ -59,11 +68,11 @@ await expect(page.getByTestId('watchlist-panel')).toHaveScreenshot();`,
         throw new Error("ไม่พบ option mask: [...]\nตัวอย่าง: await expect(page).toHaveScreenshot({ mask: [page.getByTestId('watchlist-current-price')] });");
       }
       if (!hasCorrectTestId) {
-        throw new Error("mask ต้องเจาะจงไปที่ data-testid='watchlist-current-price'");
+        throw new Error("mask ต้องเจาะจงไปที่ locator ของ data-testid='watchlist-current-price' โดยใช้ page.getByTestId(...) จริง ไม่ใช่แค่พิมพ์ชื่อ testId ไว้เฉยๆ");
       }
       log("✓ Mask เนื้อหาที่เปลี่ยนตลอดเวลาก่อนเทียบภาพถูกต้อง");
     },
-    hint: "await expect(page).toHaveScreenshot({ mask: [page.getByTestId('watchlist-current-price')] });",
+    hint: "toHaveScreenshot() รับ option mask เป็น array ของ locator — ใช้ page.getByTestId() หา element ตาม data-testid ที่โจทย์กำหนด แล้วใส่ locator นั้นเข้าไปใน array",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ถ่ายภาพเปรียบเทียบโดย mask ราคาที่เปลี่ยนตลอดเวลา', async ({ page }) => {
@@ -99,8 +108,9 @@ await expect(page).toHaveScreenshot({
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการเทส Responsive หลาย viewport...");
-      const hasSetViewport = /setViewportSize\(\{\s*width:\s*375,\s*height:\s*667\s*\}\)/.test(code);
-      const hasNamedScreenshot = /toHaveScreenshot\(['"]mobile\.png['"]\)/.test(code);
+      const src = stripComments(code);
+      const hasSetViewport = /setViewportSize\(\{\s*width:\s*375,\s*height:\s*667\s*\}\)/.test(src);
+      const hasNamedScreenshot = /toHaveScreenshot\(['"]mobile\.png['"]\)/.test(src);
       if (!hasSetViewport) {
         throw new Error("ไม่พบการตั้งค่า viewport 375x667\nตัวอย่าง: await page.setViewportSize({ width: 375, height: 667 });");
       }
@@ -109,7 +119,7 @@ await expect(page).toHaveScreenshot({
       }
       log("✓ เทส Responsive Visual สำหรับ viewport มือถือถูกต้อง");
     },
-    hint: "await page.setViewportSize({ width: 375, height: 667 }); แล้ว await expect(page).toHaveScreenshot('mobile.png');",
+    hint: "ต้องเรียกสอง method เรียงกัน: หนึ่งคือ method ของ page ที่ตั้งขนาดหน้าจอ (รับ object ที่มี width กับ height) แล้วตามด้วย toHaveScreenshot() ที่ส่งชื่อไฟล์เป็น argument ตัวแรก",
     solution: `import { test, expect } from '@playwright/test';
 
 test('หน้าเว็บแสดงผลถูกต้องบนจอมือถือ', async ({ page }) => {
@@ -143,8 +153,9 @@ for (const vp of viewports) {
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการถ่ายภาพ Full Page...");
-      const hasFullPage = /fullPage:\s*true/.test(code);
-      const hasScreenshot = /toHaveScreenshot\(/.test(code);
+      const src = stripComments(code);
+      const hasFullPage = /fullPage:\s*true/.test(src);
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
       if (!hasScreenshot) {
         throw new Error("ไม่พบการเรียก toHaveScreenshot()");
       }
@@ -153,7 +164,7 @@ for (const vp of viewports) {
       }
       log("✓ ถ่ายภาพทั้งหน้ารวมส่วนที่ต้องเลื่อนดูถูกต้อง");
     },
-    hint: "await expect(page).toHaveScreenshot({ fullPage: true });",
+    hint: "toHaveScreenshot() รับ option ที่บอกให้ถ่ายภาพความสูงทั้งหมดของหน้า ไม่ใช่แค่ส่วนที่มองเห็นในจอ — ชื่อ option สื่อความหมายตรงตัวว่า 'เต็มหน้า'",
     solution: `import { test, expect } from '@playwright/test';
 
 test('ถ่ายภาพทั้งหน้ารวมส่วนที่ต้องเลื่อนดู', async ({ page }) => {
@@ -179,8 +190,9 @@ await expect(page.getByTestId('timeline-list')).toHaveScreenshot();`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Threshold...");
-      const hasScreenshot = /toHaveScreenshot\(/.test(code);
-      const hasMaxDiffRatio = /maxDiffPixelRatio:\s*0\.02/.test(code);
+      const src = stripComments(code);
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
+      const hasMaxDiffRatio = /maxDiffPixelRatio:\s*0\.02/.test(src);
       if (!hasScreenshot) {
         throw new Error("ไม่พบการเรียก toHaveScreenshot()");
       }
@@ -189,7 +201,7 @@ await expect(page.getByTestId('timeline-list')).toHaveScreenshot();`,
       }
       log("✓ ตั้งค่า threshold ให้ยอมรับความต่างเล็กน้อยถูกต้อง");
     },
-    hint: "await expect(page).toHaveScreenshot({ maxDiffPixelRatio: 0.02 });",
+    hint: "toHaveScreenshot() รับ option ที่กำหนดสัดส่วนพิกเซลสูงสุดที่ยอมให้ต่างจาก baseline ได้ ค่าเป็นทศนิยมระหว่าง 0-1 แทนเปอร์เซ็นต์ (0.02 = 2%)",
     solution: `import { test, expect } from '@playwright/test';
 
 test('เทียบภาพโดยยอมรับความต่างเล็กน้อยจาก font rendering', async ({ page }) => {
@@ -204,6 +216,133 @@ await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
     1. ถ่ายภาพเปรียบเทียบด้วย <code>toHaveScreenshot()</code><br/>
     2. ตั้งค่า <code>maxDiffPixelRatio: 0.02</code>`
+  },
+  {
+    id: "combined_mask_and_threshold",
+    meta: "ขั้นสูง 1",
+    title: "รวมร่าง: Mask หลาย Element พร้อม Threshold ในการถ่ายภาพเดียว",
+    template: `// สถานการณ์: หน้า Dashboard แสดงราคาหุ้น real-time (data-testid="watchlist-current-price")
+// และเวลาล่าสุดที่อัปเดต (data-testid="last-updated-timestamp") พร้อมกัน
+// นอกจากนี้ baseline ยัง generate มาจาก CI (Linux) ทำให้ font rendering ต่างจากเครื่อง local เล็กน้อย (เหมือนบทที่ 4)
+// ต้องแก้ทั้งสองปัญหาพร้อมกันในการถ่ายภาพครั้งเดียว:
+// 1. mask ทั้ง watchlist-current-price และ last-updated-timestamp (สองส่วนที่เปลี่ยนตลอดเวลา)
+// 2. ตั้งค่า maxDiffPixelRatio เป็น 0.02 เพื่อกันความต่างเล็กน้อยจาก font rendering
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการรวม mask หลาย element + maxDiffPixelRatio...");
+      const src = stripComments(code);
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
+      if (!hasScreenshot) {
+        throw new Error("ไม่พบการเรียก toHaveScreenshot()");
+      }
+      const hasMaskOption = /mask:\s*\[/.test(src);
+      if (!hasMaskOption) {
+        throw new Error("ไม่พบ option mask: [...] ที่รวม locator ของส่วนที่เปลี่ยนตลอดเวลาทั้งสองส่วน");
+      }
+      const hasPriceTestId = /getByTestId\(\s*['"]watchlist-current-price['"]\s*\)/.test(src);
+      const hasTimestampTestId = /getByTestId\(\s*['"]last-updated-timestamp['"]\s*\)/.test(src);
+      if (!hasPriceTestId || !hasTimestampTestId) {
+        throw new Error("mask ต้องครอบคลุมทั้งสอง locator: page.getByTestId('watchlist-current-price') และ page.getByTestId('last-updated-timestamp')");
+      }
+      const hasMaxDiffRatio = /maxDiffPixelRatio:\s*0\.02/.test(src);
+      if (!hasMaxDiffRatio) {
+        throw new Error("ไม่พบการตั้งค่า maxDiffPixelRatio: 0.02 ร่วมกับ mask ในการถ่ายภาพเดียวกัน");
+      }
+      log("✓ รวม mask หลาย element และ maxDiffPixelRatio ในการถ่ายภาพเดียวถูกต้อง");
+    },
+    hint: "toHaveScreenshot() รับ options object เดียว ที่ใส่ทั้ง mask (array ของหลาย locator ที่ได้จาก getByTestId) และ maxDiffPixelRatio เป็น key พร้อมกันได้ ลองนึกถึงบทที่ 1 (mask หลาย element) รวมกับบทที่ 4 (threshold) แล้วรวมสอง option เข้าใน object เดียว",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('ถ่ายภาพ Dashboard โดย mask ส่วนที่เปลี่ยนตลอดเวลา และยอมรับความต่างเล็กน้อยจาก font rendering', async ({ page }) => {
+  await page.goto('/dashboard');
+  await expect(page).toHaveScreenshot({
+    mask: [
+      page.getByTestId('watchlist-current-price'),
+      page.getByTestId('last-updated-timestamp'),
+    ],
+    maxDiffPixelRatio: 0.02,
+  });
+});`,
+    theory: `บทเรียนนี้รวมสองปัญหาที่เจอแยกกันในบทที่ 1 (masking) และบทที่ 4 (threshold) เข้าด้วยกัน เพราะในงานจริง Dashboard หนึ่งหน้ามักมี<strong>ปัญหาซ้อนกันหลายอย่างพร้อมกัน</strong> ไม่ได้เจอทีละปัญหาเรียงลำดับสวยงามแบบในบทเรียน<br/><br/>
+    <code>toHaveScreenshot()</code> รับ options object เดียว ดังนั้น <code>mask</code> และ <code>maxDiffPixelRatio</code> จึงเป็นแค่สอง key ใน object เดียวกัน — ไม่ต้องเรียก <code>toHaveScreenshot()</code> สองครั้งหรือแยกเป็นสอง assertion<br/><br/>
+    ข้อควรระวัง: <code>mask</code> จัดการเฉพาะ "พื้นที่ที่รู้อยู่แล้วว่าเปลี่ยนตลอดเวลา" (ราคา, เวลา) ส่วน <code>maxDiffPixelRatio</code> จัดการ "ความต่างเล็กน้อยที่คาดเดาตำแหน่งไม่ได้" (font rendering, anti-aliasing) — สอง option นี้แก้ปัญหาคนละประเภท ใช้แทนกันไม่ได้ ต้องใช้ร่วมกันเมื่อหน้าเว็บมีทั้งสองปัญหาพร้อมกัน`,
+    example: `// ตัวอย่าง: mask element เดียวแต่รวมกับ threshold (กรณีมีแค่ปัญหาเดียวของแต่ละฝั่ง)
+await expect(page).toHaveScreenshot({
+  mask: [page.getByTestId('live-clock')],
+  maxDiffPixelRatio: 0.01,
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ถ่ายภาพด้วย <code>toHaveScreenshot()</code><br/>
+    2. mask ทั้ง <code>data-testid="watchlist-current-price"</code> และ <code>data-testid="last-updated-timestamp"</code> ในการถ่ายภาพเดียวกัน<br/>
+    3. ตั้งค่า <code>maxDiffPixelRatio: 0.02</code> ร่วมด้วยใน options object เดียวกัน`
+  },
+  {
+    id: "flaky_font_animation_fix",
+    meta: "ขั้นสูง 2",
+    title: "Debug Flaky Test: Font โหลดไม่ทัน + CSS Animation กำลังเล่นอยู่",
+    template: `// สถานการณ์: Test นี้ flaky บน CI — บางครั้งผ่าน บางครั้ง fail แบบสุ่ม ทั้งที่หน้าเว็บไม่มีอะไรเปลี่ยนแปลงจริง
+// สาเหตุ: (1) font ยังโหลดไม่เสร็จตอนถ่ายภาพ (2) มี CSS animation (fade-in) กำลังเล่นอยู่พอดีตอนถ่ายภาพ
+// โค้ดด้านล่างพยายามแก้ด้วย blind wait ซึ่ง "เดา" เวลาไปเฉยๆ ไม่ได้รับประกันว่า font โหลดเสร็จหรือ animation จบจริง
+// ทำให้ยัง flaky อยู่บางครั้ง (เครื่องช้ากว่าที่เดาไว้ ก็ยังไม่จบทัน)
+import { test, expect } from '@playwright/test';
+
+test('ถ่ายภาพหน้า Dashboard อย่างเสถียร ไม่ flaky จาก font และ animation', async ({ page }) => {
+  await page.goto('/dashboard');
+  await page.waitForTimeout(2000); // ผิด: blind wait เดาเวลา ไม่รับประกันความเสถียรจริง
+  await expect(page).toHaveScreenshot();
+});
+
+// TODO: แก้ไขให้ถูกต้อง แทนที่ blind wait ด้านบนด้วย:
+// 1. ปิด CSS animation ก่อนถ่ายภาพ ด้วยการตั้งค่า context/test option ที่เกี่ยวกับการลดการเคลื่อนไหว
+// 2. รอสัญญาณจริงว่า font โหลดเสร็จสมบูรณ์ก่อนถ่ายภาพ
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการแก้ไข Flaky Test จาก Font/Animation...");
+      const src = stripComments(code);
+      const hasBlindWait = /waitForTimeout\(/.test(src);
+      if (hasBlindWait) {
+        throw new Error("ยังพบ page.waitForTimeout() อยู่ — เป็น blind wait ที่เดาเวลาเฉยๆ ไม่รับประกันความเสถียรจริง ต้องเอาออกแล้วรอสัญญาณที่แท้จริงแทน");
+      }
+      const hasReducedMotion = /reducedMotion:\s*['"]reduce['"]/.test(src);
+      if (!hasReducedMotion) {
+        throw new Error("ไม่พบการปิด CSS animation ด้วย option reducedMotion: 'reduce'\nตัวอย่าง: test.use({ reducedMotion: 'reduce' });");
+      }
+      const hasFontReady = /document\.fonts\.ready/.test(src);
+      const hasNetworkIdle = /waitForLoadState\(\s*['"]networkidle['"]\s*\)/.test(src);
+      if (!hasFontReady && !hasNetworkIdle) {
+        throw new Error("ไม่พบการรอความเสถียรก่อนถ่ายภาพ — ต้องรอ font โหลดเสร็จด้วย document.fonts.ready หรือรอ page.waitForLoadState('networkidle')");
+      }
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
+      if (!hasScreenshot) {
+        throw new Error("ไม่พบการเรียก toHaveScreenshot()");
+      }
+      log("✓ แก้ไข Flaky Test ด้วยการรอความเสถียรที่แท้จริง (ไม่ใช่ blind wait) ถูกต้อง");
+    },
+    hint: "แทนที่ blind wait ด้วยสองอย่างร่วมกัน: (1) ปิด animation ด้วย context/test option ที่ปิดการเคลื่อนไหวตามการตั้งค่า prefers-reduced-motion ของระบบ (Playwright มี option ระดับ context ให้ตรงนี้) และ (2) รอ Promise ที่ browser มีให้อยู่แล้วสำหรับเช็คว่า font ทั้งหมดโหลดเสร็จ (อยู่ใต้ object ของ document ที่เกี่ยวกับ fonts)",
+    solution: `import { test, expect } from '@playwright/test';
+
+test.use({ reducedMotion: 'reduce' });
+
+test('ถ่ายภาพหน้า Dashboard อย่างเสถียร ไม่ flaky จาก font และ animation', async ({ page }) => {
+  await page.goto('/dashboard');
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot();
+});`,
+    theory: `Flaky visual test (บางครั้งผ่าน บางครั้ง fail แบบสุ่ม โดยไม่มีอะไรเปลี่ยนจริง) ต่างจาก false positive ที่คงที่ (เช่น font-rendering ต่างเครื่องในบทที่ 4) ตรงที่<strong>ผลลัพธ์ไม่คงที่แม้รันซ้ำบนเครื่องเดียวกัน</strong> — สาเหตุหลักสองอย่างที่พบบ่อยที่สุดคือ font ที่โหลดผ่านเครือข่ายยังมาไม่ครบตอนถ่ายภาพ (บางครั้งมาทัน บางครั้งไม่ทัน) และ CSS animation/transition ที่กำลังเล่นอยู่พอดี (จับภาพได้คนละ frame ทุกครั้งที่รัน)<br/><br/>
+    <strong>ทำไม <code>page.waitForTimeout()</code> ไม่ใช่ทางแก้ที่ถูกต้อง:</strong> เป็นการ "เดา" ตัวเลขเวลาคงที่ ซึ่งไม่รับประกันอะไรเลย — เครื่อง CI ที่ช้ากว่าปกติ (เช่น ตอน CI คิวงานหนัก) อาจยังโหลด font ไม่เสร็จแม้รอเกินเวลาที่เดาไว้ ในขณะที่เครื่องเร็วก็รอเสียเวลาโดยไม่จำเป็น<br/><br/>
+    <strong>ทางแก้ที่ถูกต้อง</strong> คือรอ "สัญญาณจริง" แทนการเดาเวลา: <code>document.fonts.ready</code> คือ Promise มาตรฐานของ browser ที่ resolve เมื่อฟอนต์ทั้งหมดโหลดเสร็จจริง (เรียกผ่าน <code>page.evaluate()</code>) ส่วนการปิด CSS animation ทำได้ผ่าน context option <code>reducedMotion: 'reduce'</code> ซึ่งบอก browser ให้ส่งสัญญาณ <code>prefers-reduced-motion: reduce</code> — เว็บที่เขียน CSS animation ให้เคารพ media query นี้ (แนวทางที่ดีอยู่แล้วเพื่อ accessibility) จะปิด/ข้าม animation ไปเอง ทำให้ทุกครั้งที่ถ่ายภาพ ได้ frame สุดท้ายที่นิ่งแล้วเสมอ`,
+    example: `// ทางเลือกอื่นสำหรับรอความเสถียร: รอ network idle แทนรอ font โดยตรง
+// (เหมาะกับกรณีที่ font โหลดมาพร้อมกับ resource อื่นๆ ผ่าน network เดียวกัน)
+test.use({ reducedMotion: 'reduce' });
+await page.goto('/dashboard');
+await page.waitForLoadState('networkidle');
+await expect(page).toHaveScreenshot();`,
+    task: `จงแก้ไขสคริปต์ทดสอบที่ flaky ให้เสถียร โดย:<br/>
+    1. เอา <code>page.waitForTimeout()</code> (blind wait) ออก<br/>
+    2. ปิด CSS animation ด้วย <code>reducedMotion: 'reduce'</code><br/>
+    3. รอ font โหลดเสร็จด้วย <code>document.fonts.ready</code> (หรือรอ <code>page.waitForLoadState('networkidle')</code>) ก่อนถ่ายภาพด้วย <code>toHaveScreenshot()</code>`
   }
 ];
 

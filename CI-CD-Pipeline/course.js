@@ -21,7 +21,7 @@ const LESSONS = [
       }
       log("✓ ตั้งชื่อ workflow ถูกต้อง");
     },
-    hint: "ใส่ name: CI เป็นบรรทัดแรกของไฟล์",
+    hint: "YAML workflow ทุกไฟล์ต้องมี key ระดับบนสุดสำหรับตั้งชื่อ workflow ทั้งไฟล์ — คำนั้นแปลตรงตัวว่า 'ชื่อ' ในภาษาอังกฤษ ใส่ไว้เป็นบรรทัดแรกสุดตามด้วยค่าที่ task กำหนด",
     solution: `name: CI`,
     theory: `<strong>CI/CD (Continuous Integration / Continuous Deployment)</strong> คือระบบที่รันงาน (build, test, deploy) <strong>อัตโนมัติ</strong>ทุกครั้งที่มีการเปลี่ยนแปลงโค้ด (push, เปิด pull request) แทนที่จะรอให้คนใดคนหนึ่งจำได้ว่าต้องรัน test เองก่อน merge<br/><br/>
     เหตุผลที่ QA ต้องเข้าใจ CI/CD (ไม่ใช่แค่หน้าที่ DevOps): <strong>test automation ที่เขียนไว้ (Playwright, k6, ฯลฯ) มีค่าจริงก็ต่อเมื่อมันถูกรันสม่ำเสมอ</strong> — test suite ที่เขียนไว้สวยงามแต่ไม่มีใครรันเลยไม่ต่างจากไม่มี test เลย CI คือกลไกที่การันตีว่า test จะถูกรันทุกครั้งโดยไม่ต้องพึ่งความจำของคนใดคนหนึ่ง<br/><br/>
@@ -51,9 +51,12 @@ jobs:
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Trigger...");
-      const hasOn = /^on:/m.test(code);
-      const hasPushMain = /push:\s*\n\s*branches:\s*\n?\s*-?\s*main|branches:\s*\[\s*main\s*\]/.test(code);
-      const hasPullRequest = /pull_request:/.test(code);
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasOn = /^on:\s*$/m.test(stripped);
+      const hasPushMain =
+        /^\s*push:\s*\n\s*branches:\s*\n\s*-\s*main\s*$/m.test(stripped) ||
+        /^\s*push:\s*\n\s*branches:\s*\[\s*main\s*\]\s*$/m.test(stripped);
+      const hasPullRequest = /^\s*pull_request:\s*$/m.test(stripped);
       if (!hasOn) {
         throw new Error("ไม่พบ on: ที่กำหนด trigger");
       }
@@ -65,7 +68,7 @@ jobs:
       }
       log("✓ ตั้งค่า Trigger ถูกต้อง");
     },
-    hint: "on:\n  push:\n    branches:\n      - main\n  pull_request:",
+    hint: "มี key ระดับบนสุดที่กำหนดว่า workflow จะ trigger ตอนไหน — ภายใต้ key นั้นต้องมี 2 เงื่อนไข: (1) เงื่อนไขสำหรับ push ที่ระบุว่า branch ไหนบ้างที่ทำให้เข้าเงื่อนไข (ต้องมี main อยู่ใน list) และ (2) อีก key ที่ทำให้ workflow รันทุกครั้งที่มีคนเปิดหรืออัปเดต pull request",
     solution: `name: CI
 on:
   push:
@@ -105,9 +108,10 @@ on:
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Concurrency...");
-      const hasConcurrency = /^concurrency:/m.test(code);
-      const hasGroup = /group:\s*ci-\$\{\{\s*github\.ref\s*\}\}/.test(code);
-      const hasCancelInProgress = /cancel-in-progress:\s*true/.test(code);
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasConcurrency = /^concurrency:\s*$/m.test(stripped);
+      const hasGroup = /^\s*group:\s*ci-\$\{\{\s*github\.ref\s*\}\}\s*$/m.test(stripped);
+      const hasCancelInProgress = /^\s*cancel-in-progress:\s*true\s*$/m.test(stripped);
       if (!hasConcurrency) {
         throw new Error("ไม่พบ concurrency: block");
       }
@@ -119,7 +123,7 @@ on:
       }
       log("✓ ตั้งค่า Concurrency ถูกต้อง");
     },
-    hint: "concurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true",
+    hint: "มี key ระดับบนสุดที่กำหนด 'กลุ่ม' ของ run ที่ถือว่าเป็นงานเดียวกัน (ควรอ้างอิง context variable ที่บอกว่ากำลังรันจาก ref ไหน) แล้วมีอีก key ย่อยที่สั่งให้ยกเลิก run เก่าที่ยังไม่จบทันทีเมื่อมี run ใหม่ในกลุ่มเดียวกันเริ่มขึ้น",
     solution: `name: CI
 on:
   push:
@@ -153,13 +157,15 @@ concurrency:
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Cache...");
-      const hasCacheAction = /uses:\s*actions\/cache@v4/.test(code);
-      const hasPath = /node_modules/.test(code) && /ms-playwright/.test(code);
-      const hasKeyHash = /hashFiles\(['"]package-lock\.json['"]\)/.test(code);
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasCacheAction = /^\s*-?\s*uses:\s*actions\/cache@v4\s*$/m.test(stripped);
+      const hasNodeModulesPath = /^\s*node_modules\s*$/m.test(stripped);
+      const hasPlaywrightPath = /^\s*~\/\.cache\/ms-playwright\s*$/m.test(stripped);
+      const hasKeyHash = /^\s*key:.*hashFiles\(['"]package-lock\.json['"]\)/m.test(stripped);
       if (!hasCacheAction) {
         throw new Error("ไม่พบ uses: actions/cache@v4");
       }
-      if (!hasPath) {
+      if (!hasNodeModulesPath || !hasPlaywrightPath) {
         throw new Error("ไม่พบ path ที่ cache ทั้ง node_modules และ ~/.cache/ms-playwright");
       }
       if (!hasKeyHash) {
@@ -167,7 +173,7 @@ concurrency:
       }
       log("✓ ตั้งค่า Caching ถูกต้อง");
     },
-    hint: "uses: actions/cache@v4\nwith:\n  path: |\n    node_modules\n    ~/.cache/ms-playwright\n  key: deps-${{ hashFiles('package-lock.json') }}",
+    hint: "มี action สำเร็จรูปของ GitHub สำหรับเก็บโฟลเดอร์ข้าม run (เวอร์ชัน 4) ต้องระบุ path มากกว่า 1 โฟลเดอร์ (ทั้ง dependency หลักของ Node และ browser binary ที่ Playwright โหลดมา) และ key ที่ผูกกับ hash ของไฟล์ lock dependency เพื่อให้ cache invalidate อัตโนมัติเมื่อ dependency เปลี่ยน",
     solution: `- name: Cache dependencies
   uses: actions/cache@v4
   with:
@@ -199,18 +205,19 @@ concurrency:
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Matrix Strategy...");
-      const hasStrategy = /^\s*strategy:/m.test(code);
-      const hasMatrix = /matrix:/.test(code);
-      const hasBrowsers = /chromium/.test(code) && /firefox/.test(code) && /webkit/.test(code);
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasStrategy = /^\s*strategy:\s*$/m.test(stripped);
+      const hasMatrix = /^\s*matrix:\s*$/m.test(stripped);
+      const hasBrowserList = /^\s*browser:\s*\[\s*chromium\s*,\s*firefox\s*,\s*webkit\s*\]\s*$/m.test(stripped);
       if (!hasStrategy || !hasMatrix) {
         throw new Error("ไม่พบ strategy: matrix:");
       }
-      if (!hasBrowsers) {
-        throw new Error("ไม่พบรายชื่อ browser ครบ chromium, firefox, webkit");
+      if (!hasBrowserList) {
+        throw new Error("ไม่พบรายชื่อ browser ครบ chromium, firefox, webkit ในรูปแบบ browser: [chromium, firefox, webkit]");
       }
       log("✓ ตั้งค่า Matrix Strategy ถูกต้อง");
     },
-    hint: "strategy:\n  matrix:\n    browser: [chromium, firefox, webkit]",
+    hint: "มี top-level key ใน job ที่สั่งให้ GitHub Actions รัน job เดียวกันซ้ำหลาย instance พร้อมกัน โดยกำหนด list ของค่าที่ต้องการให้ต่างกันในแต่ละรอบ (ในที่นี้คือชื่อ 3 browser ที่ Playwright รองรับ)",
     solution: `jobs:
   test:
     runs-on: ubuntu-latest
@@ -243,8 +250,9 @@ runs-on: \${{ matrix.os }}`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า continue-on-error...");
-      const hasJobName = /^\s*lint:/m.test(code);
-      const hasContinueOnError = /continue-on-error:\s*true/.test(code);
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasJobName = /^\s*lint:\s*$/m.test(stripped);
+      const hasContinueOnError = /^\s*continue-on-error:\s*true\s*$/m.test(stripped);
       if (!hasJobName) {
         throw new Error("ไม่พบ job ชื่อ lint:");
       }
@@ -253,7 +261,7 @@ runs-on: \${{ matrix.os }}`,
       }
       log("✓ ตั้งค่า Advisory Job ถูกต้อง");
     },
-    hint: "jobs:\n  lint:\n    runs-on: ubuntu-latest\n    continue-on-error: true\n    steps:\n      - run: npx eslint .",
+    hint: "job ที่เป็นแค่คำแนะนำไม่ควรบล็อกการ merge แม้จะ fail — มี key ระดับ job ตัวหนึ่งที่สั่งให้ workflow ไม่ fail ตามแม้ step ข้างในจะ fail จริง (ค่าเป็น boolean)",
     solution: `jobs:
   lint:
     name: Lint (advisory)
@@ -296,10 +304,11 @@ jobs:
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบการตั้งค่า Artifact Upload...");
-      const hasUploadAction = /uses:\s*actions\/upload-artifact@v4/.test(code);
-      const hasAlways = /if:\s*always\(\)/.test(code);
-      const hasName = /name:\s*playwright-report/.test(code);
-      const hasPath = /path:\s*playwright-report/.test(code);
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasUploadAction = /^\s*-?\s*uses:\s*actions\/upload-artifact@v4\s*$/m.test(stripped);
+      const hasAlways = /^\s*if:\s*always\(\)\s*$/m.test(stripped);
+      const hasName = /^\s*name:\s*playwright-report\s*$/m.test(stripped);
+      const hasPath = /^\s*path:\s*playwright-report\s*$/m.test(stripped);
       if (!hasUploadAction) {
         throw new Error("ไม่พบ uses: actions/upload-artifact@v4");
       }
@@ -311,7 +320,7 @@ jobs:
       }
       log("✓ ตั้งค่า Artifact Upload ถูกต้อง");
     },
-    hint: "- uses: actions/upload-artifact@v4\n  if: always()\n  with:\n    name: playwright-report\n    path: playwright-report",
+    hint: "ต้องใช้ action สำเร็จรูปสำหรับอัปโหลดไฟล์ออกจาก runner (เวอร์ชัน 4) และต้องมี condition ที่สั่งให้ step นี้รันเสมอไม่ว่าผลลัพธ์ของ step ก่อนหน้าจะเป็นอย่างไร (ค่า default ของทุก step จะข้ามไปเลยถ้า step ก่อนหน้า fail) แล้วตั้งชื่อ artifact กับ path ให้ตรงกับโฟลเดอร์ที่ Playwright เขียนรายงานไว้",
     solution: `jobs:
   test:
     runs-on: ubuntu-latest
@@ -335,6 +344,173 @@ jobs:
     task: `จงเขียน YAML ให้สมบูรณ์ โดย:<br/>
     1. เพิ่ม step ใช้ <code>actions/upload-artifact@v4</code> พร้อม <code>if: always()</code><br/>
     2. ตั้งค่า <code>name: playwright-report</code> และ <code>path: playwright-report</code>`
+  },
+  {
+    id: "advanced_needs_artifact_handoff",
+    meta: "ขั้นสูง 1",
+    title: "Multi-Job Pipeline: ส่งไฟล์ข้าม Job ด้วย needs + Artifact Hand-off",
+    template: `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test --reporter=html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+
+  # สถานการณ์: job "deploy" ต้องรอ job "build" ให้รัน test เสร็จก่อน แล้วดึงรายงานที่ build อัปโหลดไว้
+  # มาใช้ต่อ (เช่น publish ขึ้นหน้า status page) — ไม่ใช่ generate รายงานซ้ำเอง
+  # 1. สร้าง job ชื่อ deploy ที่ต้องรอ job build ให้เสร็จก่อน
+  # 2. ให้ deploy ดาวน์โหลด artifact ชื่อ playwright-report ที่ build อัปโหลดไว้
+  # WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการต่อ Job ด้วย needs และ Artifact hand-off...");
+      const stripped = code.replace(/#.*$/gm, '');
+      const deployIdx = stripped.search(/^\s*deploy:\s*$/m);
+      if (deployIdx === -1) {
+        throw new Error("ไม่พบ job ชื่อ deploy:");
+      }
+      const deployBlock = stripped.slice(deployIdx);
+      const hasNeedsBuild = /^\s*needs:\s*build\s*$/m.test(deployBlock);
+      const hasDownloadAction = /^\s*-?\s*uses:\s*actions\/download-artifact@v4\s*$/m.test(deployBlock);
+      const hasDownloadName = /^\s*name:\s*playwright-report\s*$/m.test(deployBlock);
+      const hasDownloadPath = /^\s*path:\s*playwright-report\s*$/m.test(deployBlock);
+      if (!hasNeedsBuild) {
+        throw new Error("job deploy ต้องมี needs: build เพื่อรอให้ build เสร็จก่อน ไม่งั้นทั้งสอง job จะรันพร้อมกัน");
+      }
+      if (!hasDownloadAction) {
+        throw new Error("job deploy ต้องมี step ที่ใช้ actions/download-artifact@v4 เพื่อดึง artifact ที่ build อัปโหลดไว้กลับมาใช้");
+      }
+      if (!hasDownloadName || !hasDownloadPath) {
+        throw new Error("step download-artifact ต้องระบุ name: playwright-report และ path: playwright-report ให้ตรงกับตอนที่ build อัปโหลดไว้ ไม่งั้นดาวน์โหลดไม่เจอ");
+      }
+      log("✓ ต่อ Job ด้วย needs และ Artifact hand-off ถูกต้อง");
+    },
+    hint: "job ที่สองต้องรอ job แรกให้เสร็จก่อนเสมอด้วย key ระดับ job ที่แปลว่า 'ต้องการ' — แล้วใช้ action คู่ตรงข้ามของ upload (ที่ใช้ดึงสิ่งที่เคยอัปโหลดไว้กลับมา) โดย name ของ artifact ต้องตรงกับตอนอัปโหลดเป๊ะๆ ไม่งั้นดาวน์โหลดไม่เจอ",
+    solution: `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test --reporter=html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+      - run: echo "Publishing report downloaded from build job"`,
+    theory: `จนถึงบทก่อนหน้า ทุก workflow มีแค่ 1 job — แต่ pipeline จริงมักมีหลาย job ที่ต้อง<strong>พึ่งพากัน</strong> เช่น job <code>build</code> รัน test แล้วสร้างรายงาน ก่อนที่ job <code>deploy</code> จะเอารายงานนั้นไป publish ต่อ<br/><br/>
+    โดย default GitHub Actions รันทุก job ใน <code>jobs:</code> <strong>พร้อมกัน (ขนาน)</strong> — ถ้าไม่บอกไว้ชัดเจน <code>deploy</code> อาจเริ่มรันก่อน <code>build</code> จะอัปโหลดรายงานเสร็จด้วยซ้ำ <code>needs: build</code> สั่งให้ <code>deploy</code> รอ <code>build</code> ให้<strong>เสร็จสมบูรณ์ก่อน</strong>ถึงจะเริ่ม<br/><br/>
+    แต่แค่รอเฉยๆ ไม่พอ — แต่ละ job รันบน runner คนละเครื่องกัน ไฟล์ที่ <code>build</code> สร้างไว้ (เช่น <code>playwright-report/</code>) จะ<strong>ไม่มีอยู่จริง</strong>บนเครื่องของ <code>deploy</code> เลย ต้องส่งต่อผ่าน <code>actions/upload-artifact</code> (ฝั่ง build) คู่กับ <code>actions/download-artifact</code> (ฝั่ง deploy) โดย <code>name</code> ต้องตรงกันเป๊ะทั้งสองฝั่ง มิฉะนั้น <code>download-artifact</code> จะหา artifact ไม่เจอและ fail`,
+    example: `# ตัวอย่าง job ที่สามรอทั้งสอง job ก่อนหน้า (needs รับ array ได้)
+notify:
+  needs: [build, deploy]
+  runs-on: ubuntu-latest
+  steps:
+    - run: echo "build และ deploy เสร็จทั้งคู่แล้ว"`,
+    task: `จงเขียน YAML ให้สมบูรณ์ โดย:<br/>
+    1. สร้าง job ชื่อ <code>deploy</code> ที่มี <code>needs: build</code><br/>
+    2. เพิ่ม step ใช้ <code>actions/download-artifact@v4</code> พร้อม <code>name: playwright-report</code> และ <code>path: playwright-report</code> ให้ตรงกับที่ <code>build</code> อัปโหลดไว้`
+  },
+  {
+    id: "advanced_debug_missing_needs",
+    meta: "ขั้นสูง 2",
+    title: "Debug Pipeline: ทำไม Deploy ถึงรันก่อน Test เสร็จ",
+    template: `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh
+
+# บั๊กที่ต้องแก้: ทีมรายงานว่า deploy.sh รันขึ้น production ไปแล้วทั้งที่ e2e_test ยังไม่ผ่าน
+# เพราะ GitHub Actions รันทุก job ใน jobs: พร้อมกันเป็น default เสมอ ถ้าไม่มีอะไรบอกให้ job หนึ่งรออีก job
+# ห้ามแก้ด้วยการลบ job ใดออก หรือแค่สลับลำดับ job ในไฟล์ (ลำดับในไฟล์ไม่มีผลต่อลำดับการรันจริง)
+# แก้ไข YAML ด้านบนให้ deploy ต้องรอ e2e_test ผ่านก่อนเท่านั้นถึงจะเริ่มรัน
+# WRITE YOUR CODE HERE (แก้ไขโดยตรงในโค้ดด้านบน)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการแก้ไข Pipeline ที่รันผิดลำดับ...");
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasE2eJob = /^\s*e2e_test:\s*$/m.test(stripped);
+      const deployIdx = stripped.search(/^\s*deploy:\s*$/m);
+      if (!hasE2eJob || deployIdx === -1) {
+        throw new Error("ห้ามลบ job e2e_test หรือ deploy ออก ต้องแก้ที่ต้นเหตุของปัญหา ไม่ใช่ตัดปัญหาทิ้ง");
+      }
+      const deployBlock = stripped.slice(deployIdx);
+      const hasNeedsE2e = /^\s*needs:\s*e2e_test\s*$/m.test(deployBlock);
+      if (!hasNeedsE2e) {
+        throw new Error("job deploy ยังไม่รอ job e2e_test ให้เสร็จก่อน — เพิ่ม needs: e2e_test ใน job deploy (การสลับลำดับ job ในไฟล์ไม่ได้ทำให้รันตามลำดับจริง ต้องใช้ needs: เท่านั้น)");
+      }
+      log("✓ แก้ไข Pipeline ให้รันตามลำดับที่ถูกต้องแล้ว");
+    },
+    hint: "job ที่ประกาศแยกกันใน jobs: จะรันขนานกันเสมอโดย default ไม่ว่าจะเขียนสลับลำดับก่อนหลังในไฟล์แบบไหนก็ตาม (ลำดับในไฟล์ไม่มีผลต่อลำดับรันจริง) ต้องมี key ระดับ job ตัวหนึ่งที่สั่งให้ job หนึ่งรอให้อีก job หนึ่ง 'เสร็จ' ก่อนถึงจะเริ่มทำงาน",
+    solution: `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test
+
+  deploy:
+    needs: e2e_test
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh`,
+    theory: `บทนี้ไม่ได้ให้เขียนใหม่ตั้งแต่ต้น แต่ให้<strong>ไล่หาต้นเหตุ</strong>จากอาการที่เห็น: "deploy รันไปแล้วทั้งที่ test ยังไม่ผ่าน" — นี่คืออาการจริงที่ทีมมักเจอ ไม่ใช่แค่ syntax error ที่ YAML parser จะฟ้องเอง แต่เป็น<strong>บั๊กเชิงโครงสร้าง</strong>ที่ syntax ถูกต้องสมบูรณ์แบบ รันได้ไม่มี error เลย แต่ผลลัพธ์ที่ได้ผิดจากที่ตั้งใจ<br/><br/>
+    กับดักที่พบบ่อยที่สุดคือ<strong>เข้าใจผิดว่าลำดับ job ในไฟล์ = ลำดับการรันจริง</strong> — ไม่ใช่เลย GitHub Actions มองทุก job ใน <code>jobs:</code> เป็น<strong>อิสระต่อกันและรันพร้อมกันเสมอ</strong> เว้นแต่จะมี <code>needs:</code> ผูกไว้ชัดเจนว่า job ไหนต้องรอ job ไหน การสลับตำแหน่ง <code>deploy</code> กับ <code>e2e_test</code> ในไฟล์ (ไม่เพิ่ม <code>needs:</code>) จะไม่แก้อะไรเลยเพราะ engine ไม่ได้อ่านไฟล์แล้วรันตามลำดับบรรทัด<br/><br/>
+    ทางแก้ที่ตรงต้นเหตุมีทางเดียว: เพิ่ม <code>needs: e2e_test</code> ใน job <code>deploy</code> เพื่อประกาศ dependency จริงๆ ให้ scheduler ของ GitHub Actions รู้ว่าต้องรอ`,
+    example: `# บั๊กแบบเดียวกันแต่มาจาก indentation ผิด (step หลุดออกจาก job โดยไม่ตั้งใจ)
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm run build
+  - run: npm test   # บั๊ก: บรรทัดนี้ indent ผิดระดับ กลายเป็น item ใน jobs: ไม่ใช่ step ใน build
+                     # ทำให้ "npm test" ไม่ถูกรันเป็น step ของ job build เลย`,
+    task: `จากอาการ "deploy รันก่อน e2e_test เสร็จ" จงแก้ไข YAML ด้านบนโดย:<br/>
+    1. หาต้นเหตุที่แท้จริงว่าทำไม GitHub Actions ถึงปล่อยให้ deploy รันไม่รอ e2e_test<br/>
+    2. แก้ไขให้ job <code>deploy</code> มี <code>needs: e2e_test</code> เพื่อบังคับลำดับการรันจริง (ห้ามลบ job ใดออก และห้ามใช้วิธีสลับลำดับ job เฉยๆ)`
   }
 ];
 

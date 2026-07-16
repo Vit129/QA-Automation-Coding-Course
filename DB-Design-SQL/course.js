@@ -63,7 +63,7 @@ const LESSONS = [
       }
       log("✓ ได้ผลลัพธ์ 5 แถวถูกต้อง ตรงกับ Holdings ทั้งหมดของ Webull");
     },
-    hint: "ใช้ SELECT ticker, shares FROM holdings WHERE broker = 'Webull';",
+    hint: "เลือกเฉพาะคอลัมน์ ticker และ shares จากตาราง holdings แล้วกรองเฉพาะแถวที่คอลัมน์ broker ตรงกับชื่อ Broker ที่โจทย์กำหนด — นึกถึงคำสั่งที่ใช้เทียบค่าคอลัมน์ string ให้เท่ากับข้อความหนึ่งๆ",
     solution: `SELECT ticker, shares FROM holdings WHERE broker = 'Webull';`,
     theory: `<strong>SQL (Structured Query Language)</strong> คือภาษามาตรฐานสำหรับดึง/แก้ไขข้อมูลในฐานข้อมูลเชิงสัมพันธ์ (Relational Database) — ทักษะที่ QA ใช้แทบทุกวันเวลาต้องยืนยันว่าข้อมูลที่ถูกต้องจริงในฐานข้อมูล ไม่ใช่แค่ "ดูเหมือนถูกต้อง" บนหน้าจอ UI<br/><br/>
     บทเรียนนี้จำลองตาราง <code>holdings</code> ขึ้นจากโครงสร้างข้อมูลจริงในโปรเจก My-Investment-Port (คอลัมน์ <code>ticker</code>, <code>broker</code>, <code>shares</code>, <code>avgCost</code>, <code>sector</code> ทั้งหมดคือ field จริงที่ใช้ใน <code>HoldingsPage.jsx</code>) — ของจริงเก็บอยู่ใน Google Sheet ไม่ใช่ SQL DB แต่โครงสร้างข้อมูลเหมือนกันเป๊ะ<br/><br/>
@@ -91,12 +91,14 @@ SELECT ticker, broker FROM holdings WHERE sector = 'Technology';`,
       if (!Array.isArray(result) || result.length !== 4) {
         throw new Error(`คาดว่าจะได้ 4 แถว (มูลค่ารวมเกิน 5000) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว\nตัวอย่าง: SELECT ... WHERE shares * avgCost > 5000 ORDER BY shares * avgCost DESC;`);
       }
-      if (result[0].ticker !== 'MSFT') {
-        throw new Error(`แถวแรกควรเป็น MSFT (มูลค่าสูงสุด 8012.5) แต่ได้ ${result[0].ticker} — ตรวจสอบว่าใช้ ORDER BY ... DESC หรือยัง`);
+      const expectedOrder = ['MSFT', 'AMZN', 'AAPL', 'TLT'];
+      const actualOrder = result.map(r => r.ticker);
+      if (JSON.stringify(actualOrder) !== JSON.stringify(expectedOrder)) {
+        throw new Error(`ลำดับ ticker ที่ได้ไม่ตรง คาดว่าจะได้ ${expectedOrder.join(' > ')} (เรียงมูลค่ารวมมากไปน้อย) แต่ได้ ${actualOrder.join(' > ')} — ตรวจสอบว่าใช้ ORDER BY shares * avgCost DESC ครบทุกแถวหรือยัง`);
       }
-      log("✓ Filter และเรียงลำดับถูกต้อง (MSFT มาก่อนเพราะมูลค่ารวมสูงสุด)");
+      log("✓ Filter และเรียงลำดับถูกต้องครบทั้ง 4 แถว (MSFT > AMZN > AAPL > TLT ตามมูลค่ารวม)");
     },
-    hint: "ใช้ SELECT ticker, shares, avgCost FROM holdings WHERE shares * avgCost > 5000 ORDER BY shares * avgCost DESC;",
+    hint: "คำนวณมูลค่ารวมของแต่ละ Holding จาก shares คูณ avgCost ก่อน แล้วกรองเฉพาะที่เกินเกณฑ์ที่โจทย์กำหนด จากนั้นเรียงผลลัพธ์ด้วยนิพจน์คำนวณเดียวกัน — อย่าลืมว่าค่า default ของการเรียงคือน้อยไปมาก ต้องระบุทิศทางตรงข้ามเองถ้าต้องการมากไปน้อย",
     solution: `SELECT ticker, shares, avgCost FROM holdings WHERE shares * avgCost > 5000 ORDER BY shares * avgCost DESC;`,
     theory: `เงื่อนไขใน <code>WHERE</code> ไม่จำเป็นต้องเทียบกับ column ตรงๆ เท่านั้น — ใช้นิพจน์คำนวณได้เลย เช่น <code>shares * avgCost > 5000</code> (มูลค่ารวมของแต่ละ Holding) กรองก่อนแล้วค่อยเรียงด้วย <code>ORDER BY</code><br/><br/>
     <strong>ORDER BY</strong> ค่า default คือ <code>ASC</code> (น้อยไปมาก) ต้องระบุ <code>DESC</code> เองถ้าต้องการมากไปน้อย และเรียงตามนิพจน์คำนวณได้เหมือนกับที่ใช้ใน WHERE (ไม่จำเป็นต้องมี column นี้ปรากฏใน SELECT ก็เรียงได้)<br/><br/>
@@ -133,9 +135,18 @@ SELECT ticker, avgCost FROM holdings ORDER BY avgCost;`,
       if (result[0].ticker !== 'TSLA' || result[0].note !== 'รอราคาย่อ') {
         throw new Error("ข้อมูลในตาราง watchlist ไม่ตรงกับที่คาดไว้ (ticker='TSLA', note='รอราคาย่อ')");
       }
-      log("✓ สร้างตาราง watchlist พร้อม PRIMARY KEY และ Insert ข้อมูลถูกต้อง");
+      let duplicateBlocked = false;
+      try {
+        alasql("INSERT INTO watchlist VALUES ('TSLA', 'ซ้ำ')");
+      } catch (err) {
+        duplicateBlocked = true;
+      }
+      if (!duplicateBlocked) {
+        throw new Error("ตาราง watchlist ยอมให้ ticker ซ้ำกันได้ — ตรวจสอบว่ากำหนดให้ ticker เป็น PRIMARY KEY ตอนสร้างตารางหรือยัง (นี่คือจุดประสงค์หลักของบทเรียนนี้)");
+      }
+      log("✓ สร้างตาราง watchlist พร้อม PRIMARY KEY ถูกต้อง — ทดสอบแล้วว่า block ticker ซ้ำได้จริง และ Insert ข้อมูลถูกต้อง");
     },
-    hint: "ใช้ CREATE TABLE watchlist (ticker STRING PRIMARY KEY, note STRING); แล้ว INSERT INTO watchlist VALUES ('TSLA', 'รอราคาย่อ');",
+    hint: "ต้องสร้างตารางใหม่ก่อนด้วยคำสั่งที่กำหนดชื่อคอลัมน์และ type รวมถึงระบุว่าคอลัมน์ไหนเป็นกุญแจหลักที่ห้ามซ้ำ จากนั้นค่อยเพิ่มแถวข้อมูลด้วยอีกคำสั่งหนึ่งแยกต่างหาก",
     solution: `CREATE TABLE watchlist (ticker STRING PRIMARY KEY, note STRING);
 INSERT INTO watchlist VALUES ('TSLA', 'รอราคาย่อ');`,
     theory: `<strong>Database Design</strong> คือการตัดสินใจว่าข้อมูลควรแบ่งเป็นกี่ตาราง แต่ละตารางมีคอลัมน์อะไรบ้าง และอะไรคือ "กุญแจ" ที่ทำให้แต่ละแถวไม่ซ้ำกัน<br/><br/>
@@ -186,7 +197,7 @@ CREATE TABLE holdings_v2 (ticker STRING, broker STRING, shares NUMBER, PRIMARY K
       }
       log("✓ สร้างตาราง orders พร้อม FOREIGN KEY ถูกต้อง — ทดสอบแล้วว่า block ค่า broker ปลอมได้จริง");
     },
-    hint: "ใช้ CREATE TABLE orders (id NUMBER, ticker STRING, broker STRING, FOREIGN KEY (broker) REFERENCES brokers(name)); แล้ว INSERT INTO orders VALUES (1, 'AMZN', 'Webull');",
+    hint: "สร้างตารางใหม่ที่มีคอลัมน์อ้างอิงกลับไปยังตาราง brokers ที่มีอยู่แล้ว โดยระบุ constraint ที่บังคับว่าค่าในคอลัมน์นั้นต้องมีอยู่จริงในตารางปลายทาง (ดูคอลัมน์ไหนของ brokers ที่เป็น PRIMARY KEY) แล้วค่อยเพิ่มแถวด้วยค่าที่อ้างอิงถูกต้องจริง",
     solution: `CREATE TABLE orders (id NUMBER, ticker STRING, broker STRING, FOREIGN KEY (broker) REFERENCES brokers(name));
 INSERT INTO orders VALUES (1, 'AMZN', 'Webull');`,
     theory: `<strong>FOREIGN KEY</strong> คือคอลัมน์ที่บังคับว่าค่าที่ใส่เข้าไปต้อง<strong>มีอยู่จริง</strong>ในตารางอื่นที่อ้างอิงถึง (referenced table) — ต่อยอดจากบท JOIN ก่อนหน้าที่เรา JOIN <code>holdings.broker = brokers.name</code> โดยไม่มีอะไรบังคับเลยว่าค่า <code>broker</code> ต้องมีจริงใน <code>brokers</code> บทนี้ทำให้มันเป็นกฎบังคับจริงระดับฐานข้อมูล ไม่ใช่แค่ความหวังว่าข้อมูลจะสอดคล้องกันเอง<br/><br/>
@@ -212,21 +223,22 @@ INSERT INTO orders VALUES (99, 'FAKE', 'ThisBrokerDoesNotExist');
     validate: (code, log) => {
       log("🔍 ตรวจสอบการพิสูจน์ความซ้ำซ้อนของข้อมูล...");
       resetDatabase();
+      alasql("INSERT INTO holdings (ticker, broker, shares, avgCost, sector) VALUES ('FIDX','Fidelity',5,10.00,'ETF')");
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 1) {
         throw new Error(`คาดว่าจะได้ 1 แถวสรุปผล แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว
 ตัวอย่าง: SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;`);
       }
       const row = result[0];
-      if (Number(row.totalRows) !== 8 || Number(row.distinctBrokers) !== 2) {
-        throw new Error(`คาดว่า totalRows=8, distinctBrokers=2 แต่ได้ totalRows=${row.totalRows}, distinctBrokers=${row.distinctBrokers}`);
+      if (Number(row.totalRows) !== 9 || Number(row.distinctBrokers) !== 3) {
+        throw new Error(`คาดว่า totalRows=9, distinctBrokers=3 (นับจากข้อมูลจริงในตาราง holdings ณ ตอนนี้) แต่ได้ totalRows=${row.totalRows}, distinctBrokers=${row.distinctBrokers} — ตรวจสอบว่าใช้ COUNT(*) และ COUNT(DISTINCT broker) จริงหรือไม่ (ห้ามใส่ตัวเลขคงที่)`);
       }
-      log("✓ พิสูจน์ได้ว่า holdings มี 8 แถว แต่ Broker จริงมีแค่ 2 ราย — ถ้าเก็บชื่อเต็ม Broker ซ้ำในทุกแถวจะซ้ำซ้อนถึง 8 ครั้งโดยไม่จำเป็น");
+      log("✓ พิสูจน์ได้ว่า holdings มี 9 แถว แต่ Broker จริงมีแค่ 3 ราย — ถ้าเก็บชื่อเต็ม Broker ซ้ำในทุกแถวจะซ้ำซ้อนโดยไม่จำเป็น");
     },
-    hint: "ใช้ SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;",
+    hint: "ใช้ Aggregate Function สองตัวในคำสั่งเดียวกัน: ตัวหนึ่งนับจำนวนแถวทั้งหมด อีกตัวนับจำนวนค่าที่ไม่ซ้ำกันในคอลัมน์ broker — อย่าลืมตั้งชื่อคอลัมน์ผลลัพธ์ทั้งสองด้วย AS ตามที่โจทย์กำหนด",
     solution: `SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;`,
     theory: `<strong>Normalization</strong> คือหลักการออกแบบฐานข้อมูลเพื่อลดข้อมูลซ้ำซ้อน โดยแยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางต่างหาก แล้วใช้ FOREIGN KEY เชื่อมกลับมา<br/><br/>
-    ผลลัพธ์ของ query นี้พิสูจน์ปัญหาให้เห็นเป็นตัวเลขจริง: <code>holdings</code> มี 8 แถว แต่มี Broker ที่ไม่ซ้ำกันแค่ 2 ราย (Webull, Dime) — ถ้าเราเก็บ <code>displayName</code> ("Webull Financial") และ <code>country</code> ("US") ซ้ำไว้ในทุกแถวของ <code>holdings</code> โดยตรงแทนที่จะแยกตาราง <code>brokers</code> ต่างหาก ข้อมูลชุดเดียวกันนี้จะถูกเก็บซ้ำถึง 5 ครั้ง (Webull) และ 3 ครั้ง (Dime) โดยไม่จำเป็น<br/><br/>
+    ผลลัพธ์ของ query นี้พิสูจน์ปัญหาให้เห็นเป็นตัวเลขจริง: <code>holdings</code> มี 9 แถว (รวมข้อมูลที่ระบบเพิ่มเข้ามาตอนตรวจคำตอบ) แต่มี Broker ที่ไม่ซ้ำกันแค่ 3 ราย (Webull, Dime, Fidelity) — ถ้าเราเก็บ <code>displayName</code> ("Webull Financial") และ <code>country</code> ("US") ซ้ำไว้ในทุกแถวของ <code>holdings</code> โดยตรงแทนที่จะแยกตาราง <code>brokers</code> ต่างหาก ข้อมูลชุดเดียวกันนี้จะถูกเก็บซ้ำถึง 5 ครั้ง (Webull), 3 ครั้ง (Dime) และ 1 ครั้ง (Fidelity) โดยไม่จำเป็น<br/><br/>
     ปัญหาจริงที่ตามมาถ้าไม่ Normalize: ถ้า Webull เปลี่ยนชื่อเป็น "Webull Corp" ต้อง <code>UPDATE</code> ทั้ง 5 แถวให้ตรงกัน — พลาดแม้แถวเดียวจะทำให้ข้อมูล<strong>ไม่สอดคล้องกันเอง</strong> (inconsistent) ทันที การแยกเป็นตาราง <code>brokers</code> (ตามที่ทำไว้ในบท "Database Design: PRIMARY KEY") ทำให้แก้ที่เดียวจบ แล้วใช้ JOIN (บทก่อนหน้า) ดึงข้อมูลกลับมาต่อกันตอนต้องใช้จริง`,
     example: `-- ตัวอย่างเช็คความซ้ำซ้อนแบบเดียวกันกับคอลัมน์อื่น
 SELECT COUNT(*) AS totalRows, COUNT(DISTINCT sector) AS distinctSectors FROM holdings;`,
@@ -250,13 +262,13 @@ SELECT COUNT(*) AS totalRows, COUNT(DISTINCT sector) AS distinctSectors FROM hol
       if (!Array.isArray(result) || result.length !== 1) {
         throw new Error(`คาดว่าจะได้ 1 แถว (AMZN) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว\nตัวอย่าง: SELECT h.ticker, h.broker, b.displayName FROM holdings h JOIN brokers b ON h.broker = b.name WHERE h.ticker = 'AMZN';`);
       }
-      const values = Object.values(result[0]).map(v => String(v));
-      if (!values.includes('Webull Financial')) {
-        throw new Error("ผลลัพธ์ไม่มีค่า 'Webull Financial' — ตรวจสอบว่า JOIN ด้วยเงื่อนไข ON h.broker = b.name ถูกต้องหรือไม่ และดึงคอลัมน์ b.displayName มาด้วย");
+      const row = result[0];
+      if (row.ticker !== 'AMZN' || row.broker !== 'Webull' || row.displayName !== 'Webull Financial') {
+        throw new Error(`แถวที่ได้ต้องมีคอลัมน์ ticker='AMZN', broker='Webull', displayName='Webull Financial' ครบทั้งสามคอลัมน์ แต่ได้ ${JSON.stringify(row)} — ตรวจสอบว่า SELECT คอลัมน์ ticker, broker, displayName ครบหรือไม่ และ JOIN ด้วยเงื่อนไข ON h.broker = b.name ถูกต้องหรือไม่`);
       }
-      log("✓ JOIN สำเร็จ ได้ displayName 'Webull Financial' ถูกต้อง");
+      log("✓ JOIN สำเร็จ ได้ ticker, broker, displayName ครบถูกต้องทุกคอลัมน์");
     },
-    hint: "ใช้ SELECT h.ticker, h.broker, b.displayName FROM holdings h JOIN brokers b ON h.broker = b.name WHERE h.ticker = 'AMZN';",
+    hint: "เชื่อมสองตารางเข้าด้วยกันด้วยเงื่อนไขที่คอลัมน์ broker ของ holdings ตรงกับคอลัมน์ที่เป็น PRIMARY KEY ของ brokers แล้วกรองเฉพาะแถวที่ ticker ตรงกับที่โจทย์ต้องการ — ใช้ alias ย่อชื่อตารางให้เขียนสั้นลง",
     solution: `SELECT h.ticker, h.broker, b.displayName FROM holdings h JOIN brokers b ON h.broker = b.name WHERE h.ticker = 'AMZN';`,
     theory: `<strong>JOIN</strong> คือการรวมแถวจาก 2 ตารางเข้าด้วยกันโดยอาศัยคอลัมน์ที่เชื่อมโยงกัน (Foreign Key) — ต่อยอดจากบทก่อนหน้าที่แยก <code>holdings</code> กับ <code>brokers</code> ออกจากกันตามหลัก Normalization ตอนนี้เราต้องการ "เอาข้อมูลทั้งสองฝั่งมาต่อกัน" เพื่อแสดงผล<br/><br/>
     รูปแบบ: <code>FROM table1 alias1 JOIN table2 alias2 ON alias1.col = alias2.col</code> — ใช้ <code>alias</code> (เช่น <code>h</code>, <code>b</code>) เพื่อย่อชื่อตารางยาวๆ และแก้ปัญหาตอนสองตารางมีคอลัมน์ชื่อซ้ำกัน (เช่นถ้าทั้งคู่มีคอลัมน์ <code>name</code> ต้องระบุว่าเอา <code>h.name</code> หรือ <code>b.name</code>)<br/><br/>
@@ -299,7 +311,7 @@ SELECT h.ticker, b.country FROM holdings h JOIN brokers b ON h.broker = b.name W
       }
       log("✓ ออกแบบคอลัมน์ BOOLEAN และอัปเดตค่าถูกต้อง (notified = true)");
     },
-    hint: "ใช้ CREATE TABLE price_alerts (ticker STRING PRIMARY KEY, note STRING, notified BOOLEAN); แล้ว INSERT ด้วย notified=FALSE แล้ว UPDATE ... SET notified = TRUE",
+    hint: "เลือก data type ที่เหมาะกับค่าที่มีแค่ 2 สถานะ (จริง/เท็จ) ตอนสร้างตาราง จากนั้นต้องมี 3 คำสั่งตามลำดับ: สร้างตาราง, เพิ่มแถวเริ่มต้น, แล้วแก้ไขแถวเดิมด้วยคำสั่งที่เปลี่ยนค่าคอลัมน์ notified — ห้ามใช้ string หรือตัวเลขแทนค่าที่ควรเป็น boolean จริง",
     solution: `CREATE TABLE price_alerts (ticker STRING PRIMARY KEY, note STRING, notified BOOLEAN);
 INSERT INTO price_alerts (ticker, note, notified) VALUES ('TSLA', 'รอราคาย่อ', FALSE);
 UPDATE price_alerts SET notified = TRUE WHERE ticker = 'TSLA';`,
@@ -337,7 +349,7 @@ SELECT ticker FROM price_alerts WHERE notified = FALSE;`,
       }
       log("✓ เจอ Holdings ที่ broker อ้างอิงของไม่มีจริง (ORPHAN/GhostBroker) ถูกต้อง");
     },
-    hint: "ใช้ SELECT h.ticker FROM holdings h LEFT JOIN brokers b ON h.broker = b.name WHERE b.name IS NULL;",
+    hint: "ใช้ JOIN แบบที่เก็บทุกแถวจากตารางฝั่งซ้าย (holdings) ไว้เสมอ แม้จะจับคู่กับฝั่งขวา (brokers) ไม่ได้ก็ตาม แถวที่จับคู่ไม่ได้จะมีคอลัมน์ฝั่งขวาเป็นค่าว่าง จากนั้นกรองหาแถวที่คอลัมน์ของฝั่งขวานั้นเป็นค่าว่างด้วยตัวดำเนินการเปรียบเทียบที่ใช้กับค่าว่างโดยเฉพาะ",
     solution: `SELECT h.ticker FROM holdings h LEFT JOIN brokers b ON h.broker = b.name WHERE b.name IS NULL;`,
     theory: `บท JOIN ก่อนหน้าเคยบอกไว้ว่า: ถ้าไม่มีแถวไหนใน <code>brokers</code> ตรงกับค่า <code>broker</code> เลย แถวนั้นจะ<strong>หายไปจากผลลัพธ์เงียบๆ</strong> เพราะ <code>JOIN</code> เฉยๆ คือ <strong>INNER JOIN</strong> (ค่า default) — บทนี้ทำให้ปัญหานั้น "มองเห็นได้" แทนที่จะถูกซ่อนไว้<br/><br/>
     <strong>LEFT JOIN</strong> เก็บ<strong>ทุกแถว</strong>จากตารางฝั่งซ้าย (<code>holdings</code>) ไว้เสมอ ไม่ว่าจะจับคู่กับฝั่งขวา (<code>brokers</code>) ได้หรือไม่ก็ตาม — ถ้าจับคู่ไม่ได้ คอลัมน์จากฝั่งขวาทั้งหมดจะเป็น <code>NULL</code><br/><br/>
@@ -359,17 +371,22 @@ SELECT h.ticker FROM holdings h JOIN brokers b ON h.broker = b.name;
     validate: (code, log) => {
       log("🔍 ตรวจสอบ GROUP BY + Aggregate Function...");
       resetDatabase();
+      alasql("INSERT INTO holdings (ticker, broker, shares, avgCost, sector) VALUES ('EXTRA','Webull',10,100,'Technology')");
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 2) {
         throw new Error(`คาดว่าจะได้ 2 แถว (Webull, Dime) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว\nตัวอย่าง: SELECT broker, SUM(shares * avgCost) AS totalValue FROM holdings GROUP BY broker;`);
       }
-      const sum = result.reduce((a, r) => a + Number(r.totalValue || 0), 0);
-      if (Math.abs(sum - 44557) > 0.5) {
-        throw new Error(`ผลรวม totalValue ของทั้งสอง Broker ควรเป็น 44557 แต่ได้ ${sum}\nตรวจสอบว่าใช้ SUM(shares * avgCost) AS totalValue และ GROUP BY broker ถูกต้องหรือไม่`);
+      const webull = result.find(r => r.broker === 'Webull');
+      const dime = result.find(r => r.broker === 'Dime');
+      if (!webull || Math.abs(Number(webull.totalValue) - 23974) > 0.5) {
+        throw new Error(`totalValue ของ Webull ควรเป็น 23974 (คำนวณจากข้อมูลจริงในตาราง ณ ตอนนี้) แต่ได้ ${webull ? webull.totalValue : 'ไม่พบแถว Webull'}\nตรวจสอบว่าใช้ SUM(shares * avgCost) AS totalValue และ GROUP BY broker ถูกต้องหรือไม่ (ห้ามใส่ตัวเลขคงที่)`);
       }
-      log("✓ GROUP BY + SUM ถูกต้อง (Webull 22974 + Dime 21583 = 44557)");
+      if (!dime || Math.abs(Number(dime.totalValue) - 21583) > 0.5) {
+        throw new Error(`totalValue ของ Dime ควรเป็น 21583 แต่ได้ ${dime ? dime.totalValue : 'ไม่พบแถว Dime'}`);
+      }
+      log("✓ GROUP BY + SUM ถูกต้องทั้งสอง Broker (Webull 23974, Dime 21583) คำนวณจากข้อมูลจริงในตาราง");
     },
-    hint: "ใช้ SELECT broker, SUM(shares * avgCost) AS totalValue FROM holdings GROUP BY broker;",
+    hint: "ต้องคำนวณนิพจน์ shares คูณ avgCost ก่อน แล้วรวมค่านั้นด้วย Aggregate Function ตัวหนึ่ง จากนั้นจับกลุ่มผลลัพธ์ตามคอลัมน์ broker — อย่าลืมตั้งชื่อคอลัมน์ผลลัพธ์ด้วย AS ตามที่โจทย์กำหนด",
     solution: `SELECT broker, SUM(shares * avgCost) AS totalValue FROM holdings GROUP BY broker;`,
     theory: `<strong>GROUP BY</strong> จับกลุ่มแถวที่มีค่าคอลัมน์เดียวกัน (เช่น <code>broker</code>) แล้วให้ <strong>Aggregate Function</strong> (<code>SUM</code>, <code>COUNT</code>, <code>AVG</code>, <code>MAX</code>, <code>MIN</code>) คำนวณสรุปทีละกลุ่ม<br/><br/>
     ข้อควรระวังสำคัญ: ทุกคอลัมน์ใน <code>SELECT</code> ที่ไม่ใช่ Aggregate Function ต้องอยู่ใน <code>GROUP BY</code> ด้วย (เช่น <code>SELECT broker, SUM(...)</code> ต้องมี <code>GROUP BY broker</code>) ไม่งั้นฐานข้อมูลจะไม่รู้ว่าจะเอาค่า <code>broker</code> ตัวไหนมาแสดงในแต่ละกลุ่ม<br/><br/>
@@ -401,9 +418,13 @@ SELECT sector, COUNT(*) AS numHoldings, AVG(avgCost) AS avgPrice FROM holdings G
       if (!Array.isArray(last) || last.length !== 1 || Number(last[0].cnt) !== 0) {
         throw new Error(`คำสั่งสุดท้ายต้องเป็น SELECT COUNT(*) AS cnt ที่ได้ผลลัพธ์ cnt = 0 (ไม่มี QQQI เหลืออยู่แล้ว)\nได้: ${JSON.stringify(last)}`);
       }
-      log("✓ ลบข้อมูลจริงสำเร็จ และยืนยันด้วย COUNT(*) = 0 ถูกต้อง");
+      const remaining = alasql("SELECT COUNT(*) AS totalCnt FROM holdings");
+      if (Number(remaining[0].totalCnt) !== 7) {
+        throw new Error(`ตาราง holdings ควรเหลือ 7 แถว (ลบออกไป 1 แถวจากทั้งหมด 8 แถว) แต่พบ ${remaining[0].totalCnt} แถว — cnt=0 ต้องมาจากการ DELETE จริง ไม่ใช่แค่เขียนเงื่อนไข WHERE ในคำสั่ง SELECT ที่กรองไม่เจอ QQQI ตั้งแต่แรกโดยไม่ได้ลบอะไรเลย`);
+      }
+      log("✓ ลบข้อมูลจริงสำเร็จ (เหลือ 7 แถวจาก 8 แถว) และยืนยันด้วย COUNT(*) = 0 ถูกต้อง");
     },
-    hint: "ใช้ DELETE FROM holdings WHERE ticker = 'QQQI' AND broker = 'Webull'; แล้วตามด้วย SELECT COUNT(*) AS cnt FROM holdings WHERE ticker = 'QQQI';",
+    hint: "ต้องมี 2 คำสั่งคั่นด้วย ; คำสั่งแรกลบแถวที่ตรงกับเงื่อนไขทั้งสองคอลัมน์ที่โจทย์กำหนด คำสั่งที่สองนับจำนวนแถวที่เหลือของ ticker เดิมเพื่อพิสูจน์ว่าลบสำเร็จจริง",
     solution: `DELETE FROM holdings WHERE ticker = 'QQQI' AND broker = 'Webull';
 SELECT COUNT(*) AS cnt FROM holdings WHERE ticker = 'QQQI';`,
     theory: `ในโค้ดจริงของ <code>HoldingsPage.jsx</code> ฟังก์ชัน <code>confirmDelete()</code> ทำงานเป็น 2 ขั้นตอนแยกกัน:<br/><br/>
@@ -442,7 +463,7 @@ SELECT shares FROM holdings WHERE ticker = 'GOOGL';
       }
       log("✓ ใช้ IS NULL เจอแถว NEWCO ที่ยังไม่มี sector ถูกต้อง");
     },
-    hint: "ใช้ SELECT ticker FROM holdings WHERE sector IS NULL; (ห้ามใช้ = NULL เพราะจะไม่เจออะไรเลย)",
+    hint: "ค่าที่ยังไม่ถูกกำหนดใน SQL ไม่ใช่ string ว่างหรือเลข 0 — การเทียบด้วยเครื่องหมาย = ตามปกติจะไม่มีวันเจอแถวที่ยังไม่มีค่าเลย ต้องใช้ตัวดำเนินการเปรียบเทียบพิเศษที่ออกแบบมาสำหรับตรวจสอบว่าคอลัมน์ 'ไม่มีค่า' โดยเฉพาะแทน",
     solution: `SELECT ticker FROM holdings WHERE sector IS NULL;`,
     theory: `<strong>NULL</strong> ไม่ใช่ค่า "ว่างเปล่า" หรือ "ศูนย์" — มันแปลว่า "ไม่รู้ค่า/ไม่มีค่า" ในทางตรรกะของ SQL การเปรียบเทียบใดๆ กับ NULL ด้วย <code>=</code> จะได้ผลลัพธ์เป็น "ไม่รู้" (ไม่ใช่ true หรือ false) เสมอ — แปลว่า <code>WHERE sector = NULL</code> จะ<strong>ไม่มีวันคืนแถวไหนเลย แม้แถวนั้นจะมี sector เป็น NULL จริงๆ ก็ตาม</strong><br/><br/>
     ต้องใช้ตัวดำเนินการพิเศษแทน:<br/>
@@ -453,6 +474,174 @@ SELECT shares FROM holdings WHERE ticker = 'GOOGL';
 SELECT ticker FROM holdings WHERE sector IS NULL AND broker = 'Webull';`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
     1. ดึง <code>ticker</code> ของ Holdings ที่ <code>sector IS NULL</code> (ยังไม่ได้จัดหมวดหมู่)`
+  },
+  {
+    id: "advanced_join_having",
+    meta: "ขั้นสูง 1",
+    title: "Reporting ขั้นสูง: หา Test Suite ที่มี Test Case FAIL เกินเกณฑ์ (JOIN + GROUP BY + HAVING)",
+    template: `-- ตาราง test_suites: id, name
+-- ตาราง test_cases: id, suiteId (อ้างอิงไปยัง test_suites.id), status ('PASS' หรือ 'FAIL')
+-- 1. หาชื่อ Test Suite (name) พร้อมจำนวน Test Case ที่ status = 'FAIL' ของแต่ละ suite (ตั้งชื่อคอลัมน์ผลลัพธ์ว่า failCount)
+--    เอาเฉพาะ suite ที่มีจำนวน FAIL มากกว่า 1 รายการเท่านั้น
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ JOIN + GROUP BY + HAVING...");
+      resetDatabase();
+      try { alasql('DROP TABLE IF EXISTS test_cases'); } catch (e) {}
+      try { alasql('DROP TABLE IF EXISTS test_suites'); } catch (e) {}
+      alasql('CREATE TABLE test_suites (id NUMBER PRIMARY KEY, name STRING)');
+      alasql(`INSERT INTO test_suites (id, name) VALUES
+        (1,'Login'), (2,'Checkout'), (3,'Search'), (4,'Reports')`);
+      alasql('CREATE TABLE test_cases (id NUMBER PRIMARY KEY, suiteId NUMBER, status STRING, FOREIGN KEY (suiteId) REFERENCES test_suites(id))');
+      alasql(`INSERT INTO test_cases (id, suiteId, status) VALUES
+        (1,1,'FAIL'), (2,1,'FAIL'), (3,1,'PASS'),
+        (4,2,'FAIL'), (5,2,'FAIL'), (6,2,'FAIL'),
+        (7,3,'PASS'), (8,3,'PASS'),
+        (9,4,'FAIL')`);
+
+      const result = runQuery(code);
+      if (!Array.isArray(result) || result.length !== 2) {
+        throw new Error(`คาดว่าจะได้ 2 แถว (Login, Checkout — suite ที่มี FAIL มากกว่า 1 รายการ) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว
+ตัวอย่าง: SELECT s.name, COUNT(*) AS failCount FROM test_cases c JOIN test_suites s ON c.suiteId = s.id WHERE c.status = 'FAIL' GROUP BY s.name HAVING COUNT(*) > 1;`);
+      }
+      const login = result.find(r => r.name === 'Login');
+      const checkout = result.find(r => r.name === 'Checkout');
+      if (!login || Number(login.failCount) !== 2) {
+        throw new Error(`Login ควรมี failCount = 2 แต่ได้ ${login ? login.failCount : 'ไม่พบแถว Login ในผลลัพธ์'}`);
+      }
+      if (!checkout || Number(checkout.failCount) !== 3) {
+        throw new Error(`Checkout ควรมี failCount = 3 แต่ได้ ${checkout ? checkout.failCount : 'ไม่พบแถว Checkout ในผลลัพธ์'}`);
+      }
+      const hasWrongSuite = result.some(r => r.name === 'Search' || r.name === 'Reports');
+      if (hasWrongSuite) {
+        throw new Error("ผลลัพธ์มี Search หรือ Reports ปนอยู่ ทั้งที่ทั้งสอง suite นี้มีจำนวน FAIL ไม่เกิน 1 รายการ — ตรวจสอบเงื่อนไข HAVING COUNT(*) > 1 อีกครั้ง");
+      }
+      log("✓ JOIN + GROUP BY + HAVING ถูกต้อง (Login FAIL 2 ครั้ง, Checkout FAIL 3 ครั้ง เกินเกณฑ์ที่กำหนด)");
+    },
+    hint: "ต้อง JOIN สองตารางก่อนด้วยคอลัมน์ที่เชื่อมกัน (suiteId กับ id) กรองเฉพาะแถวสถานะ FAIL ก่อนนับ แล้วจับกลุ่มตามชื่อ suite จากนั้นกรองผลลัพธ์ 'หลัง' การนับด้วยคำสั่งที่ต่างจาก WHERE (คำสั่งที่ใช้กรองค่าซึ่งมาจาก Aggregate Function ไม่ใช่คอลัมน์ตรงๆ)",
+    solution: `SELECT s.name, COUNT(*) AS failCount
+FROM test_cases c JOIN test_suites s ON c.suiteId = s.id
+WHERE c.status = 'FAIL'
+GROUP BY s.name
+HAVING COUNT(*) > 1;`,
+    theory: `บทเรียนนี้รวม 3 เทคนิคที่เรียนมาแล้วเข้าด้วยกันในคำถามเดียว (JOIN + WHERE + GROUP BY) และเพิ่มเทคนิคใหม่: <strong>HAVING</strong><br/><br/>
+    ความแตกต่างสำคัญระหว่าง <code>WHERE</code> กับ <code>HAVING</code>:<br/>
+    1. <code>WHERE</code> กรอง<strong>แถวดิบ</strong>ก่อนที่จะ <code>GROUP BY</code> — ใช้กรองแถวที่ <code>status = 'FAIL'</code> ก่อนนับ<br/>
+    2. <code>HAVING</code> กรอง<strong>ผลลัพธ์หลังคำนวณ Aggregate Function แล้ว</strong> — ใช้กรอง suite ที่มี <code>COUNT(*) > 1</code> หลังจากนับจำนวน FAIL ต่อ suite เสร็จแล้ว<br/><br/>
+    ทำไมต้องแยกกัน: <code>WHERE</code> ทำงานก่อน <code>GROUP BY</code> เกิดขึ้น จึงยังไม่มีค่า <code>COUNT(*)</code> ให้เทียบ (เขียน <code>WHERE COUNT(*) > 1</code> จะ error) ต้องรอให้จับกลุ่มและคำนวณเสร็จก่อน แล้วค่อยกรองด้วย <code>HAVING</code> ทีหลัง<br/><br/>
+    ในงาน QA เทคนิคนี้ตอบคำถามเชิงรายงานที่ซับซ้อนขึ้น เช่น "Test Suite ไหนที่มีอัตราความล้มเหลวสูงเกินเกณฑ์ที่ทีมต้องรีบตรวจสอบ" — คำถามที่ต้องรวมข้อมูลจากหลายตาราง กรองก่อนนับ นับแล้วจับกลุ่ม แล้วกรองอีกรอบหลังนับ ครบทุกขั้นตอนในคำสั่งเดียว`,
+    example: `-- ตัวอย่าง HAVING แบบนับทุกสถานะรวมกัน (ไม่กรอง WHERE ก่อน) หา suite ที่มี test case รวมมากกว่า 2 รายการ
+SELECT s.name, COUNT(*) AS totalCases FROM test_cases c JOIN test_suites s ON c.suiteId = s.id GROUP BY s.name HAVING COUNT(*) > 2;`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. JOIN ตาราง <code>test_cases</code> กับ <code>test_suites</code> ด้วยเงื่อนไข <code>test_cases.suiteId = test_suites.id</code><br/>
+    2. กรองเฉพาะแถวที่ <code>status = 'FAIL'</code><br/>
+    3. จับกลุ่มด้วย <code>GROUP BY</code> ชื่อ suite แล้วนับจำนวนด้วย <code>COUNT(*) AS failCount</code><br/>
+    4. กรองผลลัพธ์หลังนับด้วย <code>HAVING COUNT(*) > 1</code>`
+  },
+  {
+    id: "advanced_normalization_schema",
+    meta: "ขั้นสูง 2",
+    title: "ออกแบบ Schema แบบ Normalized: จากตารางเดียวที่ข้อมูลซ้ำซ้อน สู่ 3 ตารางที่เชื่อมด้วย Foreign Key",
+    template: `-- สถานการณ์: เดิมทีข้อมูล Test Run ถูกเก็บรวมในตารางเดียว (test_runs_flat) แบบนี้:
+-- | caseName    | testerName | testerEmail    | suiteName | status |
+-- | Login OK    | Jane       | jane@test.com  | Login     | PASS   |
+-- | Login Fail  | Jane       | jane@test.com  | Login     | FAIL   |
+-- | Checkout OK | Bob        | bob@test.com   | Checkout  | PASS   |
+-- ปัญหา: testerName/testerEmail ซ้ำทุกแถวของ Jane, suiteName ซ้ำทุกแถวของ Login (repeating groups)
+-- ถ้า Jane เปลี่ยนอีเมล ต้องไล่แก้ทุกแถวที่มีชื่อ Jane — เสี่ยงพลาดตกหล่นเหมือนปัญหาที่เคยเจอในบท Normalization
+--
+-- จงออกแบบใหม่เป็น 3 ตาราง:
+-- 1. testers: email (STRING PRIMARY KEY), name (STRING)
+-- 2. suites: id (NUMBER PRIMARY KEY), name (STRING)
+-- 3. test_runs: id (NUMBER PRIMARY KEY), testerEmail (STRING), suiteId (NUMBER), status (STRING)
+--    โดย test_runs.testerEmail ต้อง FOREIGN KEY REFERENCES testers(email)
+--    และ test_runs.suiteId ต้อง FOREIGN KEY REFERENCES suites(id)
+-- WRITE YOUR CODE HERE
+
+
+-- 4. เพิ่มข้อมูลตัวอย่าง: testers ('jane@test.com','Jane'), suites (1,'Login'), test_runs (1,'jane@test.com',1,'PASS')
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการออกแบบ Schema แบบ Normalized (3 ตาราง + Foreign Key)...");
+      resetDatabase();
+      try { alasql('DROP TABLE IF EXISTS test_runs'); } catch (e) {}
+      try { alasql('DROP TABLE IF EXISTS suites'); } catch (e) {}
+      try { alasql('DROP TABLE IF EXISTS testers'); } catch (e) {}
+
+      runQuery(code);
+
+      let testers, suites, testRuns;
+      try {
+        testers = alasql("SELECT * FROM testers");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง testers — ตรวจสอบว่าสร้างด้วย CREATE TABLE testers (email STRING PRIMARY KEY, name STRING) หรือยัง");
+      }
+      try {
+        suites = alasql("SELECT * FROM suites");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง suites — ตรวจสอบว่าสร้างด้วย CREATE TABLE suites (id NUMBER PRIMARY KEY, name STRING) หรือยัง");
+      }
+      try {
+        testRuns = alasql("SELECT * FROM test_runs");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง test_runs — ตรวจสอบว่าสร้างด้วย CREATE TABLE test_runs (...) หรือยัง");
+      }
+
+      if (testers.length !== 1 || testers[0].email !== 'jane@test.com' || testers[0].name !== 'Jane') {
+        throw new Error(`ข้อมูลในตาราง testers ไม่ตรงกับที่คาดไว้ (email='jane@test.com', name='Jane') ได้: ${JSON.stringify(testers)}`);
+      }
+      if (suites.length !== 1 || Number(suites[0].id) !== 1 || suites[0].name !== 'Login') {
+        throw new Error(`ข้อมูลในตาราง suites ไม่ตรงกับที่คาดไว้ (id=1, name='Login') ได้: ${JSON.stringify(suites)}`);
+      }
+      if (testRuns.length !== 1 || testRuns[0].testerEmail !== 'jane@test.com' || Number(testRuns[0].suiteId) !== 1 || testRuns[0].status !== 'PASS') {
+        throw new Error(`ข้อมูลในตาราง test_runs ไม่ตรงกับที่คาดไว้ (testerEmail='jane@test.com', suiteId=1, status='PASS') ได้: ${JSON.stringify(testRuns)}`);
+      }
+
+      let blockedTester = false;
+      try {
+        alasql("INSERT INTO test_runs VALUES (99, 'ghost@test.com', 1, 'FAIL')");
+      } catch (err) {
+        blockedTester = true;
+      }
+      if (!blockedTester) {
+        throw new Error("ตาราง test_runs ยอมรับ testerEmail ที่ไม่มีอยู่จริงใน testers ได้ — ตรวจสอบว่าใส่ FOREIGN KEY (testerEmail) REFERENCES testers(email) หรือยัง");
+      }
+
+      let blockedSuite = false;
+      try {
+        alasql("INSERT INTO test_runs VALUES (98, 'jane@test.com', 999, 'FAIL')");
+      } catch (err) {
+        blockedSuite = true;
+      }
+      if (!blockedSuite) {
+        throw new Error("ตาราง test_runs ยอมรับ suiteId ที่ไม่มีอยู่จริงใน suites ได้ — ตรวจสอบว่าใส่ FOREIGN KEY (suiteId) REFERENCES suites(id) หรือยัง");
+      }
+
+      log("✓ ออกแบบ Schema แบบ Normalized ถูกต้อง — 3 ตารางเชื่อมกันด้วย Foreign Key และบังคับ referential integrity ได้จริงทั้งสองจุด");
+    },
+    hint: "แยกข้อมูลที่ซ้ำกันได้ (ชื่อ/อีเมล tester, ชื่อ suite) ออกเป็นตารางของตัวเองที่มี PRIMARY KEY ไม่ซ้ำ แล้วเหลือแค่ตัวอ้างอิง (เช่น email, suite id) ไว้ในตารางบันทึกผลการรัน — ตารางบันทึกผลต้องมี FOREIGN KEY อ้างกลับไปทั้งสองตารางที่แยกออกมา ไม่ใช่แค่ตารางเดียว",
+    solution: `CREATE TABLE testers (email STRING PRIMARY KEY, name STRING);
+CREATE TABLE suites (id NUMBER PRIMARY KEY, name STRING);
+CREATE TABLE test_runs (id NUMBER PRIMARY KEY, testerEmail STRING, suiteId NUMBER, status STRING, FOREIGN KEY (testerEmail) REFERENCES testers(email), FOREIGN KEY (suiteId) REFERENCES suites(id));
+INSERT INTO testers VALUES ('jane@test.com', 'Jane');
+INSERT INTO suites VALUES (1, 'Login');
+INSERT INTO test_runs VALUES (1, 'jane@test.com', 1, 'PASS');`,
+    theory: `บทเรียนนี้เป็นบทสรุปของหลักการที่เรียนมาทั้งหมด: <strong>Normalization</strong> (บทที่ 4) + <strong>PRIMARY KEY</strong> (Database Design) + <strong>FOREIGN KEY</strong> (บทที่ 3) รวมกันเป็นงานออกแบบ Schema จริง<br/><br/>
+    ตาราง <code>test_runs_flat</code> แบบเดิมมีปัญหาที่เรียกว่า <strong>repeating groups</strong> — ข้อมูลของ tester คนเดียวกัน (<code>testerName</code>, <code>testerEmail</code>) ถูกพิมพ์ซ้ำทุกครั้งที่เขารัน test อีกครั้ง เช่นเดียวกับข้อมูล suite (<code>suiteName</code>) ที่ซ้ำทุกครั้งที่มี test case ในนั้น<br/><br/>
+    วิธีแก้: แยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางอ้างอิงต่างหาก แล้วให้ตารางบันทึกเหตุการณ์ (<code>test_runs</code>) เก็บแค่ตัวอ้างอิง (Foreign Key) กลับไปยังตารางเหล่านั้น:<br/>
+    1. <code>testers</code> — ข้อมูล tester แต่ละคนถูกเก็บครั้งเดียว ระบุตัวด้วย <code>email</code> (PRIMARY KEY)<br/>
+    2. <code>suites</code> — ข้อมูล suite แต่ละชุดถูกเก็บครั้งเดียว ระบุตัวด้วย <code>id</code> (PRIMARY KEY)<br/>
+    3. <code>test_runs</code> — 1 แถวต่อ 1 การรัน test จริง อ้างอิงกลับไปยังทั้งสองตารางด้วย Foreign Key สองจุด<br/><br/>
+    ถ้า Jane เปลี่ยนอีเมล ตอนนี้แก้แค่แถวเดียวในตาราง <code>testers</code> ก็จบ — ไม่ต้องไล่หาทุกแถวใน <code>test_runs</code> ที่เคยพิมพ์อีเมลเธอซ้ำไว้เหมือนตอนที่ยังไม่ได้ Normalize`,
+    example: `-- ตัวอย่างออกแบบคล้ายกันสำหรับข้อมูล environment ที่ test ใช้รัน (แยก environment ออกจาก run log)
+CREATE TABLE environments (id NUMBER PRIMARY KEY, name STRING, osVersion STRING);
+CREATE TABLE test_run_logs (id NUMBER PRIMARY KEY, envId NUMBER, result STRING, FOREIGN KEY (envId) REFERENCES environments(id));`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. สร้างตาราง <code>testers</code> ด้วยคอลัมน์ <code>email</code> (STRING PRIMARY KEY), <code>name</code> (STRING)<br/>
+    2. สร้างตาราง <code>suites</code> ด้วยคอลัมน์ <code>id</code> (NUMBER PRIMARY KEY), <code>name</code> (STRING)<br/>
+    3. สร้างตาราง <code>test_runs</code> ด้วยคอลัมน์ <code>id</code> (NUMBER PRIMARY KEY), <code>testerEmail</code> (STRING), <code>suiteId</code> (NUMBER), <code>status</code> (STRING) พร้อม <code>FOREIGN KEY (testerEmail) REFERENCES testers(email)</code> และ <code>FOREIGN KEY (suiteId) REFERENCES suites(id)</code><br/>
+    4. เพิ่มแถวตัวอย่าง: <code>testers ('jane@test.com','Jane')</code>, <code>suites (1,'Login')</code>, <code>test_runs (1,'jane@test.com',1,'PASS')</code>`
   }
 ];
 
