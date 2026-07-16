@@ -37,3 +37,7 @@ npm test      # runs shared/selftest.mjs across every track
 Each lesson's `validate(solution)` must pass and `validate(template)` must fail — that invariant is the only thing catching silent regex/content drift. Run this after editing any `course.js`.
 
 If you edit `shared/engine.js` (the sandbox engine shared by every track), re-run `shared/sync-engine.sh` to propagate the change into each track's own `engine.js` copy — `<script src="../shared/engine.js">` doesn't work due to `file://` sandboxing, so every track keeps a same-directory copy in sync via that script.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
