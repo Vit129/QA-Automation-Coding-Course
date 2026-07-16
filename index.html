@@ -519,6 +519,50 @@
       animation: banner-pop 0.5s ease;
     }
 
+    /* Update-available banner */
+    .update-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background-color: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+      text-align: left;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      animation: banner-pop 0.4s ease;
+    }
+
+    .update-banner a {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .update-banner-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+      flex-shrink: 0;
+    }
+
+    .update-banner-close:hover {
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 640px) {
+      .update-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
     @keyframes banner-pop {
       from { opacity: 0; transform: scale(0.95) translateY(10px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
@@ -580,6 +624,8 @@
         หลักสูตรเรียนรู้และทดสอบการเขียนโค้ดระบบจำลอง Automation แบบโต้ตอบด้วย Code Sandbox และรันชุดทดสอบเสมือนจริงในเบราว์เซอร์
       </p>
     </header>
+
+    <div id="update-banner-slot"></div>
 
     <div class="progress-panel" id="progress-panel">
       <div class="progress-panel-header">
@@ -764,17 +810,17 @@
         <span class="course-icon">♿</span>
         <h2 class="course-title">Accessibility (a11y) Testing</h2>
         <p class="course-desc">
-          ทดสอบว่าผู้ใช้ที่มีข้อจำกัดทางร่างกายใช้งานได้จริง — axe-core Scan, Alt Text, ARIA Label, Keyboard Navigation, Semantic Heading อิงจาก aria-label/alt จริงในโปรเจก My-Investment-Port (InvestmentTimeline.jsx, AiTeamTab.jsx)
+          ทดสอบว่าผู้ใช้ที่มีข้อจำกัดทางร่างกายใช้งานได้จริง — axe-core Scan, Alt Text, ARIA Label, Keyboard Navigation, Semantic Heading (เช็คลำดับจริงไม่ใช่แค่มี), Color Contrast อิงจาก aria-label/alt จริงในโปรเจก My-Investment-Port (InvestmentTimeline.jsx, AiTeamTab.jsx)
         </p>
         <div class="tags">
           <span class="tag">axe-core</span>
           <span class="tag">ARIA</span>
           <span class="tag">WCAG</span>
-          <span class="tag">5 Lessons</span>
+          <span class="tag">6 Lessons</span>
         </div>
         <div class="track-progress" id="progress-a11y">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/5 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/6 บทเรียน (0%)</span>
         </div>
         <a href="./Accessibility-Testing/index.html" class="btn btn-a11y">เข้าสู่บทเรียน →</a>
       </div>
@@ -804,17 +850,17 @@
         <span class="course-icon">⚙️</span>
         <h2 class="course-title">CI/CD Pipeline</h2>
         <p class="course-desc">
-          เขียน GitHub Actions YAML ให้ test รันอัตโนมัติทุกครั้งที่ push — Trigger Config, Concurrency/Cancel-in-progress, Dependency Caching, Matrix Strategy และ Advisory Job (continue-on-error) อิงจาก .github/workflows/ci.yml จริงของ kouen-terminal
+          เขียน GitHub Actions YAML ให้ test รันอัตโนมัติทุกครั้งที่ push — Trigger Config, Concurrency/Cancel-in-progress, Dependency Caching, Matrix Strategy, Advisory Job (continue-on-error) และ Artifact Upload (เอาหลักฐาน test fail ออกมาดู) อิงจาก .github/workflows/ci.yml จริงของ kouen-terminal
         </p>
         <div class="tags">
           <span class="tag">GitHub Actions</span>
           <span class="tag">Matrix</span>
           <span class="tag">Caching</span>
-          <span class="tag">6 Lessons</span>
+          <span class="tag">7 Lessons</span>
         </div>
         <div class="track-progress" id="progress-cicd">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/6 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/7 บทเรียน (0%)</span>
         </div>
         <a href="./CI-CD-Pipeline/index.html" class="btn btn-cicd">เข้าสู่บทเรียน →</a>
       </div>
@@ -854,9 +900,9 @@
       { key: 'sql', prefix: 'sql', total: 11, label: 'Database Design & SQL' },
       { key: 'cli', prefix: 'cli', total: 16, label: 'Git, Vim & Unix Cheat Sheet' },
       { key: 'security', prefix: 'sec', total: 6, label: 'Security Testing' },
-      { key: 'a11y', prefix: 'a11y', total: 5, label: 'Accessibility (a11y) Testing' },
+      { key: 'a11y', prefix: 'a11y', total: 6, label: 'Accessibility (a11y) Testing' },
       { key: 'visual', prefix: 'visual', total: 5, label: 'Visual Regression Testing' },
-      { key: 'cicd', prefix: 'cicd', total: 6, label: 'CI/CD Pipeline' },
+      { key: 'cicd', prefix: 'cicd', total: 7, label: 'CI/CD Pipeline' },
       { key: 'framework', prefix: 'fwk', total: 6, label: 'Test Automation Framework Design' },
     ];
     const XP_PER_LESSON = 10;
@@ -999,6 +1045,49 @@
     }
 
     renderProgress();
+
+    // Update-available check for people who cloned the repo (read-only, no push back)
+    // instead of using the always-fresh GitHub Pages URL. Bump this alongside version.json
+    // whenever new content ships.
+    const CURRENT_VERSION = 2;
+    const VERSION_CHECK_URL = 'https://raw.githubusercontent.com/Vit129/QA-Automation-Coding-Course/main/version.json';
+    const PAGES_URL = 'https://vit129.github.io/QA-Automation-Coding-Course/';
+    const DISMISS_KEY = 'qa_course_update_dismissed_version';
+
+    async function checkForUpdates() {
+      try {
+        const res = await fetch(VERSION_CHECK_URL, { cache: 'no-store' });
+        if (!res.ok) return;
+        const remote = await res.json();
+        if (typeof remote.version !== 'number' || remote.version <= CURRENT_VERSION) return;
+
+        const dismissed = Number(localStorage.getItem(DISMISS_KEY) || '0');
+        if (dismissed >= remote.version) return;
+
+        showUpdateBanner(remote);
+      } catch (e) {
+        // Offline, blocked, or rate-limited - this is a non-critical enhancement, fail silently.
+      }
+    }
+
+    function showUpdateBanner(remote) {
+      const slot = document.getElementById('update-banner-slot');
+      const banner = document.createElement('div');
+      banner.className = 'update-banner';
+      banner.innerHTML = `
+        <span>🔔 มีอัพเดตใหม่ (v${remote.version}, ${remote.updated}): ${remote.summary} —
+          รัน <code>git pull origin main</code> เพื่ออัพเดต หรือดูล่าสุดที่
+          <a href="${PAGES_URL}" target="_blank" rel="noopener">GitHub Pages</a> แทนการ clone</span>
+        <button class="update-banner-close" aria-label="ปิด">✕</button>
+      `;
+      banner.querySelector('.update-banner-close').onclick = () => {
+        localStorage.setItem(DISMISS_KEY, String(remote.version));
+        banner.remove();
+      };
+      slot.appendChild(banner);
+    }
+
+    checkForUpdates();
   </script>
 
 </body>

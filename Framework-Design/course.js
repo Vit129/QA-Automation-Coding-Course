@@ -149,40 +149,62 @@ test('เพิ่ม ticker ใหม่ใน watchlist', async ({ watchlistPa
     id: "reusable_helpers_dry",
     meta: "บทที่ 3",
     title: "DRY จริง: กรณีศึกษาจากคอร์สนี้เอง ที่เพิ่งรีแฟคเตอร์วันนี้",
-    template: `// สถานการณ์จริง (เกิดขึ้นในคอร์สนี้เองระหว่างพัฒนา): 6 track มี engine logic เหมือนกัน ~90%
-// (render lesson list, run validate, progress bar, reset) copy-paste กระจายอยู่ 6 ไฟล์
-// เพิ่มฟีเจอร์ 1 อย่าง (XP toast) ต้องแก้ 6 ไฟล์ด้วยมือทุกครั้ง เสี่ยงพลาด sync
-// 1. เขียนฟังก์ชัน calculateXP(completedCount, xpPerLesson) ที่คำนวณ XP รวม
-//    แล้วให้ track ทั้งหมดเรียกใช้ฟังก์ชันเดียวกันนี้ แทนคำนวณเองซ้ำในแต่ละไฟล์
+    template: `// สถานการณ์จริง: ฟังก์ชันนี้คือของจริงจากหน้า dashboard รวมทุก track ของคอร์สนี้เอง (index.html)
+// dashboard ต้องนับบทที่ผ่านแล้วของ 11 track ที่ไม่รู้จักกันเลย โดยไม่เขียนโค้ดนับแยกทีละ track
+// กุญแจคือทุก track เก็บ key แบบเดียวกันเป๊ะ: "<prefix>_course_completed_<lessonId>" = 'true'
+// เขียนฟังก์ชันเดียวที่รับแค่ prefix แล้วใช้ได้กับทุก track โดยไม่ต้องรู้ล่วงหน้าว่ามีบทอะไรบ้าง
+// 1. วนลูปทุก key ใน localStorage ด้วย for (let i = 0; i < localStorage.length; i++)
+// 2. นับเฉพาะ key ที่ขึ้นต้นด้วย \`\${prefix}_course_completed_\` และมีค่าเป็น 'true'
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบฟังก์ชัน calculateXP...");
-      const hasFunctionDecl = /function\s+calculateXP\s*\(\s*completedCount\s*,\s*xpPerLesson\s*\)/.test(code);
-      const hasMultiply = /completedCount\s*\*\s*xpPerLesson/.test(code);
-      const hasReturn = /return/.test(code);
+      log("🔍 ตรวจสอบฟังก์ชัน countCompletedLessons...");
+      const hasFunctionDecl = /function\s+countCompletedLessons\s*\(\s*prefix\s*\)/.test(code);
+      const hasLoop = /for\s*\(\s*let\s+i\s*=\s*0\s*;\s*i\s*<\s*localStorage\.length/.test(code);
+      const hasMarker = /_course_completed_/.test(code);
+      const hasStartsWith = /startsWith\(/.test(code);
+      const hasTrueCheck = /===\s*['"]true['"]/.test(code);
       if (!hasFunctionDecl) {
-        throw new Error("ไม่พบการประกาศ function calculateXP(completedCount, xpPerLesson)");
+        throw new Error("ไม่พบการประกาศ function countCompletedLessons(prefix)");
       }
-      if (!hasMultiply || !hasReturn) {
-        throw new Error("ฟังก์ชันต้อง return completedCount * xpPerLesson");
+      if (!hasLoop) {
+        throw new Error("ไม่พบการวนลูปทุก key ด้วย for (let i = 0; i < localStorage.length; i++)");
       }
-      log("✓ เขียนฟังก์ชัน DRY ที่ reuse ได้จริงถูกต้อง");
+      if (!hasMarker || !hasStartsWith) {
+        throw new Error("ไม่พบการเช็คว่า key ขึ้นต้นด้วย `${prefix}_course_completed_` ผ่าน .startsWith(...)");
+      }
+      if (!hasTrueCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่าค่าของ key เป็น 'true'");
+      }
+      log("✓ เขียนฟังก์ชัน DRY ที่ reuse ข้าม track ได้จริงถูกต้อง");
     },
-    hint: "function calculateXP(completedCount, xpPerLesson) { return completedCount * xpPerLesson; }",
-    solution: `function calculateXP(completedCount, xpPerLesson) {
-  return completedCount * xpPerLesson;
+    hint: "function countCompletedLessons(prefix) { const marker = `${prefix}_course_completed_`; let count = 0; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key && key.startsWith(marker) && localStorage.getItem(key) === 'true') count++; } return count; }",
+    solution: `function countCompletedLessons(prefix) {
+  const marker = \`\${prefix}_course_completed_\`;
+  let count = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(marker) && localStorage.getItem(key) === 'true') {
+      count++;
+    }
+  }
+  return count;
 }`,
-    theory: `<strong>Real grounding แบบที่สุดของบทนี้:</strong> ตัวคอร์สที่คุณกำลังเรียนอยู่นี้เอง เจอปัญหานี้จริงระหว่างการพัฒนา — 6 track (API Testing, Playwright, Robot Framework, k6, SQL, CLI) แต่ละ track มีไฟล์ <code>course.js</code> ที่มี engine logic เหมือนกันเกือบ 90% (render lesson list, ตรวจสอบ validate, progress bar, reset, XP toast) เพราะแต่ละ track ถูกสร้างด้วยวิธี copy-paste-adapt จากไฟล์ก่อนหน้า<br/><br/>
-    ปัญหาที่เกิดขึ้นจริง: เมื่อจะเพิ่มฟีเจอร์ "+XP toast" ต้องแก้ไฟล์ <code>course.js</code> ทั้ง 6 ไฟล์ด้วยมือ ทีละไฟล์ เสี่ยงพลาด sync (แก้ไฟล์หนึ่งลืมอีกไฟล์) — วิธีแก้: แยก logic ที่เหมือนกันออกมาเป็น <code>shared/engine.js</code> ไฟล์เดียว ให้ทุก track เรียกใช้ร่วมกัน แก้จุดเดียวจบทุก track<br/><br/>
-    <strong>อุปสรรคที่เจอจริงระหว่างทำ:</strong> ลองใช้ <code>&lt;script src="../shared/engine.js"&gt;</code> (ข้าม directory) แล้วพบว่า browser บล็อกการโหลด script ข้าม directory ผ่าน <code>file://</code> เงียบๆ — ทางแก้จริงที่ใช้: เก็บไฟล์ต้นฉบับไว้ที่เดียว (<code>shared/engine.js</code>) แล้วมี script sync ก็อปปี้เข้าไปในแต่ละ track folder เป็น <code>engine.js</code> ของตัวเอง (same-directory load ใช้งานได้จริง) — นี่คือตัวอย่างจริงว่าการออกแบบ DRY บางครั้งเจอข้อจำกัดทางเทคนิคที่ต้องหาทางประนีประนอม ไม่ใช่ทำได้ตรงไปตรงมาเสมอไป`,
-    example: `// ตัวอย่างฟังก์ชัน DRY อื่นที่ reuse ได้ข้ามหลาย test
-function generateTestEmail(prefix = 'qa-test') {
-  return \`\${prefix}-\${Date.now()}@example.com\`;
+    theory: `<strong>Real grounding แบบที่สุดของบทนี้:</strong> ฟังก์ชันนี้ไม่ใช่ตัวอย่างสมมติ — มันคือโค้ดจริงที่ยกมาจาก <code>index.html</code> ของคอร์สนี้เองเป๊ะๆ (แค่เปลี่ยนชื่อ) หน้า dashboard รวมทุก track ต้องนับความคืบหน้าของ 11 track ที่มีจำนวนบทไม่เท่ากันเลย (API-Testing 13 บท, Visual-Regression 5 บท, ฯลฯ) และ dashboard <strong>ไม่รู้จักเนื้อหาของ track ไหนเลยสักตัว</strong> — สิ่งที่ทำให้ฟังก์ชันเดียวใช้กับทุก track ได้คือทุก track เก็บ progress ด้วย key รูปแบบเดียวกันเป๊ะ: <code>&lt;prefix&gt;_course_completed_&lt;lessonId&gt;</code> = <code>'true'</code><br/><br/>
+    นี่คือ DRY ระดับที่ลึกกว่าแค่ "เขียนฟังก์ชันคำนวณเลข" — มันคือการออกแบบ<strong>รูปแบบ key ให้เดายาก reuse ได้ล่วงหน้า</strong> (ทำตั้งแต่ตอนออกแบบแต่ละ track ให้ใช้ prefix ต่างกันแต่โครงสร้างเดียวกัน) แล้วเขียน<strong>ฟังก์ชันเดียวที่พารามิเตอร์ด้วย prefix</strong> แทนที่จะเขียนโค้ดนับแยกทีละ 11 ครั้งสำหรับ 11 track — เพิ่ม track ที่ 12 ในอนาคตก็ไม่ต้องแตะฟังก์ชันนี้เลยแม้แต่บรรทัดเดียว<br/><br/>
+    <strong>อุปสรรคที่เจอจริงระหว่างทำ engine.js refactor ของคอร์สนี้ (คนละจุดกับฟังก์ชันนี้ แต่หลักการ DRY เดียวกัน):</strong> ตอนแรกลองรวม engine logic (render lesson list, validate, reset) ที่ซ้ำกัน ~90% ข้าม 11 ไฟล์ course.js ด้วย <code>&lt;script src="../shared/engine.js"&gt;</code> แล้วพบว่า browser บล็อกการโหลด script ข้าม directory ผ่าน <code>file://</code> เงียบๆ — ทางแก้จริงที่ใช้: เก็บไฟล์ต้นฉบับไว้ที่เดียว (<code>shared/engine.js</code>) แล้วมี script sync ก็อปปี้เข้าไปในแต่ละ track folder เป็น <code>engine.js</code> ของตัวเอง (same-directory load ใช้งานได้จริง) — DRY ที่ดีในทางทฤษฎีบางครั้งเจอข้อจำกัดทางเทคนิคจริงที่ต้องหาทางประนีประนอม ไม่ใช่ทำได้ตรงไปตรงมาเสมอไป`,
+    example: `// ตัวอย่างใช้ฟังก์ชันเดียวกันนี้กับหลาย track รวด ไม่ต้องเขียนโค้ดนับแยก
+const tracks = [
+  { prefix: 'api', total: 13 },
+  { prefix: 'visual', total: 5 },
+];
+for (const t of tracks) {
+  console.log(\`\${t.prefix}: \${countCompletedLessons(t.prefix)}/\${t.total}\`);
 }`,
     task: `จงเขียนฟังก์ชันให้สมบูรณ์ โดย:<br/>
-    1. ประกาศ <code>function calculateXP(completedCount, xpPerLesson)</code><br/>
-    2. <code>return completedCount * xpPerLesson</code>`
+    1. ประกาศ <code>function countCompletedLessons(prefix)</code><br/>
+    2. วนลูปทุก key ใน <code>localStorage</code> ด้วย <code>for (let i = 0; i &lt; localStorage.length; i++)</code><br/>
+    3. นับเฉพาะ key ที่ <code>.startsWith(\`\${prefix}_course_completed_\`)</code> และมีค่าเป็น <code>'true'</code>`
   },
   {
     id: "test_data_management",
@@ -343,7 +365,7 @@ function runSandboxCode() {
       terminal.innerHTML += `
         <div class="terminal-line text-muted">...................................................</div>
         <div class="terminal-line error">✕ <strong>ผลการรัน: ล้มเหลว (Failed)</strong></div>
-        <div class="terminal-line error">${err.message.replace(/\n/g, '<br/>')}</div>
+        <div class="terminal-line error">${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
         <div class="terminal-line error">1 failed (31ms)</div>
       `;
     }
