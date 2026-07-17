@@ -1,3 +1,4 @@
+(function() {
 // API Testing Interactive Coding Playground Data and Logic
 // Grounded in the /Users/supavit.cho/Git/Personal/My-Investment-Port/server/index.js Express API
 // and the real Playwright request-based suite at My-Investment-Port/tests/api-testing/.
@@ -1272,3 +1273,16 @@ function showGraduationMessage() {
 }
 
 // Run on window boot
+
+
+  // Expose the standalone-page contract (see shared/engine.js header comment) as real globals,
+  // and register into the shared registry so exam/index.html can load every track's LESSONS
+  // side-by-side without a duplicate top-level "const LESSONS" collision across <script> tags.
+  window.PREFIX = PREFIX;
+  window.TAB_WIDTH = TAB_WIDTH;
+  window.LESSONS = LESSONS;
+  window.runSandboxCode = runSandboxCode;
+  window.showGraduationMessage = showGraduationMessage;
+  window.QA_TRACKS = window.QA_TRACKS || {};
+  window.QA_TRACKS['api-testing'] = { id: 'api-testing', title: 'Playwright API Testing', folder: 'API-Testing', lessons: LESSONS };
+})();

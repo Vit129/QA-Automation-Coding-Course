@@ -1,3 +1,4 @@
+(function() {
 // Test Automation Framework Design Interactive Coding Playground Data and Logic
 // The DRY-helpers lesson is grounded in this very course's own real refactor from earlier
 // today (extracting shared/engine.js out of 6 near-duplicate course.js files, including the
@@ -698,3 +699,16 @@ function showGraduationMessage() {
   `;
   terminal.scrollTop = terminal.scrollHeight;
 }
+
+
+  // Expose the standalone-page contract (see shared/engine.js header comment) as real globals,
+  // and register into the shared registry so exam/index.html can load every track's LESSONS
+  // side-by-side without a duplicate top-level "const LESSONS" collision across <script> tags.
+  window.PREFIX = PREFIX;
+  window.TAB_WIDTH = TAB_WIDTH;
+  window.LESSONS = LESSONS;
+  window.runSandboxCode = runSandboxCode;
+  window.showGraduationMessage = showGraduationMessage;
+  window.QA_TRACKS = window.QA_TRACKS || {};
+  window.QA_TRACKS['framework-design'] = { id: 'framework-design', title: 'Test Automation Framework Design', folder: 'Framework-Design', lessons: LESSONS };
+})();

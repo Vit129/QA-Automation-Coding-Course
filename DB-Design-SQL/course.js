@@ -1,3 +1,4 @@
+(function() {
 // Database Design & SQL Interactive Coding Playground Data and Logic
 // Schema models the real Holdings domain from My-Investment-Port (ticker/broker/shares/avgCost/sector
 // fields all real — see src/pages/HoldingsPage.jsx, src/data/raw/webull_holdings.js). The tables
@@ -743,3 +744,16 @@ function showGraduationMessage() {
 }
 
 // Run on window boot
+
+
+  // Expose the standalone-page contract (see shared/engine.js header comment) as real globals,
+  // and register into the shared registry so exam/index.html can load every track's LESSONS
+  // side-by-side without a duplicate top-level "const LESSONS" collision across <script> tags.
+  window.PREFIX = PREFIX;
+  window.TAB_WIDTH = TAB_WIDTH;
+  window.LESSONS = LESSONS;
+  window.runSandboxCode = runSandboxCode;
+  window.showGraduationMessage = showGraduationMessage;
+  window.QA_TRACKS = window.QA_TRACKS || {};
+  window.QA_TRACKS['db-design-sql'] = { id: 'db-design-sql', title: 'Database Design & SQL', folder: 'DB-Design-SQL', lessons: LESSONS };
+})();

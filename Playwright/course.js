@@ -1,3 +1,4 @@
+(function() {
 // Playwright Interactive Coding Playground Data and Logic
 // Grounded in the /Users/supavit.cho/Git/Personal/My-Investment-Port/react_typescript_101/ codebase.
 
@@ -1392,3 +1393,16 @@ function showGraduationMessage() {
 }
 
 // Run on window boot
+
+
+  // Expose the standalone-page contract (see shared/engine.js header comment) as real globals,
+  // and register into the shared registry so exam/index.html can load every track's LESSONS
+  // side-by-side without a duplicate top-level "const LESSONS" collision across <script> tags.
+  window.PREFIX = PREFIX;
+  window.TAB_WIDTH = TAB_WIDTH;
+  window.LESSONS = LESSONS;
+  window.runSandboxCode = runSandboxCode;
+  window.showGraduationMessage = showGraduationMessage;
+  window.QA_TRACKS = window.QA_TRACKS || {};
+  window.QA_TRACKS['playwright'] = { id: 'playwright', title: 'Playwright UI Testing', folder: 'Playwright', lessons: LESSONS };
+})();

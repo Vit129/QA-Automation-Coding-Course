@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mixed Mock Exam — QA Automation Coding Course</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #080b11;
+      --bg-secondary: #111622;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --accent-blue: #3b82f6;
+      --accent-orange: #f97316;
+      --accent-emerald: #10b981;
+      --accent-gold: #eab308;
+      --accent-red: #ef4444;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 32px 20px 80px;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    a.back-link { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 24px; }
+    a.back-link:hover { color: var(--text-primary); }
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+    .subtitle { color: var(--text-secondary); margin-bottom: 32px; line-height: 1.6; }
+    .hidden { display: none !important; }
+    .panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .panel h2 { font-size: 1.15rem; margin-bottom: 16px; }
+    .track-checklist { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+    .track-check-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color); cursor: pointer; font-size: 0.92rem;
+    }
+    .track-check-item:hover { background: rgba(255,255,255,0.06); }
+    .track-check-count { margin-left: auto; color: var(--text-secondary); font-size: 0.8rem; }
+    .config-row { display: flex; gap: 20px; margin-bottom: 24px; flex-wrap: wrap; }
+    .config-field { display: flex; flex-direction: column; gap: 6px; }
+    .config-field label { font-size: 0.85rem; color: var(--text-secondary); }
+    .config-field input {
+      background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px;
+      color: var(--text-primary); padding: 8px 12px; width: 100px; font-size: 0.95rem;
+    }
+    .btn {
+      background: var(--accent-blue); color: white; border: none; border-radius: 10px;
+      padding: 12px 24px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-secondary { background: rgba(255,255,255,0.08); }
+    .btn-danger { background: var(--accent-red); }
+
+    .honesty-note {
+      background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.3);
+      border-radius: 12px; padding: 16px 20px; font-size: 0.88rem; line-height: 1.6;
+      color: var(--text-secondary); margin-bottom: 20px;
+    }
+    .honesty-note strong { color: var(--accent-gold); }
+
+    .exam-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; gap: 16px; flex-wrap: wrap;
+    }
+    #exam-timer {
+      font-family: 'SF Mono', Monaco, monospace; font-size: 1.4rem; font-weight: 700;
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+      padding: 6px 16px; border-radius: 10px;
+    }
+    .exam-timer-low { color: var(--accent-red); border-color: var(--accent-red); }
+    #exam-progress-label { color: var(--text-secondary); font-size: 0.9rem; }
+
+    #exam-question-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .exam-nav-dot {
+      width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border-color);
+      background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 0.85rem;
+    }
+    .exam-nav-active { border-color: var(--accent-blue); color: var(--text-primary); }
+    .exam-nav-answered { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-emerald); color: var(--accent-emerald); }
+
+    #exam-question-badge { color: var(--accent-blue); font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; }
+    #exam-question-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 14px; }
+    #exam-question-task { line-height: 1.7; margin-bottom: 16px; font-size: 0.95rem; }
+    #exam-question-task code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; }
+
+    #exam-answer-textarea {
+      width: 100%; min-height: 220px; background: #050709; color: #e5e7eb;
+      border: 1px solid var(--border-color); border-radius: 10px; padding: 14px;
+      font-family: 'SF Mono', Monaco, monospace; font-size: 0.88rem; line-height: 1.6;
+      resize: vertical; margin-bottom: 16px;
+    }
+    .exam-nav-buttons { display: flex; justify-content: space-between; gap: 10px; }
+
+    .exam-score-big { font-size: 3rem; font-weight: 800; text-align: center; }
+    .exam-score-percent { text-align: center; color: var(--text-secondary); margin-bottom: 8px; }
+    .exam-timeup-note { text-align: center; color: var(--accent-orange); font-size: 0.9rem; margin-top: 8px; }
+
+    .exam-result-item {
+      border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
+    }
+    .exam-result-pass { border-left: 3px solid var(--accent-emerald); }
+    .exam-result-fail { border-left: 3px solid var(--accent-red); }
+    .exam-result-header {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;
+    }
+    .exam-result-status { margin-left: auto; font-weight: 700; }
+    .exam-result-pass .exam-result-status { color: var(--accent-emerald); }
+    .exam-result-fail .exam-result-status { color: var(--accent-red); }
+    .exam-result-title { font-weight: 600; margin-bottom: 8px; }
+    .exam-result-error {
+      background: rgba(239, 68, 68, 0.08); border-radius: 8px; padding: 10px 12px;
+      font-size: 0.85rem; white-space: pre-wrap; margin-bottom: 8px; color: #fca5a5;
+    }
+    .exam-result-solution pre {
+      background: #050709; border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+      font-size: 0.82rem; margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">← กลับหน้าหลัก</a>
+    <h1>🎯 Mixed Mock Exam</h1>
+    <p class="subtitle">สุ่มโจทย์ผสมจากทุกหมวดเนื้อหา จับเวลาจริง ให้บรรยากาศใกล้เคียงการทดสอบจริงมากขึ้น</p>
+
+    <div class="honesty-note">
+      <strong>ตรงไปตรงมาเรื่องที่ยังไม่ปิด:</strong> โหมดสอบจับเวลานี้ช่วยให้ฝึกภายใต้ความกดดันเรื่องเวลาได้ แต่ยังไม่เท่ากับการสัมภาษณ์งานจริงหรือแบบทดสอบทักษะขององค์กรจริง — คลังโจทย์นี้เป็นแบบฝึกหัดที่ออกแบบมาให้ครอบคลุมหัวข้อ ไม่ใช่ชุดข้อสอบมาตรฐานจากที่ใด และยังไม่ครอบคลุมทุกซีนาริโอที่งานจริงจะเจอ ยังต้องฝึกเขียนโค้ดกับโปรเจกต์จริง/สัมภาษณ์ mock เพิ่มก่อนมั่นใจว่าพร้อมสมัครงาน QA Automation จริง
+    </div>
+
+    <!-- SETUP SCREEN -->
+    <div id="exam-setup-screen" class="panel">
+      <h2>เลือกหมวดเนื้อหา (แยกตามประเภท)</h2>
+      <div id="track-checklist" class="track-checklist"></div>
+
+      <div class="config-row">
+        <div class="config-field">
+          <label for="question-count">จำนวนข้อ</label>
+          <input type="number" id="question-count" value="20" min="1" max="137">
+        </div>
+        <div class="config-field">
+          <label for="time-limit">เวลา (นาที)</label>
+          <input type="number" id="time-limit" value="30" min="1" max="180">
+        </div>
+      </div>
+
+      <button id="start-exam-btn" class="btn">เริ่มทำข้อสอบ →</button>
+    </div>
+
+    <!-- EXAM RUNNER SCREEN -->
+    <div id="exam-runner-screen" class="panel hidden">
+      <div class="exam-topbar">
+        <span id="exam-timer">30:00</span>
+        <span id="exam-progress-label">ข้อ 1 / 20</span>
+      </div>
+      <div id="exam-question-nav"></div>
+
+      <div id="exam-question-badge"></div>
+      <div id="exam-question-title"></div>
+      <div id="exam-question-task"></div>
+      <textarea id="exam-answer-textarea" spellcheck="false"></textarea>
+
+      <div class="exam-nav-buttons">
+        <div style="display:flex; gap:10px;">
+          <button id="exam-prev-btn" class="btn btn-secondary" onclick="goPrev()">← ข้อก่อนหน้า</button>
+          <button id="exam-next-btn" class="btn btn-secondary" onclick="goNext()">ข้อถัดไป →</button>
+        </div>
+        <button class="btn btn-danger" onclick="confirmSubmitExam()">ส่งคำตอบ</button>
+      </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="exam-results-screen" class="panel hidden">
+      <div id="exam-results-summary"></div>
+      <div style="margin: 20px 0;">
+        <button class="btn" onclick="resetExam()">ทำข้อสอบชุดใหม่</button>
+      </div>
+      <div id="exam-results-breakdown"></div>
+    </div>
+  </div>
+
+  <!-- Every track's course.js, loaded before exam-engine.js — each registers itself into
+       window.QA_TRACKS (see the IIFE wrapper + registry line at the bottom of each course.js).
+       Order doesn't matter for correctness (each track is its own closure now), kept
+       alphabetical-ish to match the hub page's card order. -->
+  <script src="../Playwright/course.js"></script>
+  <script src="../API-Testing/course.js"></script>
+  <script src="../Robot-Framework/course.js"></script>
+  <script src="../Performance-Testing/course.js"></script>
+  <script src="../DB-Design-SQL/course.js"></script>
+  <script src="../CLI-Essentials/course.js"></script>
+  <script src="../Security-Testing/course.js"></script>
+  <script src="../Accessibility-Testing/course.js"></script>
+  <script src="../Visual-Regression-Testing/course.js"></script>
+  <script src="../CI-CD-Pipeline/course.js"></script>
+  <script src="../Framework-Design/course.js"></script>
+  <!-- DB-Design-SQL's validate() runs real SQL via AlaSQL — same CDN version as its standalone page -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js"></script>
+  <script src="../shared/exam-engine.js"></script>
+</body>
+</html>

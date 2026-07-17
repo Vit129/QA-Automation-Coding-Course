@@ -1,3 +1,4 @@
+(function() {
 // Visual Regression Testing Interactive Coding Playground Data and Logic
 // Grounded in My-Investment-Port's real live-price display (QuickBuyWatchlist.jsx's
 // currentPrice) for the masking lesson - a real dynamic-content source that would false-
@@ -433,3 +434,16 @@ function showGraduationMessage() {
   `;
   terminal.scrollTop = terminal.scrollHeight;
 }
+
+
+  // Expose the standalone-page contract (see shared/engine.js header comment) as real globals,
+  // and register into the shared registry so exam/index.html can load every track's LESSONS
+  // side-by-side without a duplicate top-level "const LESSONS" collision across <script> tags.
+  window.PREFIX = PREFIX;
+  window.TAB_WIDTH = TAB_WIDTH;
+  window.LESSONS = LESSONS;
+  window.runSandboxCode = runSandboxCode;
+  window.showGraduationMessage = showGraduationMessage;
+  window.QA_TRACKS = window.QA_TRACKS || {};
+  window.QA_TRACKS['visual-regression-testing'] = { id: 'visual-regression-testing', title: 'Visual Regression Testing', folder: 'Visual-Regression-Testing', lessons: LESSONS };
+})();

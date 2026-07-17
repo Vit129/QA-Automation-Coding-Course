@@ -1,3 +1,4 @@
+(function() {
 // Accessibility (a11y) Testing Interactive Coding Playground Data and Logic
 // Grounded in real aria-label/alt/heading usage found in My-Investment-Port's
 // src/features/aiInvestment/ (InvestmentTimeline.jsx, AiTeamTab.jsx, QuickBuyWatchlist.jsx).
@@ -541,3 +542,16 @@ function showGraduationMessage() {
   `;
   terminal.scrollTop = terminal.scrollHeight;
 }
+
+
+  // Expose the standalone-page contract (see shared/engine.js header comment) as real globals,
+  // and register into the shared registry so exam/index.html can load every track's LESSONS
+  // side-by-side without a duplicate top-level "const LESSONS" collision across <script> tags.
+  window.PREFIX = PREFIX;
+  window.TAB_WIDTH = TAB_WIDTH;
+  window.LESSONS = LESSONS;
+  window.runSandboxCode = runSandboxCode;
+  window.showGraduationMessage = showGraduationMessage;
+  window.QA_TRACKS = window.QA_TRACKS || {};
+  window.QA_TRACKS['accessibility-testing'] = { id: 'accessibility-testing', title: 'Accessibility (a11y) Testing', folder: 'Accessibility-Testing', lessons: LESSONS };
+})();
