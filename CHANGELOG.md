@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.5.1] - 2026-07-21
+
+### Added
+- Milestone messages + completion certificates ([`7db2050`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/7db2050c6c5f745df6d38d546464007c84168a9b))
+
 ## [0.5.0] - 2026-07-21
 
 ### Added
