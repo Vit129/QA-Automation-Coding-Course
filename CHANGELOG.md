@@ -3,7 +3,7 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [Unreleased]
+## [0.5.0] - 2026-07-21
 
 ### Added
 - Add rate-limit and flaky-test retry lessons to all 3 tracks ([`c877bca`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/c877bca4597ba821321b732c1510c6a3580f9f67))
@@ -20,6 +20,7 @@ All notable changes to QA-Automation-Coding-Course are documented here. The form
 - Deepen DB Design & Performance Testing tracks per user request ([`d8c81ff`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/d8c81ffe63a7a84f3c14ec33f7242b62a881475b))
 - Add Security, Accessibility, Visual Regression, CI/CD, and Framework Design tracks ([`92cf6a0`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/92cf6a0e516dd1c574d94703964088e85f03dbd3))
 - Add mixed timed mock exam, selectable by content track ([`1731cf8`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/1731cf8ddfabc1e151e5db5e486f091e9a4f7c5e))
+- Dialog close button repositioned + code editor autocomplete ([`cca0de1`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/cca0de16407da6d14c57a6767abcc203be0a5837))
 
 ### Changed
 - Extract shared sandbox engine, add 10 new CLI-Essentials lessons ([`2b8c030`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/2b8c030dc69fdf68caf0fd5ca32dc9e3ec874d31))
