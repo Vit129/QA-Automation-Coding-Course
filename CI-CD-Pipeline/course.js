@@ -600,6 +600,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการตั้งค่า Trigger, Concurrency, Caching, Matrix Strategy และ Advisory Job ในงาน QA จริง!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('CI/CD Pipeline');
 }
 
 

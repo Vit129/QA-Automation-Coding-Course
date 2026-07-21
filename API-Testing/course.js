@@ -1270,6 +1270,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการนำเอาเทคนิค Status Code Assertion, Negative Testing, Auth Headers และ Schema Validation ไปทดสอบ Backend API จริงในโปรเจค My-Investment-Port (server/index.js)!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Playwright API Testing');
 }
 
 // Run on window boot

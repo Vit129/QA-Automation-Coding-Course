@@ -433,6 +433,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการใช้ toHaveScreenshot(), Masking, Responsive Check, Full Page และ Threshold Tuning ในงาน QA จริง!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Visual Regression Testing');
 }
 
 

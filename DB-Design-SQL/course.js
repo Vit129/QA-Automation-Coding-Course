@@ -741,6 +741,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการนำเอาเทคนิค SELECT/WHERE, JOIN, GROUP BY, PRIMARY KEY และ Data Integrity Check ไปตรวจสอบข้อมูลจริงในโปรเจคของคุณเอง!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Database Design & SQL');
 }
 
 // Run on window boot

@@ -994,8 +994,27 @@
 
       if (isComplete && !alreadyCelebrated) {
         fireConfetti();
+        showCourseCertificate(totalCompleted, totalLessons, badges);
         localStorage.setItem('qa_course_completion_celebrated', 'true');
       }
+    }
+
+    // Big "final boss" certificate shown once when every track hits 100%
+    function showCourseCertificate(totalCompleted, totalLessons, badges) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+      overlay.innerHTML = `
+        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:16px;padding:40px 48px;max-width:480px;text-align:center;border:4px double #eab308;box-shadow:0 30px 80px rgba(0,0,0,.5);">
+          <div style="font-size:56px;">🎓</div>
+          <h2 style="margin:8px 0 4px;font-size:24px;">ใบประกาศจบคอร์ส</h2>
+          <p style="margin:0 0 20px;font-size:13px;opacity:.7;">QA Automation Coding Course · Certificate of Completion</p>
+          <p style="font-size:15px;margin:0 0 20px;line-height:1.6;">เรียนจบครบทั้ง ${TRACKS.length} แทร็ก<br/>${totalCompleted}/${totalLessons} บทเรียน (${totalCompleted * XP_PER_LESSON} XP)<br/>${new Date().toLocaleDateString('th-TH')}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:24px;">${badges.map(b => `<span style="background:rgba(255,255,255,.1);border:1px solid #eab308;border-radius:20px;padding:4px 12px;font-size:12px;">${b}</span>`).join('')}</div>
+          <button id="course-cert-close" style="background:#eab308;color:#1a1a2e;border:none;border-radius:6px;padding:12px 32px;font-weight:700;cursor:pointer;">🏆 รับใบประกาศ!</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      overlay.querySelector('#course-cert-close').onclick = () => overlay.remove();
     }
 
     // Toast any badge(s) earned since the last visit (de-duped via localStorage)

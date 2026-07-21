@@ -755,6 +755,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วกับคำสั่งพื้นฐานที่ QA ใช้บ่อยแต่ลืมง่าย — git stash, git hooks, Vim survival, และ Unix pipe/grep!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Git, Vim & Unix Cheat Sheet');
 }
 
 // Run on window boot

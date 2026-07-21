@@ -1069,6 +1069,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณมีความคุ้นเคยอย่างลึกซึ้งในการเขียนโครงสร้างไฟล์ Settings, Variables, Keywords, การควบคุม Native macOS UI ผ่าน KouenUILibrary และ OperatingSystem/Process ของ Robot Framework เรียบร้อยแล้ว!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Robot Framework Native UI Testing');
 }
 
 // Run on window boot

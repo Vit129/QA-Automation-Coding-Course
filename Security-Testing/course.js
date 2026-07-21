@@ -519,6 +519,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการตรวจสอบ Auth Bypass, Injection Awareness, XSS Prevention, Sensitive Data Exposure และ Security Headers ในงาน QA จริง!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Security Testing');
 }
 
 

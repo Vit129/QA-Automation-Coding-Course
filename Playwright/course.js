@@ -1390,6 +1390,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการนำเอาเทคนิค Page Object, API Mocking, React components testing และกลยุทธ์การตรวจจับบั๊กขั้นสูงไปใช้งานจริงในโปรเจค My-Investment-Port!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Playwright UI Testing');
 }
 
 // Run on window boot

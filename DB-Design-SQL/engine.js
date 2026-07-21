@@ -7,6 +7,8 @@
 //   function showGraduationMessage() // track-branded completion message
 // Also requires shared/editor-autocomplete.js loaded in the same page (calls into
 // updateEditorAutocomplete/hideEditorAutocomplete/acceptEditorAutocomplete).
+// Also requires shared/gamification.js loaded in the same page (calls into
+// checkMilestones/showTrackCertificate).
 
 let currentLessonIndex = 0;
 
@@ -302,7 +304,10 @@ function setLessonCompleted(lessonId) {
   localStorage.setItem(`${PREFIX}_course_completed_${lessonId}`, 'true');
   renderLessonList();
   updateProgressBar();
-  if (!alreadyDone) showXPToast();
+  if (!alreadyDone) {
+    showXPToast();
+    checkMilestones();
+  }
 }
 
 // Show a floating "+10 XP" toast on first-time lesson completion

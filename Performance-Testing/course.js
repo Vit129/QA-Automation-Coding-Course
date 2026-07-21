@@ -1001,6 +1001,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการนำเอาเทคนิค VUs, Thresholds, Stages และการออกแบบ check() ให้รู้จัก Rate Limiter จริง ไปทดสอบ Load ของ Backend จริงในโปรเจค My-Investment-Port (server/index.js)!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Performance Testing (k6)');
 }
 
 // Run on window boot

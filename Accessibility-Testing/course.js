@@ -541,6 +541,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการตรวจสอบ axe-core scan, Alt Text, ARIA Label, Keyboard Navigation และ Semantic Heading ในงาน QA จริง!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Accessibility (a11y) Testing');
 }
 
 

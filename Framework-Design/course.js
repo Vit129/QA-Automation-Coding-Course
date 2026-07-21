@@ -698,6 +698,7 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพร้อมแล้วในการออกแบบ Config, Custom Fixture, โครงสร้างโฟลเดอร์, DRY Helper, Test Data Management และ Reporting ในงาน QA จริง!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
+  showTrackCertificate('Test Automation Framework Design');
 }
 
 

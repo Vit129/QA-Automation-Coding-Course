@@ -9,7 +9,7 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRACKS=(API-Testing Playwright Robot-Framework Performance-Testing DB-Design-SQL CLI-Essentials Security-Testing Accessibility-Testing Visual-Regression-Testing CI-CD-Pipeline Framework-Design)
-FILES=(engine.js editor-autocomplete.js)
+FILES=(engine.js editor-autocomplete.js gamification.js)
 
 for track in "${TRACKS[@]}"; do
   for file in "${FILES[@]}"; do
