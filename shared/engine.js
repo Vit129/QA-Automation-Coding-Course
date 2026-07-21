@@ -5,6 +5,8 @@
 //   const LESSONS = [...];     // this track's lesson array
 //   function runSandboxCode()  // track-branded terminal output + validate() call
 //   function showGraduationMessage() // track-branded completion message
+// Also requires shared/editor-autocomplete.js loaded in the same page (calls into
+// updateEditorAutocomplete/hideEditorAutocomplete/acceptEditorAutocomplete).
 
 let currentLessonIndex = 0;
 
@@ -34,16 +36,69 @@ function initApp() {
   const textarea = document.getElementById('editor-textarea');
   if (textarea) {
     textarea.addEventListener('keydown', handleTextareaKeydown);
-    textarea.addEventListener('input', updateGutter);
+    textarea.addEventListener('input', () => {
+      updateGutter();
+      updateEditorAutocomplete();
+    });
     textarea.addEventListener('scroll', syncGutterScroll);
   }
+}
+
+const AUTO_CLOSE_PAIRS = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
+
+// Auto-close brackets/quotes: typing an opener inserts its closer next to the cursor
+// (or wraps the current selection if there is one). Typing a closer (or the same quote
+// char again) right before that same char already there skips over it instead of
+// inserting a duplicate.
+function handleAutoClosePair(textarea, key) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const closer = AUTO_CLOSE_PAIRS[key];
+
+  if (closer && start !== end) {
+    const selected = textarea.value.slice(start, end);
+    textarea.value = textarea.value.slice(0, start) + key + selected + closer + textarea.value.slice(end);
+    textarea.selectionStart = start + 1;
+    textarea.selectionEnd = end + 1;
+    updateGutter();
+    updateEditorAutocomplete();
+    return true;
+  }
+
+  const isClosingChar = Object.values(AUTO_CLOSE_PAIRS).includes(key);
+  if (isClosingChar && start === end && textarea.value[start] === key) {
+    textarea.selectionStart = textarea.selectionEnd = start + 1;
+    updateEditorAutocomplete();
+    return true;
+  }
+
+  if (closer && start === end) {
+    textarea.value = textarea.value.slice(0, start) + key + closer + textarea.value.slice(end);
+    textarea.selectionStart = textarea.selectionEnd = start + 1;
+    updateGutter();
+    updateEditorAutocomplete();
+    return true;
+  }
+
+  return false;
 }
 
 // Keydown handler to prevent tab key escaping the editor
 function handleTextareaKeydown(e) {
   const textarea = e.target;
+
+  if (AUTO_CLOSE_PAIRS[e.key] || Object.values(AUTO_CLOSE_PAIRS).includes(e.key)) {
+    if (handleAutoClosePair(textarea, e.key)) {
+      e.preventDefault();
+      return;
+    }
+  }
+
   if (e.key === 'Tab') {
     e.preventDefault();
+
+    if (acceptEditorAutocomplete()) return;
+
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const indent = ' '.repeat(TAB_WIDTH);
@@ -53,6 +108,10 @@ function handleTextareaKeydown(e) {
     // Move cursor
     textarea.selectionStart = textarea.selectionEnd = start + TAB_WIDTH;
     updateGutter();
+  }
+
+  if (e.key === 'Escape') {
+    hideEditorAutocomplete();
   }
 
   // CMD/Ctrl + Enter shortcut to run tests
@@ -66,6 +125,7 @@ function handleTextareaKeydown(e) {
 function syncGutterScroll(e) {
   const gutter = document.getElementById('editor-gutter');
   if (gutter) gutter.scrollTop = e.target.scrollTop;
+  hideEditorAutocomplete();
 }
 
 // Render line numbers in the gutter
@@ -153,6 +213,7 @@ function loadLesson(idx) {
   if (textarea) {
     textarea.value = savedCode !== null ? savedCode : lesson.template;
     updateGutter();
+    hideEditorAutocomplete();
   }
 
   // Reset Terminal output

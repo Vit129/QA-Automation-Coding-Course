@@ -114,11 +114,11 @@
 
         <!-- Dialog Overlay Modal (for Hint/Solution) -->
         <div class="lesson-overlay" id="dialog-overlay">
-          <div class="overlay-card" style="max-width: 500px; text-align: left;">
+          <div class="overlay-card" style="max-width: 500px; text-align: left; position: relative;">
+            <button class="dialog-close-btn" onclick="closeDialog()" aria-label="ปิดหน้าต่าง" style="position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-secondary); font-size: 1.1rem; line-height: 1; cursor: pointer;">✕</button>
             <h2 class="overlay-title" id="dialog-title" style="color: var(--text-primary); margin-bottom: 16px; font-size: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">หัวข้อ</h2>
             <div id="dialog-content" style="color: #d1d5db; font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px; white-space: pre-line; max-height: 300px; overflow-y: auto; font-family: var(--font-mono); background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">เนื้อหา...</div>
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-              <button class="btn btn-secondary" onclick="closeDialog()">ปิดหน้าต่าง</button>
               <button class="btn btn-primary" id="dialog-action-btn" style="display: none;">ใช้เฉลยใน Editor</button>
             </div>
           </div>
@@ -128,6 +128,7 @@
   </main>
 
   <script src="course.js"></script>
+  <script src="editor-autocomplete.js"></script>
   <script src="engine.js"></script>
 </body>
 </html>
