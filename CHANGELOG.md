@@ -3,6 +3,17 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.6.1] - 2026-07-22
+
+### Added
+- Auto-derive lesson totals from each track's course.js instead of hardcoding ([`8e464b9`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/8e464b90674b5d0fd2c04e7e680406beceaa7e46))
+- Make course site responsive for mobile and tablet screens ([`8fa2ab4`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/8fa2ab441952d62d83fb91b8fef25b9b9f9ff3a9))
+
+### Fixed
+- Untrack .claude/worktrees gitlink breaking GitHub Pages build check ([`ceb36a4`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/ceb36a490890f1303e633e631a2b279415652629))
+- Update exam question-count max to match actual lesson pool size ([`b9249c1`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/b9249c1c792721a5a50a9e727c50d9d395654078))
+- Sync homepage TRACKS lesson totals and 11-track banner to actual 12 tracks/164 lessons ([`0b75bff`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/0b75bffee8836fe3f88fa1053a7b7dac99b26620))
+
 ## [0.6.0] - 2026-07-22
 
 ### Added
