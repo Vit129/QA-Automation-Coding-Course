@@ -132,6 +132,22 @@
       background: #050709; border-radius: 8px; padding: 10px 12px; overflow-x: auto;
       font-size: 0.82rem; margin-top: 6px;
     }
+
+    @media (max-width: 480px) {
+      body { padding: 20px 14px 60px; }
+      .panel { padding: 18px; }
+      /* font-size below 16px makes iOS Safari auto-zoom the page on focus */
+      .config-field input, #exam-answer-textarea {
+        font-size: 16px;
+      }
+      .exam-nav-buttons {
+        flex-wrap: wrap;
+      }
+      .exam-nav-buttons .btn {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+      }
+    }
   </style>
 </head>
 <body>

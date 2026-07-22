@@ -271,7 +271,7 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: 550px 1fr;
-  height: calc(100vh - 70px);
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -662,6 +662,92 @@ body {
 @media (max-width: 768px) {
   .sidebar {
     width: 280px;
+  }
+  .main-header {
+    padding: 0 16px;
+  }
+  .panel-body {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 85vw;
+    max-width: 300px;
+  }
+  .main-header {
+    height: auto;
+    min-height: 60px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  #current-lesson-title {
+    font-size: 1rem;
+    max-width: 60vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .header-actions .btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+  .panel-body {
+    padding: 16px;
+  }
+  .editor-header {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  /* .editor-tab/.editor-tabs default to height:100% of .editor-header - fine when
+     the header is a fixed 48px, but once the header wraps to height:auto that 100%
+     has no definite base to resolve against, so the browser under-sizes the header
+     box and the wrapped 2nd row (editor-actions) renders outside it, painted over
+     by .editor-container right after. Break the % dependency on mobile. */
+  .editor-tabs,
+  .editor-tab {
+    height: auto;
+  }
+  .editor-tab {
+    padding: 10px 16px;
+  }
+  .editor-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .editor-actions .btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+  .menu-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .editor-textarea {
+    font-size: 16px;
+  }
+  .terminal-panel {
+    height: 160px;
+  }
+  .content-text table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .overlay-card {
+    padding: 24px;
+    max-width: 90vw;
   }
 }
 
