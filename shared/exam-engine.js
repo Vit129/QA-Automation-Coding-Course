@@ -52,6 +52,12 @@ function initExamPage() {
   renderTrackChecklist();
   const startBtn = document.getElementById('start-exam-btn');
   if (startBtn) startBtn.addEventListener('click', startExam);
+
+  const countInput = document.getElementById('question-count');
+  if (countInput) {
+    const poolSize = Object.values(window.QA_TRACKS).reduce((sum, t) => sum + t.lessons.length, 0);
+    countInput.max = String(poolSize);
+  }
 }
 
 function renderTrackChecklist() {
