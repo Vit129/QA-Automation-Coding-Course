@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.6.0] - 2026-07-22
+
+### Added
+- Add Normal Forms lessons to DB track and new Data Structures & Algorithms course ([`bed9a88`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/bed9a88a5b218837e7cb50895f7996027ac4b478))
+
 ## [0.5.1] - 2026-07-21
 
 ### Added
