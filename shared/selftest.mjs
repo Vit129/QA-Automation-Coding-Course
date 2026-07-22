@@ -31,6 +31,7 @@ const TRACKS = [
   'Visual-Regression-Testing',
   'CI-CD-Pipeline',
   'Framework-Design',
+  'Data-Structures-Algorithms',
 ];
 
 function extractLessons(src, sandbox) {

@@ -3,7 +3,9 @@
   "private": true,
   "description": "Dev-only tooling for maintaining this course (self-test harness). End users never need this - open index.html directly, no install required.",
   "scripts": {
-    "test": "node shared/selftest.mjs"
+    "test": "node shared/selftest.mjs && node DB-Design-SQL/test-normal-forms.mjs && node Data-Structures-Algorithms/test-complexity-lessons.mjs",
+    "release": "bash scripts/release.sh",
+    "ship": "bash scripts/ship.sh"
   },
   "devDependencies": {
     "alasql": "^4.6.4"

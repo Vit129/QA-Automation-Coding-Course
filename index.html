@@ -184,6 +184,10 @@
       background: var(--accent-lime);
     }
 
+    .card-dsa:hover::before {
+      background: var(--accent-emerald);
+    }
+
     .course-icon {
       font-size: 3rem;
       margin-bottom: 24px;
@@ -342,6 +346,16 @@
       box-shadow: 0 0 16px rgba(132, 204, 22, 0.4);
     }
 
+    .btn-dsa {
+      background-color: var(--accent-emerald);
+      color: white;
+    }
+
+    .btn-dsa:hover {
+      background-color: #059669;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+    }
+
     footer {
       font-size: 0.8rem;
       color: #4b5563;
@@ -492,6 +506,7 @@
     .card-visual .track-progress-fill { background-color: var(--accent-pink); }
     .card-cicd .track-progress-fill { background-color: var(--accent-cyan); }
     .card-framework .track-progress-fill { background-color: var(--accent-lime); }
+    .card-dsa .track-progress-fill { background-color: var(--accent-emerald); }
 
     .track-progress-text {
       font-size: 0.75rem;
@@ -916,6 +931,26 @@
         </div>
         <a href="./Framework-Design/index.html" class="btn btn-framework">เข้าสู่บทเรียน →</a>
       </div>
+
+      <!-- Data Structures & Algorithms for QA Course Card -->
+      <div class="course-card card-dsa" id="card-dsa">
+        <span class="course-icon">🧩</span>
+        <h2 class="course-title">Data Structures & Algorithms for QA</h2>
+        <p class="course-desc">
+          เริ่มจากมุมมองงาน QA (ทำไม test suite ถึงช้าลงเมื่อข้อมูลโต) แล้วขยายไปเรียน Big-O, Hash Table, Stack, Queue, Sorting (Merge Sort), Binary Search, Recursion, Tree, Graph (DFS/BFS), Heap และ Dynamic Programming แบบ CS พื้นฐานเต็มรูปแบบ
+        </p>
+        <div class="tags">
+          <span class="tag">Big-O</span>
+          <span class="tag">Hash Table</span>
+          <span class="tag">Graph</span>
+          <span class="tag">22 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-dsa">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/22 บทเรียน (0%)</span>
+        </div>
+        <a href="./Data-Structures-Algorithms/index.html" class="btn btn-dsa">เข้าสู่บทเรียน →</a>
+      </div>
     </div>
 
     <footer>
@@ -936,6 +971,7 @@
       { key: 'visual', prefix: 'visual', total: 5, label: 'Visual Regression Testing' },
       { key: 'cicd', prefix: 'cicd', total: 7, label: 'CI/CD Pipeline' },
       { key: 'framework', prefix: 'fwk', total: 6, label: 'Test Automation Framework Design' },
+      { key: 'dsa', prefix: 'dsa', total: 22, label: 'Data Structures & Algorithms for QA' },
     ];
     const XP_PER_LESSON = 10;
 

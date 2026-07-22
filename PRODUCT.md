@@ -12,7 +12,7 @@ Self-learners studying QA automation (Playwright, Robot Framework, API/performan
 - No single place covering the full QA automation stack (E2E, API, perf, DB, security, a11y, visual, CI/CD, framework design)
 
 ## Core Features
-- 11 tracks: Playwright, Robot Framework, API Testing, Performance Testing (k6), DB Design/SQL (AlaSQL in-browser), CLI Essentials, Security Testing, Accessibility Testing (axe-core), Visual Regression Testing, CI/CD Pipeline (GitHub Actions YAML), Framework Design
+- 12 tracks: Playwright, Robot Framework, API Testing, Performance Testing (k6), DB Design/SQL (AlaSQL in-browser), CLI Essentials, Security Testing, Accessibility Testing (axe-core), Visual Regression Testing, CI/CD Pipeline (GitHub Actions YAML), Framework Design, Data Structures & Algorithms for QA
 - Per-lesson flow: theory → code template ("WRITE YOUR CODE HERE") → in-browser validation → hint → solution
 - Progress saved to `localStorage`, no account/backend needed
 - Mixed exam mode (`exam/`)

@@ -643,6 +643,339 @@ CREATE TABLE test_run_logs (id NUMBER PRIMARY KEY, envId NUMBER, result STRING, 
     2. สร้างตาราง <code>suites</code> ด้วยคอลัมน์ <code>id</code> (NUMBER PRIMARY KEY), <code>name</code> (STRING)<br/>
     3. สร้างตาราง <code>test_runs</code> ด้วยคอลัมน์ <code>id</code> (NUMBER PRIMARY KEY), <code>testerEmail</code> (STRING), <code>suiteId</code> (NUMBER), <code>status</code> (STRING) พร้อม <code>FOREIGN KEY (testerEmail) REFERENCES testers(email)</code> และ <code>FOREIGN KEY (suiteId) REFERENCES suites(id)</code><br/>
     4. เพิ่มแถวตัวอย่าง: <code>testers ('jane@test.com','Jane')</code>, <code>suites (1,'Login')</code>, <code>test_runs (1,'jane@test.com',1,'PASS')</code>`
+  },
+  {
+    id: "functional_dependency",
+    meta: "ขั้นสูง 3",
+    title: "Functional Dependency: รากฐานของ Normal Form (A → B)",
+    template: `-- ตาราง test_runs_flat มีคอลัมน์: testerEmail, testerName, suiteName, status
+-- Functional Dependency (FD) เขียนแทนด้วย A → B แปลว่า "รู้ค่า A แล้วต้องรู้ค่า B ได้เสมอ ไม่มีทางเป็นอย่างอื่น"
+-- ทุกกฎของ Normal Form (1NF ถึง BCNF) ที่จะเรียนต่อจากบทนี้ ล้วนนิยามด้วยภาษา FD ทั้งสิ้น
+-- 1. จงพิสูจน์ว่า testerEmail → testerName เป็นจริงในข้อมูลชุดนี้
+--    โดยหา testerEmail ที่มี testerName มากกว่า 1 ชื่อ (ถ้าพบแม้แถวเดียว แปลว่า FD ถูกละเมิด)
+--    ตั้งชื่อคอลัมน์ผลลัพธ์ nameCount
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการพิสูจน์ Functional Dependency...");
+      try { alasql('DROP TABLE IF EXISTS test_runs_flat'); } catch (e) {}
+      alasql('CREATE TABLE test_runs_flat (testerEmail STRING, testerName STRING, suiteName STRING, status STRING)');
+      alasql(`INSERT INTO test_runs_flat (testerEmail, testerName, suiteName, status) VALUES
+        ('jane@test.com','Jane','Login','PASS'),
+        ('jane@test.com','Jane','Login','FAIL'),
+        ('jane@test.com','Jane','Checkout','PASS'),
+        ('bob@test.com','Bob','Checkout','PASS')`);
+
+      const cleanResult = runQuery(code);
+      if (!Array.isArray(cleanResult)) {
+        throw new Error("คำสั่งนี้ต้องเป็น SELECT ที่คืนค่าเป็นแถวข้อมูล (คืนค่าว่างเปล่าได้ถ้าไม่พบการละเมิด)\nตัวอย่าง: SELECT testerEmail, COUNT(DISTINCT testerName) AS nameCount FROM test_runs_flat GROUP BY testerEmail HAVING COUNT(DISTINCT testerName) > 1;");
+      }
+      if (cleanResult.length !== 0) {
+        throw new Error(`ข้อมูลชุดนี้ testerEmail → testerName เป็นจริงเสมอ (ไม่มีการละเมิด) แต่ query คืนค่ามา ${cleanResult.length} แถว: ${JSON.stringify(cleanResult)} — ตรวจสอบเงื่อนไข HAVING COUNT(DISTINCT testerName) > 1 อีกครั้ง`);
+      }
+
+      // Inject a genuine violation and re-run the SAME query — a hardcoded/unconditional
+      // filter that just happens to return 0 rows on clean data must fail this second check.
+      alasql("INSERT INTO test_runs_flat (testerEmail, testerName, suiteName, status) VALUES ('jane@test.com','J. Doe','Login','PASS')");
+      const violatingResult = runQuery(code);
+      if (!Array.isArray(violatingResult) || violatingResult.length !== 1) {
+        throw new Error(`หลังเพิ่มแถวที่ทำให้ jane@test.com มี testerName 2 ชื่อ (Jane, J. Doe) query ต้องคืนค่า 1 แถวที่จับการละเมิดนี้ได้ แต่ได้ ${Array.isArray(violatingResult) ? violatingResult.length : 'ไม่ใช่ array'} แถว — ตรวจสอบว่า query ใช้ GROUP BY + HAVING COUNT(DISTINCT testerName) > 1 จริง ไม่ใช่แค่เขียนเงื่อนไขคงที่ที่บังเอิญคืนค่าว่างเปล่าตอนไม่มีปัญหา`);
+      }
+      const violatingRow = violatingResult[0];
+      if (violatingRow.testerEmail !== 'jane@test.com' || Number(violatingRow.nameCount) !== 2) {
+        throw new Error(`แถวที่จับการละเมิดได้ต้องมี testerEmail='jane@test.com' และ nameCount=2 แต่ได้ ${JSON.stringify(violatingRow)}`);
+      }
+
+      log("✓ พิสูจน์ถูกต้อง: query ไม่พบการละเมิดในข้อมูลสะอาด และจับการละเมิดจริงได้ถูกต้องหลังมีข้อมูลขัดแย้ง — FD testerEmail → testerName ได้รับการตรวจสอบอย่างแท้จริง ไม่ใช่แค่คืนค่าว่างเปล่าโดยบังเอิญ");
+    },
+    hint: "GROUP BY คอลัมน์ที่เป็นฝั่งซ้ายของ FD (testerEmail) แล้วนับจำนวนค่าที่ไม่ซ้ำกันของฝั่งขวาด้วย COUNT(DISTINCT testerName) — ถ้า FD เป็นจริง ทุกกลุ่มต้องมีค่าฝั่งขวาแค่ 1 ค่าเท่านั้น ใช้ HAVING กรองเฉพาะกลุ่มที่ผิดปกติ (มากกว่า 1 ค่า) ออกมา ถ้า query คืนค่าว่างเปล่าแปลว่าไม่มีการละเมิดเลยสักกลุ่ม",
+    solution: `SELECT testerEmail, COUNT(DISTINCT testerName) AS nameCount FROM test_runs_flat GROUP BY testerEmail HAVING COUNT(DISTINCT testerName) > 1;`,
+    theory: `<strong>Functional Dependency (FD)</strong> คือความสัมพันธ์พื้นฐานที่สุดที่ Normal Form ทุกระดับ (1NF, 2NF, 3NF, BCNF) ถูกนิยามด้วย — เขียนแทนด้วย <code>A → B</code> อ่านว่า "A กำหนดค่า B" แปลว่า: ถ้ารู้ค่า A แล้ว ต้องรู้ค่า B ได้แน่นอนเพียงค่าเดียวเสมอ ไม่มีทางที่ A เดียวกันจะมี B ต่างกันได้<br/><br/>
+    ในตัวอย่างนี้: <code>testerEmail → testerName</code> แปลว่า "อีเมล tester คนหนึ่งต้องผูกกับชื่อเดียวเสมอ" — ถ้า <code>jane@test.com</code> ปรากฏพร้อมชื่อ "Jane" ในบางแถว แต่ปรากฏพร้อมชื่อ "J. Doe" ในอีกแถว นั่นคือ FD ถูกละเมิด (ข้อมูลไม่สอดคล้องกันเอง)<br/><br/>
+    เทคนิคพิสูจน์ FD ด้วย SQL คือ <code>GROUP BY</code> ฝั่งซ้าย (determinant) แล้วนับ <code>COUNT(DISTINCT ...)</code> ฝั่งขวา — ถ้าทุกกลุ่มมีค่าเดียว FD เป็นจริง ถ้ามีกลุ่มไหนมากกว่า 1 ค่า FD ถูกละเมิดที่กลุ่มนั้น เทคนิคเดียวกันนี้จะถูกใช้ซ้ำในทุกบทถัดไป (1NF-BCNF) เพื่อตรวจว่าคอลัมน์หนึ่งๆ ขึ้นอยู่กับคีย์ "ทั้งหมด" "โดยตรง" หรือ "ผ่านคอลัมน์อื่น" หรือไม่`,
+    example: `-- ตัวอย่างใช้เทคนิคเดียวกันตรวจ FD อื่น (ไม่ใช่คำตอบของโจทย์นี้ แค่ตัวอย่างวิธีคิด)
+SELECT suiteName, COUNT(DISTINCT status) AS statusCount FROM test_runs_flat GROUP BY suiteName;`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. หา <code>testerEmail</code> ที่มี <code>testerName</code> มากกว่า 1 ชื่อ ด้วย <code>GROUP BY testerEmail HAVING COUNT(DISTINCT testerName) > 1</code> ตั้งชื่อคอลัมน์นับจำนวนว่า <code>nameCount</code>`
+  },
+  {
+    id: "normal_form_1nf",
+    meta: "ขั้นสูง 4",
+    title: "1NF (First Normal Form): Atomic Values ห้ามยัดหลายค่าในช่องเดียว",
+    template: `-- สถานการณ์ (ละเมิด 1NF): สมมติมีตาราง contacts_bad เก็บเบอร์โทรของแต่ละ ticker ไว้ในคอลัมน์เดียว คั่นด้วย comma
+-- | ticker | phone_numbers              |
+-- | AMZN   | 02-111-1111,02-222-2222    |   <- ค่าเดียวแต่ยัด 2 เบอร์รวมกัน ไม่ atomic (ละเมิด 1NF)
+-- | GOOGL  | 02-333-3333                |
+-- 1NF (First Normal Form) กำหนดว่า: ทุกคอลัมน์ต้องเก็บ "ค่าเดียวที่แบ่งย่อยไม่ได้อีก" (atomic value) ห้ามมีหลายค่ารวมกันในช่องเดียว (repeating group)
+--
+-- จงแก้ปัญหาโดยสร้างตาราง contact_numbers ใหม่ (ticker STRING, phone STRING) ที่แยก 1 เบอร์ต่อ 1 แถว
+-- แล้วเพิ่มข้อมูล: AMZN มี 2 เบอร์ (02-111-1111 และ 02-222-2222), GOOGL มี 1 เบอร์ (02-333-3333)
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการออกแบบตารางให้เป็น 1NF (Atomic Values)...");
+      try { alasql('DROP TABLE IF EXISTS contact_numbers'); } catch (e) {}
+      runQuery(code);
+
+      let rows;
+      try {
+        rows = alasql("SELECT * FROM contact_numbers ORDER BY ticker, phone");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง contact_numbers — ตรวจสอบว่าสร้างด้วย CREATE TABLE contact_numbers (ticker STRING, phone STRING) หรือยัง");
+      }
+      if (rows.length !== 3) {
+        throw new Error(`คาดว่าตาราง contact_numbers จะมี 3 แถว (AMZN 2 เบอร์ + GOOGL 1 เบอร์ แยกคนละแถว) แต่มี ${rows.length} แถว: ${JSON.stringify(rows)}`);
+      }
+      const amznPhones = rows.filter(r => r.ticker === 'AMZN').map(r => r.phone).sort();
+      const googlPhones = rows.filter(r => r.ticker === 'GOOGL').map(r => r.phone);
+      if (JSON.stringify(amznPhones) !== JSON.stringify(['02-111-1111', '02-222-2222'])) {
+        throw new Error(`ticker AMZN ต้องมี 2 แถวแยกกัน เบอร์ '02-111-1111' และ '02-222-2222' แต่ได้: ${JSON.stringify(amznPhones)}`);
+      }
+      if (googlPhones.length !== 1 || googlPhones[0] !== '02-333-3333') {
+        throw new Error(`ticker GOOGL ต้องมี 1 แถว เบอร์ '02-333-3333' แต่ได้: ${JSON.stringify(googlPhones)}`);
+      }
+      const hasComma = rows.some(r => String(r.phone).includes(','));
+      if (hasComma) {
+        throw new Error("พบค่า phone ที่ยังมี comma รวมหลายเบอร์อยู่ในช่องเดียว — ต้องแยกให้เหลือ 1 เบอร์ต่อ 1 แถวเท่านั้น (ทุกค่าต้อง atomic)");
+      }
+      log("✓ ออกแบบตาราง contact_numbers ถูกต้องตาม 1NF — ทุกแถวเก็บเบอร์โทรเดียว ไม่มีการยัดหลายค่าในช่องเดียวอีกต่อไป");
+    },
+    hint: "สร้างตารางใหม่ที่มีแค่คอลัมน์ ticker และ phone (คนละคอลัมน์ ไม่ต้องมีคอลัมน์รวมเบอร์) แล้ว INSERT ทีละแถวต่อ 1 เบอร์โทร — AMZN มี 2 เบอร์ ต้องกลายเป็น 2 แถวแยกกัน ไม่ใช่ 1 แถวที่ยังคั่นด้วย comma เหมือนเดิม",
+    solution: `CREATE TABLE contact_numbers (ticker STRING, phone STRING);
+INSERT INTO contact_numbers (ticker, phone) VALUES
+  ('AMZN', '02-111-1111'),
+  ('AMZN', '02-222-2222'),
+  ('GOOGL', '02-333-3333');`,
+    theory: `<strong>1NF (First Normal Form)</strong> คือกฎแรกสุดของ Normal Form: ทุกคอลัมน์ต้องเก็บค่าที่ <strong>atomic</strong> (แบ่งย่อยไม่ได้อีก) ห้ามมีหลายค่ารวมกันในช่องเดียว (เรียกว่า <strong>repeating group</strong>)<br/><br/>
+    ตาราง <code>contacts_bad</code> เก็บ <code>phone_numbers</code> เป็น <code>"02-111-1111,02-222-2222"</code> — ดูเหมือนสะดวกตอน INSERT แต่พังทันทีตอน query จริง: <code>WHERE phone_numbers = '02-111-1111'</code> จะหาไม่เจอเพราะค่าจริงในช่องคือ string ที่มี comma ต่อท้าย ไม่ใช่ค่าที่ตรงกันเป๊ะ และ <code>COUNT(DISTINCT phone_numbers)</code> ก็นับจำนวนเบอร์จริงไม่ได้เลย เพราะระบบมองว่าทั้ง string คือ "ค่าเดียว"<br/><br/>
+    วิธีแก้ตามหลัก 1NF: แยกแต่ละเบอร์ออกเป็นคนละแถว (เหมือนที่ทำในบทนี้) — ตอนนี้ค้นหา/นับ/กรองเบอร์โทรแต่ละเบอร์ได้ตรงไปตรงมาด้วย SQL ปกติ นี่คือกฎข้อแรกที่ต่อยอดจากบท "Normalization" (บทที่ 4) และเป็นจุดเริ่มต้นของบันได 2NF, 3NF, BCNF ที่จะเรียนต่อจากนี้`,
+    example: `-- ตัวอย่างละเมิด 1NF แบบเดียวกันกับ tags (สมมติ ห้ามเขียนแบบนี้จริง)
+-- ticker='AMZN', tags='ecommerce,cloud,logistics'  <- ไม่ atomic เหมือนกัน ต้องแยกเป็นตาราง tags ต่างหาก`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. สร้างตาราง <code>contact_numbers</code> ด้วยคอลัมน์ <code>ticker</code> (STRING), <code>phone</code> (STRING)<br/>
+    2. เพิ่มข้อมูล: <code>AMZN</code> 2 แถว (<code>02-111-1111</code>, <code>02-222-2222</code>) และ <code>GOOGL</code> 1 แถว (<code>02-333-3333</code>)`
+  },
+  {
+    id: "normal_form_2nf",
+    meta: "ขั้นสูง 5",
+    title: "2NF (Second Normal Form): Partial Dependency บนคีย์ผสม (Composite Key)",
+    template: `-- สถานการณ์ (ละเมิด 2NF): สมมติมีตาราง order_items_bad เก็บรายการสั่งซื้อหุ้น มี PRIMARY KEY แบบผสม (orderId, ticker)
+-- | orderId | ticker | productName    | quantity |
+-- | 1       | AMZN   | Amazon.com Inc | 50       |
+-- | 1       | GOOGL  | Alphabet Inc   | 30       |
+-- | 2       | AMZN   | Amazon.com Inc | 20       |   <- productName ซ้ำ เพราะจริงๆ ขึ้นกับ ticker เพียงอย่างเดียว ไม่ได้ขึ้นกับ (orderId, ticker) ทั้งคู่
+-- 2NF (Second Normal Form) กำหนดว่า: ทุกคอลัมน์ที่ไม่ใช่คีย์ ต้องขึ้นอยู่กับ "คีย์ทั้งชุด" ไม่ใช่แค่บางส่วนของคีย์ผสม (เรียกว่า Partial Dependency)
+-- ที่นี่ productName ขึ้นกับ ticker เพียงอย่างเดียว (ไม่ต้องรู้ orderId เลยก็รู้ productName ได้) จึงเป็น Partial Dependency ที่ละเมิด 2NF
+--
+-- จงแก้ปัญหาโดยแยกเป็น 2 ตาราง:
+-- 1. tickers_catalog: ticker (STRING PRIMARY KEY), productName (STRING)
+-- 2. order_items: orderId (NUMBER), ticker (STRING), quantity (NUMBER), PRIMARY KEY (orderId, ticker), FOREIGN KEY (ticker) REFERENCES tickers_catalog(ticker)
+-- แล้วเพิ่มข้อมูล: tickers_catalog ('AMZN','Amazon.com Inc'); order_items (1,'AMZN',50)
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการแก้ Partial Dependency (2NF)...");
+      try { alasql('DROP TABLE IF EXISTS order_items'); } catch (e) {}
+      try { alasql('DROP TABLE IF EXISTS tickers_catalog'); } catch (e) {}
+      runQuery(code);
+
+      let catalog, items;
+      try {
+        catalog = alasql("SELECT * FROM tickers_catalog");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง tickers_catalog — ตรวจสอบว่าสร้างด้วย CREATE TABLE tickers_catalog (ticker STRING PRIMARY KEY, productName STRING) หรือยัง");
+      }
+      try {
+        items = alasql("SELECT * FROM order_items");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง order_items — ตรวจสอบว่าสร้างด้วย CREATE TABLE order_items (...) หรือยัง");
+      }
+
+      if (catalog.length !== 1 || catalog[0].ticker !== 'AMZN' || catalog[0].productName !== 'Amazon.com Inc') {
+        throw new Error(`ข้อมูลใน tickers_catalog ไม่ตรงกับที่คาดไว้ (ticker='AMZN', productName='Amazon.com Inc') ได้: ${JSON.stringify(catalog)}`);
+      }
+      if (items.length !== 1 || Number(items[0].orderId) !== 1 || items[0].ticker !== 'AMZN' || Number(items[0].quantity) !== 50) {
+        throw new Error(`ข้อมูลใน order_items ไม่ตรงกับที่คาดไว้ (orderId=1, ticker='AMZN', quantity=50) ได้: ${JSON.stringify(items)}`);
+      }
+
+      let blocked = false;
+      try {
+        alasql("INSERT INTO order_items VALUES (2, 'NOSUCH', 10)");
+      } catch (err) {
+        blocked = true;
+      }
+      if (!blocked) {
+        throw new Error("ตาราง order_items ยอมรับ ticker ที่ไม่มีอยู่จริงใน tickers_catalog ได้ — ตรวจสอบว่าใส่ FOREIGN KEY (ticker) REFERENCES tickers_catalog(ticker) หรือยัง");
+      }
+
+      log("✓ แก้ Partial Dependency ถูกต้อง — แยก productName ไปอยู่กับ ticker โดยตรงใน tickers_catalog แล้ว order_items เหลือแค่ข้อมูลที่ขึ้นกับคีย์ผสมทั้งคู่จริงๆ");
+    },
+    hint: "แยก productName ออกจาก order_items ไปไว้ในตารางที่คีย์หลักคือ ticker เพียงคอลัมน์เดียว (เพราะ productName ขึ้นกับ ticker อย่างเดียวจริงๆ) แล้วให้ order_items เหลือแค่คอลัมน์ที่ต้องพึ่งคีย์ผสมทั้งคู่ (orderId + ticker) พร้อม FOREIGN KEY อ้างกลับไปยังตารางที่แยกออกมา",
+    solution: `CREATE TABLE tickers_catalog (ticker STRING PRIMARY KEY, productName STRING);
+CREATE TABLE order_items (orderId NUMBER, ticker STRING, quantity NUMBER, PRIMARY KEY (orderId, ticker), FOREIGN KEY (ticker) REFERENCES tickers_catalog(ticker));
+INSERT INTO tickers_catalog VALUES ('AMZN', 'Amazon.com Inc');
+INSERT INTO order_items VALUES (1, 'AMZN', 50);`,
+    theory: `<strong>2NF (Second Normal Form)</strong> ต่อยอดจาก 1NF (บทก่อนหน้า — ทุกค่าต้อง atomic แล้ว) และเพิ่มกฎใหม่ที่ใช้ได้เฉพาะกับตารางที่มี <strong>Composite Primary Key</strong> (คีย์ผสมหลายคอลัมน์) เท่านั้น: ทุกคอลัมน์ที่ไม่ใช่คีย์ ต้องขึ้นอยู่กับคีย์ <strong>ทั้งชุด</strong> ไม่ใช่แค่บางส่วน<br/><br/>
+    ในตาราง <code>order_items_bad</code> คีย์คือ <code>(orderId, ticker)</code> ทั้งคู่ แต่ <code>productName</code> ใช้ FD notation (จากบทก่อนหน้า) เขียนได้ว่า <code>ticker → productName</code> — สังเกตว่าฝั่งซ้ายมีแค่ <code>ticker</code> ตัวเดียว ไม่ใช่คีย์เต็ม <code>(orderId, ticker)</code> นี่คือ <strong>Partial Dependency</strong> (ขึ้นกับคีย์แค่บางส่วน) ซึ่งทำให้ชื่อ "Amazon.com Inc" ถูกเก็บซ้ำทุกครั้งที่มี order ใหม่ของ AMZN<br/><br/>
+    วิธีแก้: แยกคอลัมน์ที่ Partial-Dependent (<code>productName</code>) ไปไว้ในตารางที่มีแค่ <code>ticker</code> เป็นคีย์ (<code>tickers_catalog</code>) แล้ว <code>order_items</code> ที่เหลือจะมีแต่คอลัมน์ที่ขึ้นกับคีย์ผสมทั้งคู่จริงๆ (<code>quantity</code> ต้องรู้ทั้ง orderId และ ticker ถึงจะระบุได้ว่าสั่งกี่หุ้น)`,
+    example: `-- ตัวอย่าง Partial Dependency แบบเดียวกันในบริบทอื่น (ไม่ใช่คำตอบของโจทย์นี้)
+-- ตาราง enrollments (studentId, courseId, studentName, grade) ที่ PK คือ (studentId, courseId)
+-- studentName ขึ้นกับ studentId อย่างเดียว (Partial Dependency เหมือนกัน) ต้องแยกไปตาราง students ต่างหาก`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. สร้างตาราง <code>tickers_catalog</code> ด้วยคอลัมน์ <code>ticker</code> (STRING PRIMARY KEY), <code>productName</code> (STRING)<br/>
+    2. สร้างตาราง <code>order_items</code> ด้วยคอลัมน์ <code>orderId</code> (NUMBER), <code>ticker</code> (STRING), <code>quantity</code> (NUMBER) พร้อม <code>PRIMARY KEY (orderId, ticker)</code> และ <code>FOREIGN KEY (ticker) REFERENCES tickers_catalog(ticker)</code><br/>
+    3. เพิ่มแถวตัวอย่าง: <code>tickers_catalog ('AMZN','Amazon.com Inc')</code>, <code>order_items (1,'AMZN',50)</code>`
+  },
+  {
+    id: "normal_form_3nf",
+    meta: "ขั้นสูง 6",
+    title: "3NF (Third Normal Form): Transitive Dependency ผ่านคอลัมน์ที่ไม่ใช่คีย์",
+    template: `-- สถานการณ์ (ละเมิด 3NF): สมมติมีตาราง holdings_flat ที่มี PRIMARY KEY คือ ticker เก็บข้อมูล broker รวมไว้ในตัวเดียวกัน
+-- | ticker | broker | brokerCountry |
+-- | AMZN   | Webull | US            |
+-- | GOOGL  | Webull | US            |   <- brokerCountry ซ้ำ เพราะจริงๆ ขึ้นกับ broker (ไม่ใช่ ticker โดยตรง)
+-- | AAPL   | Dime   | US            |
+-- 3NF (Third Normal Form) กำหนดว่า: ทุกคอลัมน์ที่ไม่ใช่คีย์ ต้องขึ้นกับคีย์ "โดยตรง" เท่านั้น ห้ามขึ้นกับคอลัมน์ที่ไม่ใช่คีย์อีกทอดหนึ่ง (Transitive Dependency)
+-- ที่นี่ ticker → broker → brokerCountry (brokerCountry ไม่ได้ขึ้นกับ ticker ตรงๆ แต่ขึ้นกับ broker ซึ่งเป็นคอลัมน์ที่ไม่ใช่คีย์) จึงเป็น Transitive Dependency ที่ละเมิด 3NF
+--
+-- จงแก้ปัญหาโดยแยกเป็น 2 ตาราง:
+-- 1. brokers_lookup: broker (STRING PRIMARY KEY), country (STRING)
+-- 2. holdings_normalized: ticker (STRING PRIMARY KEY), broker (STRING), FOREIGN KEY (broker) REFERENCES brokers_lookup(broker)
+-- แล้วเพิ่มข้อมูล: brokers_lookup ('Webull','US'); holdings_normalized ('AMZN','Webull')
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการแก้ Transitive Dependency (3NF)...");
+      try { alasql('DROP TABLE IF EXISTS holdings_normalized'); } catch (e) {}
+      try { alasql('DROP TABLE IF EXISTS brokers_lookup'); } catch (e) {}
+      runQuery(code);
+
+      let lookup, holdingsNorm;
+      try {
+        lookup = alasql("SELECT * FROM brokers_lookup");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง brokers_lookup — ตรวจสอบว่าสร้างด้วย CREATE TABLE brokers_lookup (broker STRING PRIMARY KEY, country STRING) หรือยัง");
+      }
+      try {
+        holdingsNorm = alasql("SELECT * FROM holdings_normalized");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง holdings_normalized — ตรวจสอบว่าสร้างด้วย CREATE TABLE holdings_normalized (...) หรือยัง");
+      }
+
+      if (lookup.length !== 1 || lookup[0].broker !== 'Webull' || lookup[0].country !== 'US') {
+        throw new Error(`ข้อมูลใน brokers_lookup ไม่ตรงกับที่คาดไว้ (broker='Webull', country='US') ได้: ${JSON.stringify(lookup)}`);
+      }
+      if (holdingsNorm.length !== 1 || holdingsNorm[0].ticker !== 'AMZN' || holdingsNorm[0].broker !== 'Webull') {
+        throw new Error(`ข้อมูลใน holdings_normalized ไม่ตรงกับที่คาดไว้ (ticker='AMZN', broker='Webull') ได้: ${JSON.stringify(holdingsNorm)}`);
+      }
+
+      let blocked = false;
+      try {
+        alasql("INSERT INTO holdings_normalized VALUES ('FAKE', 'NoSuchBroker')");
+      } catch (err) {
+        blocked = true;
+      }
+      if (!blocked) {
+        throw new Error("ตาราง holdings_normalized ยอมรับ broker ที่ไม่มีอยู่จริงใน brokers_lookup ได้ — ตรวจสอบว่าใส่ FOREIGN KEY (broker) REFERENCES brokers_lookup(broker) หรือยัง");
+      }
+
+      log("✓ แก้ Transitive Dependency ถูกต้อง — แยก country ไปอยู่กับ broker โดยตรงใน brokers_lookup แล้ว holdings_normalized เหลือแค่คอลัมน์ที่ขึ้นกับ ticker โดยตรงจริงๆ");
+    },
+    hint: "แยก country ออกจาก holdings_flat ไปไว้ในตารางที่คีย์หลักคือ broker (เพราะ country ขึ้นกับ broker โดยตรง ไม่ได้ขึ้นกับ ticker) แล้วให้ holdings_normalized เหลือแค่ ticker กับ broker พร้อม FOREIGN KEY อ้างกลับไปยังตารางที่แยกออกมา",
+    solution: `CREATE TABLE brokers_lookup (broker STRING PRIMARY KEY, country STRING);
+CREATE TABLE holdings_normalized (ticker STRING PRIMARY KEY, broker STRING, FOREIGN KEY (broker) REFERENCES brokers_lookup(broker));
+INSERT INTO brokers_lookup VALUES ('Webull', 'US');
+INSERT INTO holdings_normalized VALUES ('AMZN', 'Webull');`,
+    theory: `<strong>3NF (Third Normal Form)</strong> ต่อยอดจาก 2NF (บทก่อนหน้า) แต่ใช้ได้กับตารางทุกแบบ ไม่ว่าคีย์จะเป็นคอลัมน์เดียวหรือคีย์ผสม — กฎคือ: ห้ามมีคอลัมน์ที่ไม่ใช่คีย์ขึ้นอยู่กับคอลัมน์ที่ไม่ใช่คีย์อีกตัวหนึ่ง (ต้องขึ้นกับคีย์โดยตรงเท่านั้น)<br/><br/>
+    ในตาราง <code>holdings_flat</code> คีย์คือ <code>ticker</code> เขียนเป็น FD chain ได้ว่า <code>ticker → broker → country</code> — <code>country</code> ไม่ได้ขึ้นกับ <code>ticker</code> ตรงๆ แต่ขึ้นกับ <code>broker</code> (ซึ่งเองก็ไม่ใช่คีย์) นี่คือ <strong>Transitive Dependency</strong> (ขึ้นทอดสอง) ทำให้ "US" ถูกเก็บซ้ำทุกครั้งที่ Webull มี ticker ใหม่<br/><br/>
+    ข้อแตกต่างกับ 2NF (บทก่อนหน้า): 2NF พูดถึงปัญหาที่เกิด<strong>เฉพาะกับคีย์ผสม</strong> (คอลัมน์ขึ้นกับแค่บางส่วนของคีย์) ส่วน 3NF พูดถึงปัญหาที่เกิดได้แม้คีย์จะเป็นคอลัมน์เดียว (คอลัมน์ขึ้นกับคอลัมน์ที่ไม่ใช่คีย์อีกตัวหนึ่ง แทนที่จะขึ้นกับคีย์ตรงๆ) — วิธีแก้เหมือนกัน: แยกส่วนที่ transitive ออกไปเป็นตารางของตัวเอง`,
+    example: `-- ตัวอย่าง Transitive Dependency แบบเดียวกันในบริบทอื่น (ไม่ใช่คำตอบของโจทย์นี้)
+-- ตาราง employees (empId, deptId, deptManager) ที่ PK คือ empId
+-- deptManager ขึ้นกับ deptId (ไม่ใช่ empId โดยตรง) ต้องแยกไปตาราง departments ต่างหาก`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. สร้างตาราง <code>brokers_lookup</code> ด้วยคอลัมน์ <code>broker</code> (STRING PRIMARY KEY), <code>country</code> (STRING)<br/>
+    2. สร้างตาราง <code>holdings_normalized</code> ด้วยคอลัมน์ <code>ticker</code> (STRING PRIMARY KEY), <code>broker</code> (STRING) พร้อม <code>FOREIGN KEY (broker) REFERENCES brokers_lookup(broker)</code><br/>
+    3. เพิ่มแถวตัวอย่าง: <code>brokers_lookup ('Webull','US')</code>, <code>holdings_normalized ('AMZN','Webull')</code>`
+  },
+  {
+    id: "normal_form_bcnf",
+    meta: "ขั้นสูง 7",
+    title: "BCNF (Boyce-Codd Normal Form): เมื่อ 3NF ยังไม่พอ",
+    template: `-- สถานการณ์ (ผ่าน 3NF แล้ว แต่ยังละเมิด BCNF): ตาราง test_case_reviews เก็บว่าใครรีวิว test case ไหน
+-- PRIMARY KEY คือ (testCase, reviewer) — มี 2 ข้อเท็จจริงในข้อมูลนี้:
+--   1. reviewer → team (reviewer แต่ละคนอยู่ทีมเดียวเสมอ)
+--   2. (testCase, team) → reviewer (แต่ละทีมมอบหมายให้ reviewer แค่คนเดียวรีวิว test case หนึ่งๆ)
+-- ข้อเท็จจริงข้อ 2 ทำให้ (testCase, team) เป็น candidate key อีกชุดหนึ่งด้วย (นอกจาก (testCase, reviewer))
+-- แปลว่า reviewer และ team ต่างก็เป็น "prime attribute" (อยู่ใน candidate key บางชุด) — ตารางนี้จึงผ่าน 3NF จริง
+-- (3NF ห้าม transitive dependency แค่ตอนปลายทางเป็น non-prime attribute เท่านั้น)
+-- | testCase | reviewer | team      |
+-- | TC-001   | Nueng    | QA-Web    |
+-- | TC-002   | Nueng    | QA-Web    |   <- team ซ้ำทุกครั้งที่ Nueng เป็นคนรีวิว เพราะ reviewer → team
+-- | TC-003   | Bee      | QA-Mobile |
+-- ปัญหา (BCNF เข้มกว่า 3NF): reviewer → team เป็นจริง (FD) แต่ reviewer เพียงอย่างเดียวไม่ใช่ candidate key ของตารางนี้ (ต้องคู่กับ testCase หรือ team ถึงจะระบุแถวได้ไม่ซ้ำ)
+-- BCNF (Boyce-Codd Normal Form) กำหนดว่า: ทุก FD ในตาราง ฝั่งซ้าย (determinant) ต้องเป็น candidate key เสมอ ไม่ว่าฝั่งขวาจะเป็น prime attribute หรือไม่ก็ตาม (ต่างจาก 3NF ที่ยกเว้นให้ถ้าฝั่งขวาเป็น prime) — reviewer ไม่ใช่ candidate key จึงละเมิด BCNF แม้จะผ่าน 3NF แล้วก็ตาม
+--
+-- จงแก้ปัญหาโดยแยกเป็น 2 ตาราง:
+-- 1. reviewers: reviewer (STRING PRIMARY KEY), team (STRING)
+-- 2. test_case_reviews: testCase (STRING), reviewer (STRING), PRIMARY KEY (testCase, reviewer), FOREIGN KEY (reviewer) REFERENCES reviewers(reviewer)
+-- แล้วเพิ่มข้อมูล: reviewers ('Nueng','QA-Web'); test_case_reviews ('TC-001','Nueng')
+-- WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการแก้ BCNF violation...");
+      try { alasql('DROP TABLE IF EXISTS test_case_reviews'); } catch (e) {}
+      try { alasql('DROP TABLE IF EXISTS reviewers'); } catch (e) {}
+      runQuery(code);
+
+      let reviewers, reviews;
+      try {
+        reviewers = alasql("SELECT * FROM reviewers");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง reviewers — ตรวจสอบว่าสร้างด้วย CREATE TABLE reviewers (reviewer STRING PRIMARY KEY, team STRING) หรือยัง");
+      }
+      try {
+        reviews = alasql("SELECT * FROM test_case_reviews");
+      } catch (err) {
+        throw new Error("ไม่พบตาราง test_case_reviews — ตรวจสอบว่าสร้างด้วย CREATE TABLE test_case_reviews (...) หรือยัง");
+      }
+
+      if (reviewers.length !== 1 || reviewers[0].reviewer !== 'Nueng' || reviewers[0].team !== 'QA-Web') {
+        throw new Error(`ข้อมูลใน reviewers ไม่ตรงกับที่คาดไว้ (reviewer='Nueng', team='QA-Web') ได้: ${JSON.stringify(reviewers)}`);
+      }
+      if (reviews.length !== 1 || reviews[0].testCase !== 'TC-001' || reviews[0].reviewer !== 'Nueng') {
+        throw new Error(`ข้อมูลใน test_case_reviews ไม่ตรงกับที่คาดไว้ (testCase='TC-001', reviewer='Nueng') ได้: ${JSON.stringify(reviews)}`);
+      }
+
+      let blocked = false;
+      try {
+        alasql("INSERT INTO test_case_reviews VALUES ('TC-999', 'NoSuchReviewer')");
+      } catch (err) {
+        blocked = true;
+      }
+      if (!blocked) {
+        throw new Error("ตาราง test_case_reviews ยอมรับ reviewer ที่ไม่มีอยู่จริงใน reviewers ได้ — ตรวจสอบว่าใส่ FOREIGN KEY (reviewer) REFERENCES reviewers(reviewer) หรือยัง");
+      }
+
+      log("✓ แก้ BCNF violation ถูกต้อง — แยก team ไปอยู่กับ reviewer โดยตรงใน reviewers แล้ว test_case_reviews เหลือแค่คอลัมน์ที่ต้องพึ่งคีย์ผสม (testCase, reviewer) จริงๆ");
+    },
+    hint: "แยก team ออกจาก test_case_reviews ไปไว้ในตารางที่คีย์หลักคือ reviewer เพียงคอลัมน์เดียว (เพราะ team ขึ้นกับ reviewer โดยตรง แม้ reviewer จะไม่ใช่ candidate key ของตารางเดิม) แล้วให้ test_case_reviews เหลือแค่คอลัมน์ที่ต้องพึ่งคีย์ผสม (testCase, reviewer) พร้อม FOREIGN KEY อ้างกลับไปยังตารางที่แยกออกมา",
+    solution: `CREATE TABLE reviewers (reviewer STRING PRIMARY KEY, team STRING);
+CREATE TABLE test_case_reviews (testCase STRING, reviewer STRING, PRIMARY KEY (testCase, reviewer), FOREIGN KEY (reviewer) REFERENCES reviewers(reviewer));
+INSERT INTO reviewers VALUES ('Nueng', 'QA-Web');
+INSERT INTO test_case_reviews VALUES ('TC-001', 'Nueng');`,
+    theory: `<strong>BCNF (Boyce-Codd Normal Form)</strong> คือกฎที่เข้มกว่า 3NF (บทก่อนหน้า) เล็กน้อยแต่จับ edge case ที่ 3NF จับไม่ได้ — กฎคือ: ทุก Functional Dependency ในตาราง <code>A → B</code> ฝั่งซ้าย (<code>A</code>) ต้องเป็น <strong>candidate key</strong> ของตารางนั้นเสมอ ไม่มีข้อยกเว้น (candidate key คือคอลัมน์หรือกลุ่มคอลัมน์ที่ระบุแถวได้ไม่ซ้ำ ตารางหนึ่งมีได้มากกว่าหนึ่งชุด แม้จะเลือกแค่ชุดเดียวเป็น PRIMARY KEY ก็ตาม)<br/><br/>
+    ตาราง <code>test_case_reviews</code> ในโจทย์นี้มี candidate key <strong>สองชุด</strong>: <code>(testCase, reviewer)</code> และ <code>(testCase, team)</code> (เพราะแต่ละทีมมอบหมาย reviewer แค่คนเดียวต่อ test case หนึ่งๆ — รู้ testCase กับ team แล้วก็รู้ reviewer ได้แน่นอน) — เมื่อ candidate key สองชุดนี้รวมกันครอบคลุมทั้ง testCase, reviewer, team แล้ว<strong>ทุกคอลัมน์กลายเป็น prime attribute หมด</strong> (อยู่ใน candidate key บางชุด) นี่คือเหตุผลที่ตารางนี้<strong>ผ่าน 3NF จริง</strong>: กฎ 3NF ห้าม transitive dependency ที่ปลายทางเป็น<strong>non-prime attribute</strong>เท่านั้น แต่ <code>team</code> (ปลายทางของ <code>reviewer → team</code>) เป็น prime attribute (อยู่ใน candidate key <code>(testCase, team)</code>) จึงไม่นับว่าละเมิด 3NF<br/><br/>
+    แต่ BCNF<strong>ไม่มีข้อยกเว้นนี้</strong> — กฎ BCNF สนใจแค่ว่าฝั่งซ้าย (<code>reviewer</code>) เป็น candidate key หรือไม่ ไม่สนว่าฝั่งขวาจะ prime หรือไม่ก็ตาม <code>reviewer</code> เพียงตัวเดียว<strong>ไม่ใช่ candidate key</strong> ของตารางนี้ (ต้องคู่กับ <code>testCase</code> หรือ <code>team</code> ถึงจะระบุแถวได้ไม่ซ้ำ) — ฝั่งซ้ายที่ไม่ใช่ candidate key แบบนี้คือสิ่งที่ 3NF อนุโลมให้ผ่านได้ (เพราะปลายทางเป็น prime) แต่ BCNF ไม่อนุโลมเลย<br/><br/>
+    ผลคือ "QA-Web" ยังถูกเก็บซ้ำทุกครั้งที่ Nueng รีวิว test case ใหม่ ทั้งที่ผ่าน 3NF แล้ว — วิธีแก้เหมือนเดิมทุกบทที่ผ่านมา: แยกคอลัมน์ที่ผูกกับ non-candidate-key determinant (<code>team</code> ที่ผูกกับ <code>reviewer</code>) ออกไปเป็นตารางของตัวเอง<br/><br/>
+    <strong>สรุปบันได Normal Form ทั้งหมด:</strong> Functional Dependency (นิยามพื้นฐาน) → 1NF (ค่าต้อง atomic) → 2NF (ห้าม partial dependency บนคีย์ผสม) → 3NF (ห้าม transitive dependency ที่ปลายทางเป็น non-prime attribute) → BCNF (ทุก determinant ต้องเป็น candidate key ไม่มีข้อยกเว้น) — แต่ละระดับเข้มกว่าระดับก่อนหน้า และในงาน QA จริง 1NF-3NF คือสิ่งที่เจอบ่อยที่สุดตอน review schema ส่วน BCNF เป็น edge case ที่ต้องมี candidate key ซ้อนทับกันมากกว่าหนึ่งชุดถึงจะเกิดขึ้น เจอน้อยกว่ามากแต่สำคัญตอนต้องยืนยันว่า schema "ถูกต้องตามทฤษฎีเป๊ะ" จริงๆ`,
+    example: `-- ตัวอย่าง BCNF violation แบบเดียวกันในบริบทอื่น (ไม่ใช่คำตอบของโจทย์นี้)
+-- ตาราง course_bookings (student, course, instructor) มี candidate key 2 ชุด: (student, course) และ (student, instructor)
+-- เพราะแต่ละ instructor สอนได้แค่ 1 course เท่านั้น (instructor → course) และนักเรียนแต่ละคนเรียนกับ instructor คนหนึ่งได้แค่ 1 course
+-- instructor → course ผ่าน 3NF (course เป็น prime attribute อยู่ใน (student,course)) แต่ไม่ผ่าน BCNF (instructor ไม่ใช่ candidate key)`,
+    task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
+    1. สร้างตาราง <code>reviewers</code> ด้วยคอลัมน์ <code>reviewer</code> (STRING PRIMARY KEY), <code>team</code> (STRING)<br/>
+    2. สร้างตาราง <code>test_case_reviews</code> ด้วยคอลัมน์ <code>testCase</code> (STRING), <code>reviewer</code> (STRING) พร้อม <code>PRIMARY KEY (testCase, reviewer)</code> และ <code>FOREIGN KEY (reviewer) REFERENCES reviewers(reviewer)</code><br/>
+    3. เพิ่มแถวตัวอย่าง: <code>reviewers ('Nueng','QA-Web')</code>, <code>test_case_reviews ('TC-001','Nueng')</code>`
   }
 ];
 
