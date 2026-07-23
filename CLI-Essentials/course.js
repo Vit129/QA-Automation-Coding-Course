@@ -4,7 +4,8 @@
 // and Scripts/*.sh files where real material exists. Vim lessons are generic/universal —
 // neither reference project has a .vimrc, so those two teach the standard survival skill
 // instead (this course's own CLAUDE.md conventions call the same tradeoff out explicitly
-// when no project-specific grounding exists for a topic).
+// when no project-specific grounding exists for a topic). The lazygit lesson/notes are
+// generic tool intro too — no reference repo pins lazygit as required tooling.
 
 const LESSONS = [
   {
@@ -32,7 +33,8 @@ const LESSONS = [
     วิธีที่ปลอดภัยกว่า:<br/>
     1. <code>git stash push -u -m "&lt;ป้ายกำกับ&gt;"</code> — <code>-u</code> รวมไฟล์ untracked ด้วย (ไฟล์ใหม่ที่ยังไม่ได้ add) <code>-m</code> ตั้งชื่อป้ายกำกับให้หาเจอง่ายทีหลัง<br/>
     2. <code>git stash list --format='%H %gs'</code> — หา SHA ของ stash ที่มีชื่อป้ายกำกับตรงกับที่ตั้งไว้<br/>
-    3. <code>git stash apply &lt;sha&gt;</code> (ไม่ใช่ <code>pop</code>) — ดึงกลับมาโดยระบุตัวที่ต้องการเจาะจง ไม่เสี่ยงไปโดนของคนอื่น แล้วค่อย <code>git stash drop &lt;sha&gt;</code> ทิ้งเองทีหลังเมื่อมั่นใจแล้ว`,
+    3. <code>git stash apply &lt;sha&gt;</code> (ไม่ใช่ <code>pop</code>) — ดึงกลับมาโดยระบุตัวที่ต้องการเจาะจง ไม่เสี่ยงไปโดนของคนอื่น แล้วค่อย <code>git stash drop &lt;sha&gt;</code> ทิ้งเองทีหลังเมื่อมั่นใจแล้ว<br/><br/>
+    <strong>lazygit:</strong> ทำสิ่งเดียวกันนี้แบบเห็นภาพชัดกว่า — กด <code>s</code> ตรงไฟล์ที่ต้องการ stash, panel stash (มุมล่างซ้าย) แสดงรายการ label ทั้งหมดให้เลือกด้วยตา ไม่ต้องจำ SHA เอง`,
     example: `# ตัวอย่างค้นหา stash ของตัวเองด้วยป้ายกำกับ แล้วดึงกลับมาแบบเจาะจง
 git stash list --format='%H %gs' | grep "wip-login-fix"
 git stash apply <sha-ที่เจอ>`,
@@ -209,7 +211,8 @@ git rebase --abort`,
     theory: `<strong>git merge</strong> เอา commit จาก branch อื่นมารวมเข้า branch ปัจจุบัน (ต้องสลับไปอยู่ branch ปลายทางก่อนเสมอ — คำสั่ง merge วิ่ง "เอาเข้ามา" ไม่ใช่ "ส่งออกไป")<br/><br/>
     • <strong>Fast-forward merge:</strong> ถ้า branch ปัจจุบันไม่มี commit ใหม่เลยตั้งแต่แยก branch ออกไป git จะแค่เลื่อน pointer ไปข้างหน้า ไม่มี merge commit เกิดขึ้น<br/>
     • <strong>3-way merge:</strong> ถ้าทั้งสอง branch ต่างมี commit ใหม่ของตัวเอง git จะสร้าง merge commit พิเศษ (มี 2 parent) เพื่อรวม history ทั้งสองเข้าด้วยกัน<br/>
-    • ถ้ามีคนแก้ไฟล์บรรทัดเดียวกันจากทั้งสองฝั่ง เกิด <strong>merge conflict</strong> ต้องแก้เองแล้ว <code>git add</code> + <code>git commit</code> ต่อให้จบ`,
+    • ถ้ามีคนแก้ไฟล์บรรทัดเดียวกันจากทั้งสองฝั่ง เกิด <strong>merge conflict</strong> ต้องแก้เองแล้ว <code>git add</code> + <code>git commit</code> ต่อให้จบ<br/><br/>
+    <strong>lazygit:</strong> ตอน conflict เกิด ไฟล์ที่ชนจะขึ้นสีแดงในลิสต์ไฟล์ทันที กด Enter เข้าไฟล์นั้นแล้วเลือก merge tool ในตัว (หรือเปิด editor ปกติ) ได้เลย ไม่ต้องพิมพ์ <code>git status</code> ไล่หาว่าไฟล์ไหนชนบ้าง`,
     example: `# เช็คว่า merge จะ fast-forward หรือสร้าง merge commit ก่อนรวมจริง
 git merge --no-commit --no-ff feature/login-fix
 git merge --abort  # ยกเลิกถ้าแค่อยากลองดูก่อน`,
@@ -243,8 +246,45 @@ git push`,
     task: `จง push branch feature/login-fix ขึ้น origin พร้อมตั้งค่า upstream (-u) ในคำสั่งเดียว`
   },
   {
-    id: "vim_survival",
+    id: "git_lazygit_intro",
     meta: "บทที่ 8",
+    title: "lazygit: ครอบคำสั่ง git ที่เรียนมาทั้งหมดด้วย TUI",
+    template: `# สถานการณ์: อยู่ในโฟลเดอร์ repo แล้ว อยากเปิด lazygit ขึ้นมาดูสถานะแบบเห็นภาพ แทนพิมพ์ git status/log ทีละคำสั่ง
+# 1. เปิด lazygit
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่งเปิด lazygit...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasLazygit = /^\s*lazygit\s*$/m.test(activeCode);
+      if (hasLazygit) {
+        log("✓ ใช้คำสั่ง lazygit ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง lazygit\nตัวอย่าง: lazygit");
+      }
+    },
+    hint: "พิมพ์แค่ชื่อโปรแกรมเฉยๆ ไม่ต้องมี flag หรือ argument ใดๆ — lazygit จะอ่าน repo จากโฟลเดอร์ปัจจุบันเอง",
+    solution: `lazygit`,
+    theory: `<strong>lazygit</strong> คือ TUI (terminal UI) ที่ครอบคำสั่ง git ทั้งหมดที่เรียนมาในบทก่อนหน้า (<code>stash</code>/<code>fetch</code>/<code>pull</code>/<code>switch</code>/<code>merge</code>/<code>push</code>) ให้กด key เดียวแทนพิมพ์คำสั่งยาวๆ ทุกครั้ง โดยไม่ได้แทนที่ความเข้าใจ git command — ต้องรู้ก่อนว่าแต่ละคำสั่งทำอะไรถึงจะกด lazygit ได้อย่างมั่นใจ<br/><br/>
+    Layout หลัก (4 panel ซ้าย + diff view ขวา): Status, Files, Local Branches, Commits — เลื่อนด้วยลูกศรหรือ <code>1</code>-<code>5</code> สลับ panel<br/><br/>
+    Key ที่ใช้บ่อยที่สุด:<br/>
+    • <code>space</code> — stage/unstage ไฟล์ที่เลือกอยู่ (แทน <code>git add</code>)<br/>
+    • <code>c</code> — commit (เปิด prompt พิมพ์ commit message)<br/>
+    • <code>P</code> (ตัวใหญ่) — push, <code>p</code> (ตัวเล็ก) — pull<br/>
+    • <code>s</code> — stash ไฟล์ที่เลือก, panel stash ดูรายการ stash ทั้งหมด<br/>
+    • <code>Enter</code> ที่ branch ใน panel Local Branches — switch ไปทันที (แทน <code>git switch</code>)<br/>
+    • <code>?</code> — เปิด panel keybinding ทั้งหมด ณ ตำแหน่งที่ยืนอยู่ (context-aware)<br/>
+    • <code>q</code> — ออกจากโปรแกรม<br/><br/>
+    ข้อดีที่ทำให้เร็วกว่าพิมพ์เอง: เห็น diff ของทุกไฟล์แบบ real-time โดยไม่ต้องพิมพ์ <code>git diff</code>, stage เฉพาะบางส่วนของไฟล์ได้ (partial hunk staging) ด้วย <code>space</code> ในโหมด line-by-line โดยไม่ต้องจำ <code>git add -p</code>`,
+    example: `# ติดตั้งผ่าน Homebrew (macOS/Linux)
+brew install lazygit
+# เปิดจากโฟลเดอร์ repo ปัจจุบัน
+lazygit`,
+    task: `จงเปิด lazygit ขึ้นมา (พิมพ์ชื่อโปรแกรมเฉยๆ ไม่ต้องมี flag)`
+  },
+  {
+    id: "vim_survival",
+    meta: "บทที่ 9",
     title: "Vim Survival: ติดอยู่ใน Editor ตอน git commit ทำไง",
     template: `# สถานการณ์: พิมพ์ git commit เฉยๆ (ไม่ใส่ -m) แล้วหลุดเข้า Vim โดยไม่ได้ตั้งใจ
 # 1. เข้าสู่โหมด Insert แล้วพิมพ์ข้อความ commit message ว่า 'fix: correct typo'
@@ -295,7 +335,7 @@ fix: correct typo
   },
   {
     id: "vim_search_replace",
-    meta: "บทที่ 9",
+    meta: "บทที่ 10",
     title: "Vim Search & Replace: แก้ Config ไฟล์เร็วๆ ผ่าน SSH",
     template: `# สถานการณ์: ต้องเปลี่ยนค่า port ทุกจุดในไฟล์ config จาก 3000 เป็น 3001 ผ่าน SSH (ไม่มี GUI editor)
 # 1. เขียนคำสั่ง Vim แบบ Ex command แทนที่คำว่า 3000 เป็น 3001 ทุกจุด ทั้งไฟล์
@@ -328,7 +368,7 @@ fix: correct typo
   },
   {
     id: "vim_delete_yank",
-    meta: "บทที่ 10",
+    meta: "บทที่ 11",
     title: "Vim ลบ/คัดลอกบรรทัด: dd, yy, p",
     template: `# สถานการณ์: cursor อยู่บรรทัดที่ไม่ต้องการ อยากลบทิ้งแล้ววางกลับที่อื่น
 # 1. ลบทั้งบรรทัดที่ cursor อยู่ (เก็บเข้า register อัตโนมัติ)
@@ -365,7 +405,7 @@ p`,
   },
   {
     id: "vim_undo_redo",
-    meta: "บทที่ 11",
+    meta: "บทที่ 12",
     title: "Vim Undo/Redo: ย้อนกลับเมื่อพิมพ์ผิด",
     template: `# สถานการณ์: เพิ่งลบ/แก้ไขผิดบรรทัด อยากย้อนกลับ แล้วเปลี่ยนใจอยากทำต่อใหม่
 # 1. ย้อนกลับการแก้ไขล่าสุด (undo)
@@ -400,7 +440,7 @@ Ctrl+r`,
   },
   {
     id: "unix_safe_script",
-    meta: "บทที่ 12",
+    meta: "บทที่ 13",
     title: "Unix Shell: Safe Script Header ที่ควรมีทุกไฟล์",
     template: `#!/usr/bin/env bash
 # 1. เพิ่ม safety header ที่ทำให้ script หยุดทันทีเมื่อเจอ error, ตัวแปรไม่ได้ประกาศ, หรือ pipe ล้มเหลว
@@ -435,7 +475,7 @@ cd "$ROOT"
   },
   {
     id: "unix_grep_pipe",
-    meta: "บทที่ 13",
+    meta: "บทที่ 14",
     title: "Unix Pipe + grep: เช็คว่าไฟล์อันตรายถูก Stage ไว้ไหม",
     template: `# หมายเหตุ: บรรทัดนี้ปรับจาก .githooks/commit-msg จริงของ kouen-terminal
 # 1. เช็คว่าไฟล์ที่ staged ไว้ (git diff --cached --name-only) มีคำว่า "Info.plist" อยู่หรือไม่
@@ -470,7 +510,7 @@ fi`,
   },
   {
     id: "unix_find_files",
-    meta: "บทที่ 14",
+    meta: "บทที่ 15",
     title: "Unix find: ค้นหาไฟล์ตามชื่อ/ประเภท (ใช้จริงใน Kouen Build Scripts)",
     template: `# หมายเหตุ: Scripts/run.sh จริงของ kouen-terminal ใช้ find ลบไฟล์ .html ที่ generate ไว้ในโฟลเดอร์ graphify-out ทั้งหมด
 # 1. ค้นหาไฟล์ (-type f) ที่ชื่อลงท้าย .html ในโฟลเดอร์ graphify-out แล้วลบทิ้งทันที (-delete)
@@ -499,7 +539,7 @@ find graphify-out -type f -name '*.html' -print`,
   },
   {
     id: "unix_trap_cleanup",
-    meta: "บทที่ 15",
+    meta: "บทที่ 16",
     title: "Unix trap: ล้างไฟล์ชั่วคราวอัตโนมัติแม้สคริปต์ล้มเหลว",
     template: `# หมายเหตุ: Scripts/generate-app-icon.sh จริงของ kouen-terminal สร้างโฟลเดอร์ temp ไว้ประมวลผล icon
 # แล้วต้องการลบโฟลเดอร์ temp นั้นทิ้งเสมอไม่ว่าสคริปต์จะจบแบบสำเร็จหรือ error กลางทาง
