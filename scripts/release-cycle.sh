@@ -1,12 +1,12 @@
 #!/bin/bash
-# Full ship cycle: commit -> push (+ PR merge if not already on main) -> lesson
+# Full release cycle: commit -> push (+ PR merge if not already on main) -> lesson
 # self-test -> version bump/tag/GitHub Release (scripts/release.sh) -> confirm
 # the GitHub Pages deploy that auto-triggers on push actually succeeded.
 #
 # Usage:
-#   scripts/ship.sh ["commit message"] [patch|minor|major|skip]
-#   scripts/ship.sh                       # prompts for a commit message, defaults to patch
-#   scripts/ship.sh "fix: typo" skip      # commit + push only, no release
+#   scripts/release-cycle.sh ["commit message"] [patch|minor|major|skip]
+#   scripts/release-cycle.sh                       # prompts for a commit message, defaults to patch
+#   scripts/release-cycle.sh "fix: typo" skip      # commit + push only, no release
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -22,7 +22,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
   git status --short
   if [[ -z "$COMMIT_MSG" ]]; then
     if [[ -t 0 ]]; then
-      read -rp "Commit message: " COMMIT_MSG
+      read -erp "Commit message: " COMMIT_MSG
     else
       echo "Working tree is dirty and no commit message was given (non-interactive). Aborting." >&2
       exit 1
@@ -46,7 +46,7 @@ if [[ "$BRANCH" == "main" ]]; then
 else
   git push origin "HEAD:$BRANCH"
   echo "Creating/merging PR into main..."
-  PR_URL="$(gh pr create --base main --head "$BRANCH" --title "Merge $BRANCH into main" --body "Auto-merged by scripts/ship.sh" 2>/dev/null || gh pr view "$BRANCH" --json url --jq .url)"
+  PR_URL="$(gh pr create --base main --head "$BRANCH" --title "Merge $BRANCH into main" --body "Auto-merged by scripts/release-cycle.sh" 2>/dev/null || gh pr view "$BRANCH" --json url --jq .url)"
   gh pr merge "$PR_URL" --merge --admin
   git checkout main
   git pull origin main
