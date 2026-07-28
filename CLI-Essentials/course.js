@@ -731,8 +731,110 @@ chmod 755 deploy.sh`,
     task: `จงให้สิทธิ์ execute กับไฟล์ <code>deploy.sh</code> ด้วย <code>chmod +x</code>`
   },
   {
-    id: "unix_trap_cleanup",
+    id: "unix_cd_navigate",
     meta: "บทที่ 21",
+    title: "Unix cd: สลับโฟลเดอร์และย้อนกลับแบบไม่ต้องพิมพ์ Path เต็ม",
+    template: `# สถานการณ์: อยู่ในโฟลเดอร์ project/tests/e2e อยู่ ต้องขึ้นไปที่ root ของโปรเจกต์ (project/) เพื่อรันคำสั่งอื่นก่อน
+# 1. ขึ้นไป 2 ระดับจากโฟลเดอร์ปัจจุบันในคำสั่งเดียว
+# WRITE YOUR CODE HERE
+
+
+# 2. ทำงานที่ root เสร็จแล้ว สลับกลับไปโฟลเดอร์ก่อนหน้า (project/tests/e2e) โดยไม่ต้องพิมพ์ path เต็มซ้ำ
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง cd...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasUp = lines.some(l => /^cd\s+\.\.\/\.\.$/.test(l));
+      const hasBack = lines.some(l => /^cd\s+-$/.test(l));
+
+      if (!hasUp) {
+        throw new Error("ไม่พบคำสั่งขึ้นไป 2 ระดับ\nตัวอย่าง: cd ../..");
+      }
+      if (!hasBack) {
+        throw new Error("ไม่พบคำสั่งสลับกลับไปโฟลเดอร์ก่อนหน้า\nตัวอย่าง: cd -");
+      }
+      log("✓ ใช้ cd ../.. แล้ว cd - ถูกต้อง");
+    },
+    hint: "การขึ้นหลายระดับใช้ .. คั่นด้วย / ซ้อนกันได้ในคำสั่งเดียว ส่วนการกลับไปโฟลเดอร์ก่อนหน้ามีทางลัดตัวเดียวที่ไม่ต้องพิมพ์ path เต็ม (คล้ายปุ่ม back)",
+    solution: `cd ../..
+cd -`,
+    theory: `<code>cd</code> (change directory) เป็นคำสั่งพื้นฐานที่สุดในการสลับตำแหน่งที่ทำงานอยู่ของ shell แต่มีทางลัดที่ช่วยประหยัดเวลาได้เยอะ:<br/><br/>
+    • <code>cd &lt;path&gt;</code> — ไป path ที่ระบุ (relative หรือ absolute ก็ได้)<br/>
+    • <code>cd ..</code> — ขึ้น 1 ระดับ, <code>cd ../..</code> — ขึ้น 2 ระดับ (ซ้อน <code>..</code> ต่อกันด้วย <code>/</code> ได้เรื่อยๆ)<br/>
+    • <code>cd</code> (ไม่ใส่ argument) หรือ <code>cd ~</code> — กลับไป home directory ของ user ทันที<br/>
+    • <code>cd -</code> — สลับกลับไปโฟลเดอร์<strong>ก่อนหน้า</strong>ที่เพิ่งอยู่ (เก็บไว้ใน environment variable <code>$OLDPWD</code>) กด <code>cd -</code> สองครั้งติดกันจะสลับไปมาระหว่าง 2 โฟลเดอร์เหมือนปุ่ม back/forward<br/><br/>
+    ใช้ <code>pwd</code> (print working directory) เช็คได้ตลอดว่าตอนนี้อยู่ที่โฟลเดอร์ไหน — มีประโยชน์มากตอนเขียน script เพราะสคริปต์ไม่รู้ context ว่าถูกเรียกจากโฟลเดอร์ไหน ต้อง <code>cd</code> ไปตำแหน่งที่ถูกต้องก่อนเสมอ`,
+    example: `# เช็คตำแหน่งปัจจุบันก่อน-หลัง cd เพื่อยืนยันว่าไปถูกที่
+pwd
+cd ../..
+pwd`,
+    task: `จงขึ้นไป 2 ระดับด้วย <code>cd ../..</code> แล้วสลับกลับไปโฟลเดอร์ก่อนหน้าด้วย <code>cd -</code>`
+  },
+  {
+    id: "unix_mkdir_parents",
+    meta: "บทที่ 22",
+    title: "Unix mkdir -p: สร้างโฟลเดอร์ซ้อนหลายชั้นในคำสั่งเดียว",
+    template: `# สถานการณ์: ต้องการสร้างโครงสร้างโฟลเดอร์เก็บผลเทส tests/e2e/fixtures แต่ทั้ง tests/ และ tests/e2e/ ยังไม่มีอยู่เลยสักโฟลเดอร์
+#           (mkdir tests/e2e/fixtures เฉยๆ จะ error: No such file or directory)
+# 1. สร้างโฟลเดอร์ tests/e2e/fixtures พร้อมกับโฟลเดอร์แม่ที่ยังไม่มีทั้งหมดในคำสั่งเดียว
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง mkdir...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasMkdir = /mkdir\s+-p\s+tests\/e2e\/fixtures\b/.test(activeCode);
+      if (hasMkdir) {
+        log("✓ ใช้ mkdir -p tests/e2e/fixtures ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง mkdir -p tests/e2e/fixtures\nตัวอย่าง: mkdir -p tests/e2e/fixtures");
+      }
+    },
+    hint: "mkdir เฉยๆ สร้างได้แค่โฟลเดอร์ปลายทางเดียวและต้องมีโฟลเดอร์แม่อยู่ก่อนแล้ว มี flag ตัวเดียวที่สั่งให้สร้างโฟลเดอร์แม่ทุกชั้นที่ยังไม่มีไปพร้อมกันด้วย",
+    solution: `mkdir -p tests/e2e/fixtures`,
+    theory: `<code>mkdir &lt;path&gt;</code> แบบ default สร้างได้แค่โฟลเดอร์ปลายทางเดียว และ<strong>ต้องมีโฟลเดอร์แม่อยู่ก่อนแล้วเท่านั้น</strong> ถ้า path ซ้อนหลายชั้นแต่โฟลเดอร์แม่ยังไม่มีจะเจอ error <code>No such file or directory</code> ทันที<br/><br/>
+    <code>-p</code> (parents) แก้ปัญหานี้: สร้างโฟลเดอร์แม่ทุกชั้นที่ยังไม่มีให้อัตโนมัติ ก่อนจะสร้างโฟลเดอร์ปลายทางจริง — <code>mkdir -p tests/e2e/fixtures</code> จะสร้างทั้ง <code>tests/</code>, <code>tests/e2e/</code>, และ <code>tests/e2e/fixtures/</code> ในคำสั่งเดียว แม้จะไม่มีสักโฟลเดอร์มาก่อนเลยก็ตาม<br/><br/>
+    ข้อดีอีกอย่าง: <code>-p</code> ทำให้คำสั่ง<strong>idempotent</strong> (รันซ้ำได้โดยไม่ error) — ถ้าโฟลเดอร์มีอยู่แล้วบางส่วนหรือทั้งหมด <code>mkdir -p</code> จะไม่ error เลย ต่างจาก <code>mkdir</code> เฉยๆ ที่จะ error ทันทีถ้าโฟลเดอร์ปลายทางมีอยู่แล้ว — เพราะแบบนี้ script ที่รัน setup/deploy ซ้ำๆ (เช่น CI pipeline) มักใช้ <code>mkdir -p</code> เสมอแทน <code>mkdir</code> เฉยๆ`,
+    example: `# สร้างหลายโฟลเดอร์พร้อมกันในคำสั่งเดียว (แต่ละอันมี -p ในตัว)
+mkdir -p reports/{screenshots,logs,coverage}`,
+    task: `จงสร้างโฟลเดอร์ <code>tests/e2e/fixtures</code> พร้อมโฟลเดอร์แม่ที่ยังไม่มีทั้งหมด ด้วย <code>mkdir -p</code>`
+  },
+  {
+    id: "unix_symlink",
+    meta: "บทที่ 23",
+    title: "Unix Symbolic Link: ชี้ชื่อสั้นไปยังไฟล์จริง ไม่ต้อง Copy ซ้ำ",
+    template: `# สถานการณ์: มีไฟล์ config จริงอยู่ที่ config/production.env อยากให้เครื่องมือที่ root โปรเจกต์เข้าถึงผ่านชื่อ .env สั้นๆ
+#           โดยไม่ต้อง copy ไฟล์ซ้ำ (อยากแก้ที่เดียว แล้วมีผลทั้งคู่)
+# 1. สร้าง symbolic link ชื่อ .env ที่ root โปรเจกต์ ให้ชี้ไปที่ config/production.env
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง ln -s...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasSymlink = /ln\s+-s\s+config\/production\.env\s+\.env\b/.test(activeCode);
+      if (hasSymlink) {
+        log("✓ ใช้ ln -s config/production.env .env ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง ln -s config/production.env .env\nตัวอย่าง: ln -s config/production.env .env");
+      }
+    },
+    hint: "คำสั่งสร้าง link มี flag ตัวเดียวที่ทำให้เป็น 'symbolic' (ตัวชี้ ไม่ใช่ก็อปปี้จริง) แล้วเรียงลำดับ argument เป็น: ไฟล์จริงที่จะถูกชี้ไปก่อน ตามด้วยชื่อ link ที่จะสร้างใหม่",
+    solution: `ln -s config/production.env .env`,
+    theory: `<code>ln -s &lt;target&gt; &lt;link_name&gt;</code> สร้าง<strong>symbolic link</strong> (symlink) — ไฟล์พิเศษที่ทำหน้าที่เป็นแค่ "ตัวชี้" ไปยังไฟล์/โฟลเดอร์จริงอีกที่หนึ่ง ไม่ใช่การ copy เนื้อหาไปจริงๆ<br/><br/>
+    ข้อสำคัญของ <code>ln -s</code> ที่ต่างจาก copy:<br/>
+    • แก้ไขไฟล์ผ่าน symlink เท่ากับแก้ไฟล์ต้นฉบับจริง (เพราะชี้ไปที่เดียวกัน) — ไม่มีปัญหาข้อมูล 2 ชุดไม่ตรงกัน<br/>
+    • <code>ls -l</code> จะโชว์ symlink เป็น <code>.env -&gt; config/production.env</code> ให้เห็นชัดว่าชี้ไปไหน<br/>
+    • <code>rm .env</code> ลบแค่ตัว link ทิ้ง <strong>ไม่กระทบไฟล์ต้นฉบับ</strong> (<code>config/production.env</code> ยังอยู่ปกติ)<br/>
+    • ลืมใส่ <code>-s</code> จะได้ <strong>hard link</strong> แทน (ชี้ตรงไปที่ข้อมูลบน disk เดียวกันเป๊ะ ข้ามไดรฟ์ไม่ได้ และลบต้นฉบับไม่ได้ถ้ายังมี hard link เหลืออยู่) — งาน QA/dev ทั่วไปเกือบทั้งหมดใช้ symbolic link (<code>-s</code>) ไม่ใช่ hard link<br/><br/>
+    ใช้บ่อยตอนสลับ config ระหว่าง environment (เช่น <code>ln -sf config/staging.env .env</code> เปลี่ยนไปชี้ staging แทน production แบบ overwrite link เดิมด้วย <code>-f</code>) หรือตอน tool ต้องการชื่อไฟล์คงที่แต่เนื้อหาจริงเปลี่ยนตาม version`,
+    example: `# สลับ .env ไปชี้ staging แทน production (-f = force เขียนทับ link เดิม)
+ln -sf config/staging.env .env
+# เช็คว่า .env ชี้ไปไฟล์ไหนอยู่ตอนนี้
+ls -l .env`,
+    task: `จงสร้าง symbolic link ชื่อ <code>.env</code> ให้ชี้ไปที่ <code>config/production.env</code> ด้วย <code>ln -s</code>`
+  },
+  {
+    id: "unix_trap_cleanup",
+    meta: "บทที่ 24",
     title: "Unix trap: ล้างไฟล์ชั่วคราวอัตโนมัติแม้สคริปต์ล้มเหลว",
     template: `# หมายเหตุ: Scripts/generate-app-icon.sh จริงของ kouen-terminal สร้างโฟลเดอร์ temp ไว้ประมวลผล icon
 # แล้วต้องการลบโฟลเดอร์ temp นั้นทิ้งเสมอไม่ว่าสคริปต์จะจบแบบสำเร็จหรือ error กลางทาง
