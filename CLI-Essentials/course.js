@@ -246,8 +246,80 @@ git push`,
     task: `จง push branch feature/login-fix ขึ้น origin พร้อมตั้งค่า upstream (-u) ในคำสั่งเดียว`
   },
   {
-    id: "git_lazygit_intro",
+    id: "git_amend",
     meta: "บทที่ 8",
+    title: "Git Commit --amend: แก้ไข Commit ล่าสุดโดยไม่สร้างใหม่",
+    template: `# สถานการณ์: เพิ่ง commit ไปแล้วนึกขึ้นได้ว่าพิมพ์ commit message ผิด (ยังไม่ได้ push ออกไปไหน)
+# 1. แก้ไข commit ล่าสุดให้ใช้ข้อความใหม่ว่า 'fix: correct login validation logic' แทนข้อความเดิม
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git commit --amend...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasAmend = /git commit\s+--amend\s+-m\s+["']fix: correct login validation logic["']/.test(activeCode);
+      if (hasAmend) {
+        log("✓ ใช้ git commit --amend -m \"fix: correct login validation logic\" ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git commit --amend -m \"fix: correct login validation logic\"\nตัวอย่าง: git commit --amend -m \"fix: correct login validation logic\"");
+      }
+    },
+    hint: "amend ไม่ใช่คำสั่งแยกของ git แต่เป็น flag ต่อท้าย git commit ที่บอกว่าให้แก้ไข commit ล่าสุดแทนสร้างใหม่ ใช้คู่กับ -m เพื่อตั้งข้อความใหม่ได้เลยในคำสั่งเดียว",
+    solution: `git commit --amend -m "fix: correct login validation logic"`,
+    theory: `<strong>git commit --amend</strong> ไม่ใช่คำสั่งเดี่ยวๆ (ไม่มี <code>git amend</code>) แต่เป็น<strong>ตัวเลือกของ <code>git commit</code></strong> ที่สั่งว่า "แทนที่จะสร้าง commit ใหม่ ให้ไปแก้ไข commit ล่าสุดแทน" — commit เดิมจะถูกแทนที่ด้วย commit hash ใหม่ทั้งหมด (ไม่ใช่แก้ของเดิม)<br/><br/>
+    ใช้งานได้ 2 แบบ:<br/>
+    1. <code>git commit --amend -m "ข้อความใหม่"</code> — เปลี่ยนแค่ commit message เท่านั้น<br/>
+    2. <code>git add &lt;ไฟล์ที่ลืม&gt; && git commit --amend --no-edit</code> — เพิ่มไฟล์เข้า commit เดิม โดย <code>--no-edit</code> คงข้อความเดิมไว้ ไม่เปิด editor ให้แก้<br/><br/>
+    <strong>ข้อควรระวังสำคัญที่สุด:</strong> ห้าม amend commit ที่ <strong>push ไปแล้วและคนอื่นดึงไปใช้ต่อ</strong> เพราะ amend เปลี่ยน commit hash ทำให้ history ของเราไม่ตรงกับที่คนอื่นมีอยู่ในเครื่อง ถ้าจำเป็นต้อง amend commit ที่ push ไปแล้ว (ยังไม่มีใครดึงไปใช้ต่อ) ต้อง force push ด้วย <code>--force-with-lease</code> ตามด้วยเสมอ (ห้ามใช้ <code>--force</code> เปล่าๆ)`,
+    example: `# ลืม add ไฟล์เข้า commit ล่าสุด แก้โดยไม่เปลี่ยนข้อความเดิม
+git add login.spec.ts
+git commit --amend --no-edit`,
+    task: `จงแก้ไข commit ล่าสุดให้ใช้ข้อความใหม่ว่า <code>"fix: correct login validation logic"</code> ด้วย <code>git commit --amend -m</code>`
+  },
+  {
+    id: "git_tag_release",
+    meta: "บทที่ 9",
+    title: "Git Tag: ติด Tag เวอร์ชัน (Semantic Versioning) สำหรับ Release",
+    template: `# สถานการณ์: โค้ดบน main พร้อม release เป็นเวอร์ชัน v1.2.0 แล้ว ต้องการติด annotated tag พร้อมข้อความอธิบาย
+# 1. สร้าง annotated tag ชื่อ 'v1.2.0' พร้อมข้อความ 'Release v1.2.0: add login retry logic'
+# WRITE YOUR CODE HERE
+
+
+# 2. push tag นั้นขึ้น origin (push ปกติไม่ส่ง tag ไปด้วยอัตโนมัติ)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git tag...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasTag = /git tag\s+-a\s+v1\.2\.0\s+-m\s+["']Release v1\.2\.0: add login retry logic["']/.test(activeCode);
+      const hasPush = /git push\s+origin\s+v1\.2\.0\b/.test(activeCode);
+      if (!hasTag) {
+        throw new Error("ไม่พบคำสั่ง git tag -a v1.2.0 -m \"Release v1.2.0: add login retry logic\"\nตัวอย่าง: git tag -a v1.2.0 -m \"...\"");
+      }
+      if (!hasPush) {
+        throw new Error("ไม่พบคำสั่ง git push origin v1.2.0\nตัวอย่าง: git push origin v1.2.0");
+      }
+      log("✓ ใช้ git tag -a v1.2.0 -m \"...\" แล้ว push origin v1.2.0 ถูกต้อง");
+    },
+    hint: "annotated tag ต้องใช้ flag -a ระบุชื่อ tag ตามด้วย -m ใส่ข้อความอธิบาย (เหมือน commit message) จากนั้น git push ธรรมดาไม่ส่ง tag ไปให้อัตโนมัติ ต้องระบุชื่อ tag ต่อท้าย origin ตรงๆ อีกคำสั่งหนึ่ง",
+    solution: `git tag -a v1.2.0 -m "Release v1.2.0: add login retry logic"
+git push origin v1.2.0`,
+    theory: `<strong>git tag</strong> ปักหมุดไว้ที่ commit ใดคอมมิตหนึ่งแบบถาวร ใช้ทำเครื่องหมายจุด release ของ semantic versioning (<code>MAJOR.MINOR.PATCH</code> เช่น <code>v1.2.0</code>: MAJOR เปลี่ยนตอน breaking change, MINOR เปลี่ยนตอนเพิ่มฟีเจอร์ที่ backward-compatible, PATCH เปลี่ยนตอนแก้บั๊กเฉยๆ)<br/><br/>
+    Tag มี 2 แบบ:<br/>
+    • <strong>Lightweight tag</strong> (<code>git tag v1.2.0</code> เฉยๆ) — แค่ pointer ชี้ไป commit ไม่มี metadata อะไรเพิ่ม<br/>
+    • <strong>Annotated tag</strong> (<code>git tag -a v1.2.0 -m "..."</code>) — เก็บผู้สร้าง, วันที่, และข้อความไว้ด้วย เหมือน commit object แยกต่างหาก — <strong>แนะนำให้ใช้แบบนี้เสมอสำหรับ release จริง</strong> เพราะมีข้อมูลตรวจสอบย้อนหลังได้ครบกว่า<br/><br/>
+    <strong>ข้อสำคัญที่พลาดกันบ่อย:</strong> <code>git push</code> ธรรมดา<strong>ไม่ส่ง tag ขึ้น remote ให้อัตโนมัติ</strong> ต้องระบุชื่อ tag ต่อท้ายเอง (<code>git push origin v1.2.0</code>) หรือถ้ามีหลาย tag ค้างอยู่อยากส่งพร้อมกันหมดใช้ <code>git push origin --tags</code> (ระวัง: จะ push tag ทุกอันที่มีในเครื่อง ไม่ใช่แค่อันใหม่)<br/><br/>
+    บน GitHub/GitLab การ push tag ขึ้นไปมักเป็นจุดเริ่มของ "Release" อัตโนมัติ (ผูก CI ให้ build/deploy ตอนเจอ tag ที่ตรง pattern <code>v*</code>)`,
+    example: `# ดู tag ทั้งหมดที่ตรงกับ pattern v1.* ที่มีอยู่ในเครื่อง
+git tag -l "v1.*"
+# ลบ tag ที่ตั้งผิดทั้ง local และ remote
+git tag -d v1.2.0
+git push origin --delete v1.2.0`,
+    task: `จงเขียนคำสั่งให้ครบ โดย:<br/>
+    1. สร้าง annotated tag ชื่อ <code>v1.2.0</code> พร้อมข้อความ <code>"Release v1.2.0: add login retry logic"</code><br/>
+    2. push tag นั้นขึ้น <code>origin</code>`
+  },
+  {
+    id: "git_lazygit_intro",
+    meta: "บทที่ 10",
     title: "lazygit: ครอบคำสั่ง git ที่เรียนมาทั้งหมดด้วย TUI",
     template: `# สถานการณ์: อยู่ในโฟลเดอร์ repo แล้ว อยากเปิด lazygit ขึ้นมาดูสถานะแบบเห็นภาพ แทนพิมพ์ git status/log ทีละคำสั่ง
 # 1. เปิด lazygit
@@ -284,7 +356,7 @@ lazygit`,
   },
   {
     id: "vim_survival",
-    meta: "บทที่ 9",
+    meta: "บทที่ 11",
     title: "Vim Survival: ติดอยู่ใน Editor ตอน git commit ทำไง",
     template: `# สถานการณ์: พิมพ์ git commit เฉยๆ (ไม่ใส่ -m) แล้วหลุดเข้า Vim โดยไม่ได้ตั้งใจ
 # 1. เข้าสู่โหมด Insert แล้วพิมพ์ข้อความ commit message ว่า 'fix: correct typo'
@@ -334,8 +406,48 @@ fix: correct typo
     2. กด <code>&lt;Esc&gt;</code> กลับ Normal mode แล้วพิมพ์ <code>:wq</code> เพื่อบันทึก+ออก`
   },
   {
+    id: "vim_navigation",
+    meta: "บทที่ 12",
+    title: "Vim การเคลื่อนที่พื้นฐาน: h j k l, gg, G, w, b",
+    template: `# สถานการณ์: เปิดไฟล์ log ยาวหลายร้อยบรรทัดอยู่ ต้องกระโดดไปดูบรรทัดแรกสุด แล้วไปดูบรรทัดสุดท้ายสุดของไฟล์
+# 1. กระโดดไปบรรทัดแรกสุดของไฟล์
+# WRITE YOUR CODE HERE
+
+
+# 2. กระโดดไปบรรทัดสุดท้ายสุดของไฟล์
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบลำดับคีย์ Vim...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasGg = lines.some(l => l === 'gg');
+      const hasG = lines.some(l => l === 'G');
+
+      if (!hasGg) {
+        throw new Error("ไม่พบคำสั่งกระโดดไปบรรทัดแรกสุด\nตัวอย่าง: พิมพ์ gg ใน Normal mode");
+      }
+      if (!hasG) {
+        throw new Error("ไม่พบคำสั่งกระโดดไปบรรทัดสุดท้ายสุด\nตัวอย่าง: พิมพ์ G (ตัวใหญ่) ใน Normal mode");
+      }
+      log("✓ ลำดับคีย์ gg → G ถูกต้อง");
+    },
+    hint: "นึกถึงคำสั่ง Normal mode ที่กดตัวอักษรเดิมซ้ำกัน 2 ครั้งเพื่อไปต้นไฟล์ แล้วตัวอักษรตัวใหญ่ตัวเดียวที่ไปท้ายไฟล์",
+    solution: `gg
+G`,
+    theory: `Vim ไม่จำเป็นต้องใช้ลูกศรเลย — <code>h</code> <code>j</code> <code>k</code> <code>l</code> คือซ้าย/ลง/ขึ้น/ขวา อยู่ตำแหน่งเดียวกับ home row ทำให้ไม่ต้องขยับมือออกจากแป้นพิมพ์หลัก<br/><br/>
+    การกระโดดระยะไกลที่ใช้บ่อยที่สุด:<br/>
+    • <code>gg</code> — ไปบรรทัดแรกสุดของไฟล์<br/>
+    • <code>G</code> — ไปบรรทัดสุดท้ายสุดของไฟล์<br/>
+    • <code>5G</code> (ใส่เลขนำหน้า) — ไปบรรทัดที่ 5 โดยตรง<br/>
+    • <code>w</code> — กระโดดไปต้นคำถัดไป, <code>b</code> — กระโดดถอยไปต้นคำก่อนหน้า<br/>
+    • <code>0</code> — ไปต้นบรรทัด, <code>$</code> — ไปท้ายบรรทัด<br/><br/>
+    หลักการ: แทบทุกคำสั่ง Normal mode ใส่ตัวเลขนำหน้าได้เพื่อ "ทำซ้ำกี่ครั้ง" เช่น <code>3w</code> กระโดดไป 3 คำถัดไป — เข้าใจ pattern นี้แล้วจะเดาคำสั่งใหม่ๆ ได้เองโดยไม่ต้องท่องจำทีละตัว`,
+    example: `# กระโดดไปบรรทัดที่ 42 ตรงๆ โดยไม่ต้องเลื่อนทีละบรรทัด
+42G`,
+    task: `จงกระโดดไปบรรทัดแรกสุดของไฟล์ด้วย <code>gg</code> แล้วกระโดดไปบรรทัดสุดท้ายสุดด้วย <code>G</code>`
+  },
+  {
     id: "vim_search_replace",
-    meta: "บทที่ 10",
+    meta: "บทที่ 13",
     title: "Vim Search & Replace: แก้ Config ไฟล์เร็วๆ ผ่าน SSH",
     template: `# สถานการณ์: ต้องเปลี่ยนค่า port ทุกจุดในไฟล์ config จาก 3000 เป็น 3001 ผ่าน SSH (ไม่มี GUI editor)
 # 1. เขียนคำสั่ง Vim แบบ Ex command แทนที่คำว่า 3000 เป็น 3001 ทุกจุด ทั้งไฟล์
@@ -368,7 +480,7 @@ fix: correct typo
   },
   {
     id: "vim_delete_yank",
-    meta: "บทที่ 11",
+    meta: "บทที่ 14",
     title: "Vim ลบ/คัดลอกบรรทัด: dd, yy, p",
     template: `# สถานการณ์: cursor อยู่บรรทัดที่ไม่ต้องการ อยากลบทิ้งแล้ววางกลับที่อื่น
 # 1. ลบทั้งบรรทัดที่ cursor อยู่ (เก็บเข้า register อัตโนมัติ)
@@ -404,8 +516,60 @@ p`,
     task: `จงลบทั้งบรรทัดที่ cursor อยู่ด้วย dd แล้ววางกลับด้วย p`
   },
   {
+    id: "vim_visual_mode",
+    meta: "บทที่ 15",
+    title: "Vim Visual Mode: เลือกข้อความก่อนแก้ไข",
+    template: `# สถานการณ์: ต้องการลบ 3 บรรทัดติดกันพร้อมกัน แทนที่จะกด dd ทีละบรรทัด 3 รอบ
+# 1. เข้าสู่ Visual Line mode (เลือกทีละบรรทัด)
+# WRITE YOUR CODE HERE
+
+
+# 2. เลื่อนลง 2 บรรทัดเพื่อขยายพื้นที่เลือกให้ครอบคลุม 3 บรรทัด (บรรทัดปัจจุบัน + อีก 2 บรรทัดถัดไป)
+
+
+# 3. ลบข้อความที่เลือกไว้ทั้งหมด
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบลำดับคีย์ Vim...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const vIdx = lines.findIndex(l => l === 'V');
+      const jIdx = lines.findIndex((l, i) => i > vIdx && /^j{2}$|^j$/.test(l));
+      const jCount = lines.filter(l => l === 'j').length;
+      const dIdx = lines.findIndex(l => l === 'd');
+
+      if (vIdx === -1) {
+        throw new Error("ไม่พบคำสั่งเข้า Visual Line mode\nตัวอย่าง: พิมพ์ V (ตัวใหญ่) ใน Normal mode");
+      }
+      if (!(lines.some(l => l === 'jj') || jCount >= 2)) {
+        throw new Error("ไม่พบคำสั่งเลื่อนลง 2 บรรทัดเพื่อขยายพื้นที่เลือก\nตัวอย่าง: พิมพ์ jj หรือ j สองครั้ง");
+      }
+      if (dIdx === -1 || dIdx < vIdx) {
+        throw new Error("ไม่พบคำสั่งลบข้อความที่เลือกไว้\nตัวอย่าง: พิมพ์ d หลังเลือกพื้นที่เสร็จแล้ว");
+      }
+      log("✓ ลำดับคีย์ V → jj → d ถูกต้อง");
+    },
+    hint: "นึกถึงตัวอักษรตัวใหญ่ตัวเดียวที่เข้าสู่โหมดเลือกแบบทีละบรรทัด จากนั้นเลื่อนลงด้วยคีย์เคลื่อนที่ปกติเพื่อขยายพื้นที่เลือก แล้วจบด้วยคำสั่งลบตัวเดียว (ตัวเดียวกับที่ใช้คู่กับ dd ปกติ แต่ไม่ต้องพิมพ์ซ้ำ)",
+    solution: `V
+jj
+d`,
+    theory: `<strong>Visual mode</strong> ให้เลือกข้อความก่อนสั่ง action แทนที่จะเดา motion ล่วงหน้า (เหมือน <code>3dd</code>) — เหมาะกับตอนไม่แน่ใจว่าพื้นที่ที่ต้องการมีกี่บรรทัด/กี่ตัวอักษรกันแน่ เพราะเห็น highlight ที่เลือกไว้แบบ real-time ก่อนตัดสินใจ<br/><br/>
+    3 โหมดย่อยของ Visual mode:<br/>
+    • <code>v</code> (ตัวเล็ก) — Character-wise: เลือกทีละตัวอักษร<br/>
+    • <code>V</code> (ตัวใหญ่) — Line-wise: เลือกทีละบรรทัดเต็ม<br/>
+    • <code>Ctrl+v</code> — Block-wise: เลือกเป็นสี่เหลี่ยม (ใช้แก้หลายบรรทัดที่ column เดียวกันพร้อมกัน)<br/><br/>
+    หลังเข้า Visual mode แล้ว ใช้คีย์เคลื่อนที่ปกติ (<code>j</code> <code>k</code> <code>w</code> <code>$</code> ฯลฯ) ขยาย/หดพื้นที่ที่เลือกไว้ได้ตามต้องการ จากนั้นกด action ตัวเดียวจบ (ไม่ต้องพิมพ์ซ้ำเหมือน <code>dd</code>):<br/>
+    • <code>d</code> — ลบสิ่งที่เลือก<br/>
+    • <code>y</code> — คัดลอกสิ่งที่เลือก (yank)<br/>
+    • <code>&gt;</code> / <code>&lt;</code> — เพิ่ม/ลด indent ของสิ่งที่เลือก`,
+    example: `# เลือกทั้งคำ (character-wise) แล้วคัดลอกแทนลบ
+v
+w
+y`,
+    task: `จงเข้าสู่ Visual Line mode ด้วย <code>V</code> แล้วเลื่อนลง 2 บรรทัดด้วย <code>jj</code> แล้วลบข้อความที่เลือกไว้ทั้งหมดด้วย <code>d</code>`
+  },
+  {
     id: "vim_undo_redo",
-    meta: "บทที่ 12",
+    meta: "บทที่ 16",
     title: "Vim Undo/Redo: ย้อนกลับเมื่อพิมพ์ผิด",
     template: `# สถานการณ์: เพิ่งลบ/แก้ไขผิดบรรทัด อยากย้อนกลับ แล้วเปลี่ยนใจอยากทำต่อใหม่
 # 1. ย้อนกลับการแก้ไขล่าสุด (undo)
@@ -440,7 +604,7 @@ Ctrl+r`,
   },
   {
     id: "unix_safe_script",
-    meta: "บทที่ 13",
+    meta: "บทที่ 17",
     title: "Unix Shell: Safe Script Header ที่ควรมีทุกไฟล์",
     template: `#!/usr/bin/env bash
 # 1. เพิ่ม safety header ที่ทำให้ script หยุดทันทีเมื่อเจอ error, ตัวแปรไม่ได้ประกาศ, หรือ pipe ล้มเหลว
@@ -475,7 +639,7 @@ cd "$ROOT"
   },
   {
     id: "unix_grep_pipe",
-    meta: "บทที่ 14",
+    meta: "บทที่ 18",
     title: "Unix Pipe + grep: เช็คว่าไฟล์อันตรายถูก Stage ไว้ไหม",
     template: `# หมายเหตุ: บรรทัดนี้ปรับจาก .githooks/commit-msg จริงของ kouen-terminal
 # 1. เช็คว่าไฟล์ที่ staged ไว้ (git diff --cached --name-only) มีคำว่า "Info.plist" อยู่หรือไม่
@@ -510,7 +674,7 @@ fi`,
   },
   {
     id: "unix_find_files",
-    meta: "บทที่ 15",
+    meta: "บทที่ 19",
     title: "Unix find: ค้นหาไฟล์ตามชื่อ/ประเภท (ใช้จริงใน Kouen Build Scripts)",
     template: `# หมายเหตุ: Scripts/run.sh จริงของ kouen-terminal ใช้ find ลบไฟล์ .html ที่ generate ไว้ในโฟลเดอร์ graphify-out ทั้งหมด
 # 1. ค้นหาไฟล์ (-type f) ที่ชื่อลงท้าย .html ในโฟลเดอร์ graphify-out แล้วลบทิ้งทันที (-delete)
@@ -538,8 +702,37 @@ find graphify-out -type f -name '*.html' -print`,
     task: `จงเขียนคำสั่ง find ค้นหาไฟล์ (-type f) ชื่อลงท้าย .html ในโฟลเดอร์ graphify-out แล้วลบทิ้ง (-delete)`
   },
   {
+    id: "unix_chmod",
+    meta: "บทที่ 20",
+    title: "Unix chmod: ให้สิทธิ์ Execute กับ Script",
+    template: `# สถานการณ์: เพิ่งเขียน deploy.sh เสร็จ พอสั่งรัน ./deploy.sh กลับเจอ "Permission denied"
+# 1. ให้สิทธิ์ execute กับไฟล์ deploy.sh
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง chmod...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasChmod = /chmod\s+\+x\s+deploy\.sh\b/.test(activeCode);
+      if (hasChmod) {
+        log("✓ ใช้ chmod +x deploy.sh ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง chmod +x deploy.sh\nตัวอย่าง: chmod +x deploy.sh");
+      }
+    },
+    hint: "นึกถึงคำสั่งเปลี่ยนสิทธิ์ไฟล์ของ Unix แล้วหา flag แบบสัญลักษณ์ที่แปลว่า 'เพิ่มสิทธิ์ execute' ต่อท้ายด้วยชื่อไฟล์ที่ต้องการ",
+    solution: `chmod +x deploy.sh`,
+    theory: `ไฟล์ทุกไฟล์ใน Unix มีสิทธิ์ 3 กลุ่ม: <strong>อ่าน (r)</strong>, <strong>เขียน (w)</strong>, <strong>รัน (x)</strong> — แยกกำหนดแยกกันได้ 3 ระดับ: เจ้าของไฟล์ (user), กลุ่ม (group), และคนอื่นทั้งหมด (others) เช่น <code>-rw-r--r--</code> ที่เห็นจาก <code>ls -l</code> แปลว่า เจ้าของอ่าน+เขียนได้แต่รันไม่ได้ ส่วนกลุ่ม/คนอื่นอ่านได้อย่างเดียว<br/><br/>
+    ไฟล์ script ที่เพิ่งสร้างใหม่ (เช่นจาก <code>touch</code> หรือ editor) มักไม่มีสิทธิ์ execute ติดมาด้วย ทำให้รันตรงๆ ด้วย <code>./script.sh</code> แล้วเจอ <code>Permission denied</code> ทันที ทั้งที่เนื้อหาในไฟล์ไม่มีปัญหาอะไรเลย<br/><br/>
+    <code>chmod +x &lt;ไฟล์&gt;</code> คือรูปแบบสัญลักษณ์ (symbolic) เพิ่มสิทธิ์ execute ให้ทั้ง user/group/others พร้อมกัน — ใช้บ่อยและจำง่ายกว่ารูปแบบตัวเลข (numeric mode) อย่าง <code>chmod 755 deploy.sh</code> ที่ให้ผลเทียบเท่ากัน (7 = rwx สำหรับเจ้าของ, 5 = r-x สำหรับกลุ่มและคนอื่น)`,
+    example: `# เช็คสิทธิ์ปัจจุบันของไฟล์ก่อน chmod
+ls -l deploy.sh
+# ให้สิทธิ์แบบระบุตัวเลขเทียบเท่า chmod +x (rwx สำหรับเจ้าของ, r-x สำหรับกลุ่ม/คนอื่น)
+chmod 755 deploy.sh`,
+    task: `จงให้สิทธิ์ execute กับไฟล์ <code>deploy.sh</code> ด้วย <code>chmod +x</code>`
+  },
+  {
     id: "unix_trap_cleanup",
-    meta: "บทที่ 16",
+    meta: "บทที่ 21",
     title: "Unix trap: ล้างไฟล์ชั่วคราวอัตโนมัติแม้สคริปต์ล้มเหลว",
     template: `# หมายเหตุ: Scripts/generate-app-icon.sh จริงของ kouen-terminal สร้างโฟลเดอร์ temp ไว้ประมวลผล icon
 # แล้วต้องการลบโฟลเดอร์ temp นั้นทิ้งเสมอไม่ว่าสคริปต์จะจบแบบสำเร็จหรือ error กลางทาง
