@@ -1767,6 +1767,483 @@ echo $API_URL
 unset API_URL`,
     task: `จงตั้งค่า environment variable <code>API_URL</code> เป็น <code>https://staging.api.example.com</code> ด้วย <code>export</code>`
   },
+  {
+    id: "git_rebase_interactive",
+    meta: "ขั้นสูง 3",
+    title: "Git Rebase -i: รวมหลาย Commit เข้าด้วยกันก่อน Push",
+    template: `# สถานการณ์: มี 3 commit ล่าสุดที่จริงๆ แก้เรื่องเดียวกัน (พัฒนาไปทีละนิดระหว่างทาง) ยังไม่ได้ push อยากรวมเป็น commit เดียวก่อนให้คนอื่นเห็น
+# 1. เปิด interactive rebase ครอบคลุม 3 commit ล่าสุด
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git rebase -i...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasRebaseI = /git rebase\s+-i\s+HEAD~3\b/.test(activeCode);
+      if (hasRebaseI) {
+        log("✓ ใช้ git rebase -i HEAD~3 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git rebase -i HEAD~3\nตัวอย่าง: git rebase -i HEAD~3");
+      }
+    },
+    hint: "rebase ปกติมี flag ที่เปิด editor ให้เลือก action ทีละ commit ได้ (interactive) แล้วระบุว่าย้อนไปกี่ commit จาก HEAD",
+    solution: `git rebase -i HEAD~3`,
+    theory: `<code>git rebase -i HEAD~3</code> เปิด editor แสดงรายชื่อ 3 commit ล่าสุด (เรียงเก่าสุดไปใหม่สุด) แต่ละบรรทัดขึ้นต้นด้วย <code>pick</code> — แก้คำนำหน้าเพื่อสั่ง action ต่างกัน:<br/><br/>
+    • <code>pick</code> — ใช้ commit นี้ตามเดิม<br/>
+    • <code>squash</code> (หรือ <code>s</code>) — รวม commit นี้เข้ากับ commit ด้านบนติดกัน (ต้องแก้ commit message รวมกันในหน้าถัดไป)<br/>
+    • <code>reword</code> (<code>r</code>) — เก็บเนื้อหาเดิม แค่แก้ commit message<br/>
+    • <code>drop</code> (<code>d</code>) — ลบ commit นี้ทิ้งไปเลย<br/>
+    • สลับลำดับบรรทัดในไฟล์ = สลับลำดับ commit<br/><br/>
+    บันทึกแล้วปิด editor (<code>:wq</code>) เพื่อให้ rebase ทำงานตามที่สั่งไว้<br/><br/>
+    <strong style="color:#e00">กฎเดียวกับ amend:</strong> ห้าม rebase -i กับ commit ที่ push ไปแล้วและคนอื่นดึงไปใช้ต่อ เพราะเปลี่ยน commit hash ทั้งหมดที่ถูกแก้`,
+    example: `# squash 3 commit ล่าสุดรวมเป็นก้อนเดียวแบบอัตโนมัติไม่ต้องเปิด editor เอง (ใช้ message ของ commit แรกสุด)
+git reset --soft HEAD~3 && git commit -m "feat: complete login validation logic"`,
+    task: `จงเปิด interactive rebase ครอบคลุม 3 commit ล่าสุดด้วย <code>git rebase -i HEAD~3</code>`
+  },
+  {
+    id: "git_cherry_pick",
+    meta: "ขั้นสูง 4",
+    title: "Git Cherry-pick: หยิบ Commit เดียวจาก Branch อื่นมาใช้",
+    template: `# สถานการณ์: มี commit แก้บั๊กด่วน (hash abc1234) อยู่ใน branch hotfix ต้องการเอาแค่ commit นี้อันเดียวมาใช้ที่ branch ปัจจุบัน โดยไม่ merge ทั้ง branch
+# 1. หยิบ commit abc1234 มา apply เป็น commit ใหม่ที่ branch ปัจจุบัน
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git cherry-pick...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasCherryPick = /git cherry-pick\s+abc1234\b/.test(activeCode);
+      if (hasCherryPick) {
+        log("✓ ใช้ git cherry-pick abc1234 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git cherry-pick abc1234\nตัวอย่าง: git cherry-pick abc1234");
+      }
+    },
+    hint: "คำสั่งที่หยิบการแก้ไขจาก commit เดียว (ระบุด้วย hash) มาสร้างเป็น commit ใหม่ที่ branch ปัจจุบัน ไม่เกี่ยวกับ commit อื่นใน branch ต้นทางเลย",
+    solution: `git cherry-pick abc1234`,
+    theory: `<strong>git cherry-pick &lt;commit&gt;</strong> เอาการเปลี่ยนแปลง (diff) จาก commit เดียวมา apply เป็น<strong>commit ใหม่</strong>ที่ branch ปัจจุบัน (hash ใหม่ แต่เนื้อหา/ข้อความ commit เหมือนเดิมโดย default) — ต่างจาก <code>merge</code> ที่เอาทั้ง branch มารวม cherry-pick เอาแค่ commit เดียวที่เลือกจริงๆ<br/><br/>
+    ใช้บ่อยตอน "backport" — commit แก้บั๊กที่ทำไว้ใน branch หนึ่ง (เช่น hotfix) แล้วอยากเอาไปใช้ใน branch อื่นด้วย (เช่น release branch เก่า) โดยไม่ต้อง merge ทั้งประวัติ branch เข้าไป<br/><br/>
+    อาจเกิด conflict ได้ถ้า context รอบๆ commit ต่างกันมากระหว่าง 2 branch ต้องแก้ conflict เองแล้ว <code>git cherry-pick --continue</code> เหมือน rebase`,
+    example: `# หยิบมาแต่ยัง stage ไว้เฉยๆ ไม่สร้าง commit ทันที (เผื่ออยากแก้อะไรเพิ่มก่อน)
+git cherry-pick --no-commit abc1234`,
+    task: `จงหยิบ commit <code>abc1234</code> มา apply เป็นcommit ใหม่ที่ branch ปัจจุบันด้วย <code>git cherry-pick abc1234</code>`
+  },
+  {
+    id: "git_reflog",
+    meta: "ขั้นสูง 5",
+    title: "Git Reflog: กู้คืน Commit ที่คิดว่าหายไปแล้ว",
+    template: `# สถานการณ์: เผลอ git reset --hard ไปโดนของดีทิ้งหมด คิดว่า commit หายไปแล้วถาวร แต่จริงๆ git ยังไม่ลบทิ้งทันที
+# 1. ดูประวัติการเคลื่อนที่ทั้งหมดของ HEAD เพื่อหา commit hash ที่หายไป
+# WRITE YOUR CODE HERE
+
+
+# 2. สมมติเจอว่าจุดที่ต้องการอยู่ที่ตำแหน่ง 2 ก้อนก่อนหน้า (HEAD@{2}) ย้อนกลับไปที่จุดนั้นแบบเอาไฟล์กลับมาด้วย
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git reflog...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasReflog = /git reflog\b/.test(activeCode);
+      const hasReset = /git reset\s+--hard\s+HEAD@\{2\}/.test(activeCode);
+      if (!hasReflog) {
+        throw new Error("ไม่พบคำสั่ง git reflog\nตัวอย่าง: git reflog");
+      }
+      if (!hasReset) {
+        throw new Error("ไม่พบคำสั่ง git reset --hard HEAD@{2}\nตัวอย่าง: git reset --hard HEAD@{2}");
+      }
+      log("✓ ใช้ git reflog แล้ว git reset --hard HEAD@{2} ถูกต้อง");
+    },
+    hint: "คำสั่งแรกแสดงประวัติทุกตำแหน่งที่ HEAD เคยชี้ไป (รวมจุดที่ดูเหมือนหายไปแล้วจาก log ปกติ) ส่วนคำสั่งที่สองย้อนกลับไปตำแหน่งที่ N ใน reflog นั้น ใช้ syntax HEAD@{N}",
+    solution: `git reflog
+git reset --hard HEAD@{2}`,
+    theory: `<strong>git reflog</strong> บันทึกทุกตำแหน่งที่ <code>HEAD</code> เคยชี้ไป — ทุก commit, reset, rebase, checkout ที่เคยทำ แม้ commit นั้นจะไม่ถูกอ้างถึงจาก branch ไหนแล้วก็ตาม (เช่นโดน <code>reset --hard</code> ทิ้งไป) git ก็<strong>ยังไม่ลบข้อมูลจริงทันที</strong> (เก็บไว้ในเครื่องประมาณ 90 วันโดย default ก่อน garbage collect)<br/><br/>
+    <code>HEAD@{N}</code> อ้างอิงตำแหน่งที่ N ย้อนหลังใน reflog (เช่น <code>HEAD@{2}</code> = 2 ก้อนก่อนหน้าตำแหน่งปัจจุบันตาม reflog) — <code>git reset --hard HEAD@{2}</code> ย้อนกลับไปที่จุดนั้นพร้อมเอาไฟล์กลับมาด้วย<br/><br/>
+    reflog คือ "ตาข่ายนิรภัย" ของ git สำหรับความผิดพลาดที่ทำในเครื่องตัวเองแทบทุกแบบ (reset ผิด, rebase พัง, ลบ branch เผลอ) แต่<strong>อยู่แค่ในเครื่องตัวเอง ไม่ถูก push ไปไหน</strong> — คนอื่นกู้จาก reflog ของเราไม่ได้`,
+    example: `# ดู reflog แบบมีเวลากำกับด้วยว่าแต่ละจุดเกิดขึ้นเมื่อไหร่
+git reflog --date=iso`,
+    task: `จงดูประวัติทั้งหมดของ HEAD ด้วย <code>git reflog</code> แล้วย้อนกลับไปที่ <code>HEAD@{2}</code> แบบเอาไฟล์กลับมาด้วย <code>git reset --hard HEAD@{2}</code>`
+  },
+  {
+    id: "git_bisect",
+    meta: "ขั้นสูง 6",
+    title: "Git Bisect: หา Commit ต้นเหตุของบั๊กด้วย Binary Search",
+    template: `# สถานการณ์: เพิ่งเจอบั๊กตอนนี้ แต่ไม่รู้ว่า commit ไหนใน 100 commit ที่ผ่านมาที่ทำให้เกิด รู้แค่ว่า tag v1.0.0 ตอนนั้นยังไม่มีบั๊กแน่ๆ
+# 1. เริ่มกระบวนการ bisect
+# WRITE YOUR CODE HERE
+
+
+# 2. บอก git ว่า commit ปัจจุบัน (ล่าสุด) มีบั๊ก
+
+
+# 3. บอก git ว่า tag v1.0.0 เป็นจุดที่ยังไม่มีบั๊ก (good) — จากนี้ git จะ checkout จุดกึ่งกลางให้ทดสอบเอง
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git bisect...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasStart = lines.some(l => l === 'git bisect start');
+      const hasBad = lines.some(l => l === 'git bisect bad');
+      const hasGood = lines.some(l => l === 'git bisect good v1.0.0');
+
+      if (!hasStart) throw new Error("ไม่พบคำสั่ง git bisect start\nตัวอย่าง: git bisect start");
+      if (!hasBad) throw new Error("ไม่พบคำสั่ง git bisect bad\nตัวอย่าง: git bisect bad");
+      if (!hasGood) throw new Error("ไม่พบคำสั่ง git bisect good v1.0.0\nตัวอย่าง: git bisect good v1.0.0");
+      log("✓ ใช้ git bisect start → bad → good v1.0.0 ถูกต้อง");
+    },
+    hint: "ต้องเริ่มโหมด bisect ก่อนเสมอ แล้วบอกสถานะ 2 จุด: จุดปัจจุบันที่รู้ว่ามีบั๊ก (bad) และจุดในอดีตที่รู้ว่ายังไม่มีบั๊ก (good) ระบุ tag/commit ต่อท้าย good ได้เลย",
+    solution: `git bisect start
+git bisect bad
+git bisect good v1.0.0`,
+    theory: `<strong>git bisect</strong> หา commit ต้นเหตุของบั๊กด้วย <strong>binary search</strong> แทนการไล่เช็คทีละ commit (O(log n) ครั้งแทน O(n)) — จาก 100 commit ใช้แค่ประมาณ 7 ครั้งก็เจอ<br/><br/>
+    ขั้นตอน:<br/>
+    1. <code>git bisect start</code> — เข้าสู่โหมด bisect<br/>
+    2. <code>git bisect bad</code> — บอกว่าตำแหน่งปัจจุบัน (HEAD) มีบั๊ก<br/>
+    3. <code>git bisect good v1.0.0</code> — บอกว่าจุดนี้ (tag/commit เก่า) ยังไม่มีบั๊กแน่ๆ — git จะ <code>checkout</code> ไปที่จุดกึ่งกลางระหว่าง good กับ bad ให้อัตโนมัติ<br/>
+    4. ทดสอบที่จุดกึ่งกลางนั้น แล้วบอกผล <code>git bisect good</code> หรือ <code>git bisect bad</code> ตามที่เจอ — ทำซ้ำจนกว่า git จะบอกว่าเจอ commit ต้นเหตุแล้ว<br/>
+    5. <code>git bisect reset</code> — ออกจากโหมด bisect กลับไป branch เดิมตอนหาเจอแล้ว`,
+    example: `# ให้ git ทดสอบอัตโนมัติด้วย script/test command แทนตอบ good/bad มือเอง (เร็วกว่ามาก)
+git bisect run npm test`,
+    task: `จงเริ่ม bisect ด้วย <code>git bisect start</code> บอกจุดปัจจุบันว่ามีบั๊กด้วย <code>git bisect bad</code> แล้วบอกจุด <code>v1.0.0</code> ว่ายังไม่มีบั๊กด้วย <code>git bisect good v1.0.0</code>`
+  },
+  {
+    id: "git_worktree",
+    meta: "ขั้นสูง 7",
+    title: "Git Worktree: ทำงานหลาย Branch พร้อมกันโดยไม่ต้อง Stash",
+    template: `# สถานการณ์: กำลังเขียนโค้ดค้างอยู่ใน branch feature-a ยังไม่พร้อม commit/stash แต่ต้องรีบไปแก้บั๊กด่วนใน branch hotfix แบบขนานกัน โดยไม่รบกวนโฟลเดอร์ปัจจุบันเลย
+# 1. สร้างโฟลเดอร์ทำงานใหม่ที่ ../hotfix-work ให้ checkout branch hotfix เข้าไปทำงานคู่ขนานกับโฟลเดอร์ปัจจุบัน
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git worktree...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasWorktree = /git worktree add\s+\.\.\/hotfix-work\s+hotfix\b/.test(activeCode);
+      if (hasWorktree) {
+        log("✓ ใช้ git worktree add ../hotfix-work hotfix ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง git worktree add ../hotfix-work hotfix\nตัวอย่าง: git worktree add ../hotfix-work hotfix");
+      }
+    },
+    hint: "worktree มีคำสั่งย่อย add ตามด้วย path โฟลเดอร์ใหม่ที่จะสร้าง แล้วตามด้วยชื่อ branch ที่ต้องการ checkout เข้าไปในโฟลเดอร์นั้น",
+    solution: `git worktree add ../hotfix-work hotfix`,
+    theory: `<strong>git worktree</strong> ให้ checkout หลาย branch พร้อมกันได้ในเวลาเดียวกัน คนละโฟลเดอร์ แต่ทั้งหมดแชร์ <code>.git</code> history/object เดียวกัน (ไม่ใช่ clone ซ้ำ ประหยัดพื้นที่และ sync กันเองอัตโนมัติ)<br/><br/>
+    <code>git worktree add &lt;path&gt; &lt;branch&gt;</code> สร้างโฟลเดอร์ใหม่ที่ <code>path</code> พร้อม checkout <code>branch</code> เข้าไปทันที — งานค้างใน branch เดิมที่โฟลเดอร์หลักไม่ถูกรบกวนเลย ไม่ต้อง <code>stash</code> ก่อนสลับเหมือนวิธีเดิม<br/><br/>
+    คำสั่งจัดการอื่น:<br/>
+    • <code>git worktree list</code> — ดู worktree ทั้งหมดที่มีอยู่<br/>
+    • <code>git worktree remove &lt;path&gt;</code> — ลบ worktree ทิ้งเมื่อทำงานเสร็จแล้ว`,
+    example: `# ดู worktree ทั้งหมดที่มีอยู่ตอนนี้
+git worktree list`,
+    task: `จงสร้าง worktree ใหม่ที่ <code>../hotfix-work</code> พร้อม checkout branch <code>hotfix</code> ด้วย <code>git worktree add ../hotfix-work hotfix</code>`
+  },
+  {
+    id: "vim_registers",
+    meta: "ขั้นสูง 8",
+    title: "Vim Named Registers: คัดลอกหลายก้อนพร้อมกันโดยไม่ทับกัน",
+    template: `# สถานการณ์: อยากคัดลอกบรรทัดปัจจุบันเก็บไว้ในที่เก็บแยกต่างหาก (ไม่ใช่ unnamed register ตัวเดียวที่ยกเลิกของเก่าทันทีที่ yank/delete ใหม่) แล้ววางออกมาทีหลัง
+# 1. คัดลอกบรรทัดปัจจุบันเก็บลง register ชื่อ a
+# WRITE YOUR CODE HERE
+
+
+# 2. วางเนื้อหาจาก register a ออกมา
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบลำดับคีย์ Vim...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasYank = lines.some(l => l === '"ayy');
+      const hasPaste = lines.some(l => l === '"ap');
+
+      if (!hasYank) throw new Error("ไม่พบคำสั่งคัดลอกลง register a\nตัวอย่าง: พิมพ์ \"ayy");
+      if (!hasPaste) throw new Error("ไม่พบคำสั่งวางจาก register a\nตัวอย่าง: พิมพ์ \"ap");
+      log("✓ ใช้ \"ayy แล้ว \"ap ถูกต้อง");
+    },
+    hint: "นำหน้าคำสั่ง yank/paste ปกติด้วย \" (double quote) ตามด้วยชื่อ register (ตัวอักษร a-z) ที่ต้องการใช้แทนที่ unnamed register เริ่มต้น",
+    solution: `"ayy
+"ap`,
+    theory: `<strong>Unnamed register</strong> (ตัวที่ <code>yy</code>/<code>dd</code>/<code>p</code> ใช้โดย default ไม่ต้องระบุอะไร) มีแค่<strong>ก้อนเดียว</strong> — yank/delete ใหม่ทับของเก่าทันที เก็บพร้อมกันหลายก้อนไม่ได้<br/><br/>
+    <strong>Named register</strong> (ตัวอักษร a-z) แก้ปัญหานี้ — เก็บได้อิสระจากกัน 26 ก้อนพร้อมกัน:<br/>
+    • <code>"ayy</code> — yank บรรทัดปัจจุบันเก็บลง register <code>a</code> (แทน <code>yy</code> เฉยๆ ที่ไปลงที่ unnamed register)<br/>
+    • <code>"ap</code> — วางเนื้อหาจาก register <code>a</code><br/>
+    • ใช้ตัวอักษรใหญ่แทน (เช่น <code>"Ayy</code>) — <strong>ต่อท้าย</strong>เข้า register เดิมแทนการเขียนทับ<br/><br/>
+    <code>:reg</code> ดูเนื้อหาทุก register พร้อมกันได้ ช่วยเช็คว่าเก็บอะไรไว้ตรงไหนบ้าง`,
+    example: `# ยก (yank) เข้า system clipboard ของ OS โดยตรง (แชร์กับโปรแกรมอื่นนอก Vim ได้)
+"+yy`,
+    task: `จง yank บรรทัดปัจจุบันลง register <code>a</code> ด้วย <code>"ayy</code> แล้ววางออกมาด้วย <code>"ap</code>`
+  },
+  {
+    id: "vim_split_windows",
+    meta: "ขั้นสูง 9",
+    title: "Vim Split Windows: ดู 2 ไฟล์พร้อมกันในหน้าจอเดียว",
+    template: `# สถานการณ์: กำลังแก้ login.ts อยู่ อยากเปิด test/login.spec.ts ดูคู่กันในหน้าจอเดียวกัน โดยไม่ต้องสลับ buffer ไปมา
+# 1. split หน้าจอแนวนอน เปิดไฟล์ test/login.spec.ts ขึ้นมาอีกช่อง
+# WRITE YOUR CODE HERE
+
+
+# 2. สลับ focus ไปยังหน้าต่างถัดไป
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง split...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasSplit = lines.some(l => l === ':sp test/login.spec.ts');
+      const hasSwitch = lines.some(l => /^ctrl-w\s*w$|^<c-w>\s*w$|^ctrl\+w\s*w$/i.test(l));
+
+      if (!hasSplit) throw new Error("ไม่พบคำสั่ง split เปิดไฟล์ test/login.spec.ts\nตัวอย่าง: :sp test/login.spec.ts");
+      if (!hasSwitch) throw new Error("ไม่พบคำสั่งสลับ focus ไปหน้าต่างถัดไป\nตัวอย่าง: Ctrl+w w");
+      log("✓ ใช้ :sp test/login.spec.ts แล้ว Ctrl+w w ถูกต้อง");
+    },
+    hint: "คำสั่ง Ex สำหรับ split แนวนอนตามด้วยชื่อไฟล์ที่จะเปิดในช่องใหม่ ส่วนการสลับ focus ระหว่างช่องใช้ปุ่ม Ctrl ค้างไว้กับ w แล้วกด w ซ้ำอีกทีเพื่อวนไปช่องถัดไป",
+    solution: `:sp test/login.spec.ts
+Ctrl+w w`,
+    theory: `<code>:sp &lt;ไฟล์&gt;</code> (split) แบ่งหน้าจอแนวนอนเป็น 2 ช่อง เปิดไฟล์ที่ระบุในช่องใหม่ (ถ้าไม่ใส่ชื่อไฟล์จะเปิดไฟล์เดิมซ้ำอีกช่อง เหมาะกับดู 2 จุดของไฟล์ยาวพร้อมกัน) — <code>:vsp</code> ทำแบบเดียวกันแต่แบ่งแนวตั้งแทน<br/><br/>
+    การสลับ focus ระหว่างช่อง (window) ทั้งหมดขึ้นต้นด้วย <code>Ctrl+w</code> ตามด้วยคีย์ที่สอง:<br/>
+    • <code>Ctrl+w w</code> — วนไปช่องถัดไป<br/>
+    • <code>Ctrl+w h/j/k/l</code> — ย้าย focus ตามทิศทาง (เหมือนคีย์เคลื่อนที่ปกติ)<br/>
+    • <code>Ctrl+w q</code> — ปิดช่องปัจจุบัน<br/><br/>
+    <code>:only</code> ปิดช่องอื่นทั้งหมด เหลือแค่ช่องปัจจุบันช่องเดียว — ต่างจาก buffer/tab ตรงที่ split ทำให้เห็นหลายไฟล์<strong>พร้อมกันในจอเดียว</strong> ไม่ต้องสลับไปมา`,
+    example: `# แบ่งแนวตั้งแทนแนวนอน เปิดไฟล์เดิมซ้ำเพื่อเทียบ 2 ส่วนของไฟล์ยาวเดียวกัน
+:vsp`,
+    task: `จง split แนวนอนเปิด <code>test/login.spec.ts</code> ด้วย <code>:sp test/login.spec.ts</code> แล้วสลับ focus ไปช่องถัดไปด้วย <code>Ctrl+w w</code>`
+  },
+  {
+    id: "vim_global_command",
+    meta: "ขั้นสูง 10",
+    title: "Vim Global Command: รันคำสั่งกับทุกบรรทัดที่ Match Pattern",
+    template: `# สถานการณ์: ไฟล์ log มีบรรทัด DEBUG ปนอยู่เต็มไปหมด อยากลบทุกบรรทัดที่มีคำว่า DEBUG ทิ้งทั้งไฟล์ในคำสั่งเดียว (ไม่ใช่ไล่ dd ทีละบรรทัด)
+# 1. ลบทุกบรรทัดที่มีคำว่า DEBUG ทิ้งทั้งไฟล์
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง :g...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasGlobal = /:g\/DEBUG\/d\b/.test(activeCode);
+      if (hasGlobal) {
+        log("✓ ใช้ :g/DEBUG/d ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง :g/DEBUG/d\nตัวอย่าง: :g/DEBUG/d");
+      }
+    },
+    hint: "คำสั่ง Ex ที่หาทุกบรรทัดที่ match pattern ก่อน (คั่นด้วย /) แล้วรันคำสั่งต่อท้ายกับทุกบรรทัดที่เจอ — คำสั่งที่จะรันในที่นี้คือคำสั่งลบบรรทัด",
+    solution: `:g/DEBUG/d`,
+    theory: `<code>:g/pattern/command</code> (global) หาทุกบรรทัดที่ match <code>pattern</code>ในไฟล์ทั้งหมดก่อน แล้วรัน Ex <code>command</code> ที่ระบุกับ<strong>ทุกบรรทัดที่เจอ</strong> — รวม "หา" กับ "ทำ" เป็นคำสั่งเดียว ไม่ต้องไล่ทีละบรรทัดเอง<br/><br/>
+    <code>:g/DEBUG/d</code> — หาทุกบรรทัดที่มีคำว่า <code>DEBUG</code> แล้ว <code>d</code> (delete) ทิ้งทุกบรรทัดนั้น<br/><br/>
+    ผสมกับ <code>:s</code> (substitute) ที่เรียนไปก่อนหน้าได้ด้วย: <code>:g/pattern/s/หา/แทน/</code> จะแทนที่แค่ในบรรทัดที่ match pattern เท่านั้น (ต่างจาก <code>:%s/หา/แทน/g</code> ที่ทำกับทุกบรรทัดไม่สนใจเงื่อนไข)<br/><br/>
+    <code>:g!/pattern/command</code> (หรือ <code>:v/pattern/command</code>) กลับด้าน — ทำกับบรรทัดที่<strong>ไม่ match</strong> pattern แทน`,
+    example: `# แทนที่คำว่า TODO เป็น DONE เฉพาะบรรทัดที่มีคำว่า TODO เท่านั้น
+:g/TODO/s/TODO/DONE/`,
+    task: `จงลบทุกบรรทัดที่มีคำว่า <code>DEBUG</code> ทิ้งทั้งไฟล์ด้วย <code>:g/DEBUG/d</code>`
+  },
+  {
+    id: "vim_marks",
+    meta: "ขั้นสูง 11",
+    title: "Vim Marks: ปักหมุดตำแหน่งแล้วกระโดดกลับมาแม่นยำ",
+    template: `# สถานการณ์: กำลังแก้ไฟล์ยาวอยู่ อยากปักหมุดตำแหน่งปัจจุบันไว้ก่อนเลื่อนไปทำที่อื่น แล้วอยากกระโดดกลับมาที่หมุดเดิมแบบแม่นยำทีหลัง
+# 1. ปักหมุดตำแหน่ง cursor ปัจจุบัน เก็บไว้ในชื่อ a
+# WRITE YOUR CODE HERE
+
+
+# 2. (เลื่อนไปทำที่อื่นแล้ว) กระโดดกลับมาตำแหน่งเป๊ะๆ ของหมุด a
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบลำดับคีย์ Vim...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasMark = lines.some(l => l === 'ma');
+      const hasJump = lines.some(l => l === '`a');
+
+      if (!hasMark) throw new Error("ไม่พบคำสั่งปักหมุด a\nตัวอย่าง: พิมพ์ ma ใน Normal mode");
+      if (!hasJump) throw new Error("ไม่พบคำสั่งกระโดดกลับไปหมุด a\nตัวอย่าง: พิมพ์ `a (backtick ตามด้วย a)");
+      log("✓ ใช้ ma แล้ว `a ถูกต้อง");
+    },
+    hint: "ปักหมุดใช้ m ตามด้วยชื่อหมุด (ตัวอักษรใดก็ได้) ส่วนกระโดดกลับไปตำแหน่งเป๊ะของหมุดนั้นใช้เครื่องหมาย backtick ตามด้วยชื่อหมุดเดียวกัน",
+    solution: `ma
+\`a`,
+    theory: `<code>m&lt;ตัวอักษร&gt;</code> ปักหมุด (mark) ที่ตำแหน่ง cursor ปัจจุบัน ผูกไว้กับชื่อที่ระบุ — <code>ma</code> ปักหมุดชื่อ <code>a</code>:<br/><br/>
+    • ตัวอักษร<strong>เล็ก</strong> (a-z) — หมุด local ใช้ได้แค่ในไฟล์ปัจจุบัน<br/>
+    • ตัวอักษร<strong>ใหญ่</strong> (A-Z) — หมุด global ใช้ข้ามไฟล์ได้ (กระโดดข้ามไฟล์ไปยังตำแหน่งที่ปักไว้)<br/><br/>
+    กระโดดกลับไปหมุด 2 แบบ:<br/>
+    • <code>\`a</code> (backtick) — กระโดดไปตำแหน่ง<strong>เป๊ะ</strong> (ทั้งบรรทัดและคอลัมน์) ของหมุด a<br/>
+    • <code>'a</code> (single quote) — กระโดดไปแค่<strong>ต้นบรรทัด</strong>ของหมุด a (ไม่สนใจคอลัมน์)<br/><br/>
+    มีหมุดพิเศษที่ Vim ตั้งให้อัตโนมัติโดยไม่ต้องปักเอง: <code>\`\`</code> (backtick สองครั้ง) กระโดดกลับไปตำแหน่งก่อนหน้า jump ล่าสุด — มีประโยชน์มากตอนอยากย้อนกลับไปจุดเดิมหลังกระโดดไปดูที่อื่นชั่วคราว`,
+    example: `# กระโดดกลับไปตำแหน่งก่อนหน้า jump ล่าสุด (ไม่ต้องปักหมุดเองล่วงหน้า)
+\`\``,
+    task: `จงปักหมุดตำแหน่งปัจจุบันชื่อ <code>a</code> ด้วย <code>ma</code> แล้วกระโดดกลับไปตำแหน่งเป๊ะของหมุดนั้นด้วย <code>\`a</code>`
+  },
+  {
+    id: "unix_background_jobs",
+    meta: "ขั้นสูง 12",
+    title: "Unix Background Jobs: รัน Process เบื้องหลังโดยไม่ค้าง Terminal",
+    template: `# สถานการณ์: รัน npm start (dev server) ซึ่งค้าง terminal ไว้ตลอดเวลาที่รัน อยากส่งไปรันเบื้องหลังแทนเพื่อใช้เทอร์มินัลเดิมพิมพ์คำสั่งอื่นต่อ แล้วอยากให้ process รอดแม้ปิด terminal
+# 1. รัน npm start แบบส่งไปทำงานเบื้องหลังทันที
+# WRITE YOUR CODE HERE
+
+
+# 2. ดูรายการ background job ทั้งหมดของ terminal นี้
+
+
+# 3. ถอด job ล่าสุดออกจากการดูแลของ shell เพื่อให้รอดแม้ปิด terminal
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ background job...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasBg = lines.some(l => l === 'npm start &');
+      const hasJobs = lines.some(l => l === 'jobs');
+      const hasDisown = lines.some(l => l === 'disown');
+
+      if (!hasBg) throw new Error("ไม่พบคำสั่ง npm start &\nตัวอย่าง: npm start &");
+      if (!hasJobs) throw new Error("ไม่พบคำสั่ง jobs\nตัวอย่าง: jobs");
+      if (!hasDisown) throw new Error("ไม่พบคำสั่ง disown\nตัวอย่าง: disown");
+      log("✓ ใช้ npm start &, jobs, disown ถูกต้อง");
+    },
+    hint: "เติม & ท้ายคำสั่งเพื่อส่งไปรันเบื้องหลังทันที คำสั่งดูรายการ background job ของ shell ปัจจุบันมีชื่อตรงตัว ส่วนคำสั่งถอด job ออกจากการดูแลของ shell ก็มีชื่อตรงตัวเช่นกัน",
+    solution: `npm start &
+jobs
+disown`,
+    theory: `เติม <code>&</code> ท้ายคำสั่งใดก็ตาม สั่งให้รันเบื้องหลัง (background) ทันที — คืน terminal ให้พิมพ์คำสั่งอื่นต่อได้เลยโดยไม่ต้องรอ process นั้นจบก่อน (จะโชว์เลข job และ PID กลับมาให้)<br/><br/>
+    • <code>jobs</code> — แสดง background job ทั้งหมดของ shell session ปัจจุบัน<br/>
+    • <code>fg %1</code> — ดึง job หมายเลข 1 กลับมาทำงานที่ foreground<br/>
+    • <code>bg</code> — สั่ง job ที่ถูกหยุดชั่วคราว (เช่นกด Ctrl+Z) ให้กลับไปทำงานต่อที่ background<br/><br/>
+    <strong>ข้อควรรู้:</strong> background job ปกติจะ<strong>โดนปิดตาม</strong> (ได้รับ signal SIGHUP) ทันทีที่ terminal ปิด — <code>disown</code> ถอด job ออกจากตารางงานที่ shell ดูแล ทำให้รอดต่อไปได้แม้ terminal จะปิดไปแล้ว หรือใช้ <code>nohup command &</code> ตั้งแต่ต้นเพื่อป้องกันไว้ล่วงหน้าแบบเดียวกัน`,
+    example: `# nohup + redirect + background รวมในคำสั่งเดียว: รันแบบไม่ต้องพึ่ง terminal เลยตั้งแต่เริ่ม
+nohup npm start > server.log 2>&1 &`,
+    task: `จงรัน <code>npm start</code> แบบ background ด้วย <code>npm start &</code> แล้วดู job ด้วย <code>jobs</code> แล้วถอดออกจากการดูแลของ shell ด้วย <code>disown</code>`
+  },
+  {
+    id: "unix_awk_full",
+    meta: "ขั้นสูง 13",
+    title: "Unix awk: กรองและดึงคอลัมน์จากไฟล์ CSV ด้วยเงื่อนไข",
+    template: `# สถานการณ์: ไฟล์ sales.csv คั่นด้วย comma คอลัมน์ที่ 3 คือยอดขาย อยากพิมพ์เฉพาะชื่อ (คอลัมน์ที่ 1) ของแถวที่ยอดขายมากกว่า 1000
+# 1. กรองแถวที่คอลัมน์ 3 มากกว่า 1000 แล้วพิมพ์เฉพาะคอลัมน์ 1 ออกมา
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง awk...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasAwk = /awk\s+-F\s*['"]?,['"]?\s+['"]\$3\s*>\s*1000\s*\{\s*print\s+\$1\s*\}['"]\s+sales\.csv\b/.test(activeCode);
+      if (hasAwk) {
+        log("✓ ใช้ awk -F',' '$3 > 1000 {print $1}' sales.csv ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง awk -F',' '$3 > 1000 {print $1}' sales.csv\nตัวอย่าง: awk -F',' '$3 > 1000 {print $1}' sales.csv");
+      }
+    },
+    hint: "ต้องกำหนดตัวคั่นคอลัมน์เป็น comma ก่อน (flag -F) แล้วเขียนเงื่อนไขเทียบคอลัมน์ที่ 3 นำหน้า action ที่พิมพ์คอลัมน์ที่ 1 — เงื่อนไขที่วางไว้ก่อน {action} จะกรองว่าบรรทัดไหนถึงจะรัน action นั้น",
+    solution: `awk -F',' '$3 > 1000 {print $1}' sales.csv`,
+    theory: `<code>awk</code> ประมวลผลไฟล์ทีละบรรทัด แบ่งแต่ละบรรทัดเป็น "คอลัมน์" อัตโนมัติตามตัวคั่น (default เป็น whitespace, override ด้วย <code>-F'&lt;ตัวคั่น&gt;'</code> เช่น <code>-F','</code> สำหรับ CSV) แล้วเข้าถึงแต่ละคอลัมน์ผ่าน <code>$1</code>, <code>$2</code>, <code>$3</code> ...<br/><br/>
+    รูปแบบเต็มคือ <code>'&lt;เงื่อนไข&gt; {action}'</code> — เงื่อนไขก่อน <code>{}</code> กรองว่าบรรทัดไหนจะรัน action นั้น (ถ้าไม่ใส่เงื่อนไขจะรันทุกบรรทัด):<br/><br/>
+    <code>'$3 > 1000 {print $1}'</code> — เฉพาะบรรทัดที่คอลัมน์ 3 มากกว่า 1000 ค่อยพิมพ์คอลัมน์ 1 ออกมา — รวม "กรอง" (เหมือน grep) กับ "ดึงคอลัมน์" (เหมือน cut) ไว้ในเครื่องมือเดียว ไม่ต้องต่อ pipe หลายตัว`,
+    example: `# รวมยอด (sum) ของคอลัมน์ 3 ทั้งไฟล์ แล้วพิมพ์ผลรวมครั้งเดียวตอนจบ (END block)
+awk -F',' '{sum += $3} END {print sum}' sales.csv`,
+    task: `จงพิมพ์ชื่อ (คอลัมน์ 1) ของแถวที่ยอดขาย (คอลัมน์ 3) มากกว่า 1000 จากไฟล์ <code>sales.csv</code> ด้วย <code>awk -F',' '$3 > 1000 {print $1}' sales.csv</code>`
+  },
+  {
+    id: "unix_rsync",
+    meta: "ขั้นสูง 14",
+    title: "Unix rsync: Sync ไฟล์ไปเซิร์ฟเวอร์แบบส่งแค่ส่วนที่เปลี่ยน",
+    template: `# สถานการณ์: อยาก sync โฟลเดอร์ build output (dist/) ไปเซิร์ฟเวอร์ deploy ทุกครั้งที่ build ใหม่ โดยส่งแค่ไฟล์ที่เปลี่ยนแปลงจริง ไม่ต้อง copy ใหม่ทั้งหมดทุกครั้ง
+# 1. sync โฟลเดอร์ dist/ ไปที่ user@server:/var/www/app/
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง rsync...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasRsync = /rsync\s+-avz\s+dist\/\s+user@server:\/var\/www\/app\//.test(activeCode);
+      if (hasRsync) {
+        log("✓ ใช้ rsync -avz dist/ user@server:/var/www/app/ ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง rsync -avz dist/ user@server:/var/www/app/\nตัวอย่าง: rsync -avz dist/ user@server:/var/www/app/");
+      }
+    },
+    hint: "รวม 3 flag ที่ใช้บ่อยที่สุด: archive mode (คงสิทธิ์/timestamp/symlink ไว้), verbose (แสดง progress), compress (บีบอัดระหว่างส่ง) แล้วตามด้วยโฟลเดอร์ต้นทาง (ใส่ / ท้ายด้วย) และปลายทางแบบ user@host:path",
+    solution: `rsync -avz dist/ user@server:/var/www/app/`,
+    theory: `<code>rsync</code> sync ไฟล์/โฟลเดอร์โดย<strong>ส่งเฉพาะส่วนที่เปลี่ยนแปลงจริง</strong> (delta transfer) แทนที่จะ copy ใหม่ทั้งหมดทุกครั้งเหมือน <code>scp</code> — เร็วกว่ามากตอน deploy ซ้ำๆ ที่ไฟล์ส่วนใหญ่เหมือนเดิม<br/><br/>
+    Flag ที่ใช้บ่อย:<br/>
+    • <code>-a</code> (archive) — คงสิทธิ์ไฟล์, timestamp, symlink ไว้ครบ (รวม <code>-r</code> recursive ไว้ในตัวแล้ว)<br/>
+    • <code>-v</code> (verbose) — แสดงรายชื่อไฟล์ที่กำลังส่ง<br/>
+    • <code>-z</code> (compress) — บีบอัดข้อมูลระหว่างส่งผ่านเครือข่าย<br/><br/>
+    <strong>เครื่องหมาย <code>/</code> ท้ายโฟลเดอร์ต้นทางสำคัญมาก:</strong> <code>dist/</code> (มี /) หมายถึง copy <strong>เนื้อหาข้างใน</strong> dist ไปไว้ที่ปลายทางตรงๆ แต่ <code>dist</code> (ไม่มี /) จะสร้างโฟลเดอร์ <code>dist/</code> ซ้อนอีกชั้นที่ปลายทางแทน`,
+    example: `# เพิ่ม --delete ให้ปลายทางเหมือนต้นทางเป๊ะ (ลบไฟล์ที่ปลายทางที่ไม่มีในต้นทางด้วย — ใช้ระวังมาก)
+rsync -avz --delete dist/ user@server:/var/www/app/`,
+    task: `จง sync โฟลเดอร์ <code>dist/</code> ไปที่ <code>user@server:/var/www/app/</code> ด้วย <code>rsync -avz</code>`
+  },
+  {
+    id: "unix_ssh_scp",
+    meta: "ขั้นสูง 15",
+    title: "Unix ssh/scp: เข้าเซิร์ฟเวอร์ระยะไกลและคัดลอกไฟล์ผ่าน SSH",
+    template: `# สถานการณ์: ต้องเข้าไปดู log บนเซิร์ฟเวอร์ staging ตรงๆ ผ่าน SSH แล้วอยากคัดลอกไฟล์ log กลับมาที่เครื่องตัวเองเพื่อดูออฟไลน์
+# 1. เปิด SSH session ไปที่เซิร์ฟเวอร์ staging.example.com ด้วย user 'deploy'
+# WRITE YOUR CODE HERE
+
+
+# 2. คัดลอกไฟล์ /var/log/app.log จากเซิร์ฟเวอร์นั้นมาไว้ที่เครื่องตัวเอง (โฟลเดอร์ปัจจุบัน)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง ssh/scp...");
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      const hasSsh = lines.some(l => l === 'ssh deploy@staging.example.com');
+      const hasScp = lines.some(l => l === 'scp deploy@staging.example.com:/var/log/app.log ./app.log');
+
+      if (!hasSsh) throw new Error("ไม่พบคำสั่ง ssh deploy@staging.example.com\nตัวอย่าง: ssh deploy@staging.example.com");
+      if (!hasScp) throw new Error("ไม่พบคำสั่ง scp deploy@staging.example.com:/var/log/app.log ./app.log\nตัวอย่าง: scp deploy@staging.example.com:/var/log/app.log ./app.log");
+      log("✓ ใช้ ssh deploy@staging.example.com แล้ว scp ...:/var/log/app.log ./app.log ถูกต้อง");
+    },
+    hint: "ssh ต่อด้วย user@host ตรงๆ ส่วน scp มี syntax คล้าย cp แต่ path ฝั่งเซิร์ฟเวอร์ต้องมี user@host: นำหน้า path จริงบนเซิร์ฟเวอร์นั้น",
+    solution: `ssh deploy@staging.example.com
+scp deploy@staging.example.com:/var/log/app.log ./app.log`,
+    theory: `<code>ssh user@host</code> เปิด shell session บนเครื่องระยะไกล ยืนยันตัวตนด้วยรหัสผ่านหรือ SSH key pair (แนะนำ key-based: สร้างด้วย <code>ssh-keygen</code> เก็บ public key ไว้ที่ <code>~/.ssh/authorized_keys</code> บนเซิร์ฟเวอร์ ไม่ต้องพิมพ์รหัสผ่านทุกครั้ง)<br/><br/>
+    <code>scp</code> (secure copy) คัดลอกไฟล์ผ่าน SSH protocol/auth เดียวกัน syntax คล้าย <code>cp</code> แต่ path ฝั่งเซิร์ฟเวอร์ต้องมี <code>user@host:</code> นำหน้า:<br/>
+    • ดึงจากเซิร์ฟเวอร์มาเครื่องตัวเอง: <code>scp user@host:remote-path local-path</code><br/>
+    • ส่งจากเครื่องตัวเองขึ้นเซิร์ฟเวอร์: <code>scp local-path user@host:remote-path</code> (สลับตำแหน่งต้นทาง/ปลายทาง)`,
+    example: `# copy ทั้งโฟลเดอร์ขึ้นเซิร์ฟเวอร์แบบ recursive
+scp -r ./dist deploy@staging.example.com:/var/www/app`,
+    task: `จงเปิด SSH ไปที่ <code>deploy@staging.example.com</code> แล้วคัดลอก <code>/var/log/app.log</code> มาไว้ที่เครื่องตัวเองด้วย <code>scp</code>`
+  },
+  {
+    id: "unix_cron",
+    meta: "ขั้นสูง 16",
+    title: "Unix Cron: ตั้งเวลารันสคริปต์อัตโนมัติ",
+    template: `# สถานการณ์: อยากให้สคริปต์ /home/user/scripts/backup.sh รันอัตโนมัติทุกวันตอนตี 2 โดยไม่ต้องมีคนมานั่งรันเอง
+# 1. เขียนบรรทัด crontab ที่ตั้งให้รัน backup.sh ทุกวันเวลา 02:00 น.
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบบรรทัด crontab...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasCron = /^0\s+2\s+\*\s+\*\s+\*\s+\/home\/user\/scripts\/backup\.sh\s*$/m.test(activeCode);
+      if (hasCron) {
+        log("✓ ใช้ 0 2 * * * /home/user/scripts/backup.sh ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบบรรทัด crontab: 0 2 * * * /home/user/scripts/backup.sh\nตัวอย่าง: 0 2 * * * /home/user/scripts/backup.sh");
+      }
+    },
+    hint: "crontab มี 5 ช่องเวลาเรียงกัน: นาที ชั่วโมง วันที่ เดือน วันในสัปดาห์ ตามด้วยคำสั่งที่จะรัน ตอนตี 2 หมายถึงนาทีที่ 0 ชั่วโมงที่ 2 ส่วนอีก 3 ช่องที่เหลือใช้ * (ทุกค่า) เพราะอยากให้รันทุกวัน",
+    solution: `0 2 * * * /home/user/scripts/backup.sh`,
+    theory: `<strong>cron</strong> รันงานตามเวลาที่ตั้งไว้อัตโนมัติ โดยไม่ต้องมีคนมานั่งรันเอง — แก้ตารางเวลาด้วย <code>crontab -e</code> (เปิดไฟล์ crontab ของ user ปัจจุบันด้วย editor ที่ตั้งไว้ใน <code>$EDITOR</code>)<br/><br/>
+    แต่ละบรรทัดมี 5 ช่องเวลาเรียงกัน ตามด้วยคำสั่งที่จะรัน:<br/>
+    <code>&lt;นาที&gt; &lt;ชั่วโมง&gt; &lt;วันที่&gt; &lt;เดือน&gt; &lt;วันในสัปดาห์&gt; &lt;คำสั่ง&gt;</code><br/><br/>
+    <code>0 2 * * * /home/user/scripts/backup.sh</code> = นาที 0, ชั่วโมง 2, ส่วน 3 ช่องที่เหลือเป็น <code>*</code> (ทุกค่า) = "ทุกวัน ทุกเดือน ทุกวันในสัปดาห์ ตอน 02:00 น." — <code>crontab -l</code> ดูรายการ job ทั้งหมดที่ตั้งไว้`,
+    example: `# รันทุก 15 นาที (*/N หมายถึง 'ทุกๆ N หน่วย' ของช่องนั้น)
+*/15 * * * * /home/user/scripts/health-check.sh`,
+    task: `จงเขียนบรรทัด crontab ที่รัน <code>/home/user/scripts/backup.sh</code> ทุกวันเวลา 02:00 น. ด้วย <code>0 2 * * * /home/user/scripts/backup.sh</code>`
+  },
+  {
+    id: "unix_lsof_port",
+    meta: "ขั้นสูง 17",
+    title: "Unix lsof: หาว่า Process ไหนกำลังใช้ Port อยู่",
+    template: `# สถานการณ์: พยายามรัน dev server ที่ port 3000 แต่เจอ error "port already in use" ต้องการหาว่า process ไหนกำลังใช้ port 3000 อยู่ก่อนจะไป kill ทิ้ง
+# 1. หาว่า process ไหนกำลังใช้ port 3000 อยู่
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง lsof...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasLsof = /lsof\s+-i\s+:3000\b/.test(activeCode);
+      if (hasLsof) {
+        log("✓ ใช้ lsof -i :3000 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง lsof -i :3000\nตัวอย่าง: lsof -i :3000");
+      }
+    },
+    hint: "lsof (list open files) มี flag สำหรับกรองเฉพาะ network connection ตามด้วย : แล้วตามด้วยหมายเลข port ที่ต้องการเช็ค",
+    solution: `lsof -i :3000`,
+    theory: `ใน Unix ทุกอย่างถูกมองเป็น "ไฟล์" รวมถึง network socket ด้วย — <code>lsof</code> (list open files) จึงใช้หาได้ว่า process ไหนกำลัง "เปิด" socket ของ port ไหนอยู่<br/><br/>
+    <code>lsof -i :&lt;port&gt;</code> — กรองเฉพาะ network connection ที่ผูกกับ port นั้น แสดงคอลัมน์ <strong>PID</strong> ของ process ที่ถือ port นั้นอยู่ตรงๆ พร้อมชื่อ command — เร็วกว่าไล่ <code>ps aux | grep</code> เดามั่วๆ ว่า process ไหนคือตัวที่ใช้ port อยู่<br/><br/>
+    หา PID ได้แล้วก็เอาไปต่อกับ <code>kill</code> (บทก่อนหน้า) ปิด process นั้นทิ้งได้ทันที`,
+    example: `# รวม lsof + kill ในคำสั่งเดียว: ฆ่า process ที่ถือ port 3000 อยู่ตรงๆ (-t = พิมพ์แค่ PID เปล่าๆ)
+kill -9 $(lsof -t -i :3000)`,
+    task: `จงหาว่า process ไหนกำลังใช้ port <code>3000</code> อยู่ด้วย <code>lsof -i :3000</code>`
+  },
 ];
 
 // Application state
