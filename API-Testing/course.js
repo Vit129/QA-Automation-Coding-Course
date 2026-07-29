@@ -1220,8 +1220,11 @@ test('TC-3014: สร้าง Watchlist แล้วใช้ id จาก resp
 });`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Chained Request Workflow: สร้าง Resource แล้วดึงข้อมูลกลับด้วย id ที่ได้จาก Response (Mock Endpoint) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>1. <strong>Extract</strong>: แปลง response แรกเป็น JSON แล้วดึงค่าที่ต้องใช้ต่อออกมาเก็บในตัวแปร<br/><br/>2. <strong>Chain</strong>: นำตัวแปรนั้นไปประกอบเป็นส่วนหนึ่งของ URL หรือ body ของ request ถัดไป (มักใช้ template literal แทรกตัวแปรลงใน string)<br/><br/>3. <strong>Verify</strong>: ยืนยันว่าข้อมูลที่ได้จาก request ที่สองสอดคล้องกับสิ่งที่สร้างไว้ในขั้นตอนแรกจริง ไม่ใช่แค่เช็ค status code ผ่านเฉยๆ<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> รูปแบบที่พบบ่อยที่สุด: ยิง <code>POST</code> เพื่อสร้าง resource ใหม่ แล้ว backend จะสร้าง <code>id</code> ให้เองและตอบกลับมาใน response body — QA <strong>ห้ามสมมติหรือคิด id เอง</strong> เพราะ id มักเป็นค่าที่ backend สุ่มหรือ auto-increment ขึ้นมา (เช่น UUID หรือเลขลำดับถัดไปในฐานข้อมูล) ต้องดึงค่าจริงจาก response ของขั้นตอนก่อนหน้ามาใช้เสมอ<br/><br/><br/>ขั้นตอนสำคัญ 3 อย่างของแบบฝึกหัดนี้:<br/>`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>const createResponse = await request.post('/api/watchlist', { data: { ticker: 'TSLA' } });</code><br/>
+    <code>const { id } = await createResponse.json();</code><br/>
+    <code>const getResponse = await request.get(\`/api/watchlist/\${id}\`);</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> รูปแบบที่พบบ่อยที่สุด: ยิง <code>POST</code> เพื่อสร้าง resource ใหม่ แล้ว backend จะสร้าง <code>id</code> ให้เองและตอบกลับมาใน response body — QA <strong>ห้ามสมมติหรือคิด id เอง</strong> เพราะ id มักเป็นค่าที่ backend สุ่มหรือ auto-increment ขึ้นมา (เช่น UUID หรือเลขลำดับถัดไปในฐานข้อมูล) ต้องดึงค่าจริงจาก response ของขั้นตอนก่อนหน้ามาใช้เสมอ`,
     example: `// ตัวอย่าง Chained Request กับ endpoint สร้างและดึงข้อมูล order
 const createRes = await request.post('/api/orders', { data: { item: 'widget' } });
 const { orderId } = await createRes.json();

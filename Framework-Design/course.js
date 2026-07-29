@@ -130,7 +130,7 @@ export default defineConfig({
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Test Automation Framework Design</strong> คือการตัดสินใจว่าจะจัดโครงสร้างโปรเจก test อย่างไร ไม่ใช่แค่ "เขียน test แต่ละบทให้ผ่าน" (ซึ่งเป็นสิ่งที่ track อื่นๆ ในคอร์สนี้สอนไปแล้ว) — ปัญหาที่พบบ่อยเมื่อโปรเจก test โตขึ้น: ทุกคนเขียน test ไฟล์ใหม่แบบ copy-paste จากไฟล์เก่า ไม่มีจุดรวมศูนย์ของ config/helper สุดท้ายกลายเป็น "โค้ดซ้ำกระจายไปทุกที่" แก้จุดเดียวต้องไล่แก้เป็นสิบไฟล์<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทเรียนที่เหลือในเทรคนี้จะครอบคลุม: Custom Fixtures, โครงสร้างโฟลเดอร์, การลดโค้ดซ้ำแบบ DRY, การจัดการ Test Data, และการตั้งค่า Reporting<br/><br/>
     💡 <strong>Mental Model & Syntax:</strong><br/><code>playwright.config.ts</code> คือจุดตั้งค่ากลางของทั้งโปรเจก — <code>baseURL</code> ทำให้ทุก test เขียน <code>page.goto('/watchlist')</code> แทนที่จะต้องพิมพ์ URL เต็มซ้ำทุกไฟล์ (<code>page.goto('http://localhost:5173/watchlist')</code>) — ถ้าวันหนึ่ง URL เปลี่ยน (deploy ไป staging environment) แก้ที่ config จุดเดียวจบ ไม่ต้องไล่แก้ทุก test file<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ใส่ <code>baseURL</code> ไว้นอก <code>use: { ... }</code> block (เช่นแปะไว้ระดับบนสุดของ <code>defineConfig()</code> ตรงๆ) จะไม่มีผลอะไรเลย เพราะ Playwright อ่านค่านี้จากภายใน <code>use</code> เท่านั้น และต้องมี <code>http://</code> นำหน้าเสมอให้ตรงกับพอร์ตจริงของ dev server`,
     example: `// ตัวอย่าง config เพิ่มเติมที่ใช้บ่อย
 export default defineConfig({
   use: {
@@ -187,8 +187,12 @@ export const test = base.extend({
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Fixture</strong> ของ Playwright คือกลไก "เตรียมของให้ก่อน test เริ่ม แล้วเก็บกวาดให้หลัง test จบ" — <code>page</code>, <code>request</code>, <code>context</code> ที่ใช้กันมาตลอดทั้งคอร์สนี้ ล้วนเป็น built-in fixture ทั้งหมด<br/><br/>
     <code>test.extend()</code> สร้าง fixture ของตัวเองเพิ่มได้ — ในตัวอย่างนี้ <code>watchlistPage</code> ทำ <code>goto('/watchlist')</code> ให้อัตโนมัติ<strong>ก่อน</strong>ที่ code ของ test จะเริ่มทำงาน แล้ว <code>await use(page)</code> คือจุดที่ "ส่งมอบ" ค่าที่เตรียมไว้กลับไปให้ test ใช้งานต่อ (โค้ดหลัง <code>use()</code> จะรันหลัง test จบ เหมาะกับ cleanup)<br/><br/>
     ประโยชน์เทียบกับเขียน <code>beforeEach</code> ซ้ำทุกไฟล์: fixture ประกาศครั้งเดียวในไฟล์กลาง แล้ว <code>import { test } from './fixtures'</code> ใช้ได้ทุกไฟล์ — ทุก test ที่รับ parameter <code>watchlistPage</code> จะได้หน้าที่ goto ไว้แล้วอัตโนมัติ ไม่ต้องเขียน <code>await page.goto('/watchlist')</code> ซ้ำเองในทุก test อีกต่อไป<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ประโยชน์เทียบกับเขียน <code>beforeEach</code> ซ้ำทุกไฟล์: fixture ประกาศครั้งเดียวในไฟล์กลาง แล้ว <code>import { test } from './fixtures'</code> ใช้ได้ทุกไฟล์ — ทุก test ที่รับ parameter <code>watchlistPage</code> จะได้หน้าที่ goto ไว้แล้วอัตโนมัติ ไม่ต้องเขียน <code>await page.goto('/watchlist')</code> ซ้ำเองในทุก test อีกต่อไป<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>test.extend()</code> สร้าง fixture ของตัวเองเพิ่มได้ — ในตัวอย่างนี้ <code>watchlistPage</code> ทำ <code>goto('/watchlist')</code> ให้อัตโนมัติ<strong>ก่อน</strong>ที่ code ของ test จะเริ่มทำงาน แล้ว <code>await use(page)</code> คือจุดที่ "ส่งมอบ" ค่าที่เตรียมไว้กลับไปให้ test ใช้งานต่อ (โค้ดหลัง <code>use()</code> จะรันหลัง test จบ เหมาะกับ cleanup)<br/><br/>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>export const test = base.extend({</code><br/>
+<code>&nbsp;&nbsp;watchlistPage: async ({ page }, use) => {</code><br/>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;await page.goto('/watchlist');</code><br/>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;await use(page);</code><br/>
+<code>&nbsp;&nbsp;},</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลืมเรียก <code>await use(page)</code> ในตัว fixture จะทำให้ test ที่ขอใช้ <code>watchlistPage</code> ไม่ได้ค่าอะไรเลย (fixture ต้อง "ส่งมอบ" ค่าผ่าน <code>use()</code> เสมอ จะ <code>return</code> ตรงๆ แบบฟังก์ชันปกติไม่ได้)`,
     example: `// ตัวอย่างการใช้งาน fixture ที่สร้างไว้ในไฟล์ test จริง
 import { test } from './fixtures';
 import { expect } from '@playwright/test';
@@ -228,8 +232,11 @@ test('เพิ่ม ticker ใหม่ใน watchlist', async ({ watchlistPa
 // utils/     - helper function ที่ใช้ร่วมกันข้ามไฟล์ (formatDate, generateTestEmail)`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ โครงสร้างโฟลเดอร์: แยกหน้าที่ให้ชัด ไม่ใช่โยนทุกอย่างลงที่เดียว และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>โครงสร้างมาตรฐานที่ทีม Playwright ส่วนใหญ่ใช้ (สอดคล้องกับที่ track Playwright UI Testing สอน POM ไปแล้ว แต่ขยายให้เห็นภาพรวมทั้งโปรเจก):<br/><br/><br/>หลักการเลือกว่าโค้ดควรอยู่โฟลเดอร์ไหน: <strong>ถ้าโค้ดผูกกับหน้าเว็บหนึ่งหน้า → pages/, ถ้าเป็น setup ที่ test หลายไฟล์ใช้ร่วมกัน → fixtures/, ถ้าเป็น pure function ไม่ผูกกับ Playwright เลย → utils/</strong><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>tests/</code> — เก็บเฉพาะไฟล์ <code>.spec.ts</code> ที่มี test case อ่านแล้วเข้าใจ "ทดสอบอะไร" ทันที ไม่ปนรายละเอียดการ implement<br/><br/>• <code>pages/</code> — Page Object class แต่ละไฟล์แทนหนึ่งหน้าเว็บ (ตามที่บท POM ของ track Playwright สอนไว้)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>// tests/     - ไฟล์ .spec.ts ที่มีแต่ test case</code><br/>
+<code>// pages/     - Page Object class ของแต่ละหน้า</code><br/>
+<code>// fixtures/  - custom fixture และ test data</code><br/>
+<code>// utils/     - helper function ที่ใช้ร่วมกันข้ามไฟล์</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ใส่ Page Object class ปนไว้ใน <code>tests/</code> โดยตรง (แทนที่จะแยกไปไว้ใน <code>pages/</code>) ทำให้ไฟล์ test ยาวและมี implementation detail ปนกับ test case จนแยกไม่ออกว่าอะไรคือ "สิ่งที่ทดสอบ" อะไรคือ "วิธี implement"`,
     example: `// ตัวอย่างโครงสร้างเต็มของโปรเจกจริง
 // e2e/
 //   tests/
@@ -307,7 +314,7 @@ test('เพิ่ม ticker ใหม่ใน watchlist', async ({ watchlistPa
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Real grounding แบบที่สุดของบทนี้:</strong> ฟังก์ชันนี้ไม่ใช่ตัวอย่างสมมติ — มันคือโค้ดจริงที่ยกมาจาก <code>index.html</code> ของคอร์สนี้เองเป๊ะๆ (แค่เปลี่ยนชื่อ) หน้า dashboard รวมทุก track ต้องนับความคืบหน้าของ 11 track ที่มีจำนวนบทไม่เท่ากันเลย (API-Testing 13 บท, Visual-Regression 5 บท, ฯลฯ) และ dashboard <strong>ไม่รู้จักเนื้อหาของ track ไหนเลยสักตัว</strong> — สิ่งที่ทำให้ฟังก์ชันเดียวใช้กับทุก track ได้คือทุก track เก็บ progress ด้วย key รูปแบบเดียวกันเป๊ะ: <code>&lt;prefix&gt;_course_completed_&lt;lessonId&gt;</code> = <code>'true'</code><br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>นี่คือ DRY ระดับที่ลึกกว่าแค่ "เขียนฟังก์ชันคำนวณเลข" — มันคือการออกแบบ<strong>รูปแบบ key ให้เดายาก reuse ได้ล่วงหน้า</strong> (ทำตั้งแต่ตอนออกแบบแต่ละ track ให้ใช้ prefix ต่างกันแต่โครงสร้างเดียวกัน) แล้วเขียน<strong>ฟังก์ชันเดียวที่พารามิเตอร์ด้วย prefix</strong> แทนที่จะเขียนโค้ดนับแยกทีละ 11 ครั้งสำหรับ 11 track — เพิ่ม track ที่ 12 ในอนาคตก็ไม่ต้องแตะฟังก์ชันนี้เลยแม้แต่บรรทัดเดียว<br/><br/><br/><br/>
     💡 <strong>Mental Model & Syntax:</strong><br/><strong>อุปสรรคที่เจอจริงระหว่างทำ engine.js refactor ของคอร์สนี้ (คนละจุดกับฟังก์ชันนี้ แต่หลักการ DRY เดียวกัน):</strong> ตอนแรกลองรวม engine logic (render lesson list, validate, reset) ที่ซ้ำกัน ~90% ข้าม 11 ไฟล์ course.js ด้วย <code>&lt;script src="../shared/engine.js"&gt;</code> แล้วพบว่า browser บล็อกการโหลด script ข้าม directory ผ่าน <code>file://</code> เงียบๆ — ทางแก้จริงที่ใช้: เก็บไฟล์ต้นฉบับไว้ที่เดียว (<code>shared/engine.js</code>) แล้วมี script sync ก็อปปี้เข้าไปในแต่ละ track folder เป็น <code>engine.js</code> ของตัวเอง (same-directory load ใช้งานได้จริง) — DRY ที่ดีในทางทฤษฎีบางครั้งเจอข้อจำกัดทางเทคนิคจริงที่ต้องหาทางประนีประนอม ไม่ใช่ทำได้ตรงไปตรงมาเสมอไป<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลืมใช้ <code>===</code> เทียบกับ <code>'true'</code> (ใช้ truthy check เฉยๆ) จะนับ string ค่าอื่นที่ไม่ใช่ 'true' ผิดไปด้วย และอย่าลืม guard <code>key &&</code> ก่อนเรียก <code>.startsWith()</code> เพราะ <code>localStorage.key(i)</code> อาจคืน <code>null</code> ได้`,
     example: `// ตัวอย่างใช้ฟังก์ชันเดียวกันนี้กับหลาย track รวด ไม่ต้องเขียนโค้ดนับแยก
 const tracks = [
   { prefix: 'api', total: 13 },
@@ -358,7 +365,7 @@ for (const t of tracks) {
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Test Data Management: แยกข้อมูลทดสอบออกจาก Logic การทดสอบ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ประโยชน์เพิ่มเติม: เมื่อข้อมูลจริง (เช่นโครงสร้าง Holdings ของ My-Investment-Port ที่ track DB Design & SQL ใช้สอน) เปลี่ยนแปลง (เพิ่ม field ใหม่) แก้ไฟล์ test data จุดเดียว ไม่ต้องไล่แก้ hardcoded value กระจายอยู่ทั่วโปรเจก<br/><br/>
     💡 <strong>Mental Model & Syntax:</strong><br/>หลักการ <strong>Test Data Management</strong> ที่ดี: แยก "ข้อมูล" (ticker, ราคา, จำนวน) ออกจาก "ตรรกะการทดสอบ" (การกระทำ + การตรวจสอบ) โดยเก็บข้อมูลไว้ใน object/ไฟล์แยกต่างหาก (มักอยู่ใน <code>fixtures/</code> ตามโครงสร้างที่เคยพูดถึง) แล้ว <code>import</code> เข้ามาใช้ในไฟล์ test — เปลี่ยนข้อมูลทดสอบจุดเดียว ทุก test ที่ import ไปใช้จะได้ค่าใหม่โดยอัตโนมัติ<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า test ไหน mutate <code>testHoldings</code> ตรงๆ (เช่น <code>testHoldings.shares = 50</code>) ค่าที่เปลี่ยนจะกระทบทุก test อื่นที่ import object เดียวกันไปใช้ต่อ (module cache แชร์ reference เดียวกัน) ควร clone ด้วย <code>{ ...testHoldings }</code> ก่อน mutate เสมอ`,
     example: `// ตัวอย่างใช้ test data ที่แยกไว้ในไฟล์ test จริง
 import { testHoldings } from '../fixtures/testHoldings';
 
@@ -410,8 +417,11 @@ export default defineConfig({
 });`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Reporting: ตั้งค่ารายงานผลให้อ่านง่ายทั้งคนและ CI และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การตั้งค่าหลาย reporter พร้อมกันไม่ได้ทำให้ test รันช้าลง (reporter แค่ฟังผลลัพธ์ที่ test สร้างแล้วจัดรูปแบบส่งออกคนละแบบ ไม่ใช่รัน test ซ้ำ) — เป็นวิธีที่คุ้มค่าที่สุดในการตอบโจทย์ทั้ง "คนอยากดูสวยๆ" และ "ระบบอยากได้ข้อมูลดิบไปประมวลผลต่อ" พร้อมกันในคำสั่งเดียว<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>Playwright รองรับตั้งค่า <code>reporter</code> เป็น<strong>หลายตัวพร้อมกัน</strong>:<br/><br/><br/>• <code>'html'</code> — สร้างรายงานหน้าเว็บสวยงาม เปิดดูได้ใน browser มี screenshot/trace ของ test ที่ fail แนบมาให้ทันที เหมาะกับคนดู<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>reporter: [</code><br/>
+<code>&nbsp;&nbsp;['html'],</code><br/>
+<code>&nbsp;&nbsp;['json', { outputFile: 'results.json' }],</code><br/>
+<code>],</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลืมห่อแต่ละ reporter เป็น tuple <code>[ชื่อ, options]</code> แล้วใส่ <code>outputFile</code> ผิดตำแหน่ง (เช่นแปะไว้นอก array ของ <code>'json'</code>) จะทำให้ Playwright ไม่รู้ว่า option นี้เป็นของ reporter ตัวไหน`,
     example: `// ตัวอย่างเพิ่ม reporter บรรทัด (สรุปสั้นๆ ใน terminal ระหว่างรัน) เข้าไปด้วย
 reporter: [
   ['list'],
@@ -523,8 +533,12 @@ reporter: [
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Automation ที่คุยกับระบบภายนอก (API เรียกเช็คสถานะ, WebSocket, third-party service) มักเจอ<strong>ความ flaky ตามธรรมชาติ</strong> ที่ไม่ใช่บั๊กของแอปเรา (network glitch ชั่วคราว, service ยังไม่พร้อมตอบ) — เขียน <code>try/catch</code> วนลองใหม่ในทุกจุดที่เรียกของแบบนี้เป็นโค้ดซ้ำที่ scale ไม่ได้ (DRY เดิมจากบทก่อนหน้า ใช้หลักการเดียวกัน)<br/><br/>
     <strong>Retry wrapper</strong> คือฟังก์ชันกลางที่ "ห่อ" ฟังก์ชัน async ใดๆ ให้มีพฤติกรรม ลองใหม่อัตโนมัติเมื่อ fail โดยรับพารามิเตอร์ควบคุม: จำนวนครั้งสูงสุด (<code>retries</code>) และเวลาหน่วงระหว่างรอบ (<code>delayMs</code>) — การหน่วงเวลาสำคัญเพราะถ้าลองซ้ำทันทีไม่หน่วงเลย อาจยิงถล่ม service ที่กำลังมีปัญหาซ้ำเข้าไปอีก (thundering herd)<br/><br/>
     หลักการสำคัญที่ทำให้ wrapper นี้ "ถูกต้อง": (1) สำเร็จเมื่อไหร่ต้องหยุดทันที ไม่ลองต่อให้เสียเวลา (2) ต้องนับจำนวนครั้งให้ตรงตาม <code>retries</code> พอดี ไม่มากไม่น้อยกว่าที่กำหนด (3) เมื่อหมดโอกาสแล้วต้อง throw error ตัวล่าสุดออกไป ไม่ใช่กลืน error เงียบๆ (เพราะ test framework ต้องรู้ว่าสุดท้ายแล้วมันยัง fail อยู่จริง)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Retry wrapper</strong> คือฟังก์ชันกลางที่ "ห่อ" ฟังก์ชัน async ใดๆ ให้มีพฤติกรรม ลองใหม่อัตโนมัติเมื่อ fail โดยรับพารามิเตอร์ควบคุม: จำนวนครั้งสูงสุด (<code>retries</code>) และเวลาหน่วงระหว่างรอบ (<code>delayMs</code>) — การหน่วงเวลาสำคัญเพราะถ้าลองซ้ำทันทีไม่หน่วงเลย อาจยิงถล่ม service ที่กำลังมีปัญหาซ้ำเข้าไปอีก (thundering herd)<br/><br/><br/>หลักการสำคัญที่ทำให้ wrapper นี้ "ถูกต้อง": (1) สำเร็จเมื่อไหร่ต้องหยุดทันที ไม่ลองต่อให้เสียเวลา (2) ต้องนับจำนวนครั้งให้ตรงตาม <code>retries</code> พอดี ไม่มากไม่น้อยกว่าที่กำหนด (3) เมื่อหมดโอกาสแล้วต้อง throw error ตัวล่าสุดออกไป ไม่ใช่กลืน error เงียบๆ (เพราะ test framework ต้องรู้ว่าสุดท้ายแล้วมันยัง fail อยู่จริง)<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>for (let attempt = 1; attempt &lt;= retries; attempt++) {</code><br/>
+<code>&nbsp;&nbsp;try { return await fn(); }</code><br/>
+<code>&nbsp;&nbsp;catch (err) { lastError = err; }</code><br/>
+<code>}</code><br/>
+<code>throw lastError;</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลืม <code>await</code> ตอนหน่วงเวลาด้วย <code>setTimeout</code> จะทำให้ loop ยิง retry ถัดไปทันทีโดยไม่รอจริง หรือลืม throw <code>lastError</code> หลัง loop จบ ทำให้ฟังก์ชัน return <code>undefined</code> เงียบๆ แทนที่จะแจ้ง error ว่ายัง fail อยู่`,
     example: `// ตัวอย่างใช้ retry ห่อ API call ที่ flaky ในไฟล์ test จริง
 const health = await retry(
   () => fetch('/api/health').then((r) => r.json()),
@@ -595,8 +609,12 @@ function createTestCaseResult() {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Test Data Factory</strong> คือรูปแบบหนึ่งของ Test Data Management (บทที่ 4) ที่ลึกกว่าการแยกค่าคงที่ธรรมดา — เมื่อ test ต้องการ "ของปลอม" ที่มีสถานะเปลี่ยนแปลงได้ (mutate ได้ระหว่าง test) การใช้ object เดิมซ้ำๆ ข้ามหลาย test เป็นบ่อเกิดของบั๊กที่ตามยากที่สุดแบบหนึ่ง: <strong>test A แก้ค่าใน object แล้ว test B ที่รันทีหลังเจอค่าที่เพี้ยนไปจาก test A โดยไม่รู้ตัว (state leak ข้าม test)</strong><br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Factory function แก้ปัญหานี้ด้วยการ<strong>สร้าง object ใหม่ทุกครั้งที่ถูกเรียก</strong> (ไม่ return reference เดิมซ้ำ) พร้อม<strong>ค่า id ที่ไม่ซ้ำกัน</strong> — id ที่ unique สำคัญเพราะเวลา assert หรือ track ผลลัพธ์หลาย test case พร้อมกัน (เช่นรัน parallel) การมี id ชนกันจะทำให้แยกไม่ออกว่าผลลัพธ์ไหนเป็นของ test ไหน<br/><br/><br/>วิธีการันตี unique ที่ใช้บ่อย:ตัวนับ (counter) ที่เพิ่มค่าทุกครั้ง (เรียบง่าย คาดเดาลำดับได้) หรือค่าสุ่ม/timestamp ที่ชนกันยากมาก (เหมาะกับกระจาย test ข้ามหลาย process/worker ที่ไม่แชร์ตัวนับกัน)<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>let __testCaseCounter = 0;</code><br/>
+<code>function createTestCaseResult() {</code><br/>
+<code>&nbsp;&nbsp;__testCaseCounter += 1;</code><br/>
+<code>&nbsp;&nbsp;return { id: __testCaseCounter, status: 'pending' };</code><br/>
+<code>}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า return object เดิมที่ประกาศไว้นอกฟังก์ชัน (แทนที่จะสร้าง object literal <code>{ ... }</code> ใหม่ทุกครั้ง) ทุกการเรียกจะได้ reference เดียวกัน — test หนึ่ง mutate ค่าจะกระทบอีก test ที่เรียก factory ไปก่อนหน้าโดยไม่รู้ตัว`,
     example: `// ตัวอย่างใช้ factory สร้าง test case ปลอมหลายตัวไม่ชนกันในไฟล์ test จริง
 const tc1 = createTestCaseResult();
 const tc2 = createTestCaseResult();
@@ -663,8 +681,12 @@ console.log(tc1.id, tc2.id); // ตัวเลขต่างกันเสม
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Real grounding:</strong> <code>HoldingsPage.ts</code> ของ My-Investment-Port (<code>tests/web-testing/pages/port/holdings/holdingsPage.ts</code>) มี method <code>searchTicker(ticker)</code> ที่กรอกช่องค้นหาอย่างเดียว ไม่มี assertion ใดๆ ข้างใน และมี method <code>verifyHoldingInTable(ticker)</code>, <code>verifyDcaAmount(ticker, ...)</code> ที่ตั้งชื่อขึ้นต้นด้วย <code>verify</code> โดยเฉพาะ และมี <code>expect()</code> อยู่ข้างในเท่านั้น — เปิดไฟล์จริงแล้วจะเห็นรูปแบบนี้ทั้งไฟล์<br/><br/>
     หลักการ <strong>POM Design</strong> ที่มักถูกเข้าใจผิดว่า "ห้ามมี expect() ใน Page Object เด็ดขาด" — ในทางปฏิบัติจริง (ตามไฟล์นี้) ไม่ได้เข้มงวดขนาดนั้น: <strong>action method</strong> (คลิก, กรอกฟอร์ม, navigate) ไม่ควรมี assertion เพราะมันคือ "การกระทำ" ไม่ใช่ "การตัดสิน" — แต่ method ที่<strong>ตั้งใจให้เป็นตัวตรวจผล</strong>และตั้งชื่อสื่อความหมายชัดเจน (ขึ้นต้นด้วย <code>verify</code>) การมี <code>expect()</code> ข้างในเป็นที่ยอมรับได้ เพราะชื่อ method บอกไว้ตรงๆ แล้วว่ามันจะ assert<br/><br/>
     ปัญหาจริงที่หลักการนี้ป้องกัน: ถ้า <code>searchTicker()</code> แอบมี <code>expect()</code> ซ่อนอยู่ข้างใน คนอ่าน test ที่เห็นแค่ <code>await holdingsPage.searchTicker('AAPL')</code> จะไม่รู้เลยว่าบรรทัดนี้ "อาจ fail จากการ assert" ด้วย — ต้องเปิดไปดูข้างใน Page Object ถึงจะรู้ ทำให้ debug ยากขึ้นโดยไม่จำเป็น<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>หลักการ <strong>POM Design</strong> ที่มักถูกเข้าใจผิดว่า "ห้ามมี expect() ใน Page Object เด็ดขาด" — ในทางปฏิบัติจริง (ตามไฟล์นี้) ไม่ได้เข้มงวดขนาดนั้น: <strong>action method</strong> (คลิก, กรอกฟอร์ม, navigate) ไม่ควรมี assertion เพราะมันคือ "การกระทำ" ไม่ใช่ "การตัดสิน" — แต่ method ที่<strong>ตั้งใจให้เป็นตัวตรวจผล</strong>และตั้งชื่อสื่อความหมายชัดเจน (ขึ้นต้นด้วย <code>verify</code>) การมี <code>expect()</code> ข้างในเป็นที่ยอมรับได้ เพราะชื่อ method บอกไว้ตรงๆ แล้วว่ามันจะ assert<br/><br/><br/>ปัญหาจริงที่หลักการนี้ป้องกัน: ถ้า <code>searchTicker()</code> แอบมี <code>expect()</code> ซ่อนอยู่ข้างใน คนอ่าน test ที่เห็นแค่ <code>await holdingsPage.searchTicker('AAPL')</code> จะไม่รู้เลยว่าบรรทัดนี้ "อาจ fail จากการ assert" ด้วย — ต้องเปิดไปดูข้างใน Page Object ถึงจะรู้ ทำให้ debug ยากขึ้นโดยไม่จำเป็น<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>async searchTicker(ticker) {</code><br/>
+<code>&nbsp;&nbsp;await this.searchInput.fill(ticker); // ไม่มี expect()</code><br/>
+<code>}</code><br/>
+<code>async verifyHoldingInTable(ticker) {</code><br/>
+<code>&nbsp;&nbsp;await expect(this.getHoldingRow(ticker)).toBeVisible();</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าแอบใส่ <code>expect()</code> ไว้ใน action method อย่าง <code>searchTicker()</code> คนอ่าน test ที่เห็นแค่ <code>await holdingsPage.searchTicker('AAPL')</code> จะไม่รู้เลยว่าบรรทัดนี้อาจ fail จากการ assert ด้วย ต้องแยกให้ action method "กระทำ" เท่านั้น ปล่อยให้ method ที่ขึ้นต้นด้วย <code>verify</code> เป็นตัวเดียวที่มี <code>expect()</code>`,
     example: `// ตัวอย่างใช้งานทั้งสอง method ร่วมกันในไฟล์ test จริง
 const holdingsPage = new HoldingsPage(page);
 await holdingsPage.searchTicker('AAPL');
@@ -707,8 +729,11 @@ if (!baseURL.includes('localhost')) {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Real grounding:</strong> <code>playwright.config.ts</code> ของ My-Investment-Port (<code>tests/web-testing/playwright.config.ts</code>) อ่านค่า baseURL จาก <code>process.env.BASE_URL</code> พร้อม fallback เป็น <code>http://localhost:5175</code> เมื่อไม่ได้ตั้งค่าไว้ — วิธีนี้ทำให้สลับรัน test ข้าม environment (local dev / SIT / staging) ได้โดยแค่เปลี่ยนตัวแปร environment ตอนสั่งรัน ไม่ต้องแก้โค้ด config เลย เช่น <code>BASE_URL=https://sit.example.com npx playwright test</code><br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ไฟล์จริงยังมี <strong>safety guard</strong> ต่อท้ายทันที: ตรวจสอบว่า baseURL หน้าตาเหมือน localhost, 127.0.0.1 หรือ SIT host ที่รู้จักหรือไม่ ถ้าไม่ใช่ (เช่นมีคนตั้ง BASE_URL เป็น URL ของ production โดยไม่ได้ตั้งใจ) จะ throw error หยุดการรันทันที <strong>ก่อน</strong>ที่ test จะเริ่มยิงคำสั่งใดๆ เข้าเว็บจริงเลยด้วยซ้ำ<br/><br/><br/>เหตุผลที่ guard นี้สำคัญ: automation test มักมีการกระทำที่ทำลายข้อมูลได้ (ลบ, แก้ไข, submit ฟอร์ม) — ถ้า environment variable ผิดพลาดแล้ว test ไปรันใส่ production จริงโดยไม่มี guard กันไว้ อาจสร้างความเสียหายที่แก้คืนไม่ได้ การเช็คแบบนี้เป็นด่านป้องกันสุดท้ายที่ทำได้ในระดับ config ก่อนจะไปถึงจุดที่สายเกินไป (บทเรียนนี้ทำให้ตัวตรวจง่ายกว่าไฟล์จริงเล็กน้อย — ไฟล์จริงใช้ regex ครอบคลุมทั้ง localhost, 127.0.0.1 และ SIT host พร้อมกัน หลักการเดียวกัน)<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>const baseURL = process.env.BASE_URL || 'http://localhost:5175';</code><br/>
+<code>if (!baseURL.includes('localhost')) {</code><br/>
+<code>&nbsp;&nbsp;throw new Error(\`BLOCKED: \${baseURL} is not safe\`);</code><br/>
+<code>}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าลืมใส่เครื่องหมาย <code>!</code> หน้า <code>baseURL.includes('localhost')</code> guard จะกลายเป็นบล็อกกรณีที่ปลอดภัย (localhost) แทนที่จะบล็อกกรณีอันตราย (URL อื่นที่ไม่ใช่ localhost) ทำให้ safety guard ทำงานสลับด้านตรงข้ามกับที่ตั้งใจไว้เลย`,
     example: `// รันจริงโดยสลับ environment ผ่าน command line โดยไม่ต้องแก้โค้ด config เลย
 // BASE_URL=https://sit.example.com npx playwright test
 // BASE_URL=http://localhost:5175 npx playwright test`,
@@ -766,7 +791,11 @@ export const test = base.extend({
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทที่ 1 สอนสร้าง fixture ที่พึ่งพา built-in <code>page</code> — แต่ fixture ที่เราสร้างเองก็สามารถ "พึ่งพา fixture อื่นที่เราสร้างไว้ก่อนหน้า" ได้เช่นกัน แค่ตั้งชื่อ fixture นั้นเป็น parameter แทน <code>page</code> ตรงๆ Playwright จะรู้เองจาก dependency graph ว่าต้อง setup ตัวที่ถูกพึ่งพาก่อนเสมอ (ตามเอกสารทางการ Playwright: fixture A ที่พึ่งพา fixture B, B ต้อง setup ก่อน A และ teardown หลัง A เสมอ ไม่ว่าจะพึ่งพากันกี่ชั้นก็ตาม)<br/><br/>
     ประโยชน์เทียบกับเขียน fixture ใหม่จาก <code>page</code> เปล่าๆ ซ้ำ: ไม่ต้องเขียน <code>goto('/watchlist')</code> ซ้ำอีกรอบใน fixture ใหม่ — ต่อยอดจากสิ่งที่มีอยู่แล้วได้ตรงๆ เหมือนฟังก์ชันเรียกฟังก์ชัน ลด logic ที่ต้องดูแลซ้ำซ้อนเมื่อโปรเจกมี fixture หลายสิบตัวที่ทับซ้อนกันบางส่วน<br/><br/>
     ข้อควรระวัง: อย่าพึ่งพาข้ามกันเป็นวงกลม (fixture A พึ่งพา B และ B พึ่งพา A) — Playwright จะตรวจจับและ error ทันทีตอน setup เพราะไม่รู้ว่าจะ setup ตัวไหนก่อน<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ประโยชน์เทียบกับเขียน fixture ใหม่จาก <code>page</code> เปล่าๆ ซ้ำ: ไม่ต้องเขียน <code>goto('/watchlist')</code> ซ้ำอีกรอบใน fixture ใหม่ — ต่อยอดจากสิ่งที่มีอยู่แล้วได้ตรงๆ เหมือนฟังก์ชันเรียกฟังก์ชัน ลด logic ที่ต้องดูแลซ้ำซ้อนเมื่อโปรเจกมี fixture หลายสิบตัวที่ทับซ้อนกันบางส่วน<br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>export const test = base.extend({</code><br/>
+<code>&nbsp;&nbsp;watchlistPage: async ({ page }, use) => { ... },</code><br/>
+<code>&nbsp;&nbsp;filteredWatchlistPage: async ({ watchlistPage }, use) => {</code><br/>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;await watchlistPage.getByTestId('sector-filter').selectOption('Technology');</code><br/>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;await use(watchlistPage);</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ข้อควรระวัง: อย่าพึ่งพาข้ามกันเป็นวงกลม (fixture A พึ่งพา B และ B พึ่งพา A) — Playwright จะตรวจจับและ error ทันทีตอน setup เพราะไม่รู้ว่าจะ setup ตัวไหนก่อน`,
     example: `// ใช้ filteredWatchlistPage ในไฟล์ test จริง — ได้ทั้ง goto และ filter มาพร้อมแล้ว ไม่ต้องเขียนเอง
 import { test } from './fixtures';
@@ -829,8 +858,12 @@ test('เพิ่ม Holding ใหม่', async ({ page }) => {
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>ยืนยันจากเอกสารทางการ Playwright:</strong> <code>test.step(title, body)</code> "Declares a test step that is shown in the report" — แต่ละ step ที่ห่อไว้จะปรากฏเป็นก้อนแยกกันชัดเจนทั้งใน HTML report และ trace viewer แทนที่จะเห็นแค่ log รวมของทั้ง test<br/><br/>
     <code>test.step()</code> คืนค่าที่ callback ข้างในมัน return ออกมา (ตามเอกสาร: "The method returns the value returned by the step callback") จึงใช้เก็บผลลัพธ์จาก step หนึ่งไปใช้ต่อใน step ถัดไปได้ตรงๆ และรองรับการซ้อน step ข้างในอีก step หนึ่งได้ด้วย (nested step) เหมาะกับขั้นตอนย่อยของขั้นตอนใหญ่<br/><br/>
     ประโยชน์จริงเมื่อ test ยาวและซับซ้อนขึ้น (เช่น login → เพิ่ม holding → ตรวจผลรวม 3 ขั้นตอนขึ้นไป): ถ้าไม่มี step แบ่งไว้ รายงานจะบอกแค่ "test นี้ fail" คนอ่านต้องไล่ดู log ทั้งหมดเองว่า fail ตรงไหน — มี step แบ่งไว้ จะเห็นทันทีว่า step ไหน pass ไปแล้ว step ไหนคือจุดที่ fail จริง (ตัวอย่างนี้ใช้ testid จริงจาก <code>HoldingsPage.ts</code> ของ My-Investment-Port คือ <code>btn-add-holding</code> แต่การห่อด้วย test.step() เองยังไม่ได้ใช้จริงใน test suite ของโปรเจกนั้นตอนนี้ — บทเรียนนี้สอน API ที่ยืนยันถูกต้องจากเอกสารทางการ ประยุกต์กับ testid จริงที่มีอยู่)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>test.step()</code> คืนค่าที่ callback ข้างในมัน return ออกมา (ตามเอกสาร: "The method returns the value returned by the step callback") จึงใช้เก็บผลลัพธ์จาก step หนึ่งไปใช้ต่อใน step ถัดไปได้ตรงๆ และรองรับการซ้อน step ข้างในอีก step หนึ่งได้ด้วย (nested step) เหมาะกับขั้นตอนย่อยของขั้นตอนใหญ่<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ประโยชน์จริงเมื่อ test ยาวและซับซ้อนขึ้น (เช่น login → เพิ่ม holding → ตรวจผลรวม 3 ขั้นตอนขึ้นไป): ถ้าไม่มี step แบ่งไว้ รายงานจะบอกแค่ "test นี้ fail" คนอ่านต้องไล่ดู log ทั้งหมดเองว่า fail ตรงไหน — มี step แบ่งไว้ จะเห็นทันทีว่า step ไหน pass ไปแล้ว step ไหนคือจุดที่ fail จริง (ตัวอย่างนี้ใช้ testid จริงจาก <code>HoldingsPage.ts</code> ของ My-Investment-Port คือ <code>btn-add-holding</code> แต่การห่อด้วย test.step() เองยังไม่ได้ใช้จริงใน test suite ของโปรเจกนั้นตอนนี้ — บทเรียนนี้สอน API ที่ยืนยันถูกต้องจากเอกสารทางการ ประยุกต์กับ testid จริงที่มีอยู่)`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>await test.step('login', async () => {</code><br/>
+<code>&nbsp;&nbsp;await page.goto('/login');</code><br/>
+<code>});</code><br/>
+<code>await test.step('add holding', async () => {</code><br/>
+<code>&nbsp;&nbsp;await page.getByTestId('btn-add-holding').click();</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลืมใส่ <code>await</code> หน้า <code>test.step(...)</code> จะทำให้ step ถัดไปเริ่มทำงานก่อนที่ step ก่อนหน้าจะทำงานเสร็จจริง (เพราะ <code>test.step()</code> คืน Promise เสมอ) ลำดับใน report อาจไม่ตรงกับลำดับที่ต้องการ และ error ข้างในอาจไม่ถูกจับตามที่ควร`,
     example: `// test.step() ซ้อนกันได้ (nested step) และ return ค่าออกมาใช้ต่อได้
 const total = await test.step('คำนวณยอดรวม', async () => {
   await test.step('ขั้นตอนย่อย: ดึงราคาล่าสุด', async () => {
@@ -886,8 +919,10 @@ const total = await test.step('คำนวณยอดรวม', async () => {
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>ยืนยันจากเอกสารทางการ Playwright:</strong> แต่ละ worker process มี isolated browser context ของตัวเองอยู่แล้ว (cookies, storage, in-memory variable ในหน้าเว็บไม่ปนกันข้าม worker) แต่เอกสารเตือนไว้ตรงๆ ว่า "flakiness comes from state that lives outside a single test" — พูดง่ายๆ คือ resource ที่อยู่<strong>นอกเหนือ</strong>ขอบเขตของ browser (เช่น user account ใน backend, แถวข้อมูลใน database) ไม่ได้ isolate ให้อัตโนมัติ ต้องจัดการเอง<br/><br/>
     Playwright ให้ค่า <code>testInfo.workerIndex</code> (เลขเริ่มจาก 1 ไม่ซ้ำกันในแต่ละ worker ที่ยังมีชีวิตอยู่) มาเพื่อการนี้โดยเฉพาะ — ตัวอย่างจากเอกสาร: สร้าง test user ชื่อ <code>user-</code> ต่อท้ายด้วยเลข workerIndex ให้แต่ละ worker ได้ user เป็นของตัวเอง ทุก test ที่รันโดย worker เดียวกันใช้ user ตัวเดิมซ้ำได้ (ไม่ต้องสร้างใหม่ทุก test) แต่ worker คนละตัวจะไม่มีวันชนกันเลย เพราะเลข workerIndex การันตีไม่ซ้ำกัน<br/><br/>
     <strong>ความเชื่อมโยงกับความเป็นจริงของโปรเจกนี้:</strong> <code>playwright.config.ts</code> ของ My-Investment-Port ตั้งค่า <code>fullyParallel: false</code> และ <code>workers: 1</code> จริง (รันแบบ serial ทีละ test process เดียว) จึงยังไม่ได้ใช้เทคนิคนี้ตอนนี้ — แต่เป็นเทคนิคมาตรฐานที่เอกสารทางการแนะนำสำหรับวันที่โปรเจกไหนก็ตามขยายไปรัน parallel จริงจัง ไม่ใช่แค่ทฤษฎีลอยๆ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ความเชื่อมโยงกับความเป็นจริงของโปรเจกนี้:</strong> <code>playwright.config.ts</code> ของ My-Investment-Port ตั้งค่า <code>fullyParallel: false</code> และ <code>workers: 1</code> จริง (รันแบบ serial ทีละ test process เดียว) จึงยังไม่ได้ใช้เทคนิคนี้ตอนนี้ — แต่เป็นเทคนิคมาตรฐานที่เอกสารทางการแนะนำสำหรับวันที่โปรเจกไหนก็ตามขยายไปรัน parallel จริงจัง ไม่ใช่แค่ทฤษฎีลอยๆ<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> Playwright ให้ค่า <code>testInfo.workerIndex</code> (เลขเริ่มจาก 1 ไม่ซ้ำกันในแต่ละ worker ที่ยังมีชีวิตอยู่) มาเพื่อการนี้โดยเฉพาะ — ตัวอย่างจากเอกสาร: สร้าง test user ชื่อ <code>user-</code> ต่อท้ายด้วยเลข workerIndex ให้แต่ละ worker ได้ user เป็นของตัวเอง ทุก test ที่รันโดย worker เดียวกันใช้ user ตัวเดิมซ้ำได้ (ไม่ต้องสร้างใหม่ทุก test) แต่ worker คนละตัวจะไม่มีวันชนกันเลย เพราะเลข workerIndex การันตีไม่ซ้ำกัน<br/><br/>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>function makeWorkerTestUser(workerIndex) {</code><br/>
+<code>&nbsp;&nbsp;return \`user-\${workerIndex}\`;</code><br/>
+<code>}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าใช้ตัวแปร counter ธรรมดาแทน <code>workerIndex</code> เพื่อสร้างชื่อ user ที่ไม่ซ้ำ จะไม่การันตี uniqueness จริง เพราะแต่ละ worker process มีหน่วยความจำแยกกัน ตัวแปร counter ของแต่ละ worker จะเริ่มนับจาก 0 เหมือนกันหมด ต้องใช้ <code>workerIndex</code> ที่ Playwright การันตีไม่ซ้ำข้าม process เท่านั้น`,
     example: `// ใช้ผูกกับ fixture จริงในไฟล์ test (ยืนยัน pattern จากเอกสาร Playwright)
 const test = base.extend({
   testUser: async ({}, use, testInfo) => {

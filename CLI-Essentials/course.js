@@ -99,11 +99,11 @@ fi`,
     hint: "นึกถึงคำสั่งพื้นฐานที่สุดของ git ที่ใช้เริ่มสร้าง repository ใหม่เอี่ยมในโฟลเดอร์ปัจจุบัน ไม่ต้องมี flag หรือ argument ใดๆ เพิ่ม",
     solution: `git init`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน<br/><br/>
-    ถ้าโปรเจคมี remote (GitHub/GitLab) อยู่แล้วและต้องการโค้ดที่มีอยู่ ให้ใช้ <code>git clone &lt;url&gt;</code> แทน — ไม่ใช่ <code>git init</code> ตามด้วย <code>git remote add</code> เอง (clone ทำสองอย่างในคำสั่งเดียว: init + ผูก remote + ดึงโค้ดมาครบ)<br/><br/>
-    หลัง <code>git init</code> repo จะยังไม่มี commit ใดๆ เลย (<code>git status</code> จะบอกว่า "No commits yet") — git สมัยใหม่ (2.28+) จะตั้งชื่อ default branch เป็น <code>main</code> ให้อัตโนมัติ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>หลัง <code>git init</code> repo จะยังไม่มี commit ใดๆ เลย (<code>git status</code> จะบอกว่า "No commits yet") — git สมัยใหม่ (2.28+) จะตั้งชื่อ default branch เป็น <code>main</code> ให้อัตโนมัติ<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าโปรเจคมี remote (GitHub/GitLab) อยู่แล้วและต้องการโค้ดที่มีอยู่ ให้ใช้ <code>git clone &lt;url&gt;</code> แทน — ไม่ใช่ <code>git init</code> ตามด้วย <code>git remote add</code> เอง (clone ทำสองอย่างในคำสั่งเดียว: init + ผูก remote + ดึงโค้ดมาครบ)<br/><br/>`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน หลัง <code>git init</code> repo จะยังไม่มี commit ใดๆ เลย (<code>git status</code> จะบอกว่า "No commits yet") — git สมัยใหม่ (2.28+) จะตั้งชื่อ default branch เป็น <code>main</code> ให้อัตโนมัติ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git init</code><br/>
+    <code>git status</code>  # เช็คว่าเพิ่ง init เสร็จ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าโปรเจคมี remote (GitHub/GitLab) อยู่แล้วและต้องการโค้ดที่มีอยู่ ให้ใช้ <code>git clone &lt;url&gt;</code> แทน — ไม่ใช่ <code>git init</code> ตามด้วย <code>git remote add</code> เอง (clone ทำสองอย่างในคำสั่งเดียว: init + ผูก remote + ดึงโค้ดมาครบ)`,
     example: `# เช็คว่า repo เพิ่ง init เสร็จ ยังไม่มี commit ใดๆ
 git status`,
     task: `จงเขียนคำสั่งเริ่มต้น git repository ใหม่ในโฟลเดอร์ปัจจุบัน`
@@ -131,8 +131,10 @@ git status`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git fetch</strong> ดึงข้อมูล commit/ref ใหม่จาก remote มาเก็บไว้ (เช่น <code>origin/main</code>) แต่<strong>ไม่แตะ branch ปัจจุบันเลย</strong> — ต่างจาก <code>git pull</code> ที่ fetch+merge ในคำสั่งเดียว ปลอดภัยกว่าเวลาต้องการแค่ "ดูก่อนว่ามีอะไรเปลี่ยนไป" โดยไม่กระทบงานที่ทำค้างอยู่<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git fetch</strong> ดึงข้อมูล commit/ref ใหม่จาก remote มาเก็บไว้ (เช่น <code>origin/main</code>) แต่<strong>ไม่แตะ branch ปัจจุบันเลย</strong> — ต่างจาก <code>git pull</code> ที่ fetch+merge ในคำสั่งเดียว ปลอดภัยกว่าเวลาต้องการแค่ "ดูก่อนว่ามีอะไรเปลี่ยนไป" โดยไม่กระทบงานที่ทำค้างอยู่<br/><br/>
     <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/commit-push-merge.sh</code> (ใช้จริงตอน merge worktree เข้า main) เขียนไว้ตรงๆ ว่า <code>git fetch origin main</code> ก่อนจะ <code>git rebase origin/main</code> เสมอ — แยกขั้นตอน "ดึงข้อมูลมาดูก่อน" ออกจาก "เอาไปรวมจริง" ชัดเจน<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Real grounding:</strong> kouen-terminal's <code>Scripts/commit-push-merge.sh</code> (ใช้จริงตอน merge worktree เข้า main) เขียนไว้ตรงๆ ว่า <code>git fetch origin main</code> ก่อนจะ <code>git rebase origin/main</code> เสมอ — แยกขั้นตอน "ดึงข้อมูลมาดูก่อน" ออกจาก "เอาไปรวมจริง" ชัดเจน<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git fetch origin main</code><br/>
+    <code>git log HEAD..origin/main --oneline</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>git fetch</code> ไม่แตะ local branch เลย — หลัง fetch เสร็จ <code>origin/main</code> ขยับแล้วแต่ <code>main</code> ในเครื่องยังเหมือนเดิม ถ้าลืมแล้วไปเช็คโค้ดที่ branch <code>main</code> ตรงๆ จะไม่เห็นการเปลี่ยนแปลงใดๆ จนกว่าจะ <code>merge</code>/<code>rebase</code> เข้าจริง`,
     example: `git fetch origin main
 git log HEAD..origin/main --oneline  # ดูว่า main มี commit ใหม่อะไรบ้างที่เรายังไม่มี`,
     task: `จงดึงข้อมูลล่าสุดของ branch main จาก origin โดยไม่ merge เข้า branch ปัจจุบัน`
@@ -158,9 +160,12 @@ git log HEAD..origin/main --oneline  # ดูว่า main มี commit ให
     hint: "git pull ปกติคือ fetch+merge รวมกัน แต่โจทย์นี้ต้องการไม่ให้เกิด merge commit — มี flag ที่เปลี่ยนวิธีรวม history จาก merge เป็นวางต่อแบบเรียงเส้นตรงแทน ระบุ remote และชื่อ branch ต่อท้ายด้วย",
     solution: `git pull --rebase origin feature/login-fix`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Pull: Fetch + Rebase ในคำสั่งเดียว และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>git pull --rebase origin "$branch"<br/>git push origin "HEAD:$branch" --force-with-lease<br/>fi</code></pre><br/>pattern มาตรฐานสำหรับ "sync แล้วลอง push ใหม่"<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Real grounding:</strong> <code>Scripts/commit-push-merge.sh</code> ของ kouen-terminal ใช้จริงตอน push ถูก remote reject (มีคนอื่น push ก่อน):<br/><pre><code>if ! git push origin "HEAD:$branch" --force-with-lease; then<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git pull</code> ปกติคือ <code>fetch</code> + <code>merge</code> รวมกันในคำสั่งเดียว ส่วน <code>--rebase</code> เปลี่ยนขั้นตอนหลังจาก fetch จาก merge เป็น rebase แทน — ได้ history เรียงเส้นตรง ไม่มี merge commit เกิดขึ้น<br/><br/>
+    <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/commit-push-merge.sh</code> ใช้ pattern นี้ตอน push ถูก remote reject (มีคนอื่น push ก่อน): <code>git pull --rebase origin "$branch"</code> ก่อน แล้วค่อย push ใหม่<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git pull --rebase origin feature/login-fix</code><br/>
+    <code>git rebase --continue</code>  # ถ้าเจอ conflict ระหว่างทาง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าลืมใส่ <code>--rebase</code> คำสั่ง <code>git pull</code> เปล่าๆ จะสร้าง merge commit เพิ่มขึ้นมาทุกครั้งที่มี commit ใหม่ทั้งสองฝั่งโดยไม่ตั้งใจ และถ้า rebase เจอ conflict ต้องแก้ไฟล์แล้ว <code>git add</code> ตามด้วย <code>git rebase --continue</code> เท่านั้น ห้ามใช้ <code>git commit</code> ธรรมดาระหว่าง rebase`,
     example: `# ถ้า rebase เจอ conflict ระหว่างทาง แก้ไฟล์แล้ว git add ต่อด้วย
 git rebase --continue
 # หรือยกเลิกกลับไปจุดก่อน rebase ทั้งหมด
@@ -192,8 +197,10 @@ git rebase --abort`,
     • <code>git switch &lt;branch&gt;</code> — สลับไป branch ที่มีอยู่แล้ว<br/>
     • <code>git switch -c &lt;new-branch&gt;</code> — สร้างใหม่แล้วสลับเข้าไปทันที (<code>-c</code> = <code>--create</code>)<br/><br/>
     คู่กันกับ <code>git restore &lt;file&gt;</code> ที่แยกหน้าที่ "คืนค่าไฟล์" ออกมาต่างหาก (เดิม <code>git checkout &lt;file&gt;</code> ทำหน้าที่นี้)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>git switch &lt;branch&gt;</code> — สลับไป branch ที่มีอยู่แล้ว<br/><br/>• <code>git switch -c &lt;new-branch&gt;</code> — สร้างใหม่แล้วสลับเข้าไปทันที (<code>-c</code> = <code>--create</code>)<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git switch -c feature/login-fix</code><br/>
+    <code>git switch main</code>  # สลับกลับไป branch เดิม (ไม่มี -c)<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า branch ที่ต้องการสลับมีอยู่แล้ว ห้ามใส่ <code>-c</code> ซ้ำ — git จะ error ว่า branch นั้นมีอยู่แล้ว (<code>-c</code> ใช้เฉพาะตอนสร้างใหม่เท่านั้น) และถ้า branch มีอยู่แค่บน remote ยังไม่เคยดึงมาในเครื่อง <code>git switch &lt;branch&gt;</code> เฉยๆ อาจ error ได้เช่นกัน ต้องเช็คว่า track จาก <code>origin/&lt;branch&gt;</code> อัตโนมัติหรือไม่`,
     example: `git switch main  # สลับกลับไป main (ไม่สร้างใหม่ ไม่มี -c)`,
     task: `จงสร้าง branch ใหม่ชื่อ 'feature/login-fix' แล้วสลับเข้าไปในคำสั่งเดียว`
   },
@@ -219,8 +226,10 @@ git rebase --abort`,
     solution: `git merge feature/login-fix`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git merge</strong> เอา commit จาก branch อื่นมารวมเข้า branch ปัจจุบัน (ต้องสลับไปอยู่ branch ปลายทางก่อนเสมอ — คำสั่ง merge วิ่ง "เอาเข้ามา" ไม่ใช่ "ส่งออกไป")<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>• <strong>Fast-forward merge:</strong> ถ้า branch ปัจจุบันไม่มี commit ใหม่เลยตั้งแต่แยก branch ออกไป git จะแค่เลื่อน pointer ไปข้างหน้า ไม่มี merge commit เกิดขึ้น<br/><br/>• <strong>3-way merge:</strong> ถ้าทั้งสอง branch ต่างมี commit ใหม่ของตัวเอง git จะสร้าง merge commit พิเศษ (มี 2 parent) เพื่อรวม history ทั้งสองเข้าด้วยกัน<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• ถ้ามีคนแก้ไฟล์บรรทัดเดียวกันจากทั้งสองฝั่ง เกิด <strong>merge conflict</strong> ต้องแก้เองแล้ว <code>git add</code> + <code>git commit</code> ต่อให้จบ<br/><br/><br/><strong>lazygit:</strong> ตอน conflict เกิด ไฟล์ที่ชนจะขึ้นสีแดงในลิสต์ไฟล์ทันที กด Enter เข้าไฟล์นั้นแล้วเลือก merge tool ในตัว (หรือเปิด editor ปกติ) ได้เลย ไม่ต้องพิมพ์ <code>git status</code> ไล่หาว่าไฟล์ไหนชนบ้าง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git merge feature/login-fix</code><br/>
+    <code>git merge --abort</code>  # ยกเลิกถ้าเจอ conflict แล้วยังไม่พร้อมแก้<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้ามีคนแก้ไฟล์บรรทัดเดียวกันจากทั้งสองฝั่งจะเกิด <strong>merge conflict</strong> ต้องแก้ไฟล์เองแล้ว <code>git add</code> ตามด้วย <code>git commit</code> ให้จบ (ห้ามลืม commit ตอนจบ ไม่งั้น merge จะค้างอยู่ครึ่งๆ กลางๆ) และต้องแน่ใจว่ายืนอยู่ branch ปลายทางก่อนรัน merge เสมอ ไม่งั้นจะรวมผิดทิศทาง`,
     example: `# เช็คว่า merge จะ fast-forward หรือสร้าง merge commit ก่อนรวมจริง
 git merge --no-commit --no-ff feature/login-fix
 git merge --abort  # ยกเลิกถ้าแค่อยากลองดูก่อน`,
@@ -250,8 +259,10 @@ git merge --abort  # ยกเลิกถ้าแค่อยากลอง�
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>push ครั้งแรกของ branch ใหม่ต้องระบุ remote+branch ชัดเจน แล้วใช้ <code>-u</code> (<code>--set-upstream</code>) ผูก local branch กับ remote branch ไว้ — หลังจากนั้น <code>git push</code>/<code>git pull</code> เปล่าๆ (ไม่ต้องพิมพ์ origin/branch ซ้ำ) จะรู้เองว่าต้องไปที่ไหน<br/><br/>
     <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/commit-push.sh</code> ใช้เป๊ะแบบนี้ทุก commit: <code>git push -u origin "$branch"</code><br/><br/>
     <strong>คำเตือนสำคัญ</strong> (จากกฎ core.md ของ session นี้เอง): ห้าม force-push ไปที่ main/master โดยไม่ได้รับอนุญาต — ถ้าจำเป็นต้อง force push branch ตัวเอง (เช่นหลัง rebase) ให้ใช้ <code>--force-with-lease</code> แทน <code>--force</code> เปล่าๆ เพราะ force-with-lease จะเช็คก่อนว่า remote ไม่ได้ถูกคนอื่น push ทับระหว่างที่เรายังไม่ได้ fetch ล่าสุด (กันเผลอเขียนทับงานคนอื่นโดยไม่รู้ตัว) — <code>Scripts/commit-push-merge.sh</code> ของ kouen ใช้จริง: <code>git push origin "HEAD:$branch" --force-with-lease</code><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Real grounding:</strong> kouen-terminal's <code>Scripts/commit-push.sh</code> ใช้เป๊ะแบบนี้ทุก commit: <code>git push -u origin "$branch"</code><br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>คำเตือนสำคัญ</strong> (จากกฎ core.md ของ session นี้เอง): ห้าม force-push ไปที่ main/master โดยไม่ได้รับอนุญาต — ถ้าจำเป็นต้อง force push branch ตัวเอง (เช่นหลัง rebase) ให้ใช้ <code>--force-with-lease</code> แทน <code>--force</code> เปล่าๆ เพราะ force-with-lease จะเช็คก่อนว่า remote ไม่ได้ถูกคนอื่น push ทับระหว่างที่เรายังไม่ได้ fetch ล่าสุด (กันเผลอเขียนทับงานคนอื่นโดยไม่รู้ตัว) — <code>Scripts/commit-push-merge.sh</code> ของ kouen ใช้จริง: <code>git push origin "HEAD:$branch" --force-with-lease</code>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git push -u origin feature/login-fix</code><br/>
+    <code>git push</code>  # ครั้งถัดไป ไม่ต้องพิมพ์ origin/branch ซ้ำแล้ว<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ห้าม force-push ไปที่ main/master โดยไม่ได้รับอนุญาต — ถ้าจำเป็นต้อง force push branch ตัวเอง (เช่นหลัง rebase) ให้ใช้ <code>--force-with-lease</code> แทน <code>--force</code> เปล่าๆ เพราะ force-with-lease จะเช็คก่อนว่า remote ไม่ได้ถูกคนอื่น push ทับระหว่างที่เรายังไม่ได้ fetch ล่าสุด`,
     example: `# หลัง branch มี upstream แล้ว push เปล่าๆ พอ ไม่ต้องพิมพ์ origin/branch ซ้ำ
 git push`,
     task: `จง push branch feature/login-fix ขึ้น origin พร้อมตั้งค่า upstream (-u) ในคำสั่งเดียว`
@@ -277,8 +288,10 @@ git push`,
     hint: "amend ไม่ใช่คำสั่งแยกของ git แต่เป็น flag ต่อท้าย git commit ที่บอกว่าให้แก้ไข commit ล่าสุดแทนสร้างใหม่ ใช้คู่กับ -m เพื่อตั้งข้อความใหม่ได้เลยในคำสั่งเดียว",
     solution: `git commit --amend -m "fix: correct login validation logic"`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git commit --amend</strong> ไม่ใช่คำสั่งเดี่ยวๆ (ไม่มี <code>git amend</code>) แต่เป็น<strong>ตัวเลือกของ <code>git commit</code></strong> ที่สั่งว่า "แทนที่จะสร้าง commit ใหม่ ให้ไปแก้ไข commit ล่าสุดแทน" — commit เดิมจะถูกแทนที่ด้วย commit hash ใหม่ทั้งหมด (ไม่ใช่แก้ของเดิม)<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใช้งานได้ 2 แบบ:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <code>git commit --amend -m "ข้อความใหม่"</code> — เปลี่ยนแค่ commit message เท่านั้น<br/><br/>2. <code>git add &lt;ไฟล์ที่ลืม&gt; && git commit --amend --no-edit</code> — เพิ่มไฟล์เข้า commit เดิม โดย <code>--no-edit</code> คงข้อความเดิมไว้ ไม่เปิด editor ให้แก้<br/><br/><br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใช้งานได้ 2 แบบ: (1) แก้แค่ commit message เฉยๆ หรือ (2) เพิ่มไฟล์ที่ลืม add เข้า commit เดิมโดยคงข้อความเดิมไว้<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git commit --amend -m "ข้อความใหม่"</code><br/>
+    <code>git add &lt;ไฟล์ที่ลืม&gt; && git commit --amend --no-edit</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ข้อควรระวังสำคัญที่สุด:</strong> ห้าม amend commit ที่ <strong>push ไปแล้วและคนอื่นดึงไปใช้ต่อ</strong> เพราะ amend เปลี่ยน commit hash ทำให้ history ของเราไม่ตรงกับที่คนอื่นมีอยู่ในเครื่อง ถ้าจำเป็นต้อง amend commit ที่ push ไปแล้ว (ยังไม่มีใครดึงไปใช้ต่อ) ต้อง force push ด้วย <code>--force-with-lease</code> ตามด้วยเสมอ (ห้ามใช้ <code>--force</code> เปล่าๆ)`,
     example: `# ลืม add ไฟล์เข้า commit ล่าสุด แก้โดยไม่เปลี่ยนข้อความเดิม
 git add login.spec.ts
@@ -313,8 +326,10 @@ git commit --amend --no-edit`,
     solution: `git tag -a v1.2.0 -m "Release v1.2.0: add login retry logic"
 git push origin v1.2.0`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git tag</strong> ปักหมุดไว้ที่ commit ใดคอมมิตหนึ่งแบบถาวร ใช้ทำเครื่องหมายจุด release ของ semantic versioning (<code>MAJOR.MINOR.PATCH</code> เช่น <code>v1.2.0</code>: MAJOR เปลี่ยนตอน breaking change, MINOR เปลี่ยนตอนเพิ่มฟีเจอร์ที่ backward-compatible, PATCH เปลี่ยนตอนแก้บั๊กเฉยๆ)<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Tag มี 2 แบบ:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <strong>Lightweight tag</strong> (<code>git tag v1.2.0</code> เฉยๆ) — แค่ pointer ชี้ไป commit ไม่มี metadata อะไรเพิ่ม<br/><br/>• <strong>Annotated tag</strong> (<code>git tag -a v1.2.0 -m "..."</code>) — เก็บผู้สร้าง, วันที่, และข้อความไว้ด้วย เหมือน commit object แยกต่างหาก — <strong>แนะนำให้ใช้แบบนี้เสมอสำหรับ release จริง</strong> เพราะมีข้อมูลตรวจสอบย้อนหลังได้ครบกว่า<br/><br/><br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Tag มี 2 แบบ: <strong>Lightweight tag</strong> (<code>git tag v1.2.0</code> เฉยๆ — แค่ pointer ชี้ไป commit ไม่มี metadata) กับ <strong>Annotated tag</strong> (<code>git tag -a v1.2.0 -m "..."</code> — เก็บผู้สร้าง วันที่ และข้อความไว้ด้วย) — แนะนำให้ใช้ annotated เสมอสำหรับ release จริง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git tag -a v1.2.0 -m "Release v1.2.0: add login retry logic"</code><br/>
+    <code>git push origin v1.2.0</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ข้อสำคัญที่พลาดกันบ่อย:</strong> <code>git push</code> ธรรมดา<strong>ไม่ส่ง tag ขึ้น remote ให้อัตโนมัติ</strong> ต้องระบุชื่อ tag ต่อท้ายเอง (<code>git push origin v1.2.0</code>) หรือถ้ามีหลาย tag ค้างอยู่อยากส่งพร้อมกันหมดใช้ <code>git push origin --tags</code> (ระวัง: จะ push tag ทุกอันที่มีในเครื่อง ไม่ใช่แค่อันใหม่)<br/><br/>`,
     example: `# ดู tag ทั้งหมดที่ตรงกับ pattern v1.* ที่มีอยู่ในเครื่อง
 git tag -l "v1.*"
@@ -346,9 +361,12 @@ git push origin --delete v1.2.0`,
     hint: "พิมพ์แค่ชื่อโปรแกรมเฉยๆ ไม่ต้องมี flag หรือ argument ใดๆ — lazygit จะอ่าน repo จากโฟลเดอร์ปัจจุบันเอง",
     solution: `lazygit`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>lazygit</strong> คือ TUI (terminal UI) ที่ครอบคำสั่ง git ทั้งหมดที่เรียนมาในบทก่อนหน้า (<code>stash</code>/<code>fetch</code>/<code>pull</code>/<code>switch</code>/<code>merge</code>/<code>push</code>) ให้กด key เดียวแทนพิมพ์คำสั่งยาวๆ ทุกครั้ง โดยไม่ได้แทนที่ความเข้าใจ git command — ต้องรู้ก่อนว่าแต่ละคำสั่งทำอะไรถึงจะกด lazygit ได้อย่างมั่นใจ<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Key ที่ใช้บ่อยที่สุด:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>Layout หลัก (4 panel ซ้าย + diff view ขวา): Status, Files, Local Branches, Commits — เลื่อนด้วยลูกศรหรือ <code>1</code>-<code>5</code> สลับ panel<br/><br/><br/>• <code>space</code> — stage/unstage ไฟล์ที่เลือกอยู่ (แทน <code>git add</code>)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Layout หลัก (4 panel ซ้าย + diff view ขวา): Status, Files, Local Branches, Commits — เลื่อนด้วยลูกศรหรือ <code>1</code>-<code>5</code> สลับ panel Key ที่ใช้บ่อยที่สุด: <code>space</code> stage/unstage, <code>c</code> commit, <code>P</code>/<code>p</code> push/pull, <code>s</code> stash<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>space</code>  # stage/unstage ไฟล์ที่เลือก (แทน git add)<br/>
+    <code>c</code>  # commit (เปิด prompt พิมพ์ message)<br/>
+    <code>P</code> / <code>p</code>  # push / pull<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> key แต่ละตัวทำงาน<strong>ตาม panel ที่ยืนอยู่</strong> เช่น <code>Enter</code> ที่ branch ใน panel Local Branches คือ switch branch แต่ <code>Enter</code> ที่ panel อื่นทำหน้าที่ต่างกัน — ถ้ากดผิด panel ผลลัพธ์จะไม่ตรงที่คาด ต้องเลื่อนไป panel ที่ถูกต้องก่อนเสมอ`,
     example: `# ติดตั้งผ่าน Homebrew (macOS/Linux)
 brew install lazygit
 # เปิดจากโฟลเดอร์ repo ปัจจุบัน
@@ -399,8 +417,11 @@ fix: correct typo
     2. <strong>Insert mode</strong> (กด <code>i</code> เพื่อเข้า) — ปุ่มคือตัวอักษรจริงเหมือน editor ทั่วไป<br/>
     3. กลับ Normal mode ด้วย <code>&lt;Esc&gt;</code> เสมอ ไม่ว่าจะอยู่โหมดไหน<br/>
     4. คำสั่งขึ้นต้นด้วย <code>:</code> (Ex command) พิมพ์ได้เฉพาะตอนอยู่ Normal mode: <code>:wq</code> (write + quit บันทึกแล้วออก), <code>:q!</code> (quit ทิ้งโดยไม่บันทึก ใช้ตอนพิมพ์ผิดทั้งหมดอยากเริ่มใหม่)<br/><br/>
-    เหตุการณ์ที่พบบ่อยที่สุด: พิมพ์ <code>git commit</code> เฉยๆ (ลืมใส่ <code>-m "ข้อความ"</code>) ระบบเปิด Vim (หรือ editor ที่ตั้งไว้ใน <code>$EDITOR</code>) ให้พิมพ์ commit message — คนที่ไม่คุ้น Vim มักติดอยู่เพราะพิมพ์อะไรก็ไม่ขึ้น (เพราะยังอยู่ Normal mode ต้องกด <code>i</code> ก่อน) หรือกด <code>Ctrl+C</code>/ปิดหน้าต่างแทนซึ่งมักทำให้ terminal ค้าง<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <strong>Normal mode</strong> (โหมดเริ่มต้นเสมอ) — ปุ่มคือ "คำสั่ง" ไม่ใช่ตัวอักษร (เช่น <code>dd</code> ลบทั้งบรรทัด, <code>i</code> ไม่ได้พิมพ์ตัว i แต่สั่งเข้า Insert mode)<br/><br/>2. <strong>Insert mode</strong> (กด <code>i</code> เพื่อเข้า) — ปุ่มคือตัวอักษรจริงเหมือน editor ทั่วไป<br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>i</code>  # เข้า Insert mode<br/>
+    <code>fix: correct typo</code>  # พิมพ์ข้อความ<br/>
+    <code>&lt;Esc&gt;</code>  # กลับ Normal mode<br/>
+    <code>:wq</code>  # บันทึก + ออก<br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เหตุการณ์ที่พบบ่อยที่สุด: พิมพ์ <code>git commit</code> เฉยๆ (ลืมใส่ <code>-m "ข้อความ"</code>) ระบบเปิด Vim (หรือ editor ที่ตั้งไว้ใน <code>$EDITOR</code>) ให้พิมพ์ commit message — คนที่ไม่คุ้น Vim มักติดอยู่เพราะพิมพ์อะไรก็ไม่ขึ้น (เพราะยังอยู่ Normal mode ต้องกด <code>i</code> ก่อน) หรือกด <code>Ctrl+C</code>/ปิดหน้าต่างแทนซึ่งมักทำให้ terminal ค้าง`,
     example: `# ถ้าพิมพ์ผิดทั้งหมดอยากยกเลิก ไม่บันทึกอะไรเลย ออกจาก Vim แบบทิ้งทุกอย่าง
 <Esc>
@@ -438,9 +459,11 @@ fix: correct typo
     solution: `gg
 G`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Vim การเคลื่อนที่พื้นฐาน: h j k l, gg, G, w, b และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การกระโดดระยะไกลที่ใช้บ่อยที่สุด:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>gg</code> — ไปบรรทัดแรกสุดของไฟล์<br/><br/>• <code>G</code> — ไปบรรทัดสุดท้ายสุดของไฟล์<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การเคลื่อนที่พื้นฐาน <code>h</code>/<code>j</code>/<code>k</code>/<code>l</code> (ซ้าย/ลง/ขึ้น/ขวา) ขยับทีละตัวอักษร ส่วนการกระโดดระยะไกลที่ใช้บ่อยที่สุดคือ <code>gg</code>/<code>G</code> ไปต้น/ท้ายไฟล์ และ <code>w</code>/<code>b</code> กระโดดทีละคำ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>gg</code>  # ไปบรรทัดแรกสุดของไฟล์<br/>
+    <code>G</code>  # ไปบรรทัดสุดท้ายสุดของไฟล์<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>g</code> ตัวเล็กกับ <code>G</code> ตัวใหญ่ทำงานต่างกันคนละเรื่อง (<code>gg</code> ต้องกด g สองครั้งไปต้นไฟล์ ส่วน <code>G</code> ตัวเดียวไปท้ายไฟล์) พิมพ์ผิดตัวพิมพ์เล็ก-ใหญ่จะกระโดดผิดทิศทางทันที และถ้าใส่ตัวเลขนำหน้า <code>G</code> เช่น <code>42G</code> จะกระโดดไปบรรทัดที่ 42 แทน ไม่ใช่ท้ายไฟล์`,
     example: `# กระโดดไปบรรทัดที่ 42 ตรงๆ โดยไม่ต้องเลื่อนทีละบรรทัด
 42G`,
     task: `จงกระโดดไปบรรทัดแรกสุดของไฟล์ด้วย <code>gg</code> แล้วกระโดดไปบรรทัดสุดท้ายสุดด้วย <code>G</code>`
@@ -467,8 +490,10 @@ G`,
     solution: `:%s/3000/3001/g`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Ex command</strong> รูปแบบ <code>:s/pattern/replacement/flags</code> คือคำสั่ง find & replace ของ Vim ใช้ได้เฉพาะตอนอยู่ Normal mode<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใช้บ่อยตอนต้อง SSH เข้าเซิร์ฟเวอร์ที่ไม่มี GUI editor แล้วต้องแก้ config/log ไฟล์ด่วนๆ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ส่วนประกอบ: <code>:%s/3000/3001/g</code><br/><br/>1. <code>%</code> — ขอบเขต "ทั้งไฟล์" (ทุกบรรทัด) ถ้าไม่ใส่ <code>%</code> จะแทนที่แค่บรรทัดปัจจุบันบรรทัดเดียว<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> 5. <code>g</code> — global flag: แทนที่<strong>ทุกจุดที่เจอในแต่ละบรรทัด</strong> ถ้าไม่ใส่ <code>g</code> จะแทนแค่จุดแรกที่เจอต่อบรรทัดเท่านั้น (บั๊กที่พบบ่อย: ลืมใส่ <code>g</code> แล้วงงว่าทำไมยังเหลือค่าเก่าอยู่บางจุด)<br/><br/>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>:%s/3000/3001/g</code><br/>
+    <code>:5,10s/localhost/127.0.0.1/g</code>  # เฉพาะบรรทัด 5-10 ถ้าไม่ใส่ % ทั้งไฟล์<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลืมใส่ <code>%</code> นำหน้า <code>s</code> จะแทนที่แค่บรรทัดปัจจุบันบรรทัดเดียว ไม่ใช่ทั้งไฟล์ และลืมใส่ <code>g</code> ท้ายสุดจะแทนที่แค่จุดแรกที่เจอต่อบรรทัดเท่านั้น (บั๊กที่พบบ่อย: ลืมใส่ <code>g</code> แล้วงงว่าทำไมยังเหลือค่าเก่าอยู่บางจุด)`,
     example: `# ตัวอย่างแทนที่เฉพาะบรรทัดที่ 5-10 เท่านั้น (ไม่ใช้ % ทั้งไฟล์)
 :5,10s/localhost/127.0.0.1/g`,
     task: `จงเขียนคำสั่ง Vim ให้สมบูรณ์ โดย:<br/>
@@ -506,8 +531,11 @@ p`,
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใน Normal mode, <code>dd</code> คือคำสั่งลบทั้งบรรทัดที่ cursor อยู่ — ข้อความที่ถูกลบจะเก็บเข้า <strong>register เริ่มต้น</strong> (unnamed register) เหมือน clipboard ชั่วคราว แล้วใช้ <code>p</code> (put/paste) วางกลับได้ทันทีที่บรรทัดถัดจาก cursor (ใช้ <code>P</code> ตัวใหญ่ถ้าอยากวาง<strong>ก่อน</strong>บรรทัด cursor แทน)<br/><br/>
     คำสั่งลบรูปแบบเดียวกันที่ใช้บ่อย: <code>dw</code> (ลบทั้งคำ), <code>d$</code> (ลบถึงท้ายบรรทัด), <code>3dd</code> (ลบ 3 บรรทัดรวด — ใส่ตัวเลขนำหน้าคำสั่งซ้ำกี่รอบก็ได้เกือบทุกคำสั่ง Normal mode)<br/><br/>
     <code>yy</code> (yank) คือคัดลอกทั้งบรรทัดแบบไม่ลบ (เก็บเข้า register เดียวกับ dd) แล้ว <code>p</code> วางได้เหมือนกัน — ต่างจาก <code>dd</code> แค่ตรงที่ต้นฉบับไม่หายไป<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>คำสั่งลบรูปแบบเดียวกันที่ใช้บ่อย: <code>dw</code> (ลบทั้งคำ), <code>d$</code> (ลบถึงท้ายบรรทัด), <code>3dd</code> (ลบ 3 บรรทัดรวด — ใส่ตัวเลขนำหน้าคำสั่งซ้ำกี่รอบก็ได้เกือบทุกคำสั่ง Normal mode)<br/><br/><br/><code>yy</code> (yank) คือคัดลอกทั้งบรรทัดแบบไม่ลบ (เก็บเข้า register เดียวกับ dd) แล้ว <code>p</code> วางได้เหมือนกัน — ต่างจาก <code>dd</code> แค่ตรงที่ต้นฉบับไม่หายไป<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>dd</code>  # ลบทั้งบรรทัด<br/>
+    <code>yy</code>  # คัดลอกทั้งบรรทัด (ไม่ลบ)<br/>
+    <code>p</code> / <code>P</code>  # วางหลัง/ก่อนบรรทัด cursor<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>dd</code>/<code>yy</code> ใช้ <strong>unnamed register เดียวกัน</strong> — ถ้า <code>yy</code> คัดลอกไว้ก่อน แล้วไป <code>dd</code> ลบบรรทัดอื่นทีหลัง สิ่งที่ yank ไว้จะถูกทับหายไปทันที ต้องวาง (<code>p</code>) ก่อนที่จะลบอะไรเพิ่มเสมอถ้ายังต้องการของที่ copy ไว้`,
     example: `# คัดลอก (ไม่ลบ) บรรทัดปัจจุบัน แล้ววาง 2 ครั้งติดกัน
 yy
 p
@@ -552,9 +580,12 @@ p`,
 jj
 d`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Visual mode</strong> ให้เลือกข้อความก่อนสั่ง action แทนที่จะเดา motion ล่วงหน้า (เหมือน <code>3dd</code>) — เหมาะกับตอนไม่แน่ใจว่าพื้นที่ที่ต้องการมีกี่บรรทัด/กี่ตัวอักษรกันแน่ เพราะเห็น highlight ที่เลือกไว้แบบ real-time ก่อนตัดสินใจ<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>3 โหมดย่อยของ Visual mode:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>v</code> (ตัวเล็ก) — Character-wise: เลือกทีละตัวอักษร<br/><br/>• <code>V</code> (ตัวใหญ่) — Line-wise: เลือกทีละบรรทัดเต็ม<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>3 โหมดย่อยของ Visual mode: <code>v</code> ตัวเล็ก (Character-wise เลือกทีละตัวอักษร), <code>V</code> ตัวใหญ่ (Line-wise เลือกทีละบรรทัด), <code>Ctrl+v</code> (Block-wise เลือกเป็นสี่เหลี่ยม แก้หลายบรรทัด column เดียวกันพร้อมกัน)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>V</code>  # เข้า Visual Line mode<br/>
+    <code>jj</code>  # เลื่อนลงขยายพื้นที่เลือก<br/>
+    <code>d</code>  # ลบสิ่งที่เลือก (แทน y = คัดลอก)<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องกด action (<code>d</code>/<code>y</code>) <strong>หลัง</strong>ขยับพื้นที่เลือกเสร็จแล้วเท่านั้น ถ้ากด <code>d</code>/<code>y</code> ก่อนเลื่อน cursor จะลบ/คัดลอกแค่ตัวอักษรเดียวที่ cursor อยู่ตอนเข้าโหมด ไม่ใช่พื้นที่ที่ตั้งใจไว้`,
     example: `# เลือกทั้งคำ (character-wise) แล้วคัดลอกแทนลบ
 v
 w
@@ -591,8 +622,11 @@ y`,
 Ctrl+r`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Vim Undo/Redo: ย้อนกลับเมื่อพิมพ์ผิด และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ทั้งสองคำสั่งทำงานได้เฉพาะตอนอยู่ <strong>Normal mode</strong> เท่านั้น (เหมือนคำสั่งอื่นๆ ที่ไม่ใช่ Insert mode)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>Ctrl+r</code> (redo) คือทำสิ่งที่เพิ่ง undo ไปซ้ำอีกครั้ง (ตรงข้ามกับ undo) — สลับ undo/redo ไปมาได้จนกว่าจะแก้ไขอะไรใหม่ (พอพิมพ์อะไรใหม่ history ฝั่ง redo จะถูกล้างทิ้ง)<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>u</code>  # undo ล่าสุด<br/>
+    <code>3u</code>  # undo 3 ขั้นรวดเดียว<br/>
+    <code>Ctrl+r</code>  # redo (ทำสิ่งที่เพิ่ง undo ไปซ้ำ)<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> สลับ undo/redo ไปมาได้เรื่อยๆ แต่พอพิมพ์แก้ไขอะไรใหม่ (แม้แค่ตัวเดียว) history ฝั่ง redo จะถูกล้างทิ้งทันที — กลับไป redo อันเก่าที่เคย undo ไว้ไม่ได้อีกแล้ว`,
     example: `# undo ย้อนกลับ 3 ขั้นรวดเดียว (ใส่ตัวเลขนำหน้าได้เหมือนคำสั่งอื่น)
 3u`,
     task: `จง undo การแก้ไขล่าสุดด้วย u แล้ว redo กลับมาด้วย Ctrl+r`
@@ -619,9 +653,11 @@ Ctrl+r`,
     solution: `#!/usr/bin/env bash
 set -euo pipefail`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix Shell: Safe Script Header ที่ควรมีทุกไฟล์ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>แยกทีละ flag:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <strong><code>-e</code></strong> (errexit): หยุด script ทันทีที่คำสั่งไหนคืนค่า exit code ไม่ใช่ 0 — ไม่มี flag นี้ script จะรันต่อแม้คำสั่งก่อนหน้าจะพัง อาจทำงานต่อบนสถานะที่ผิดพลาดโดยไม่รู้ตัว<br/><br/>2. <strong><code>-u</code></strong> (nounset): error ทันทีถ้าอ้างอิงตัวแปรที่ไม่เคยประกาศ — จับ typo ชื่อตัวแปรได้ (เช่นพิมพ์ <code>$FOOBAR</code> ทั้งที่ประกาศไว้เป็น <code>$FOO_BAR</code> ปกติ bash จะแทนที่เป็นค่าว่างเงียบๆ ไม่แจ้งเตือนเลย)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Bash แบบ default นั้น "ใจดีเกินไป" — รันคำสั่งพัง ก็ยังรันบรรทัดถัดไปต่อเหมือนไม่มีอะไรเกิดขึ้น <code>-e</code> (errexit) หยุดทันทีที่คำสั่งพัง, <code>-u</code> (nounset) error ถ้าอ้างอิงตัวแปรที่ไม่เคยประกาศ (จับ typo ชื่อตัวแปรได้)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>#!/usr/bin/env bash</code><br/>
+    <code>set -euo pipefail</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>-o pipefail</code> คือส่วนที่มักถูกลืม: ปกติ exit code ของ pipeline (<code>cmd1 | cmd2</code>) จะดูแค่คำสั่งสุดท้าย ถ้า <code>cmd1</code> พังแต่ <code>cmd2</code> สำเร็จ pipeline จะรายงานว่าสำเร็จทั้งที่จริงพังไปแล้วครึ่งทาง — ถ้าใส่แค่ <code>set -eu</code> โดยไม่มี <code>pipefail</code> จะจับ error แบบนี้ไม่ได้เลย`,
     example: `#!/usr/bin/env bash
 set -euo pipefail
 
@@ -653,9 +689,11 @@ cd "$ROOT"
     hint: "ต่อคำสั่งที่แสดงรายชื่อไฟล์ staged เข้ากับเครื่องมือค้นหา pattern แบบมาตรฐานผ่าน pipe แล้วใช้ flag ของเครื่องมือนั้นที่ทำให้ทำงานแบบเงียบ (ไม่ print อะไรออกมา แค่ตั้งค่า exit code ไว้เช็คใน if)",
     solution: `git diff --cached --name-only | grep -q "Info.plist"`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Pipe (<code>|</code>)</strong> ส่ง stdout ของคำสั่งฝั่งซ้ายไปเป็น stdin ให้คำสั่งฝั่งขวา — <code>git diff --cached --name-only</code> พิมพ์รายชื่อไฟล์ที่ staged ไว้ (คนละไฟล์ต่อบรรทัด) แล้วส่งต่อให้ <code>grep</code> ค้นหา<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;echo "พบไฟล์ Info.plist ถูก stage ไว้"<br/><br/>fi</code><br/><br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong><code>grep -q</code></strong> (quiet) ไม่พิมพ์อะไรออกมาเลย แค่ตั้งค่า <strong>exit code</strong>: เจอ = 0 (สำเร็จ), ไม่เจอ = 1 (ล้มเหลว) — ออกแบบมาให้ใช้ในเงื่อนไข <code>if</code> โดยเฉพาะ ไม่ต้องมานั่ง parse ข้อความเอง:<br/><br/><br/><code>if git diff --cached --name-only | grep -q "Info.plist"; then<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong><code>grep -q</code></strong> (quiet) ไม่พิมพ์อะไรออกมาเลย แค่ตั้งค่า <strong>exit code</strong>: เจอ = 0 (สำเร็จ), ไม่เจอ = 1 (ล้มเหลว) — ออกแบบมาให้ใช้ในเงื่อนไข <code>if</code> โดยเฉพาะ ไม่ต้องมานั่ง parse ข้อความเอง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git diff --cached --name-only | grep -q "Info.plist"</code><br/>
+    <code>if git diff --cached --name-only | grep -q "Info.plist"; then exit 1; fi</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> exit code ของ <code>grep -q</code> ตรงข้ามกับที่คนมักเข้าใจ: <strong>เจอ (found) = 0</strong> (สำเร็จในสายตา shell) <strong>ไม่เจอ = 1</strong> — ถ้าเผลอเขียน logic กลับด้าน (เช่นคิดว่า 0 แปลว่า "ไม่เจอ") เงื่อนไข <code>if</code> จะทำงานสลับขั้วตรงข้ามกับที่ตั้งใจทันที`,
     example: `# ตัวอย่างใช้ผลจาก grep -q ในเงื่อนไข if จริง (ต่อยอดจาก commit-msg hook)
 if git diff --cached --name-only | grep -q "Info.plist"; then
   echo "🛑 พบ Info.plist ถูก stage ไว้ — ตรวจสอบก่อน commit"
@@ -690,8 +728,10 @@ fi`,
     • <code>-name '&lt;pattern&gt;'</code> กรองด้วยชื่อไฟล์ (รองรับ wildcard <code>*</code> แบบเดียวกับ shell แต่ต้องใส่ quote กันไม่ให้ shell ขยาย <code>*</code> เองก่อนส่งให้ find)<br/>
     • <code>-delete</code> ลบไฟล์ที่เจอทันที (<strong>อันตราย!</strong> ทดสอบด้วย <code>-print</code> ก่อนเสมอถ้าไม่มั่นใจ)<br/><br/>
     <strong>Real grounding:</strong> kouen-terminal's <code>Scripts/run.sh</code> ใช้เป๊ะแบบนี้ตอน refresh graphify: <code>find graphify-out -type f -name '*.html' -delete</code> — ลบไฟล์ report .html เก่าทั้งหมดก่อน generate ใหม่ (ป้องกันของเก่าค้าง)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>-type f</code> เอาเฉพาะไฟล์ (ไม่เอาโฟลเดอร์), <code>-type d</code> เอาเฉพาะโฟลเดอร์<br/><br/>• <code>-name '&lt;pattern&gt;'</code> กรองด้วยชื่อไฟล์ (รองรับ wildcard <code>*</code> แบบเดียวกับ shell แต่ต้องใส่ quote กันไม่ให้ shell ขยาย <code>*</code> เองก่อนส่งให้ find)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>find graphify-out -type f -name '*.html' -print</code>  # เช็คก่อนเสมอ<br/>
+    <code>find graphify-out -type f -name '*.html' -delete</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าลืมใส่ quote รอบ <code>'*.html'</code> shell จะขยาย wildcard เอง (glob expansion) ก่อนส่งให้ <code>find</code> — ถ้าไม่มีไฟล์ในโฟลเดอร์ปัจจุบันตรงกับ pattern จะได้ error <code>No such file or directory</code> แทนที่จะค้นหาแบบ recursive ตามที่ตั้งใจ`,
     example: `# ปลอดภัยกว่า: ดูก่อนว่าจะลบอะไรบ้าง ก่อนใส่ -delete จริง
 find graphify-out -type f -name '*.html' -print`,
     task: `จงเขียนคำสั่ง find ค้นหาไฟล์ (-type f) ชื่อลงท้าย .html ในโฟลเดอร์ graphify-out แล้วลบทิ้ง (-delete)`
@@ -720,8 +760,10 @@ find graphify-out -type f -name '*.html' -print`,
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ไฟล์ทุกไฟล์ใน Unix มีสิทธิ์ 3 กลุ่ม: <strong>อ่าน (r)</strong>, <strong>เขียน (w)</strong>, <strong>รัน (x)</strong> — แยกกำหนดแยกกันได้ 3 ระดับ: เจ้าของไฟล์ (user), กลุ่ม (group), และคนอื่นทั้งหมด (others) เช่น <code>-rw-r--r--</code> ที่เห็นจาก <code>ls -l</code> แปลว่า เจ้าของอ่าน+เขียนได้แต่รันไม่ได้ ส่วนกลุ่ม/คนอื่นอ่านได้อย่างเดียว<br/><br/>
     ไฟล์ script ที่เพิ่งสร้างใหม่ (เช่นจาก <code>touch</code> หรือ editor) มักไม่มีสิทธิ์ execute ติดมาด้วย ทำให้รันตรงๆ ด้วย <code>./script.sh</code> แล้วเจอ <code>Permission denied</code> ทันที ทั้งที่เนื้อหาในไฟล์ไม่มีปัญหาอะไรเลย<br/><br/>
     <code>chmod +x &lt;ไฟล์&gt;</code> คือรูปแบบสัญลักษณ์ (symbolic) เพิ่มสิทธิ์ execute ให้ทั้ง user/group/others พร้อมกัน — ใช้บ่อยและจำง่ายกว่ารูปแบบตัวเลข (numeric mode) อย่าง <code>chmod 755 deploy.sh</code> ที่ให้ผลเทียบเท่ากัน (7 = rwx สำหรับเจ้าของ, 5 = r-x สำหรับกลุ่มและคนอื่น)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ไฟล์ script ที่เพิ่งสร้างใหม่ (เช่นจาก <code>touch</code> หรือ editor) มักไม่มีสิทธิ์ execute ติดมาด้วย ทำให้รันตรงๆ ด้วย <code>./script.sh</code> แล้วเจอ <code>Permission denied</code> ทันที ทั้งที่เนื้อหาในไฟล์ไม่มีปัญหาอะไรเลย<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>chmod +x &lt;ไฟล์&gt;</code> คือรูปแบบสัญลักษณ์ (symbolic) เพิ่มสิทธิ์ execute ให้ทั้ง user/group/others พร้อมกัน — ใช้บ่อยและจำง่ายกว่ารูปแบบตัวเลข (numeric mode) อย่าง <code>chmod 755 deploy.sh</code> ที่ให้ผลเทียบเท่ากัน (7 = rwx สำหรับเจ้าของ, 5 = r-x สำหรับกลุ่มและคนอื่น)`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>chmod +x deploy.sh</code><br/>
+    <code>ls -l deploy.sh</code>  # เช็คว่ามี x ติดมาแล้ว<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>chmod +x</code> เปล่าๆ ให้สิทธิ์ execute กับทั้ง user/group/others พร้อมกัน — ถ้าต้องการจำกัดเฉพาะเจ้าของไฟล์เท่านั้น (เช่น script ที่มีข้อมูล sensitive) ต้องใช้ <code>chmod u+x</code> แทน ไม่ใช่ <code>+x</code> เฉยๆ ซึ่งกว้างเกินความจำเป็น`,
     example: `# เช็คสิทธิ์ปัจจุบันของไฟล์ก่อน chmod
 ls -l deploy.sh
 # ให้สิทธิ์แบบระบุตัวเลขเทียบเท่า chmod +x (rwx สำหรับเจ้าของ, r-x สำหรับกลุ่ม/คนอื่น)
@@ -763,8 +805,10 @@ cd -`,
     • <code>cd</code> (ไม่ใส่ argument) หรือ <code>cd ~</code> — กลับไป home directory ของ user ทันที<br/>
     • <code>cd -</code> — สลับกลับไปโฟลเดอร์<strong>ก่อนหน้า</strong>ที่เพิ่งอยู่ (เก็บไว้ใน environment variable <code>$OLDPWD</code>) กด <code>cd -</code> สองครั้งติดกันจะสลับไปมาระหว่าง 2 โฟลเดอร์เหมือนปุ่ม back/forward<br/><br/>
     ใช้ <code>pwd</code> (print working directory) เช็คได้ตลอดว่าตอนนี้อยู่ที่โฟลเดอร์ไหน — มีประโยชน์มากตอนเขียน script เพราะสคริปต์ไม่รู้ context ว่าถูกเรียกจากโฟลเดอร์ไหน ต้อง <code>cd</code> ไปตำแหน่งที่ถูกต้องก่อนเสมอ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>cd &lt;path&gt;</code> — ไป path ที่ระบุ (relative หรือ absolute ก็ได้)<br/><br/>• <code>cd ..</code> — ขึ้น 1 ระดับ, <code>cd ../..</code> — ขึ้น 2 ระดับ (ซ้อน <code>..</code> ต่อกันด้วย <code>/</code> ได้เรื่อยๆ)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>cd ../..</code>  # ขึ้น 2 ระดับ<br/>
+    <code>cd -</code>  # กลับไปโฟลเดอร์ก่อนหน้า<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>cd -</code> สลับกลับไปแค่ตำแหน่ง<strong>ก่อนหน้าล่าสุด</strong> (<code>$OLDPWD</code>) เท่านั้น ไม่ใช่ history แบบ back หลายขั้น — ถ้ากด <code>cd -</code> ซ้ำสองครั้งจะสลับไปมาระหว่าง 2 โฟลเดอร์เดิมเท่านั้น ไม่ได้ย้อนกลับไปไกลกว่านั้น`,
     example: `# เช็คตำแหน่งปัจจุบันก่อน-หลัง cd เพื่อยืนยันว่าไปถูกที่
 pwd
 cd ../..
@@ -796,8 +840,9 @@ pwd`,
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>mkdir &lt;path&gt;</code> แบบ default สร้างได้แค่โฟลเดอร์ปลายทางเดียว และ<strong>ต้องมีโฟลเดอร์แม่อยู่ก่อนแล้วเท่านั้น</strong> ถ้า path ซ้อนหลายชั้นแต่โฟลเดอร์แม่ยังไม่มีจะเจอ error <code>No such file or directory</code> ทันที<br/><br/>
     <code>-p</code> (parents) แก้ปัญหานี้: สร้างโฟลเดอร์แม่ทุกชั้นที่ยังไม่มีให้อัตโนมัติ ก่อนจะสร้างโฟลเดอร์ปลายทางจริง — <code>mkdir -p tests/e2e/fixtures</code> จะสร้างทั้ง <code>tests/</code>, <code>tests/e2e/</code>, และ <code>tests/e2e/fixtures/</code> ในคำสั่งเดียว แม้จะไม่มีสักโฟลเดอร์มาก่อนเลยก็ตาม<br/><br/>
     ข้อดีอีกอย่าง: <code>-p</code> ทำให้คำสั่ง<strong>idempotent</strong> (รันซ้ำได้โดยไม่ error) — ถ้าโฟลเดอร์มีอยู่แล้วบางส่วนหรือทั้งหมด <code>mkdir -p</code> จะไม่ error เลย ต่างจาก <code>mkdir</code> เฉยๆ ที่จะ error ทันทีถ้าโฟลเดอร์ปลายทางมีอยู่แล้ว — เพราะแบบนี้ script ที่รัน setup/deploy ซ้ำๆ (เช่น CI pipeline) มักใช้ <code>mkdir -p</code> เสมอแทน <code>mkdir</code> เฉยๆ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>-p</code> (parents) แก้ปัญหานี้: สร้างโฟลเดอร์แม่ทุกชั้นที่ยังไม่มีให้อัตโนมัติ ก่อนจะสร้างโฟลเดอร์ปลายทางจริง — <code>mkdir -p tests/e2e/fixtures</code> จะสร้างทั้ง <code>tests/</code>, <code>tests/e2e/</code>, และ <code>tests/e2e/fixtures/</code> ในคำสั่งเดียว แม้จะไม่มีสักโฟลเดอร์มาก่อนเลยก็ตาม<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ข้อดีอีกอย่าง: <code>-p</code> ทำให้คำสั่ง<strong>idempotent</strong> (รันซ้ำได้โดยไม่ error) — ถ้าโฟลเดอร์มีอยู่แล้วบางส่วนหรือทั้งหมด <code>mkdir -p</code> จะไม่ error เลย ต่างจาก <code>mkdir</code> เฉยๆ ที่จะ error ทันทีถ้าโฟลเดอร์ปลายทางมีอยู่แล้ว — เพราะแบบนี้ script ที่รัน setup/deploy ซ้ำๆ (เช่น CI pipeline) มักใช้ <code>mkdir -p</code> เสมอแทน <code>mkdir</code> เฉยๆ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>mkdir -p tests/e2e/fixtures</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>mkdir -p</code> ไม่มี error ใดๆ แม้พิมพ์ path ผิด (typo) — มันจะสร้างโฟลเดอร์ใหม่ตาม path ที่พิมพ์ไว้ทันทีโดยไม่เตือน ต่างจาก <code>mkdir</code> เฉยๆ ที่อย่างน้อยจะ error ถ้าโฟลเดอร์แม่ไม่มี ทำให้ typo ใน path หลุดรอดไปสร้างโฟลเดอร์ผิดที่โดยไม่รู้ตัว ต้องเช็ค path ให้ถูกต้องเองก่อนรันเสมอ`,
     example: `# สร้างหลายโฟลเดอร์พร้อมกันในคำสั่งเดียว (แต่ละอันมี -p ในตัว)
 mkdir -p reports/{screenshots,logs,coverage}`,
     task: `จงสร้างโฟลเดอร์ <code>tests/e2e/fixtures</code> พร้อมโฟลเดอร์แม่ที่ยังไม่มีทั้งหมด ด้วย <code>mkdir -p</code>`
@@ -824,9 +869,11 @@ mkdir -p reports/{screenshots,logs,coverage}`,
     hint: "คำสั่งสร้าง link มี flag ตัวเดียวที่ทำให้เป็น 'symbolic' (ตัวชี้ ไม่ใช่ก็อปปี้จริง) แล้วเรียงลำดับ argument เป็น: ไฟล์จริงที่จะถูกชี้ไปก่อน ตามด้วยชื่อ link ที่จะสร้างใหม่",
     solution: `ln -s config/production.env .env`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix Symbolic Link: ชี้ชื่อสั้นไปยังไฟล์จริง ไม่ต้อง Copy ซ้ำ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>• แก้ไขไฟล์ผ่าน symlink เท่ากับแก้ไฟล์ต้นฉบับจริง (เพราะชี้ไปที่เดียวกัน) — ไม่มีปัญหาข้อมูล 2 ชุดไม่ตรงกัน<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ข้อสำคัญของ <code>ln -s</code> ที่ต่างจาก copy:<br/><br/>• <code>ls -l</code> จะโชว์ symlink เป็น <code>.env -&gt; config/production.env</code> ให้เห็นชัดว่าชี้ไปไหน<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>แก้ไขไฟล์ผ่าน symlink เท่ากับแก้ไฟล์ต้นฉบับจริง (เพราะชี้ไปที่เดียวกัน) — <code>ls -l</code> จะโชว์ symlink เป็น <code>.env -&gt; config/production.env</code> ให้เห็นชัดว่าชี้ไปไหน และ <code>rm .env</code> ลบแค่ตัว link ทิ้ง ไม่กระทบไฟล์ต้นฉบับ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>ln -s config/production.env .env</code><br/>
+    <code>ls -l .env</code>  # เช็คว่าชี้ไปไฟล์ไหน<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลืมใส่ <code>-s</code> จะได้ <strong>hard link</strong> แทน ไม่ใช่ symbolic link (ชี้ตรงไปที่ข้อมูลบน disk เดียวกันเป๊ะ ข้ามไดรฟ์ไม่ได้ และลบต้นฉบับไม่ได้ถ้ายังมี hard link เหลืออยู่) — งาน QA/dev ทั่วไปเกือบทั้งหมดต้องใช้ <code>-s</code> เสมอ`,
     example: `# สลับ .env ไปชี้ staging แทน production (-f = force เขียนทับ link เดิม)
 ln -sf config/staging.env .env
 # เช็คว่า .env ชี้ไปไฟล์ไหนอยู่ตอนนี้
@@ -857,8 +904,10 @@ TMP_STAGE=$(mktemp -d)
     solution: `trap 'rm -rf "$TMP_STAGE"' EXIT`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix trap: ล้างไฟล์ชั่วคราวอัตโนมัติแม้สคริปต์ล้มเหลว และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ถ้าไม่ตั้ง trap แล้วสคริปต์ error กลางทางก่อนถึงบรรทัด rm ท้ายสุด ไฟล์ temp จะค้างอยู่ตลอดไป — trap แก้ปัญหานี้โดยผูก cleanup ไว้ล่วงหน้าตั้งแต่ต้น ไม่ต้องพึ่งว่าสคริปต์จะรันจบถึงบรรทัดสุดท้ายจริงหรือเปล่า<br/><br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Real grounding:</strong> kouen-terminal's <code>Scripts/generate-app-icon.sh</code>, <code>mobile-web.sh</code>, <code>smoke-dmg.sh</code> ใช้ pattern เดียวกันนี้ทั้งหมด — สร้าง resource ชั่วคราว (temp dir, background process) แล้ว <code>trap '&lt;cleanup&gt;' EXIT</code> ทันทีหลังสร้างเสร็จ ก่อนจะทำงานต่อ<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>TMP_STAGE=$(mktemp -d)</code><br/>
+    <code>trap 'rm -rf "$TMP_STAGE"' EXIT</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องตั้ง <code>trap</code> ทันทีหลังสร้าง resource (เช่น <code>mktemp -d</code>) เสมอ ไม่ใช่ตั้งไว้ท้ายสุดของสคริปต์ — ถ้าสคริปต์ error ระหว่างกลางก่อนถึงบรรทัด <code>trap</code> จะยังไม่มี cleanup ผูกไว้เลย ไฟล์ temp จะค้างอยู่ตลอดไป`,
     example: `# ใช้ trap คู่กับหลาย signal พร้อมกันได้ (เช่นเผื่อโดน Ctrl+C หรือ kill ด้วย)
 trap cleanup EXIT INT TERM`,
     task: `จงตั้ง trap ให้รันคำสั่ง rm -rf "$TMP_STAGE" ทุกครั้งที่สคริปต์จบการทำงาน (EXIT)`
@@ -913,9 +962,11 @@ trap cleanup EXIT INT TERM`,
     hint: "ต้องกรองบรรทัดที่ต้องการก่อนด้วยเครื่องมือค้นหา pattern แบบมาตรฐาน จากนั้นดึงเฉพาะคอลัมน์ที่ต้องการออกมา (มีเครื่องมือแยกคอลัมน์ที่ใช้ได้ เช่น awk) ก่อนจะนับจำนวนซ้ำต้องเรียงข้อมูลให้อยู่ติดกันก่อนเสมอ แล้วค่อยนับด้วย flag ที่ทำให้แสดงจำนวนครั้งด้วย สุดท้ายเรียงผลลัพธ์จากมากไปน้อยแบบตัวเลข",
     solution: `grep "FAIL" test-results.log | awk '{print $4}' | sort | uniq -c | sort -rn`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix Pipeline หลายขั้นตอน: สรุปสถิติ Test Fail จาก Log และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>แยกทีละขั้นตอน:<br/><br/>หลักการสำคัญ: งานแบบนี้ทำด้วยคำสั่งเดียวไม่ได้ ต้อง "ประกอบ" เครื่องมือเล็กๆ หลายตัวเข้าด้วยกัน — นี่คือปรัชญาพื้นฐานของ Unix เอง<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <code>grep "FAIL" test-results.log</code> — กรองเอาเฉพาะบรรทัดที่มีคำว่า FAIL<br/><br/>2. <code>awk '{print $4}'</code> — awk แบ่งแต่ละบรรทัดเป็น "คอลัมน์" ตาม whitespace โดยอัตโนมัติ (<code>$1</code>, <code>$2</code>, ... ) คำสั่งนี้พิมพ์เฉพาะคอลัมน์ที่ 4 ออกมา (ชื่อ test case)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>หลักการสำคัญ: งานแบบนี้ทำด้วยคำสั่งเดียวไม่ได้ ต้อง "ประกอบ" เครื่องมือเล็กๆ หลายตัวเข้าด้วยกันผ่าน pipe — นี่คือปรัชญาพื้นฐานของ Unix เอง (<code>grep</code> กรอง → <code>awk</code> ดึงคอลัมน์ → <code>sort</code> เรียง → <code>uniq -c</code> นับ → <code>sort -rn</code> เรียงจากมากไปน้อย)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>grep "FAIL" test-results.log | awk '{print $4}' \</code><br/>
+    <code>&nbsp;&nbsp;| sort | uniq -c | sort -rn</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>uniq -c</code> นับได้เฉพาะบรรทัดที่ซ้ำกัน<strong>ติดกัน</strong>เท่านั้น ไม่ใช่ทั้งไฟล์ — ถ้าลืม <code>sort</code> ก่อน <code>uniq -c</code> ชื่อเดียวกันที่กระจัดกระจายอยู่คนละที่จะถูกนับแยกเป็นหลายกลุ่ม ได้ผลลัพธ์ผิดทันที`,
     example: `# ใช้ pattern เดียวกันนับ HTTP status code ที่เจอบ่อยที่สุดใน access.log
 grep " 500 " access.log | awk '{print $1}' | sort | uniq -c | sort -rn`,
     task: `จงเขียน pipeline คำสั่งเดียวจากไฟล์ <code>test-results.log</code> ให้ครบทุกขั้นตอน:<br/>
@@ -979,8 +1030,11 @@ done`,
     3. quote ตัวแปร <code>"$f"</code> เสมอเวลาใช้เป็น argument ของคำสั่ง — ป้องกันปัญหาถ้าชื่อไฟล์มี space หรือ special character อยู่ข้างใน (shell จะไม่ตัดคำผิดพลาด)<br/>
     4. <code>echo "$f"</code> — แสดงชื่อไฟล์ที่เข้าเงื่อนไข ก่อนจะปิด <code>if</code> ด้วย <code>fi</code> และปิด <code>for</code> ด้วย <code>done</code><br/><br/>
     แนวคิดนี้ต่อยอดจาก <code>set -euo pipefail</code> และ <code>grep -q</code> ที่เรียนไปก่อนหน้า — เอามาผสมกับ loop เพื่อจัดการงาน batch หลายไฟล์พร้อมกันแบบอัตโนมัติ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <code>for f in results/*.txt; do ... done</code> — วนลูปผ่านทุกไฟล์ที่ตรงกับ pattern <code>results/*.txt</code> (shell ขยาย <code>*</code> เป็นรายชื่อไฟล์จริงให้เอง) ตัวแปร <code>f</code> จะเปลี่ยนค่าเป็นชื่อไฟล์ถัดไปในแต่ละรอบ<br/><br/>2. <code>if grep -q "FAIL" "$f"; then ... fi</code> — <code>grep -q</code> เช็คแบบเงียบว่าไฟล์นั้นมีคำว่า FAIL หรือไม่ ให้แค่ exit code (0 = เจอ, ไม่ใช่ 0 = ไม่เจอ) เอาไปใช้เป็นเงื่อนไขของ <code>if</code> ได้ตรงๆ<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>for f in results/*.txt; do</code><br/>
+    <code>&nbsp;&nbsp;if grep -q "FAIL" "$f"; then echo "$f"; fi</code><br/>
+    <code>done</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าไม่มีไฟล์ <code>.txt</code> ใน <code>results/</code> เลยแม้แต่ไฟล์เดียว bash แบบ default จะ<strong>ไม่ขยาย</strong> <code>*</code> ให้ — loop จะรันแค่ 1 รอบโดย <code>f</code> เป็น string ตัวอักษร <code>results/*.txt</code> ตรงๆ (ไม่ใช่ไม่วนลูปเลยตามที่หลายคนคาดหวัง) ทำให้ <code>grep</code> ไป error ว่าไฟล์ไม่มีอยู่จริง`,
     example: `# ตัวอย่างนับจำนวนไฟล์ที่ fail แทนที่จะ print ชื่อไฟล์
 count=0
 for f in results/*.txt; do
@@ -1015,9 +1069,11 @@ echo "พบไฟล์ fail ทั้งหมด $count ไฟล์"`,
     hint: "คำสั่งพื้นฐานที่สุดที่ควรพิมพ์ก่อนทำอะไรก็ตามใน git เพื่อดูภาพรวมของ working directory ตอนนี้",
     solution: `git status`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git status</strong> คือคำสั่งที่ควรพิมพ์เป็นอันดับแรกก่อน commit/add ทุกครั้ง แสดงสถานะไฟล์ทั้งหมดแบ่งเป็น 3 กลุ่ม:<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>3. <strong>Untracked</strong> — ไฟล์ใหม่ที่ git ยังไม่เคยรู้จักเลย (ไม่เคย add มาก่อน)<br/><br/><br/>เช็คก่อน commit ทุกครั้งช่วยกันคอมมิตไฟล์ผิดหรือลืมไฟล์ที่ควร add ไปด้วย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <strong>Staged (จะเข้าไปใน commit ถัดไป)</strong> — ไฟล์ที่ <code>git add</code> ไปแล้ว<br/><br/>2. <strong>Modified/Unstaged</strong> — ไฟล์ที่แก้ไปแล้วแต่ยังไม่ได้ <code>git add</code><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>1. <strong>Staged</strong> (จะเข้าไปใน commit ถัดไป) — ไฟล์ที่ <code>git add</code> ไปแล้ว 2. <strong>Modified/Unstaged</strong> — ไฟล์ที่แก้ไปแล้วแต่ยังไม่ได้ <code>git add</code> 3. <strong>Untracked</strong> — ไฟล์ใหม่ที่ git ยังไม่เคยรู้จักเลย<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git status</code><br/>
+    <code>git status -s</code>  # short format อ่านเร็วกว่า<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เช็ค <code>git status</code> ก่อน commit ทุกครั้ง — ไฟล์ที่อยู่ใน Untracked จะ<strong>ไม่ถูก commit ไปด้วย</strong>แม้จะรัน <code>git commit -a</code> ก็ตาม (<code>-a</code> stage เฉพาะไฟล์ที่ track อยู่แล้วเท่านั้น) พลาดตรงนี้บ่อยจนลืม add ไฟล์ใหม่เข้า commit`,
     example: `# แบบย่อ (short format) กระชับกว่า อ่านเร็วกว่าตอนไฟล์เยอะ
 git status -s`,
     task: `จงเช็คสถานะปัจจุบันของ working directory ด้วย <code>git status</code>`
@@ -1047,8 +1103,10 @@ git status -s`,
     • <code>--oneline</code> — ย่อแต่ละ commit เหลือบรรทัดเดียว (hash ย่อ + ข้อความ)<br/>
     • <code>-N</code> (เช่น <code>-5</code>) — จำกัดแสดงแค่ N commit ล่าสุด<br/>
     • <code>--graph --all</code> — วาดเส้น branch แบบ ASCII ให้เห็นว่า commit ไหนอยู่ branch ไหนบ้าง มีประโยชน์มากตอน branch เยอะ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>--oneline</code> — ย่อแต่ละ commit เหลือบรรทัดเดียว (hash ย่อ + ข้อความ)<br/><br/>• <code>-N</code> (เช่น <code>-5</code>) — จำกัดแสดงแค่ N commit ล่าสุด<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git log --oneline -5</code><br/>
+    <code>git log --oneline --graph --all</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>-5</code> จำกัดแค่<strong>จำนวน</strong> commit ที่แสดง ไม่ใช่กรองตามช่วงเวลาหรือ branch — ถ้าอยู่ branch อื่นที่ไม่ใช่ branch หลัก commit ล่าสุด 5 อันที่เห็นอาจไม่ใช่ 5 อันล่าสุดของทั้ง repo ต้องเติม <code>--all</code> ถ้าต้องการดูทุก branch พร้อมกัน`,
     example: `# ดูทุก branch พร้อมเส้นกราฟ
 git log --oneline --graph --all`,
     task: `จงแสดงประวัติ 5 commit ล่าสุดแบบย่อบรรทัดเดียวด้วย <code>git log --oneline -5</code>`
@@ -1086,8 +1144,10 @@ git diff --cached`,
     • <code>git diff --cached</code> (เท่ากับ <code>--staged</code>) — เทียบ <strong>staging area vs commit ล่าสุด</strong> คือดูว่า <code>add</code> ไว้อะไรบ้างที่จะเข้า commit ถัดไปจริงๆ<br/>
     • <code>git diff HEAD</code> — เทียบ working directory กับ commit ล่าสุดตรงๆ (รวมทั้ง staged และ unstaged ในทีเดียว)<br/><br/>
     เช็ค <code>git diff --cached</code> ก่อน commit ทุกครั้งช่วยกันไม่ให้ commit อะไรที่ไม่ตั้งใจ add ไปด้วย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>git diff</code> (เปล่าๆ) — เทียบ <strong>working directory vs staging area</strong> คือดูว่าแก้อะไรไปแล้วที่ยังไม่ได้ <code>add</code><br/><br/>• <code>git diff --cached</code> (เท่ากับ <code>--staged</code>) — เทียบ <strong>staging area vs commit ล่าสุด</strong> คือดูว่า <code>add</code> ไว้อะไรบ้างที่จะเข้า commit ถัดไปจริงๆ<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git diff</code>  # unstaged<br/>
+    <code>git diff --cached</code>  # staged<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> หลัง <code>git add</code> ไฟล์ไปแล้ว <code>git diff</code> เปล่าๆ จะ<strong>ไม่โชว์การเปลี่ยนแปลงนั้นอีก</strong> (เพราะย้ายไป staging area แล้ว) หลายคนพิมพ์ <code>git diff</code> ซ้ำแล้วงงว่าทำไมว่างเปล่า ทั้งที่ต้องดูด้วย <code>git diff --cached</code> แทน`,
     example: `# เทียบ working directory กับ commit ล่าสุดตรงๆ (รวม staged+unstaged)
 git diff HEAD`,
     task: `จงดู <code>git diff</code> (unstaged) แล้วดู <code>git diff --cached</code> (staged) ตามลำดับ`
@@ -1115,8 +1175,10 @@ git diff HEAD`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Add -p: Stage เฉพาะบางส่วนของไฟล์ (Patch Mode) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git add &lt;ไฟล์&gt;</code> ธรรมดา stage ทั้งไฟล์รวดเดียว — ถ้าไฟล์มีทั้งการแก้ที่ตั้งใจ commit จริงๆ ปนกับโค้ด debug ที่ลืมลบ จะแยกไม่ได้ว่าอะไรควรอยู่ commit ไหน<br/><br/>
     <code>git add -p &lt;ไฟล์&gt;</code> (patch mode) แบ่งการแก้ไขออกเป็น "hunk" (กลุ่มบรรทัดที่เปลี่ยนติดกัน) แล้วถามทีละ hunk ว่าจะ stage มั้ย (<code>y</code>=ใช่, <code>n</code>=ไม่, <code>s</code>=แบ่ง hunk นี้ให้ย่อยลงอีก, <code>q</code>=หยุดถามที่เหลือ) — ทำให้แยก commit ได้ละเอียดกว่าระดับไฟล์ เป็นเทคนิคที่ทำให้แต่ละ commit โฟกัสเรื่องเดียวจริงๆ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>git add -p &lt;ไฟล์&gt;</code> (patch mode) แบ่งการแก้ไขออกเป็น "hunk" (กลุ่มบรรทัดที่เปลี่ยนติดกัน) แล้วถามทีละ hunk ว่าจะ stage มั้ย (<code>y</code>=ใช่, <code>n</code>=ไม่, <code>s</code>=แบ่ง hunk นี้ให้ย่อยลงอีก, <code>q</code>=หยุดถามที่เหลือ) — ทำให้แยก commit ได้ละเอียดกว่าระดับไฟล์ เป็นเทคนิคที่ทำให้แต่ละ commit โฟกัสเรื่องเดียวจริงๆ<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git add -p login.ts</code><br/>
+    <code>y / n / s / q</code>  # stage / skip / แบ่ง hunk ย่อย / หยุดถาม<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>git add -p</code> ทำงานได้เฉพาะไฟล์ที่ git <strong>track อยู่แล้ว</strong> (มี diff เทียบกับ commit เดิม) — ถ้าไฟล์เป็น untracked ใหม่เอี่ยม จะไม่มี hunk ให้เลือกเลย ต้อง <code>git add -N &lt;ไฟล์&gt;</code> (intent-to-add) ก่อน ถึงจะเริ่ม patch mode ได้`,
     example: `# ทำแบบเดียวกันตอน commit แทนที่จะ add ก่อน (สลับไป patch mode ตอน commit ได้เลย)
 git commit -p`,
     task: `จงเข้าโหมด patch ของ <code>git add</code> เพื่อเลือก stage บาง hunk ของไฟล์ <code>login.ts</code>`
@@ -1143,10 +1205,10 @@ git commit -p`,
     solution: `git clone https://github.com/acme/webapp.git`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git clone &lt;url&gt;</strong> ทำครบในคำสั่งเดียว: สร้างโฟลเดอร์ใหม่ + <code>git init</code> ข้างใน + ผูก remote ชื่อ <code>origin</code> ให้ชี้ไป url ที่ระบุ + ดึงข้อมูลทั้งหมด (ทุก branch, ทุก commit) มาเก็บไว้ + checkout branch default (มักเป็น <code>main</code>) ออกมาให้ทำงานได้ทันที<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git clone &lt;url&gt;</strong> ทำครบในคำสั่งเดียว: สร้างโฟลเดอร์ใหม่ + <code>git init</code> ข้างใน + ผูก remote ชื่อ <code>origin</code> ให้ชี้ไป url ที่ระบุ + ดึงข้อมูลทั้งหมด (ทุก branch, ทุก commit) มาเก็บไว้ + checkout branch default (มักเป็น <code>main</code>) ออกมาให้ทำงานได้ทันที<br/><br/>
-    นี่คือเหตุผลที่บท <code>git init</code> เตือนไว้ว่า: ถ้าโปรเจกต์มี remote อยู่แล้วให้ใช้ <code>clone</code> แทน ไม่ต้องมานั่ง <code>init</code> แล้วต่อด้วย <code>remote add</code> เอง<br/><br/>
-    ค่า default ชื่อโฟลเดอร์ที่ได้จะตรงกับชื่อ repo (ในตัวอย่างนี้คือ <code>webapp/</code>) ถ้าอยากตั้งชื่อโฟลเดอร์เองใส่ argument ที่สองต่อท้าย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>นี่คือเหตุผลที่บท <code>git init</code> เตือนไว้ว่า: ถ้าโปรเจกต์มี remote อยู่แล้วให้ใช้ <code>clone</code> แทน ไม่ต้องมานั่ง <code>init</code> แล้วต่อด้วย <code>remote add</code> เอง<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ค่า default ชื่อโฟลเดอร์ที่ได้จะตรงกับชื่อ repo (ในตัวอย่างนี้คือ <code>webapp/</code>) ถ้าอยากตั้งชื่อโฟลเดอร์เองใส่ argument ที่สองต่อท้าย`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git clone https://github.com/acme/webapp.git</code><br/>
+    <code>git clone &lt;url&gt; my-local-webapp</code>  # ตั้งชื่อโฟลเดอร์เอง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ค่า default ชื่อโฟลเดอร์ที่ได้จะตรงกับชื่อ repo (ในตัวอย่างนี้คือ <code>webapp/</code>) ถ้าอยากตั้งชื่อโฟลเดอร์เองต้องใส่ argument ที่สองต่อท้าย ไม่งั้นถ้า clone repo ชื่อซ้ำกันหลายอันในโฟลเดอร์เดียวกันจะ error ทับกันทันที`,
     example: `# clone แล้วตั้งชื่อโฟลเดอร์เองแทนใช้ชื่อ repo เดิม
 git clone https://github.com/acme/webapp.git my-local-webapp`,
     task: `จง clone repo <code>https://github.com/acme/webapp.git</code> มาไว้ในเครื่อง`
@@ -1175,8 +1237,10 @@ git clone https://github.com/acme/webapp.git my-local-webapp`,
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>remote</strong> คือชื่อเล่นที่ผูกไว้กับ URL ของ repo อื่น (ปกติอยู่บน GitHub/GitLab) — <code>origin</code> เป็นแค่<strong>ชื่อตามธรรมเนียม</strong> ที่ทุกคนใช้กัน ไม่ใช่ชื่อบังคับของ git<br/><br/>
     <code>git remote add &lt;ชื่อ&gt; &lt;url&gt;</code> ผูก remote ใหม่เข้ากับ local repo — จำเป็นเฉพาะตอนที่ repo เริ่มจาก <code>git init</code> เอง (ถ้าใช้ <code>git clone</code> จะได้ remote <code>origin</code> ผูกมาให้อัตโนมัติแล้ว)<br/><br/>
     หนึ่ง repo มีได้หลาย remote พร้อมกัน (เช่น <code>origin</code> ชี้ไป fork ของตัวเอง + <code>upstream</code> ชี้ไป repo ต้นฉบับ) ใช้ <code>git remote -v</code> ดูรายชื่อ remote ทั้งหมดพร้อม URL<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>git remote add &lt;ชื่อ&gt; &lt;url&gt;</code> ผูก remote ใหม่เข้ากับ local repo — จำเป็นเฉพาะตอนที่ repo เริ่มจาก <code>git init</code> เอง (ถ้าใช้ <code>git clone</code> จะได้ remote <code>origin</code> ผูกมาให้อัตโนมัติแล้ว)<br/><br/><br/>หนึ่ง repo มีได้หลาย remote พร้อมกัน (เช่น <code>origin</code> ชี้ไป fork ของตัวเอง + <code>upstream</code> ชี้ไป repo ต้นฉบับ) ใช้ <code>git remote -v</code> ดูรายชื่อ remote ทั้งหมดพร้อม URL<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git remote add origin https://github.com/acme/webapp.git</code><br/>
+    <code>git remote -v</code>  # เช็ค remote ทั้งหมดพร้อม URL<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า remote ชื่อ <code>origin</code> มีอยู่แล้ว <code>git remote add origin</code> จะ <strong>error ทันที</strong> (<code>remote origin already exists</code>) — ต้องใช้ <code>git remote set-url origin &lt;url&gt;</code> แทนถ้าต้องการเปลี่ยน URL ของ remote เดิม ไม่ใช่ <code>add</code> ซ้ำ`,
     example: `# ดู remote ทั้งหมดที่ผูกไว้ พร้อม URL (v = verbose)
 git remote -v`,
     task: `จงผูก remote ชื่อ <code>origin</code> ให้ชี้ไปที่ <code>https://github.com/acme/webapp.git</code>`
@@ -1207,8 +1271,9 @@ git remote -v`,
     • <code>--mixed</code> (default ถ้าไม่ใส่ flag) — ย้อน commit และเอาออกจาก staged ด้วย แต่ไฟล์ในเครื่องยังอยู่ (ต้อง <code>git add</code> ใหม่เอง)<br/>
     • <code>--hard</code> — ย้อน commit และ<strong>ลบการแก้ไขทั้งหมดทิ้งถาวร</strong> (ไฟล์กลับไปเหมือน commit เป้าหมายเป๊ะ) — <strong style="color:#e00">อันตรายที่สุด ห้ามใช้กับ commit ที่ push ไปแล้ว/คนอื่นดึงไปใช้ต่อ</strong> เพราะข้อมูลหายจริง กู้คืนยาก<br/><br/>
     กฎทองคือ: <code>reset</code> (ทุกโหมด) ปลอดภัยเฉพาะกับ commit ที่ยัง<strong>ไม่ push</strong> ออกไปไหนเท่านั้น<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>--mixed</code> (default ถ้าไม่ใส่ flag) — ย้อน commit และเอาออกจาก staged ด้วย แต่ไฟล์ในเครื่องยังอยู่ (ต้อง <code>git add</code> ใหม่เอง)<br/><br/>• <code>--hard</code> — ย้อน commit และ<strong>ลบการแก้ไขทั้งหมดทิ้งถาวร</strong> (ไฟล์กลับไปเหมือน commit เป้าหมายเป๊ะ) — <strong style="color:#e00">อันตรายที่สุด ห้ามใช้กับ commit ที่ push ไปแล้ว/คนอื่นดึงไปใช้ต่อ</strong> เพราะข้อมูลหายจริง กู้คืนยาก<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> • <code>--soft</code> — ย้อน commit แต่ <strong>เก็บทุกอย่างไว้แบบ staged</strong> เหมือนเพิ่ง <code>git add</code> เสร็จ พร้อม commit ใหม่ทันที (ใช้แก้ commit message หรือรวม commit หลายอันเข้าด้วยกัน)<br/>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git reset --soft HEAD~1</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าลืมใส่ <code>--soft</code> ระบบจะใช้ <code>--mixed</code> เป็น default แทน — ไฟล์จะหลุดออกจาก staged ทันที (ต้อง <code>git add</code> ใหม่เองทั้งหมดก่อน commit ได้) และห้ามพิมพ์ <code>--hard</code> สลับกับ <code>--soft</code> โดยไม่ตั้งใจเด็ดขาด เพราะ <code>--hard</code> ลบการแก้ไขทิ้งถาวร กู้คืนยาก`,
     example: `# ย้อน 1 commit แบบลบการแก้ไขทิ้งถาวร (ระวังมาก ใช้เฉพาะ commit ที่ไม่เคย push)
 git reset --hard HEAD~1`,
     task: `จงย้อนกลับไปก่อน commit ล่าสุด 1 อัน โดยเก็บไฟล์ที่แก้ไว้แบบ staged ด้วย <code>git reset --soft HEAD~1</code>`
@@ -1239,8 +1304,10 @@ git reset --hard HEAD~1`,
     • <code>reset</code> — เขียน history ใหม่ (ลบ/ย้าย commit ทิ้ง) ปลอดภัยเฉพาะ commit ที่ยังไม่ push<br/>
     • <code>revert</code> — ไม่แตะ history เดิมเลย ปลอดภัย<strong>แม้กับ commit ที่ push ไปแล้วและคนอื่นดึงไปใช้ต่อ</strong> เพราะทุกคนแค่ต้อง <code>pull</code> commit ใหม่ที่ revert เข้ามาเพิ่ม ไม่มี history ใครขัดกัน<br/><br/>
     กฎง่ายๆ: commit ยังไม่ push → ใช้ <code>reset</code>/<code>amend</code> ได้ตามสบาย, commit push ไปแล้ว/แชร์กับคนอื่นแล้ว → ใช้ <code>revert</code> เสมอ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>เทียบกับ <code>reset</code>:<br/><br/>• <code>reset</code> — เขียน history ใหม่ (ลบ/ย้าย commit ทิ้ง) ปลอดภัยเฉพาะ commit ที่ยังไม่ push<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git revert abc1234</code><br/>
+    <code>git revert HEAD~2..HEAD</code>  # revert หลาย commit รวด<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า commit ที่จะ revert เป็น <strong>merge commit</strong> คำสั่งจะ error ทันที (<code>commit is a merge but no -m option was given</code>) เพราะ merge commit มี 2 parent ไม่รู้จะย้อนเทียบกับฝั่งไหน ต้องระบุ <code>-m 1</code> (หรือ 2) บอก parent ที่ต้องการอิงด้วยเสมอ`,
     example: `# revert หลาย commit ติดกันในคำสั่งเดียว (เก่าสุดไปใหม่สุด)
 git revert HEAD~2..HEAD`,
     task: `จงสร้าง commit ใหม่ที่ย้อนผลของ commit <code>abc1234</code> ด้วย <code>git revert abc1234</code>`
@@ -1288,8 +1355,11 @@ git revert HEAD~2..HEAD`,
     • <code>:wq</code> — เขียน (write) แล้วออก (quit) เรียงกัน แต่จะ error ถ้าไฟล์เป็น read-only (เปิดด้วย <code>vim -R</code> หรือตั้ง <code>:set readonly</code> ไว้)<br/>
     • <code>:wq!</code> — เติม <code>!</code> บังคับเขียนทับ read-only flag<strong>ของ Vim เอง</strong>แล้วออก — <strong>ข้อควรรู้:</strong> <code>!</code> ตัวนี้ override แค่ read-only flag ภายใน Vim เท่านั้น ถ้าไฟล์จริงถูก <code>chmod</code> ห้ามเขียนระดับ filesystem (permission denied จริง) <code>:wq!</code> ก็ยังเขียนไม่ได้อยู่ดี<br/><br/>
     หลักการจำ: <code>!</code> ต่อท้ายคำสั่งไหนก็ตาม = "บังคับ ไม่ต้องถาม" ใช้ pattern นี้ได้กับคำสั่ง Ex อื่นๆ ของ Vim ด้วยเช่นกัน<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>:q</code> (quit) — ออกได้ก็ต่อเมื่อ<strong>ไม่มีอะไรค้าง</strong> (ไม่มีการแก้ไขที่ยังไม่บันทึก) ถ้ามีอะไรค้างจะ error <code>E37: No write since last change</code> ทันที ไม่ยอมออกให้เฉยๆ<br/><br/>• <code>:q!</code> — เติม <code>!</code> (force) ท้ายคำสั่งไหนก็ตาม แปลว่า "บังคับทำ ไม่ต้องถามอะไร" — <code>:q!</code> จึงออกทันทีโดย<strong>ทิ้งการแก้ไขที่ยังไม่บันทึกทั้งหมด</strong><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>:q</code>  # ออกเฉยๆ ไม่มีอะไรค้าง<br/>
+    <code>:q!</code>  # บังคับออก ทิ้งการแก้ไข<br/>
+    <code>:wq!</code>  # บันทึกทับ readonly แล้วออก<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลำดับตัวอักษรสำคัญ — ต้องเขียน <code>w</code> (write) ก่อน <code>q</code> (quit) เสมอ <code>:wq</code> ใช้ได้ แต่ <code>:qw</code> ไม่มีคำสั่งนี้อยู่ Vim จะ error <code>E492: Not an editor command</code> ทันที`,
     example: `# ปิดทุกไฟล์ที่เปิดพร้อมกันหมด (หลาย buffer/split) แบบบังคับทิ้งทุกอย่าง
 :qa!`,
     task: `จงเขียนคำสั่งออกจาก Vim ให้ครบทั้ง 3 แบบตามสถานการณ์:<br/>
@@ -1326,9 +1396,11 @@ git revert HEAD~2..HEAD`,
     solution: `/ERROR
 n`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Vim Search: หาคำในไฟล์ด้วย / และเลื่อนไปผลถัดไปด้วย n และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>หลังค้นหาแล้ว:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>n</code> — เลื่อนไปจุดที่เจอ<strong>ถัดไป</strong> (ทิศทางเดิมที่ค้นหาไว้)<br/><br/>• <code>N</code> (ตัวใหญ่) — เลื่อนไปจุดที่เจอ<strong>ก่อนหน้า</strong> (ทิศทางย้อนกลับ)<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>หลังค้นหาแล้ว <code>n</code> เลื่อนไปจุดที่เจอ<strong>ถัดไป</strong> (ทิศทางเดิม) ส่วน <code>N</code> ตัวใหญ่เลื่อนไปจุดที่เจอ<strong>ก่อนหน้า</strong> (ทิศทางย้อนกลับ) — <code>?</code> ค้นหาแบบถอยหลังแทน <code>/</code><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>/ERROR</code>  # ค้นหาเดินหน้า<br/>
+    <code>n</code>  # ไปจุดที่เจอถัดไป<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>n</code>/<code>N</code> อ้างอิงตามทิศทางที่<strong>ค้นหาไว้ตอนแรก</strong> ไม่ใช่ทิศทางตายตัว — ถ้าค้นหาด้วย <code>?</code> (ถอยหลัง) แทน <code>/</code> ความหมายของ <code>n</code>/<code>N</code> จะสลับกัน (<code>n</code> กลายเป็นถอยหลังแทน) พลาดจุดนี้บ่อยเวลาสลับใช้ทั้งสองแบบ`,
     example: `# ค้นหาคำที่ cursor อยู่ตรงนี้พอดี (ไม่ต้องพิมพ์คำเอง) แล้วเลื่อนไปจุดถัดไป
 *
 n`,
@@ -1377,9 +1449,13 @@ j
 q
 9@a`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Macro</strong> คือการบันทึกลำดับคีย์ที่กดจริงไว้ในตัวแปรชื่อสั้นๆ (register a-z) แล้วสั่งเล่นซ้ำได้ทีหลัง เหมาะมากกับงานที่ต้องแก้แบบเดิมซ้ำๆ กันหลายบรรทัด/หลายจุด<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ขั้นตอน:<br/><br/>2. ทำสิ่งที่ต้องการตามปกติ (คีย์อะไรก็ได้ รวมถึงเข้า Insert mode พิมพ์ข้อความจริงด้วย)<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <code>qa</code> — เริ่มบันทึกลง register <code>a</code> (ใช้ตัวอักษรอื่นแทน a ได้ เช่น <code>qb</code>)<br/><br/>3. <code>q</code> (กดตัวเดียวเฉยๆ ไม่มี argument) — หยุดบันทึก<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ขั้นตอน: (1) <code>qa</code> เริ่มบันทึกลง register <code>a</code> (2) ทำสิ่งที่ต้องการตามปกติ (3) <code>q</code> เฉยๆ หยุดบันทึก (4) <code>@a</code> เล่นซ้ำ 1 รอบ หรือ <code>9@a</code> เล่นซ้ำ 9 รอบรวด<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>qa</code>  # เริ่มบันทึกลง register a<br/>
+    <code>A;&lt;Esc&gt;j</code>  # ทำงานตามปกติ<br/>
+    <code>q</code>  # หยุดบันทึก<br/>
+    <code>9@a</code>  # เล่นซ้ำ 9 รอบ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> macro เล่นซ้ำคำสั่งเป๊ะตามที่บันทึกไว้ ไม่ได้ "เข้าใจ" เนื้อหา — ถ้าบางบรรทัดมีโครงสร้างต่างจากบรรทัดแรกที่ใช้บันทึก (เช่น มี <code>;</code> ติดอยู่ท้ายบรรทัดอยู่แล้ว หรือบรรทัดว่างคั่นอยู่) ผลลัพธ์ตอนเล่นซ้ำจะเพี้ยนทันที ควรเช็คให้แน่ใจว่าทุกบรรทัดมีรูปแบบเดียวกันก่อนเล่นซ้ำจำนวนมาก`,
     example: `# ดูเนื้อหาที่บันทึกไว้ใน macro register a (เผื่ออยากเช็คว่าบันทึกถูกต้องมั้ย)
 :reg a`,
     task: `จงบันทึก macro ลง register <code>a</code> ที่เติม <code>;</code> ท้ายบรรทัดแล้วเลื่อนลง แล้วเล่นซ้ำ 9 ครั้งด้วย <code>9@a</code>`
@@ -1410,8 +1486,10 @@ q
     • <code>-a</code> (all) — แสดงไฟล์ซ่อนด้วย (รวมถึง <code>.</code> และ <code>..</code> ที่แทนโฟลเดอร์ปัจจุบัน/แม่)<br/>
     • รวมกันเป็น <code>-la</code> หรือ <code>-al</code> ได้ผลเหมือนกัน<br/><br/>
     เพิ่ม <code>-h</code> (human-readable) แสดงขนาดไฟล์เป็น KB/MB/GB แทนตัวเลข byte ยาวๆ อ่านยาก: <code>ls -lah</code><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>-l</code> (long) — แสดงแบบละเอียด: สิทธิ์ (rwx), เจ้าของ, กลุ่ม, ขนาดไฟล์, วันที่แก้ไขล่าสุด<br/><br/>• <code>-a</code> (all) — แสดงไฟล์ซ่อนด้วย (รวมถึง <code>.</code> และ <code>..</code> ที่แทนโฟลเดอร์ปัจจุบัน/แม่)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>ls -la</code><br/>
+    <code>ls -lah</code>  # + ขนาดไฟล์แบบอ่านง่าย<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>-a</code> จะรวม <code>.</code> (โฟลเดอร์ปัจจุบัน) และ <code>..</code> (โฟลเดอร์แม่) เข้ามาในรายการด้วยเสมอ — ถ้าเอาผลลัพธ์ <code>ls -la</code> ไปนับจำนวนไฟล์ด้วยสคริปต์ (เช่น <code>wc -l</code>) จะได้ตัวเลขเกินมา 2 จากสองรายการนี้ ต้องกรองออกก่อนถ้าต้องการนับไฟล์จริงๆ`,
     example: `# แสดงขนาดไฟล์แบบอ่านง่าย (KB/MB) แทนตัวเลข byte ดิบ
 ls -lah`,
     task: `จงแสดงรายชื่อไฟล์ทั้งหมดในโฟลเดอร์ปัจจุบัน แบบละเอียดรวมไฟล์ซ่อนด้วย <code>ls -la</code>`
@@ -1439,9 +1517,10 @@ ls -lah`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix cat: แสดงเนื้อหาไฟล์สั้นๆ ในเทอร์มินัลทันที และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>cat</code> (concatenate) พิมพ์เนื้อหาไฟล์ออกทาง stdout ตรงๆ ทั้งไฟล์ — เหมาะกับไฟล์สั้นๆ ที่อยากดูเนื้อหาเร็วๆ โดยไม่ต้องเปิด editor<br/><br/>
     ใส่หลายไฟล์พร้อมกันได้ จะพิมพ์ต่อกันเป็นเนื้อหาเดียว: <code>cat a.txt b.txt</code> — ที่มาของชื่อ "concatenate" (เอามาต่อกัน) นั่นเอง<br/><br/>
-    <strong>ข้อควรระวัง:</strong> ถ้าไฟล์ยาวมาก (log เป็นหมื่นบรรทัด) <code>cat</code> จะพิมพ์รัวออกมาทั้งหมดจนล้นหน้าจอ อ่านไม่ทัน — กรณีนั้นควรใช้ <code>head</code>/<code>tail</code> (ดูเฉพาะส่วนต้น/ท้าย) หรือ <code>less</code> (เลื่อนดูทีละหน้า) แทน<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ใส่หลายไฟล์พร้อมกันได้ จะพิมพ์ต่อกันเป็นเนื้อหาเดียว: <code>cat a.txt b.txt</code> — ที่มาของชื่อ "concatenate" (เอามาต่อกัน) นั่นเอง<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ข้อควรระวัง:</strong> ถ้าไฟล์ยาวมาก (log เป็นหมื่นบรรทัด) <code>cat</code> จะพิมพ์รัวออกมาทั้งหมดจนล้นหน้าจอ อ่านไม่ทัน — กรณีนั้นควรใช้ <code>head</code>/<code>tail</code> (ดูเฉพาะส่วนต้น/ท้าย) หรือ <code>less</code> (เลื่อนดูทีละหน้า) แทน`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>cat deploy.log</code><br/>
+    <code>cat part1.txt part2.txt &gt; combined.txt</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าไฟล์ยาวมาก (log เป็นหมื่นบรรทัด) <code>cat</code> จะพิมพ์รัวออกมาทั้งหมดจนล้นหน้าจอ อ่านไม่ทัน — กรณีนั้นควรใช้ <code>head</code>/<code>tail</code> (ดูเฉพาะส่วนต้น/ท้าย) หรือ <code>less</code> (เลื่อนดูทีละหน้า) แทน`,
     example: `# ต่อหลายไฟล์เข้าด้วยกันแล้วเก็บผลรวมไว้ในไฟล์ใหม่
 cat part1.txt part2.txt > combined.txt`,
     task: `จงแสดงเนื้อหาทั้งหมดของไฟล์ <code>deploy.log</code> ด้วย <code>cat</code>`
@@ -1476,8 +1555,10 @@ tail -f deploy.log`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix head/tail: ดูแค่ต้นไฟล์หรือท้ายไฟล์ (รวมถึงแบบ Real-time) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>head</code> แสดง<strong>บรรทัดแรกๆ</strong> ของไฟล์ (default 10 บรรทัด ถ้าไม่ระบุ), <code>tail</code> แสดง<strong>บรรทัดท้ายๆ</strong> ของไฟล์ — ใช้ <code>-n &lt;จำนวน&gt;</code> กำหนดจำนวนบรรทัดที่ต้องการทั้งคู่<br/><br/>
     <strong><code>tail -f</code></strong> (follow) พิเศษกว่า: แสดงบรรทัดท้ายไฟล์แล้ว<strong>ไม่จบโปรแกรม</strong> แต่ค้างรอดูบรรทัดใหม่ที่ถูกเขียนเพิ่มเข้าไฟล์แบบ real-time (เหมือนเปิดจอมอนิเตอร์ log สด) — เป็นวิธีมาตรฐานที่ใช้ตามดู log ของ server/process ที่กำลังรันอยู่ กด <code>Ctrl+C</code> เพื่อหยุดตาม<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong><code>tail -f</code></strong> (follow) พิเศษกว่า: แสดงบรรทัดท้ายไฟล์แล้ว<strong>ไม่จบโปรแกรม</strong> แต่ค้างรอดูบรรทัดใหม่ที่ถูกเขียนเพิ่มเข้าไฟล์แบบ real-time (เหมือนเปิดจอมอนิเตอร์ log สด) — เป็นวิธีมาตรฐานที่ใช้ตามดู log ของ server/process ที่กำลังรันอยู่ กด <code>Ctrl+C</code> เพื่อหยุดตาม<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>head -n 20 deploy.log</code><br/>
+    <code>tail -f deploy.log</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>tail -f</code> ตามดู<strong>ไฟล์เดิมตาม file descriptor</strong> — ถ้า log ถูก rotate (ไฟล์เดิมถูก rename แล้วสร้างไฟล์ใหม่ชื่อเดิมแทน ซึ่งเป็นเรื่องปกติของระบบ log rotation) <code>tail -f</code> จะยังตามไฟล์เก่าที่ถูก rename ไปต่อ ไม่สลับไปไฟล์ใหม่ให้ ต้องใช้ <code>tail -F</code> (ตัวใหญ่) แทนถ้าต้องการให้ตามชื่อไฟล์แทน`,
     example: `# ผสมกับ grep เพื่อกรองเฉพาะบรรทัดที่มีคำว่า ERROR แบบ real-time
 tail -f deploy.log | grep ERROR`,
     task: `จงแสดง 20 บรรทัดแรกของ <code>deploy.log</code> ด้วย <code>head -n 20</code> แล้วตามดู log ใหม่แบบ real-time ด้วย <code>tail -f</code>`
@@ -1514,8 +1595,10 @@ mv config.yaml.bak archive/config.yaml.bak`,
     <code>mv &lt;ต้นทาง&gt; &lt;ปลายทาง&gt;</code> (move) — ย้ายไฟล์ ต้นฉบับ<strong>หายไป</strong> เหลือแค่ที่ปลายทางใหม่ (มีไฟล์เดียว) ใช้ syntax เดียวกันได้ทั้ง 2 จุดประสงค์:<br/>
     • <strong>ย้ายไปโฟลเดอร์อื่น</strong> (ชื่อไฟล์เหมือนเดิม): <code>mv file.txt archive/file.txt</code><br/>
     • <strong>เปลี่ยนชื่อ</strong> (อยู่โฟลเดอร์เดิม): <code>mv old-name.txt new-name.txt</code> — Unix ไม่มีคำสั่ง <code>rename</code> แยกต่างหาก ใช้ <code>mv</code> ทำหน้าที่นี้แทน<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>mv &lt;ต้นทาง&gt; &lt;ปลายทาง&gt;</code> (move) — ย้ายไฟล์ ต้นฉบับ<strong>หายไป</strong> เหลือแค่ที่ปลายทางใหม่ (มีไฟล์เดียว) ใช้ syntax เดียวกันได้ทั้ง 2 จุดประสงค์:<br/><br/>• <strong>ย้ายไปโฟลเดอร์อื่น</strong> (ชื่อไฟล์เหมือนเดิม): <code>mv file.txt archive/file.txt</code><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>cp config.yaml config.yaml.bak</code><br/>
+    <code>mv config.yaml.bak archive/config.yaml.bak</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ทั้ง <code>cp</code> และ <code>mv</code> จะ<strong>เขียนทับไฟล์ปลายทางที่มีชื่อซ้ำโดยไม่เตือนเลย</strong> ถ้าปลายทางมีไฟล์อยู่แล้ว ข้อมูลเดิมจะหายทันทีไม่มีถามยืนยัน — ใช้ flag <code>-i</code> (interactive) ถ้าอยากให้ถามก่อนทับทุกครั้ง`,
     example: `# เปลี่ยนชื่อไฟล์ (อยู่โฟลเดอร์เดิม ไม่ได้ย้ายที่)
 mv old-report.json report.json`,
     task: `จงคัดลอก <code>config.yaml</code> เป็น <code>config.yaml.bak</code> ด้วย <code>cp</code> แล้วย้ายไปไว้ที่ <code>archive/config.yaml.bak</code> ด้วย <code>mv</code>`
@@ -1545,9 +1628,9 @@ mv old-report.json report.json`,
     • <code>-r</code> (recursive) — ลบแบบวนลึกเข้าไปทุก subdirectory จำเป็นสำหรับลบโฟลเดอร์<br/>
     • <code>-f</code> (force) — ไม่ถามยืนยันทีละไฟล์ และไม่ error ถ้าไฟล์ไม่มีอยู่จริง<br/>
     • รวมกันเป็น <code>-rf</code> คือ pattern มาตรฐานที่ใช้ลบโฟลเดอร์ทั้งก้อนแบบเงียบๆ<br/><br/>
-    <strong style="color:#e00">คำเตือนสำคัญที่สุด:</strong> Unix <strong>ไม่มีถังขยะ (trash)</strong> — <code>rm -rf</code> ลบถาวรทันที กู้คืนไม่ได้เลย (ต่างจาก GUI ที่ลบแล้วยังกู้จาก Recycle Bin ได้) และห้ามใช้กับตัวแปรที่อาจว่างเปล่าเด็ดขาด: <code>rm -rf "$DIR"</code> ถ้า <code>$DIR</code> ดันไม่ได้ตั้งค่าไว้ (unset) จะกลายเป็น <code>rm -rf ""</code> ซึ่งบางกรณีตีความเป็นโฟลเดอร์ปัจจุบันหรือแย่กว่านั้น — นี่คือเหตุผลที่บท <code>set -euo pipefail</code> (โดยเฉพาะ <code>-u</code>) สำคัญมากในสคริปต์ที่มี <code>rm -rf</code><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>-r</code> (recursive) — ลบแบบวนลึกเข้าไปทุก subdirectory จำเป็นสำหรับลบโฟลเดอร์<br/><br/>• <code>-f</code> (force) — ไม่ถามยืนยันทีละไฟล์ และไม่ error ถ้าไฟล์ไม่มีอยู่จริง<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong style="color:#e00">คำเตือนสำคัญที่สุด:</strong> Unix <strong>ไม่มีถังขยะ (trash)</strong> — <code>rm -rf</code> ลบถาวรทันที กู้คืนไม่ได้เลย (ต่างจาก GUI ที่ลบแล้วยังกู้จาก Recycle Bin ได้) และห้ามใช้กับตัวแปรที่อาจว่างเปล่าเด็ดขาด: <code>rm -rf "$DIR"</code> ถ้า <code>$DIR</code> ดันไม่ได้ตั้งค่าไว้ (unset) จะกลายเป็น <code>rm -rf ""</code> ซึ่งบางกรณีตีความเป็นโฟลเดอร์ปัจจุบันหรือแย่กว่านั้น — นี่คือเหตุผลที่บท <code>set -euo pipefail</code> (โดยเฉพาะ <code>-u</code>) สำคัญมากในสคริปต์ที่มี <code>rm -rf</code>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>rm -rf tmp-cache</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong style="color:#e00">คำเตือนสำคัญที่สุด:</strong> Unix <strong>ไม่มีถังขยะ (trash)</strong> — <code>rm -rf</code> ลบถาวรทันที กู้คืนไม่ได้เลย และห้ามใช้กับตัวแปรที่อาจว่างเปล่าเด็ดขาด: <code>rm -rf "$DIR"</code> ถ้า <code>$DIR</code> ดันไม่ได้ตั้งค่าไว้ (unset) จะกลายเป็น <code>rm -rf ""</code> ซึ่งบางกรณีตีความเป็นโฟลเดอร์ปัจจุบันหรือแย่กว่านั้น — นี่คือเหตุผลที่ <code>set -euo pipefail</code> (โดยเฉพาะ <code>-u</code>) สำคัญมากในสคริปต์ที่มี <code>rm -rf</code>`,
     example: `# ปลอดภัยกว่า: ดูก่อนว่าจะลบอะไรบ้างด้วย -i (ถามยืนยันทีละไฟล์) ก่อนมั่นใจแล้วค่อยใช้ -f
 rm -ri tmp-cache`,
     task: `จงลบโฟลเดอร์ <code>tmp-cache</code> ทิ้งทั้งหมดด้วย <code>rm -rf</code>`
@@ -1578,8 +1661,10 @@ rm -ri tmp-cache`,
     • <code>-w</code> — นับจำนวน<strong>คำ</strong> (word, แบ่งด้วย whitespace)<br/>
     • <code>-c</code> — นับจำนวน<strong>byte</strong>, <code>-m</code> — นับจำนวน<strong>ตัวอักษร</strong> (character อาจต่างจาก byte ถ้ามีตัวอักษรหลาย byte เช่นภาษาไทย)<br/><br/>
     ใช้บ่อยที่สุดแบบต่อ pipe เพื่อนับจำนวนผลลัพธ์จากคำสั่งอื่น เช่น <code>grep FAIL test-results.log | wc -l</code> นับว่ามีกี่บรรทัดที่ fail — เร็วกว่าเปิดไฟล์มานับเองเยอะ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>-l</code> — นับจำนวน<strong>บรรทัด</strong> (line)<br/><br/>• <code>-w</code> — นับจำนวน<strong>คำ</strong> (word, แบ่งด้วย whitespace)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>wc -l test-results.log</code><br/>
+    <code>grep FAIL test-results.log | wc -l</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>wc -l</code> นับจากจำนวนตัวอักษร<strong>newline</strong> ในไฟล์ ไม่ใช่นับ "บรรทัด" ตรงๆ — ถ้าบรรทัดสุดท้ายของไฟล์ไม่มี newline ปิดท้าย (ไม่ได้กด Enter ก่อนจบไฟล์) <code>wc -l</code> จะนับขาดไป 1 บรรทัดจากที่เห็นจริงบนหน้าจอ`,
     example: `# นับจำนวนบรรทัดที่มีคำว่า FAIL แทนที่จะนับทั้งไฟล์
 grep FAIL test-results.log | wc -l`,
     task: `จงนับจำนวนบรรทัดทั้งหมดในไฟล์ <code>test-results.log</code> ด้วย <code>wc -l</code>`
@@ -1616,8 +1701,11 @@ run-tests.sh >> out.log
 run-tests.sh > out.log 2>&1`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix Redirection: ส่ง Output ไปเก็บในไฟล์แทนพิมพ์หน้าจอ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใช้บ่อยตอนรัน script ใน background/cron แล้วอยากเก็บทั้ง output และ error ไว้ตรวจสอบทีหลังในไฟล์เดียว แทนที่จะปล่อยหายไปกับ terminal<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>&gt; file</code> — ส่ง stdout ไปเขียนไฟล์ <strong>ทับของเดิมทั้งหมด</strong><br/><br/>• <code>&gt;&gt; file</code> — ส่ง stdout ไปเขียนไฟล์แบบ<strong>ต่อท้าย</strong> ไม่ลบเนื้อหาเดิม<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>run-tests.sh &gt; out.log</code>  # ทับของเดิม<br/>
+    <code>run-tests.sh &gt;&gt; out.log</code>  # ต่อท้าย<br/>
+    <code>run-tests.sh &gt; out.log 2&gt;&1</code>  # รวม stdout+stderr<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ลำดับสำคัญมาก</strong> — <code>2&gt;&1</code> ต้องอยู่<strong>หลัง</strong> <code>&gt; out.log</code> เสมอ ถ้าเขียนสลับเป็น <code>2&gt;&1 &gt; out.log</code> stderr จะยังคงพิมพ์ออก terminal เหมือนเดิม ไม่ถูกส่งเข้าไฟล์ด้วย เพราะตอนที่ <code>2&gt;&1</code> ทำงาน stdout ยังไม่ได้ถูกย้ายไปที่ไฟล์เลย`,
     example: `# ทิ้ง output ทั้งหมดไม่สนใจเลย (ส่งไป /dev/null ซึ่งเป็นเหมือน "หลุมดำ")
 noisy-command.sh > /dev/null 2>&1`,
     task: `จงเขียนคำสั่งให้ครบ 3 แบบ:<br/>
@@ -1648,9 +1736,10 @@ noisy-command.sh > /dev/null 2>&1`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix xargs: ส่งผลลัพธ์จาก Pipe ไปเป็น Argument ของคำสั่งถัดไป และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>หลายคำสั่ง (เช่น <code>rm</code>) รับ<strong>argument</strong>เป็นชื่อไฟล์ แต่<strong>ไม่ได้อ่านจาก stdin โดยตรง</strong> — ถ้า <code>find ... | rm</code> ตรงๆ จะไม่ทำงาน เพราะ <code>rm</code> ไม่รู้จะเอา stdin ไปทำอะไร<br/><br/>
     <code>xargs</code> แก้ปัญหานี้: อ่านแต่ละบรรทัดจาก stdin แล้ว<strong>แปลงเป็น argument</strong> ต่อท้ายคำสั่งที่ระบุ — <code>find . -name '*.tmp' | xargs rm</code> เท่ากับสั่ง <code>rm</code> พร้อม argument เป็นรายชื่อไฟล์ทั้งหมดที่ find เจอ<br/><br/>
-    <strong>ข้อควรระวัง:</strong> ถ้าชื่อไฟล์มี space อยู่ข้างใน <code>xargs</code> ธรรมดาจะตัดคำผิดพลาด (แยกชื่อไฟล์เดียวเป็นหลาย argument) วิธีป้องกันคือใช้คู่กับ <code>find -print0</code> และ <code>xargs -0</code> ที่คั่นด้วย null byte แทน space<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>xargs</code> แก้ปัญหานี้: อ่านแต่ละบรรทัดจาก stdin แล้ว<strong>แปลงเป็น argument</strong> ต่อท้ายคำสั่งที่ระบุ — <code>find . -name '*.tmp' | xargs rm</code> เท่ากับสั่ง <code>rm</code> พร้อม argument เป็นรายชื่อไฟล์ทั้งหมดที่ find เจอ<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ข้อควรระวัง:</strong> ถ้าชื่อไฟล์มี space อยู่ข้างใน <code>xargs</code> ธรรมดาจะตัดคำผิดพลาด (แยกชื่อไฟล์เดียวเป็นหลาย argument) วิธีป้องกันคือใช้คู่กับ <code>find -print0</code> และ <code>xargs -0</code> ที่คั่นด้วย null byte แทน space`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>find . -name '*.tmp' | xargs rm</code><br/>
+    <code>find . -name '*.tmp' -print0 | xargs -0 rm</code>  # ปลอดภัยกว่า<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าชื่อไฟล์มี space อยู่ข้างใน <code>xargs</code> ธรรมดาจะตัดคำผิดพลาด (แยกชื่อไฟล์เดียวเป็นหลาย argument) วิธีป้องกันคือใช้คู่กับ <code>find -print0</code> และ <code>xargs -0</code> ที่คั่นด้วย null byte แทน space`,
     example: `# ปลอดภัยกว่าเวลาชื่อไฟล์อาจมี space (คั่นด้วย null byte แทน)
 find . -name '*.tmp' -print0 | xargs -0 rm`,
     task: `จงหาไฟล์ <code>.tmp</code> ทั้งหมดด้วย <code>find</code> แล้วส่งต่อให้ <code>xargs rm</code> ลบทิ้ง`
@@ -1682,9 +1771,10 @@ kill -9 1234`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix ps/kill: หา Process ที่ค้างอยู่แล้วปิดทิ้ง และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>ps aux</code> แสดง process ทั้งหมดที่กำลังรันอยู่ในเครื่อง (ทุก user, <code>a</code>=all users, <code>u</code>=user-oriented format แสดง CPU%/mem%, <code>x</code>=รวม process ที่ไม่ได้ผูกกับ terminal ด้วย) แต่ละแถวมี <strong>PID</strong> (Process ID) ซึ่งเป็นตัวเลขไว้อ้างอิงว่าจะสั่งอะไรกับ process ไหน — ต่อ pipe เข้า <code>grep</code> เพื่อกรองหาเฉพาะที่สนใจ<br/><br/>
     <code>kill &lt;PID&gt;</code> ส่ง<strong>signal</strong>ไปให้ process — default คือ <code>SIGTERM</code> (signal 15) ที่แค่ "ขอร้อง" ให้ process ปิดตัวเอง (ยังทำ cleanup ก่อนปิดได้) ส่วน <code>kill -9</code> คือ <code>SIGKILL</code> ที่<strong>บังคับปิดทันที ไม่ให้โอกาส cleanup เลย</strong><br/><br/>
-    <strong>แนวทางที่ควรทำ:</strong> ลอง <code>kill &lt;PID&gt;</code> เปล่าๆ (ไม่มี -9) ก่อนเสมอ ให้โอกาส process ปิดตัวเองอย่างเรียบร้อย ถ้าไม่ยอมปิดจริงๆ ค่อยใช้ <code>-9</code> เป็นทางเลือกสุดท้าย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>kill &lt;PID&gt;</code> ส่ง<strong>signal</strong>ไปให้ process — default คือ <code>SIGTERM</code> (signal 15) ที่แค่ "ขอร้อง" ให้ process ปิดตัวเอง (ยังทำ cleanup ก่อนปิดได้) ส่วน <code>kill -9</code> คือ <code>SIGKILL</code> ที่<strong>บังคับปิดทันที ไม่ให้โอกาส cleanup เลย</strong><br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>แนวทางที่ควรทำ:</strong> ลอง <code>kill &lt;PID&gt;</code> เปล่าๆ (ไม่มี -9) ก่อนเสมอ ให้โอกาส process ปิดตัวเองอย่างเรียบร้อย ถ้าไม่ยอมปิดจริงๆ ค่อยใช้ <code>-9</code> เป็นทางเลือกสุดท้าย`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>ps aux | grep node</code><br/>
+    <code>kill -9 1234</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>แนวทางที่ควรทำ:</strong> ลอง <code>kill &lt;PID&gt;</code> เปล่าๆ (ไม่มี -9) ก่อนเสมอ ให้โอกาส process ปิดตัวเองอย่างเรียบร้อย (ทำ cleanup ก่อนปิดได้) ถ้าไม่ยอมปิดจริงๆ ค่อยใช้ <code>-9</code> (SIGKILL) เป็นทางเลือกสุดท้าย — และ <code>ps aux | grep node</code> มักเจอ process ของ <code>grep</code> เองติดมาด้วยเสมอ (เพราะชื่อคำสั่งมีคำว่า node อยู่ในนั้น) ต้องดู PID ให้ถูกตัวก่อน kill`,
     example: `# ปิด process ทุกตัวที่ชื่อ node ตรงๆ โดยไม่ต้องหา PID เอง
 pkill -9 node`,
     task: `จงหา process ของ node ด้วย <code>ps aux | grep node</code> แล้วปิด process ที่ PID <code>1234</code> แบบบังคับด้วย <code>kill -9 1234</code>`
@@ -1710,9 +1800,11 @@ pkill -9 node`,
     hint: "ต้องปิด progress meter ก่อน (silent) ทิ้งเนื้อหา response ไปที่ /dev/null (ไม่สนใจ) แล้วใช้ flag format output พิมพ์แค่ status code ออกมาแทน",
     solution: `curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix curl: ยิง Request ทดสอบ API จาก Terminal และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Flag ที่ใช้บ่อยสำหรับ smoke test:<br/><br/>รวมกันได้ one-liner เช็คว่า endpoint ตอบ 200 มั้ยโดยไม่ต้อง parse response เอง — ใช้ได้ทั้งตอนทดสอบมือและใน CI script<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>-s</code> (silent) — ปิด progress meter ที่ปกติจะพิมพ์ระหว่างโหลด<br/><br/>• <code>-o /dev/null</code> — ทิ้ง response body ไป (ไม่สนใจเนื้อหา แค่อยากรู้ว่า request สำเร็จมั้ย)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Flag ที่ใช้บ่อยสำหรับ smoke test: <code>-s</code> (silent ปิด progress meter), <code>-o /dev/null</code> (ทิ้ง response body), <code>-w "%{http_code}"</code> (พิมพ์ HTTP status code แทน) — รวมกันได้ one-liner เช็คว่า endpoint ตอบ 200 มั้ยโดยไม่ต้อง parse response เอง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>curl -s -o /dev/null -w "%{http_code}" \</code><br/>
+    <code>&nbsp;&nbsp;https://api.example.com/health</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>curl</code> default ถือว่า<strong>สำเร็จ (exit code 0) แม้ server ตอบ 404 หรือ 500</strong> ก็ตาม เพราะ curl มองว่า request-response สำเร็จแล้ว (แค่ status code ไม่ใช่ 200) — ถ้าอยากให้ curl fail จริงตอนเจอ HTTP error ต้องเติม flag <code>-f</code> (fail) เพิ่มด้วย ไม่งั้น script ที่เช็คแค่ exit code จะไม่รู้ตัวว่า endpoint พังอยู่`,
     example: `# ยิง POST พร้อม JSON body และ header กำหนด content-type
 curl -X POST -H "Content-Type: application/json" -d '{"user":"qa"}' https://api.example.com/login`,
     task: `จงยิง GET ไปที่ <code>https://api.example.com/health</code> แล้วแสดงแค่ HTTP status code ด้วย <code>curl -s -o /dev/null -w "%{http_code}"</code>`
@@ -1748,8 +1840,10 @@ tar -xzvf test-reports.tar.gz`,
     • <code>v</code> (verbose) — แสดงรายชื่อไฟล์ที่กำลังประมวลผลระหว่างทาง (เห็น progress)<br/>
     • <code>f</code> (filename) — ระบุว่าชื่อไฟล์ archive คืออะไร (argument ถัดจาก flag นี้ต้องเป็นชื่อไฟล์เสมอ)<br/><br/>
     <code>-czvf</code> (create) กับ <code>-xzvf</code> (extract) คือ 2 pattern ที่ใช้บ่อยที่สุดจนควรจำขึ้นใจ — ใช้เก็บ build artifact/test report ก่อนอัปโหลดใน CI pipeline บ่อยมาก เพราะไฟล์เดียวอัปโหลด/ดาวน์โหลดง่ายกว่าไฟล์กระจายเป็นร้อยไฟล์<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>c</code> (create) — สร้าง archive ใหม่, <code>x</code> (extract) — แตก archive ออกมา<br/><br/>• <code>z</code> (gzip) — บีบอัด/แตกแบบ gzip พร้อมกันในตัว (ได้ <code>.tar.gz</code>)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>tar -czvf test-reports.tar.gz test-reports/</code><br/>
+    <code>tar -xzvf test-reports.tar.gz</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลำดับ flag สำคัญ — <code>f</code> ต้องอยู่<strong>ตัวสุดท้าย</strong>ของกลุ่ม flag เสมอ เพราะ argument ถัดจาก <code>f</code> ต้องเป็นชื่อไฟล์ archive โดยตรง ถ้าเขียนสลับเป็น <code>-fczv</code> tar จะเข้าใจผิดว่าชื่อไฟล์ archive คือ <code>czv</code> แทน แล้ว error ทันที`,
     example: `# ดูรายชื่อไฟล์ข้างใน archive โดยไม่ต้องแตกไฟล์จริง (t = list contents)
 tar -tzvf test-reports.tar.gz`,
     task: `จงบีบอัดโฟลเดอร์ <code>test-reports/</code> เป็น <code>test-reports.tar.gz</code> ด้วย <code>tar -czvf</code> แล้วแตกกลับออกมาด้วย <code>tar -xzvf</code>`
@@ -1776,8 +1870,10 @@ tar -tzvf test-reports.tar.gz`,
     solution: `sed -i 's/1.2.0/1.3.0/g' version.txt`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix sed: แทนที่ข้อความในไฟล์ตรงๆ ผ่าน Command Line และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใช้บ่อยตอนต้องแก้ config/version หลายไฟล์พร้อมกันแบบอัตโนมัติใน script (เช่น bump version ตอน release) โดยไม่ต้องเปิด editor ทีละไฟล์<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>-i</code> (in-place) — แก้ไฟล์จริงตรงๆ ทับต้นฉบับเลย ถ้าไม่ใส่ <code>-i</code> ผลลัพธ์จะพิมพ์ออกทาง stdout เฉยๆ ไม่แก้ไฟล์จริง<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> • <strong>ข้อควรระวังข้าม OS:</strong> บน Linux <code>sed -i 's/.../.../ ' file</code> ใช้ได้ตรงๆ แต่บน macOS (BSD sed) ต้องใส่ argument ว่างต่อจาก <code>-i</code> เสมอ: <code>sed -i '' 's/.../.../' file</code> ไม่งั้นจะ error หรือพฤติกรรมเพี้ยน<br/><br/>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>sed -i 's/1.2.0/1.3.0/g' version.txt</code><br/>
+    <code>sed -i.bak 's/1.2.0/1.3.0/g' version.txt</code>  # เก็บสำรอง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ข้อควรระวังข้าม OS:</strong> บน Linux <code>sed -i 's/.../.../' file</code> ใช้ได้ตรงๆ แต่บน macOS (BSD sed) ต้องใส่ argument ว่างต่อจาก <code>-i</code> เสมอ: <code>sed -i '' 's/.../.../' file</code> ไม่งั้นจะ error หรือพฤติกรรมเพี้ยน`,
     example: `# แก้ไฟล์แบบเก็บสำเนาต้นฉบับไว้เป็น .bak ก่อนเสมอ (ปลอดภัยกว่า เผื่อพลาด)
 sed -i.bak 's/1.2.0/1.3.0/g' version.txt`,
     task: `จงแทนที่ <code>1.2.0</code> เป็น <code>1.3.0</code> ทุกจุดในไฟล์ <code>version.txt</code> แบบแก้ทับไฟล์ตรงๆ ด้วย <code>sed -i 's/1.2.0/1.3.0/g' version.txt</code>`
@@ -1806,8 +1902,10 @@ sed -i.bak 's/1.2.0/1.3.0/g' version.txt`,
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>VAR=value</code> เฉยๆ (ไม่มี <code>export</code>) ตั้งค่าเป็นแค่<strong>shell variable</strong> — มองเห็นได้เฉพาะ shell ปัจจุบันเท่านั้น ถ้า shell นี้ไปเรียก process อื่นต่อ (เช่นรัน <code>node script.js</code>) process ลูกนั้น<strong>จะมองไม่เห็นค่านี้เลย</strong><br/><br/>
     <code>export VAR=value</code> เลื่อนสถานะตัวแปรขึ้นเป็น<strong>environment variable</strong> ที่ถูกส่งต่อ (inherit) ไปให้ทุก subprocess ที่ถูกเรียกจาก shell นี้นับจากนี้ไป — สำคัญมากเพราะเครื่องมือส่วนใหญ่ (test runner, build script, framework ต่างๆ) อ่าน config ผ่าน environment variable (เช่น <code>process.env.API_URL</code> ใน Node.js หรือ <code>os.environ</code> ใน Python) ไม่ได้อ่านจาก shell variable ตรงๆ<br/><br/>
     เช็คค่าที่ export ไว้ได้ด้วย <code>echo $API_URL</code> หรือดูทุก environment variable พร้อมกันด้วย <code>env</code><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>export VAR=value</code> เลื่อนสถานะตัวแปรขึ้นเป็น<strong>environment variable</strong> ที่ถูกส่งต่อ (inherit) ไปให้ทุก subprocess ที่ถูกเรียกจาก shell นี้นับจากนี้ไป — สำคัญมากเพราะเครื่องมือส่วนใหญ่ (test runner, build script, framework ต่างๆ) อ่าน config ผ่าน environment variable (เช่น <code>process.env.API_URL</code> ใน Node.js หรือ <code>os.environ</code> ใน Python) ไม่ได้อ่านจาก shell variable ตรงๆ<br/><br/><br/>เช็คค่าที่ export ไว้ได้ด้วย <code>echo $API_URL</code> หรือดูทุก environment variable พร้อมกันด้วย <code>env</code><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>export API_URL=https://staging.api.example.com</code><br/>
+    <code>echo $API_URL</code>  # เช็คค่าที่ตั้งไว้<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> environment variable ส่งต่อได้<strong>ทางเดียว</strong> จาก shell แม่ไปยัง subprocess ลูกเท่านั้น — ถ้ารันสคริปต์ (<code>./script.sh</code>) ที่ export ตัวแปรไว้ข้างใน ค่านั้นจะ<strong>ไม่ย้อนกลับมาให้ shell ที่เรียกมันเห็นเลย</strong> เพราะสคริปต์รันเป็น subprocess แยก ถ้าต้องการให้ shell ปัจจุบันเห็นค่าด้วยต้อง <code>source script.sh</code> แทนการรันตรงๆ`,
     example: `# เช็คค่าที่ export ไว้ แล้วลบทิ้งถ้าไม่ต้องการแล้ว
 echo $API_URL
 unset API_URL`,
@@ -1834,9 +1932,12 @@ unset API_URL`,
     hint: "rebase ปกติมี flag ที่เปิด editor ให้เลือก action ทีละ commit ได้ (interactive) แล้วระบุว่าย้อนไปกี่ commit จาก HEAD",
     solution: `git rebase -i HEAD~3`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Rebase -i: รวมหลาย Commit เข้าด้วยกันก่อน Push และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>• สลับลำดับบรรทัดในไฟล์ = สลับลำดับ commit<br/><br/><br/><strong style="color:#e00">กฎเดียวกับ amend:</strong> ห้าม rebase -i กับ commit ที่ push ไปแล้วและคนอื่นดึงไปใช้ต่อ เพราะเปลี่ยน commit hash ทั้งหมดที่ถูกแก้<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>pick</code> — ใช้ commit นี้ตามเดิม<br/><br/>• <code>squash</code> (หรือ <code>s</code>) — รวม commit นี้เข้ากับ commit ด้านบนติดกัน (ต้องแก้ commit message รวมกันในหน้าถัดไป)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git rebase -i HEAD~3</code> เปิด editor แสดงรายชื่อ 3 commit ล่าสุด แต่ละบรรทัดขึ้นต้นด้วย <code>pick</code> — แก้คำนำหน้าเพื่อสั่ง action ต่างกัน: <code>pick</code> ใช้เดิม, <code>squash</code>/<code>s</code> รวมกับ commit ด้านบน, <code>reword</code>/<code>r</code> แก้แค่ message, <code>drop</code>/<code>d</code> ลบทิ้ง — สลับลำดับบรรทัดในไฟล์ = สลับลำดับ commit<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git rebase -i HEAD~3</code><br/>
+    <code>pick abc1234 ...</code><br/>
+    <code>squash def5678 ...</code>  # แก้คำนำหน้าในตัว editor<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong style="color:#e00">กฎเดียวกับ amend:</strong> ห้าม <code>rebase -i</code> กับ commit ที่ push ไปแล้วและคนอื่นดึงไปใช้ต่อ เพราะเปลี่ยน commit hash ทั้งหมดที่ถูกแก้`,
     example: `# squash 3 commit ล่าสุดรวมเป็นก้อนเดียวแบบอัตโนมัติไม่ต้องเปิด editor เอง (ใช้ message ของ commit แรกสุด)
 git reset --soft HEAD~3 && git commit -m "feat: complete login validation logic"`,
     task: `จงเปิด interactive rebase ครอบคลุม 3 commit ล่าสุดด้วย <code>git rebase -i HEAD~3</code>`
@@ -1864,9 +1965,10 @@ git reset --soft HEAD~3 && git commit -m "feat: complete login validation logic"
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git cherry-pick &lt;commit&gt;</strong> เอาการเปลี่ยนแปลง (diff) จาก commit เดียวมา apply เป็น<strong>commit ใหม่</strong>ที่ branch ปัจจุบัน (hash ใหม่ แต่เนื้อหา/ข้อความ commit เหมือนเดิมโดย default) — ต่างจาก <code>merge</code> ที่เอาทั้ง branch มารวม cherry-pick เอาแค่ commit เดียวที่เลือกจริงๆ<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git cherry-pick &lt;commit&gt;</strong> เอาการเปลี่ยนแปลง (diff) จาก commit เดียวมา apply เป็น<strong>commit ใหม่</strong>ที่ branch ปัจจุบัน (hash ใหม่ แต่เนื้อหา/ข้อความ commit เหมือนเดิมโดย default) — ต่างจาก <code>merge</code> ที่เอาทั้ง branch มารวม cherry-pick เอาแค่ commit เดียวที่เลือกจริงๆ<br/><br/>
     ใช้บ่อยตอน "backport" — commit แก้บั๊กที่ทำไว้ใน branch หนึ่ง (เช่น hotfix) แล้วอยากเอาไปใช้ใน branch อื่นด้วย (เช่น release branch เก่า) โดยไม่ต้อง merge ทั้งประวัติ branch เข้าไป<br/><br/>
-    อาจเกิด conflict ได้ถ้า context รอบๆ commit ต่างกันมากระหว่าง 2 branch ต้องแก้ conflict เองแล้ว <code>git cherry-pick --continue</code> เหมือน rebase<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>อาจเกิด conflict ได้ถ้า context รอบๆ commit ต่างกันมากระหว่าง 2 branch ต้องแก้ conflict เองแล้ว <code>git cherry-pick --continue</code> เหมือน rebase<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ใช้บ่อยตอน "backport" — commit แก้บั๊กที่ทำไว้ใน branch หนึ่ง (เช่น hotfix) แล้วอยากเอาไปใช้ใน branch อื่นด้วย (เช่น release branch เก่า) โดยไม่ต้อง merge ทั้งประวัติ branch เข้าไป<br/><br/>`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git cherry-pick abc1234</code><br/>
+    <code>git cherry-pick --continue</code>  # หลังแก้ conflict<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> อาจเกิด conflict ได้ถ้า context รอบๆ commit ต่างกันมากระหว่าง 2 branch — ต้องแก้ conflict เองแล้ว <code>git add</code> ตามด้วย <code>git cherry-pick --continue</code> เหมือน rebase (ไม่ใช่ <code>git commit</code> ตรงๆ) หรือ <code>git cherry-pick --abort</code> ถ้าอยากยกเลิกกลับไปจุดก่อนเริ่ม`,
     example: `# หยิบมาแต่ยัง stage ไว้เฉยๆ ไม่สร้าง commit ทันที (เผื่ออยากแก้อะไรเพิ่มก่อน)
 git cherry-pick --no-commit abc1234`,
     task: `จงหยิบ commit <code>abc1234</code> มา apply เป็นcommit ใหม่ที่ branch ปัจจุบันด้วย <code>git cherry-pick abc1234</code>`
@@ -1900,8 +2002,10 @@ git cherry-pick --no-commit abc1234`,
 git reset --hard HEAD@{2}`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git reflog</strong> บันทึกทุกตำแหน่งที่ <code>HEAD</code> เคยชี้ไป — ทุก commit, reset, rebase, checkout ที่เคยทำ แม้ commit นั้นจะไม่ถูกอ้างถึงจาก branch ไหนแล้วก็ตาม (เช่นโดน <code>reset --hard</code> ทิ้งไป) git ก็<strong>ยังไม่ลบข้อมูลจริงทันที</strong> (เก็บไว้ในเครื่องประมาณ 90 วันโดย default ก่อน garbage collect)<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>reflog คือ "ตาข่ายนิรภัย" ของ git สำหรับความผิดพลาดที่ทำในเครื่องตัวเองแทบทุกแบบ (reset ผิด, rebase พัง, ลบ branch เผลอ) แต่<strong>อยู่แค่ในเครื่องตัวเอง ไม่ถูก push ไปไหน</strong> — คนอื่นกู้จาก reflog ของเราไม่ได้<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>HEAD@{N}</code> อ้างอิงตำแหน่งที่ N ย้อนหลังใน reflog (เช่น <code>HEAD@{2}</code> = 2 ก้อนก่อนหน้าตำแหน่งปัจจุบันตาม reflog) — <code>git reset --hard HEAD@{2}</code> ย้อนกลับไปที่จุดนั้นพร้อมเอาไฟล์กลับมาด้วย<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git reflog</code><br/>
+    <code>git reset --hard HEAD@{2}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตำแหน่ง <code>HEAD@{N}</code> ขยับทุกครั้งที่มี action ใหม่เกิดขึ้น (commit, reset, checkout ฯลฯ) — ถ้าเช็ค <code>git reflog</code> ดูตำแหน่งไว้แล้ว แต่ดันทำ action อื่นคั่นก่อนจะ <code>reset</code> จริง ตัวเลข N ที่จำไว้จะไม่ตรงกับตำแหน่งเดิมอีกต่อไป ต้องเช็ค <code>git reflog</code> ซ้ำก่อน reset เสมอถ้ามีอะไรคั่นระหว่างทาง`,
     example: `# ดู reflog แบบมีเวลากำกับด้วยว่าแต่ละจุดเกิดขึ้นเมื่อไหร่
 git reflog --date=iso`,
     task: `จงดูประวัติทั้งหมดของ HEAD ด้วย <code>git reflog</code> แล้วย้อนกลับไปที่ <code>HEAD@{2}</code> แบบเอาไฟล์กลับมาด้วย <code>git reset --hard HEAD@{2}</code>`
@@ -1937,9 +2041,12 @@ git reflog --date=iso`,
 git bisect bad
 git bisect good v1.0.0`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git bisect</strong> หา commit ต้นเหตุของบั๊กด้วย <strong>binary search</strong> แทนการไล่เช็คทีละ commit (O(log n) ครั้งแทน O(n)) — จาก 100 commit ใช้แค่ประมาณ 7 ครั้งก็เจอ<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ขั้นตอน:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <code>git bisect start</code> — เข้าสู่โหมด bisect<br/><br/>4. ทดสอบที่จุดกึ่งกลางนั้น แล้วบอกผล <code>git bisect good</code> หรือ <code>git bisect bad</code> ตามที่เจอ — ทำซ้ำจนกว่า git จะบอกว่าเจอ commit ต้นเหตุแล้ว<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> 2. <code>git bisect bad</code> — บอกว่าตำแหน่งปัจจุบัน (HEAD) มีบั๊ก<br/><br/>3. <code>git bisect good v1.0.0</code> — บอกว่าจุดนี้ (tag/commit เก่า) ยังไม่มีบั๊กแน่ๆ — git จะ <code>checkout</code> ไปที่จุดกึ่งกลางระหว่าง good กับ bad ให้อัตโนมัติ<br/>`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ขั้นตอน: (1) <code>git bisect start</code> เข้าโหมด bisect (2) <code>git bisect bad</code> บอกว่าตำแหน่งปัจจุบันมีบั๊ก (3) <code>git bisect good v1.0.0</code> บอกจุดเก่าที่ยังไม่มีบั๊ก — git จะ <code>checkout</code> ไปจุดกึ่งกลางให้อัตโนมัติ (4) ทดสอบแล้วบอกผล <code>good</code>/<code>bad</code> ซ้ำจนกว่าจะเจอ commit ต้นเหตุ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git bisect start</code><br/>
+    <code>git bisect bad</code><br/>
+    <code>git bisect good v1.0.0</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องรัน <code>git bisect reset</code> เมื่อหาเจอหรือยกเลิกแล้วเสมอ — ไม่งั้น repo จะค้างอยู่ในสถานะ detached HEAD กลางกระบวนการ bisect ต่อไปเรื่อยๆ ทำงานต่อบน branch ปกติไม่ได้จนกว่าจะ reset ออกมาก่อน`,
     example: `# ให้ git ทดสอบอัตโนมัติด้วย script/test command แทนตอบ good/bad มือเอง (เร็วกว่ามาก)
 git bisect run npm test`,
     task: `จงเริ่ม bisect ด้วย <code>git bisect start</code> บอกจุดปัจจุบันว่ามีบั๊กด้วย <code>git bisect bad</code> แล้วบอกจุด <code>v1.0.0</code> ว่ายังไม่มีบั๊กด้วย <code>git bisect good v1.0.0</code>`
@@ -1965,9 +2072,11 @@ git bisect run npm test`,
     hint: "worktree มีคำสั่งย่อย add ตามด้วย path โฟลเดอร์ใหม่ที่จะสร้าง แล้วตามด้วยชื่อ branch ที่ต้องการ checkout เข้าไปในโฟลเดอร์นั้น",
     solution: `git worktree add ../hotfix-work hotfix`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git worktree</strong> ให้ checkout หลาย branch พร้อมกันได้ในเวลาเดียวกัน คนละโฟลเดอร์ แต่ทั้งหมดแชร์ <code>.git</code> history/object เดียวกัน (ไม่ใช่ clone ซ้ำ ประหยัดพื้นที่และ sync กันเองอัตโนมัติ)<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>คำสั่งจัดการอื่น:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>git worktree add &lt;path&gt; &lt;branch&gt;</code> สร้างโฟลเดอร์ใหม่ที่ <code>path</code> พร้อม checkout <code>branch</code> เข้าไปทันที — งานค้างใน branch เดิมที่โฟลเดอร์หลักไม่ถูกรบกวนเลย ไม่ต้อง <code>stash</code> ก่อนสลับเหมือนวิธีเดิม<br/><br/><br/>• <code>git worktree list</code> — ดู worktree ทั้งหมดที่มีอยู่<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>คำสั่งจัดการอื่น: <code>git worktree list</code> ดูทั้งหมดที่มีอยู่, <code>git worktree remove &lt;path&gt;</code> ลบทิ้งเมื่อทำงานเสร็จแล้ว<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git worktree add ../hotfix-work hotfix</code><br/>
+    <code>git worktree list</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>branch เดียวกันเช็คเอาท์พร้อมกันในหลาย worktree ไม่ได้</strong> — ถ้า branch <code>hotfix</code> ถูก checkout อยู่ที่ worktree หนึ่งแล้ว การ <code>git worktree add</code> ด้วย branch เดิมที่อื่นจะ error ทันที (<code>already checked out</code>) ต้องสร้าง branch ใหม่หรือใช้ branch อื่นแทน`,
     example: `# ดู worktree ทั้งหมดที่มีอยู่ตอนนี้
 git worktree list`,
     task: `จงสร้าง worktree ใหม่ที่ <code>../hotfix-work</code> พร้อม checkout branch <code>hotfix</code> ด้วย <code>git worktree add ../hotfix-work hotfix</code>`
@@ -1997,9 +2106,11 @@ git worktree list`,
     solution: `"ayy
 "ap`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Unnamed register</strong> (ตัวที่ <code>yy</code>/<code>dd</code>/<code>p</code> ใช้โดย default ไม่ต้องระบุอะไร) มีแค่<strong>ก้อนเดียว</strong> — yank/delete ใหม่ทับของเก่าทันที เก็บพร้อมกันหลายก้อนไม่ได้<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Named register</strong> (ตัวอักษร a-z) แก้ปัญหานี้ — เก็บได้อิสระจากกัน 26 ก้อนพร้อมกัน:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>"ayy</code> — yank บรรทัดปัจจุบันเก็บลง register <code>a</code> (แทน <code>yy</code> เฉยๆ ที่ไปลงที่ unnamed register)<br/><br/>• <code>"ap</code> — วางเนื้อหาจาก register <code>a</code><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Named register</strong> (ตัวอักษร a-z) แก้ปัญหานี้ — เก็บได้อิสระจากกัน 26 ก้อนพร้อมกัน <code>:reg</code> ดูเนื้อหาทุก register พร้อมกันได้ ช่วยเช็คว่าเก็บอะไรไว้ตรงไหนบ้าง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>"ayy</code>  # yank เก็บลง register a<br/>
+    <code>"ap</code>  # วางจาก register a<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ใช้ตัวพิมพ์เล็ก <code>"a</code> จะ<strong>เขียนทับ</strong>เนื้อหาเดิมใน register a ทุกครั้ง — ถ้าต้องการ<strong>ต่อท้าย</strong>เพิ่มเข้า register เดิมแทนการทับ ต้องใช้ตัวพิมพ์ใหญ่ (เช่น <code>"Ayy</code>) พลาดตัวพิมพ์เล็ก-ใหญ่ตรงนี้บ่อยจนของเก่าหายไปโดยไม่ตั้งใจ`,
     example: `# ยก (yank) เข้า system clipboard ของ OS โดยตรง (แชร์กับโปรแกรมอื่นนอก Vim ได้)
 "+yy`,
     task: `จง yank บรรทัดปัจจุบันลง register <code>a</code> ด้วย <code>"ayy</code> แล้ววางออกมาด้วย <code>"ap</code>`
@@ -2035,8 +2146,10 @@ Ctrl+w w`,
     • <code>Ctrl+w h/j/k/l</code> — ย้าย focus ตามทิศทาง (เหมือนคีย์เคลื่อนที่ปกติ)<br/>
     • <code>Ctrl+w q</code> — ปิดช่องปัจจุบัน<br/><br/>
     <code>:only</code> ปิดช่องอื่นทั้งหมด เหลือแค่ช่องปัจจุบันช่องเดียว — ต่างจาก buffer/tab ตรงที่ split ทำให้เห็นหลายไฟล์<strong>พร้อมกันในจอเดียว</strong> ไม่ต้องสลับไปมา<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>การสลับ focus ระหว่างช่อง (window) ทั้งหมดขึ้นต้นด้วย <code>Ctrl+w</code> ตามด้วยคีย์ที่สอง:<br/><br/>• <code>Ctrl+w w</code> — วนไปช่องถัดไป<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>:sp test/login.spec.ts</code><br/>
+    <code>Ctrl+w w</code>  # วนไปช่องถัดไป<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>:q</code> ในหน้าต่าง split จะปิดแค่<strong>ช่องปัจจุบันช่องเดียว</strong> ไม่ได้ปิด Vim ทั้งโปรแกรม — หลายคนกด <code>:q</code> ซ้ำหลายรอบเพื่อปิดทีละช่องโดยไม่รู้ว่ามี <code>:qa</code> (quit all) ที่ปิดทุกช่องพร้อมกันในคำสั่งเดียว`,
     example: `# แบ่งแนวตั้งแทนแนวนอน เปิดไฟล์เดิมซ้ำเพื่อเทียบ 2 ส่วนของไฟล์ยาวเดียวกัน
 :vsp`,
     task: `จง split แนวนอนเปิด <code>test/login.spec.ts</code> ด้วย <code>:sp test/login.spec.ts</code> แล้วสลับ focus ไปช่องถัดไปด้วย <code>Ctrl+w w</code>`
@@ -2066,8 +2179,10 @@ Ctrl+w w`,
     <code>:g/DEBUG/d</code> — หาทุกบรรทัดที่มีคำว่า <code>DEBUG</code> แล้ว <code>d</code> (delete) ทิ้งทุกบรรทัดนั้น<br/><br/>
     ผสมกับ <code>:s</code> (substitute) ที่เรียนไปก่อนหน้าได้ด้วย: <code>:g/pattern/s/หา/แทน/</code> จะแทนที่แค่ในบรรทัดที่ match pattern เท่านั้น (ต่างจาก <code>:%s/หา/แทน/g</code> ที่ทำกับทุกบรรทัดไม่สนใจเงื่อนไข)<br/><br/>
     <code>:g!/pattern/command</code> (หรือ <code>:v/pattern/command</code>) กลับด้าน — ทำกับบรรทัดที่<strong>ไม่ match</strong> pattern แทน<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>:g/DEBUG/d</code> — หาทุกบรรทัดที่มีคำว่า <code>DEBUG</code> แล้ว <code>d</code> (delete) ทิ้งทุกบรรทัดนั้น<br/><br/><br/>ผสมกับ <code>:s</code> (substitute) ที่เรียนไปก่อนหน้าได้ด้วย: <code>:g/pattern/s/หา/แทน/</code> จะแทนที่แค่ในบรรทัดที่ match pattern เท่านั้น (ต่างจาก <code>:%s/หา/แทน/g</code> ที่ทำกับทุกบรรทัดไม่สนใจเงื่อนไข)<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>:g/DEBUG/d</code><br/>
+    <code>:g/pattern/s/หา/แทน/</code>  # ผสมกับ substitute<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า pattern ที่ค้นหามีเครื่องหมาย <code>/</code> อยู่ในตัวเอง (เช่นค้นหา path อย่าง <code>src/utils</code>) Vim จะตีความ <code>/</code> ตัวกลางเป็นตัวปิด pattern ผิดจุดทันที ต้องเปลี่ยนตัวคั่นเป็นอักขระอื่นแทน เช่น <code>:g#src/utils#d</code>`,
     example: `# แทนที่คำว่า TODO เป็น DONE เฉพาะบรรทัดที่มีคำว่า TODO เท่านั้น
 :g/TODO/s/TODO/DONE/`,
     task: `จงลบทุกบรรทัดที่มีคำว่า <code>DEBUG</code> ทิ้งทั้งไฟล์ด้วย <code>:g/DEBUG/d</code>`
@@ -2097,9 +2212,11 @@ Ctrl+w w`,
     solution: `ma
 \`a`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Vim Marks: ปักหมุดตำแหน่งแล้วกระโดดกลับมาแม่นยำ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>• ตัวอักษร<strong>เล็ก</strong> (a-z) — หมุด local ใช้ได้แค่ในไฟล์ปัจจุบัน<br/><br/>• ตัวอักษร<strong>ใหญ่</strong> (A-Z) — หมุด global ใช้ข้ามไฟล์ได้ (กระโดดข้ามไฟล์ไปยังตำแหน่งที่ปักไว้)<br/><br/><br/>กระโดดกลับไปหมุด 2 แบบ:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>\`a</code> (backtick) — กระโดดไปตำแหน่ง<strong>เป๊ะ</strong> (ทั้งบรรทัดและคอลัมน์) ของหมุด a<br/><br/>• <code>'a</code> (single quote) — กระโดดไปแค่<strong>ต้นบรรทัด</strong>ของหมุด a (ไม่สนใจคอลัมน์)<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ตัวอักษร<strong>เล็ก</strong> (a-z) — หมุด local ใช้ได้แค่ในไฟล์ปัจจุบัน ส่วนตัวอักษร<strong>ใหญ่</strong> (A-Z) — หมุด global ใช้ข้ามไฟล์ได้<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>ma</code>  # ปักหมุด a<br/>
+    <code>\`a</code>  # กระโดดกลับไปตำแหน่งเป๊ะ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>\`a</code> (backtick) กระโดดไปตำแหน่ง<strong>เป๊ะ</strong>ทั้งบรรทัดและคอลัมน์ ส่วน <code>'a</code> (single quote) กระโดดไปแค่<strong>ต้นบรรทัด</strong>ของหมุด a เท่านั้น (ไม่สนใจคอลัมน์) — สับสนสอง symbol นี้บ่อยเพราะหน้าตาคล้ายกันมาก`,
     example: `# กระโดดกลับไปตำแหน่งก่อนหน้า jump ล่าสุด (ไม่ต้องปักหมุดเองล่วงหน้า)
 \`\``,
     task: `จงปักหมุดตำแหน่งปัจจุบันชื่อ <code>a</code> ด้วย <code>ma</code> แล้วกระโดดกลับไปตำแหน่งเป๊ะของหมุดนั้นด้วย <code>\`a</code>`
@@ -2140,8 +2257,11 @@ disown`,
     • <code>fg %1</code> — ดึง job หมายเลข 1 กลับมาทำงานที่ foreground<br/>
     • <code>bg</code> — สั่ง job ที่ถูกหยุดชั่วคราว (เช่นกด Ctrl+Z) ให้กลับไปทำงานต่อที่ background<br/><br/>
     <strong>ข้อควรรู้:</strong> background job ปกติจะ<strong>โดนปิดตาม</strong> (ได้รับ signal SIGHUP) ทันทีที่ terminal ปิด — <code>disown</code> ถอด job ออกจากตารางงานที่ shell ดูแล ทำให้รอดต่อไปได้แม้ terminal จะปิดไปแล้ว หรือใช้ <code>nohup command &</code> ตั้งแต่ต้นเพื่อป้องกันไว้ล่วงหน้าแบบเดียวกัน<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>jobs</code> — แสดง background job ทั้งหมดของ shell session ปัจจุบัน<br/><br/>• <code>fg %1</code> — ดึง job หมายเลข 1 กลับมาทำงานที่ foreground<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>npm start &</code><br/>
+    <code>jobs</code><br/>
+    <code>disown</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>disown</code> เฉยๆ (ไม่ใส่ argument) ถอดแค่ <strong>job ล่าสุดเท่านั้น</strong> — ถ้ามีหลาย background job พร้อมกัน ต้องระบุเลข job ต่อท้ายเจาะจง (เช่น <code>disown %2</code>) ไม่งั้น job อื่นที่ไม่ใช่ล่าสุดจะยังโดน SIGHUP ปิดตามเมื่อปิด terminal อยู่ดี`,
     example: `# nohup + redirect + background รวมในคำสั่งเดียว: รันแบบไม่ต้องพึ่ง terminal เลยตั้งแต่เริ่ม
 nohup npm start > server.log 2>&1 &`,
     task: `จงรัน <code>npm start</code> แบบ background ด้วย <code>npm start &</code> แล้วดู job ด้วย <code>jobs</code> แล้วถอดออกจากการดูแลของ shell ด้วย <code>disown</code>`
@@ -2170,8 +2290,10 @@ nohup npm start > server.log 2>&1 &`,
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>awk</code> ประมวลผลไฟล์ทีละบรรทัด แบ่งแต่ละบรรทัดเป็น "คอลัมน์" อัตโนมัติตามตัวคั่น (default เป็น whitespace, override ด้วย <code>-F'&lt;ตัวคั่น&gt;'</code> เช่น <code>-F','</code> สำหรับ CSV) แล้วเข้าถึงแต่ละคอลัมน์ผ่าน <code>$1</code>, <code>$2</code>, <code>$3</code> ...<br/><br/>
     รูปแบบเต็มคือ <code>'&lt;เงื่อนไข&gt; {action}'</code> — เงื่อนไขก่อน <code>{}</code> กรองว่าบรรทัดไหนจะรัน action นั้น (ถ้าไม่ใส่เงื่อนไขจะรันทุกบรรทัด):<br/><br/>
     <code>'$3 > 1000 {print $1}'</code> — เฉพาะบรรทัดที่คอลัมน์ 3 มากกว่า 1000 ค่อยพิมพ์คอลัมน์ 1 ออกมา — รวม "กรอง" (เหมือน grep) กับ "ดึงคอลัมน์" (เหมือน cut) ไว้ในเครื่องมือเดียว ไม่ต้องต่อ pipe หลายตัว<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>รูปแบบเต็มคือ <code>'&lt;เงื่อนไข&gt; {action}'</code> — เงื่อนไขก่อน <code>{}</code> กรองว่าบรรทัดไหนจะรัน action นั้น (ถ้าไม่ใส่เงื่อนไขจะรันทุกบรรทัด):<br/><br/><br/><code>'$3 > 1000 {print $1}'</code> — เฉพาะบรรทัดที่คอลัมน์ 3 มากกว่า 1000 ค่อยพิมพ์คอลัมน์ 1 ออกมา — รวม "กรอง" (เหมือน grep) กับ "ดึงคอลัมน์" (เหมือน cut) ไว้ในเครื่องมือเดียว ไม่ต้องต่อ pipe หลายตัว<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>awk -F',' '$3 > 1000 {print $1}' sales.csv</code><br/>
+    <code>awk -F',' '{sum += $3} END {print sum}' sales.csv</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าคอลัมน์ตัวเลขมี format แปลกๆ ปนอยู่ (เช่น <code>"1,000"</code> ที่มี comma คั่นหลักพัน หรือมีช่องว่างนำหน้า) awk จะเทียบเป็น<strong>ตัวเลขได้แค่ prefix ที่ตีความได้</strong> เท่านั้น ทำให้เปรียบเทียบผิดพลาดแบบเงียบๆ โดยไม่ error ให้เห็นเลย ต้องเช็คว่าข้อมูลสะอาดเป็นตัวเลขล้วนก่อนเสมอ`,
     example: `# รวมยอด (sum) ของคอลัมน์ 3 ทั้งไฟล์ แล้วพิมพ์ผลรวมครั้งเดียวตอนจบ (END block)
 awk -F',' '{sum += $3} END {print sum}' sales.csv`,
     task: `จงพิมพ์ชื่อ (คอลัมน์ 1) ของแถวที่ยอดขาย (คอลัมน์ 3) มากกว่า 1000 จากไฟล์ <code>sales.csv</code> ด้วย <code>awk -F',' '$3 > 1000 {print $1}' sales.csv</code>`
@@ -2197,9 +2319,10 @@ awk -F',' '{sum += $3} END {print sum}' sales.csv`,
     hint: "รวม 3 flag ที่ใช้บ่อยที่สุด: archive mode (คงสิทธิ์/timestamp/symlink ไว้), verbose (แสดง progress), compress (บีบอัดระหว่างส่ง) แล้วตามด้วยโฟลเดอร์ต้นทาง (ใส่ / ท้ายด้วย) และปลายทางแบบ user@host:path",
     solution: `rsync -avz dist/ user@server:/var/www/app/`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix rsync: Sync ไฟล์ไปเซิร์ฟเวอร์แบบส่งแค่ส่วนที่เปลี่ยน และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Flag ที่ใช้บ่อย:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>-a</code> (archive) — คงสิทธิ์ไฟล์, timestamp, symlink ไว้ครบ (รวม <code>-r</code> recursive ไว้ในตัวแล้ว)<br/><br/>• <code>-v</code> (verbose) — แสดงรายชื่อไฟล์ที่กำลังส่ง<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Flag ที่ใช้บ่อย: <code>-a</code> (archive คงสิทธิ์/timestamp/symlink รวม recursive ในตัว), <code>-v</code> (verbose แสดงรายชื่อไฟล์ที่ส่ง), <code>-z</code> (compress ระหว่างส่ง)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>rsync -avz dist/ user@server:/var/www/app/</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>เครื่องหมาย <code>/</code> ท้ายโฟลเดอร์ต้นทางสำคัญมาก</strong> — <code>dist/</code> (มี <code>/</code>) จะ sync แค่<strong>เนื้อหาข้างใน</strong> dist เข้าปลายทาง แต่ <code>dist</code> (ไม่มี <code>/</code>) จะ sync ทั้งโฟลเดอร์ dist ไปเป็น subfolder ซ้อนอีกชั้นที่ปลายทางแทน โครงสร้างไฟล์จะผิดทันทีถ้าพลาดตรงนี้`,
     example: `# เพิ่ม --delete ให้ปลายทางเหมือนต้นทางเป๊ะ (ลบไฟล์ที่ปลายทางที่ไม่มีในต้นทางด้วย — ใช้ระวังมาก)
 rsync -avz --delete dist/ user@server:/var/www/app/`,
     task: `จง sync โฟลเดอร์ <code>dist/</code> ไปที่ <code>user@server:/var/www/app/</code> ด้วย <code>rsync -avz</code>`
@@ -2233,8 +2356,10 @@ scp deploy@staging.example.com:/var/log/app.log ./app.log`,
     <code>scp</code> (secure copy) คัดลอกไฟล์ผ่าน SSH protocol/auth เดียวกัน syntax คล้าย <code>cp</code> แต่ path ฝั่งเซิร์ฟเวอร์ต้องมี <code>user@host:</code> นำหน้า:<br/>
     • ดึงจากเซิร์ฟเวอร์มาเครื่องตัวเอง: <code>scp user@host:remote-path local-path</code><br/>
     • ส่งจากเครื่องตัวเองขึ้นเซิร์ฟเวอร์: <code>scp local-path user@host:remote-path</code> (สลับตำแหน่งต้นทาง/ปลายทาง)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>scp</code> (secure copy) คัดลอกไฟล์ผ่าน SSH protocol/auth เดียวกัน syntax คล้าย <code>cp</code> แต่ path ฝั่งเซิร์ฟเวอร์ต้องมี <code>user@host:</code> นำหน้า:<br/><br/>• ดึงจากเซิร์ฟเวอร์มาเครื่องตัวเอง: <code>scp user@host:remote-path local-path</code><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>ssh deploy@staging.example.com</code><br/>
+    <code>scp deploy@staging.example.com:/var/log/app.log ./app.log</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>scp</code> copy ได้แค่ไฟล์เดี่ยวเท่านั้นถ้าไม่ใส่ flag เพิ่ม — ถ้าต้องการ copy ทั้งโฟลเดอร์ต้องใส่ <code>-r</code> (recursive) เองเสมอเหมือน <code>cp</code> ไม่งั้นจะเจอ error <code>not a regular file</code> ทันที`,
     example: `# copy ทั้งโฟลเดอร์ขึ้นเซิร์ฟเวอร์แบบ recursive
 scp -r ./dist deploy@staging.example.com:/var/www/app`,
     task: `จงเปิด SSH ไปที่ <code>deploy@staging.example.com</code> แล้วคัดลอก <code>/var/log/app.log</code> มาไว้ที่เครื่องตัวเองด้วย <code>scp</code>`
@@ -2260,9 +2385,10 @@ scp -r ./dist deploy@staging.example.com:/var/www/app`,
     hint: "crontab มี 5 ช่องเวลาเรียงกัน: นาที ชั่วโมง วันที่ เดือน วันในสัปดาห์ ตามด้วยคำสั่งที่จะรัน ตอนตี 2 หมายถึงนาทีที่ 0 ชั่วโมงที่ 2 ส่วนอีก 3 ช่องที่เหลือใช้ * (ทุกค่า) เพราะอยากให้รันทุกวัน",
     solution: `0 2 * * * /home/user/scripts/backup.sh`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>cron</strong> รันงานตามเวลาที่ตั้งไว้อัตโนมัติ โดยไม่ต้องมีคนมานั่งรันเอง — แก้ตารางเวลาด้วย <code>crontab -e</code> (เปิดไฟล์ crontab ของ user ปัจจุบันด้วย editor ที่ตั้งไว้ใน <code>$EDITOR</code>)<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>แต่ละบรรทัดมี 5 ช่องเวลาเรียงกัน ตามด้วยคำสั่งที่จะรัน:<br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>&lt;นาที&gt; &lt;ชั่วโมง&gt; &lt;วันที่&gt; &lt;เดือน&gt; &lt;วันในสัปดาห์&gt; &lt;คำสั่ง&gt;</code><br/><br/><br/><code>0 2 * * * /home/user/scripts/backup.sh</code> = นาที 0, ชั่วโมง 2, ส่วน 3 ช่องที่เหลือเป็น <code>*</code> (ทุกค่า) = "ทุกวัน ทุกเดือน ทุกวันในสัปดาห์ ตอน 02:00 น." — <code>crontab -l</code> ดูรายการ job ทั้งหมดที่ตั้งไว้<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>แต่ละบรรทัดมี 5 ช่องเวลาเรียงกัน (<code>&lt;นาที&gt; &lt;ชั่วโมง&gt; &lt;วันที่&gt; &lt;เดือน&gt; &lt;วันในสัปดาห์&gt;</code>) ตามด้วยคำสั่งที่จะรัน — <code>crontab -l</code> ดูรายการ job ทั้งหมดที่ตั้งไว้<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>0 2 * * * /home/user/scripts/backup.sh</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> cron รันสคริปต์ด้วย<strong>environment ที่จำกัดมาก</strong> ไม่เหมือน interactive shell ปกติ (<code>PATH</code> สั้นกว่ามาก, ไม่มี alias/config ที่เคย source ไว้) — สคริปต์ที่รันได้ปกติเวลาพิมพ์เองอาจ fail เงียบๆ ใต้ cron เพราะหา command ไม่เจอ ควรใช้ path เต็มเสมอ (ไม่พึ่ง PATH) และ redirect output ไปไฟล์ log เพื่อ debug ได้`,
     example: `# รันทุก 15 นาที (*/N หมายถึง 'ทุกๆ N หน่วย' ของช่องนั้น)
 */15 * * * * /home/user/scripts/health-check.sh`,
     task: `จงเขียนบรรทัด crontab ที่รัน <code>/home/user/scripts/backup.sh</code> ทุกวันเวลา 02:00 น. ด้วย <code>0 2 * * * /home/user/scripts/backup.sh</code>`
@@ -2291,8 +2417,10 @@ scp -r ./dist deploy@staging.example.com:/var/www/app`,
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใน Unix ทุกอย่างถูกมองเป็น "ไฟล์" รวมถึง network socket ด้วย — <code>lsof</code> (list open files) จึงใช้หาได้ว่า process ไหนกำลัง "เปิด" socket ของ port ไหนอยู่<br/><br/>
     <code>lsof -i :&lt;port&gt;</code> — กรองเฉพาะ network connection ที่ผูกกับ port นั้น แสดงคอลัมน์ <strong>PID</strong> ของ process ที่ถือ port นั้นอยู่ตรงๆ พร้อมชื่อ command — เร็วกว่าไล่ <code>ps aux | grep</code> เดามั่วๆ ว่า process ไหนคือตัวที่ใช้ port อยู่<br/><br/>
     หา PID ได้แล้วก็เอาไปต่อกับ <code>kill</code> (บทก่อนหน้า) ปิด process นั้นทิ้งได้ทันที<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>lsof -i :&lt;port&gt;</code> — กรองเฉพาะ network connection ที่ผูกกับ port นั้น แสดงคอลัมน์ <strong>PID</strong> ของ process ที่ถือ port นั้นอยู่ตรงๆ พร้อมชื่อ command — เร็วกว่าไล่ <code>ps aux | grep</code> เดามั่วๆ ว่า process ไหนคือตัวที่ใช้ port อยู่<br/><br/><br/>หา PID ได้แล้วก็เอาไปต่อกับ <code>kill</code> (บทก่อนหน้า) ปิด process นั้นทิ้งได้ทันที<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>lsof -i :3000</code><br/>
+    <code>kill -9 $(lsof -t -i :3000)</code>  # ฆ่าตรงๆ ในคำสั่งเดียว<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>lsof -i :3000</code> อาจโชว์<strong>หลายแถว</strong>ถ้ามีทั้ง IPv4 และ IPv6 socket ผูกกับ port เดียวกัน (หรือหลาย process ฟัง port เดียวกันจริงๆ ในบางกรณี) ต้องดู PID ให้ตรงตัวก่อน kill ไม่ใช่เดา kill ตัวแรกที่เห็นเสมอไป`,
     example: `# รวม lsof + kill ในคำสั่งเดียว: ฆ่า process ที่ถือ port 3000 อยู่ตรงๆ (-t = พิมพ์แค่ PID เปล่าๆ)
 kill -9 $(lsof -t -i :3000)`,
     task: `จงหาว่า process ไหนกำลังใช้ port <code>3000</code> อยู่ด้วย <code>lsof -i :3000</code>`

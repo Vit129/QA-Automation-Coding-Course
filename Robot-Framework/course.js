@@ -221,7 +221,10 @@ Open File Via Palette
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ RF Custom Keywords & Arguments และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เพื่อจัดกลุ่มขั้นตอนการโต้ตอบที่ทำงานเป็นชุดให้สะดวกต่อการเรียกใช้ซ้ำ ๆ ในหลายกรณีทดสอบ เราจะสร้างคีย์เวิร์ดขึ้นใช้งานเองในบล็อก <code>*** Keywords ***</code> โดยสามารถนำคีย์ <strong><code>[Arguments]</code></strong> มากำหนดตัวรับพารามิเตอร์ส่งต่อสืบทอด และเรียกใช้ในลักษณะการส่งต่อค่าตำแหน่งอาร์กิวเมนต์ได้ทันที<br/><br/>
     ต่างจากคีย์เวิร์ดสำเร็จรูปใน <code>kouen.resource</code> จริงอย่าง <code>Split Right</code> หรือ <code>Open Command Palette</code> ที่ไม่รับอาร์กิวเมนต์เลย (เพราะแค่กดคีย์ลัดตายตัว) คีย์เวิร์ดที่ต้อง "พิมพ์ข้อความที่ต่างกันในแต่ละครั้ง" อย่างการเปิดไฟล์ จำเป็นต้องรับพารามิเตอร์ผ่าน <code>[Arguments]</code> เพื่อให้เรียกใช้ซ้ำกับไฟล์คนละชื่อได้<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Open File Via Palette</code><br/>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;[Arguments]&nbsp;&nbsp;&nbsp;&nbsp;\${filename}</code><br/>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;Type Text&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\${filename}</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต่างจากคีย์เวิร์ดสำเร็จรูปใน <code>kouen.resource</code> จริงอย่าง <code>Split Right</code> หรือ <code>Open Command Palette</code> ที่ไม่รับอาร์กิวเมนต์เลย (เพราะแค่กดคีย์ลัดตายตัว) คีย์เวิร์ดที่ต้อง "พิมพ์ข้อความที่ต่างกันในแต่ละครั้ง" อย่างการเปิดไฟล์ จำเป็นต้องรับพารามิเตอร์ผ่าน <code>[Arguments]</code> เพื่อให้เรียกใช้ซ้ำกับไฟล์คนละชื่อได้`,
     example: `*** Keywords ***
 Switch To Session And Verify
@@ -274,8 +277,10 @@ Reset Config File
     Create File    \${CONFIG_FILE}    kouen.toast("v1")`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ OperatingSystem & Workspace และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ไลบรารี <code>OperatingSystem</code> ของ Robot Framework ถูกออกแบบมาสำหรับสแกนสร้างและเคลียร์ไฟล์หรือแคชตกค้างบนระบบปฏิบัติการของเครื่องเทสจริง ๆ โดยมีคำสั่งจัดการหลักอย่าง <code>Remove File</code> ในการล้างไฟล์แบบปลอดภัย (ไม่ฟ้องเออเรอร์หากไม่มีไฟล์) และ <code>Create File</code> ในการป้อนสร้างข้อความไฟล์ข้อมูลขึ้นมาใหม่ได้ทันที<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Remove File&nbsp;&nbsp;&nbsp;&nbsp;\${CONFIG_FILE}</code><br/>
+    <code>Create File&nbsp;&nbsp;&nbsp;&nbsp;\${CONFIG_FILE}&nbsp;&nbsp;&nbsp;&nbsp;kouen.toast("v1")</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>Remove File</code> ไม่ error แม้ไฟล์ไม่มีอยู่จริง (safe-remove) แต่ <code>Create File</code> จะเขียนทับไฟล์เดิมทันทีโดยไม่ถามยืนยัน ถ้าตัวแปร path ผิดพลาดอาจเขียนทับไฟล์อื่นที่ไม่ตั้งใจโดยไม่มี error เตือน`,
     example: `*** Settings ***
 Library          OperatingSystem
 *** Keywords ***
@@ -325,8 +330,10 @@ TC-01: เปิดแท็บใหม่ผ่านปุ่มบนหน�
     Click UI Element    new-tab-button`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Native macOS UI Automation (KouenUILibrary) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>1. <strong>Element Should Exist</strong>: ตรวจสอบว่าอิลิเมนต์ปรากฏอยู่ใน Accessibility Tree จริงก่อนโต้ตอบ (ป้องกันคลิกอิลิเมนต์ที่ยังเรนเดอร์ไม่เสร็จ)<br/><br/>2. <strong>Click UI Element</strong>: สั่งคลิกอิลิเมนต์ผ่าน System Events จริง ไม่ใช่การจำลองผ่านเบราว์เซอร์<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Element Should Exist&nbsp;&nbsp;&nbsp;&nbsp;new-tab-button</code><br/>
+    <code>Click UI Element&nbsp;&nbsp;&nbsp;&nbsp;new-tab-button</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องเรียก <code>Element Should Exist</code> ก่อน <code>Click UI Element</code> เสมอ ถ้าข้ามขั้นตอนตรวจสอบแล้วคลิกอิลิเมนต์ที่ยังเรนเดอร์ไม่เสร็จ จะได้ error ที่บอกแค่ "คลิกไม่ได้" โดยไม่รู้สาเหตุจริงว่าอิลิเมนต์ยังไม่โหลด`,
     example: `// การสลับเปิด/ปิด Sidebar ผ่านคีย์เวิร์ดจริงของ KouenUILibrary
 Press Shortcut    cmd+backslash
 Wait For UI       0.5
@@ -375,7 +382,9 @@ TC-02: ตรวจสอบ Kanban Board ของ Kouen สำเร็จ
     Should Be True                     \${count} > 0`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ RF Assertions & Validation และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>2. <strong>Should Be True</strong>: ประเมินสมการตัวเลขหรือตรรกะเงื่อนไขของตัวแปร โดยจะดึงสิทธิ์ส่งต่อไปคำนวณเบื้องหลังในระบบภาษา Python<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Kouen Board Should Have Column&nbsp;&nbsp;&nbsp;&nbsp;Backlog</code><br/>
+    <code>Should Be True&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\${count} > 0</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> 1. <strong>Kouen Board Should Have Column</strong>: คีย์เวิร์ดที่เขียนขึ้นเองใน <code>KouenUILibrary.py</code> โดยข้างในจะสั่งรันคำสั่ง <code>kouen board</code> ผ่าน CLI จริง แล้วเช็คว่าชื่อคอลัมน์ที่ระบุปรากฏอยู่ใน stdout หรือไม่ — เป็นตัวอย่างว่า Assertion ของ Robot ไม่จำเป็นต้องผูกกับ UI เสมอไป จะเขียนขึ้นมาเช็คผลลัพธ์จาก CLI ก็ได้<br/>`,
     example: `// การเช็คความเท่ากันและเช็คผลลัพธ์คำสั่ง CLI สำเร็จ
 Should Be Equal As Strings       \${status}           SUCCESS
@@ -424,8 +433,10 @@ Launch Application Process
     Wait For Process    kouen_process    timeout=10s`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Process Library & Process Control และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การสั่งรันแอปพลิเคชันหลังบ้าน เซิร์ฟเวอร์ทดสอบ หรือโปรแกรมคอมมานด์ไลน์ภายนอก (Background running) ใน Robot Framework ใช้งานโมดูล <code>Process</code> โดยการรันประเภทแอปที่ห้ามปิดบล็อก (Non-blocking) เราจะดึง <strong><code>Launch Process</code></strong> คีย์เวิร์ดมาทำงานส่งผลลัพธ์ย้อนกลับไปผูกติดไว้ที่ตัวแปร <code>handle</code> ทำให้สคริปต์รันเทสขั้นตอนอื่นได้ทันทีโดยไม่ต้องนอนค้างรอหน้าจอ<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Launch Process&nbsp;&nbsp;&nbsp;&nbsp;kouen-cli&nbsp;&nbsp;&nbsp;&nbsp;handle=kouen_process</code><br/>
+    <code>Wait For Process&nbsp;&nbsp;&nbsp;&nbsp;kouen_process&nbsp;&nbsp;&nbsp;&nbsp;timeout=10s</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าลืมระบุ <code>timeout</code> ใน <code>Wait For Process</code> แล้วโปรเซสค้าง (hang) ตัวเทสทั้ง suite จะค้างตามไปไม่มีที่สิ้นสุด ต้องระบุ timeout เสมอเพื่อกัน CI ค้างยาว`,
     example: `// การสั่งเริ่มเปิดจำลองเซิร์ฟเวอร์ย่อยเบื้องหลังการประมวลผล
 Launch Process    npm    run    start    handle=dev_server
 # สคริปต์สามารถสั่งทำเทสส่วนถัดไปขนานได้ทันที`,
@@ -474,8 +485,10 @@ Verify App Windows Count
     Should Be True    \${count} > 0`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Custom Python Libraries และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เมื่อต้องการสร้างคำสั่งใหม่ที่ไม่มีในระบบหรือเรียกอ่านคุณสมบัติลึกในระบบ OS คลาสของภาษา Python สามารถเขียนขึ้นเป็น Custom Library ได้ โดยเมื่อ Robot Framework สแกนนำเข้าคำสั่ง ฟังก์ชันที่เขียนสไตล์ <code>snake_case</code> ของ Python (เช่น <code>get_window_count</code>) จะถูกทำการแปลงมาโชว์เป็นคำแยกช่องว่างคีย์คำใหญ่ <code>Get Window Count</code> ให้อัตโนมัติ<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>\${count}=&nbsp;&nbsp;&nbsp;&nbsp;Get Window Count</code><br/>
+    <code>Should Be True&nbsp;&nbsp;&nbsp;&nbsp;\${count} > 0</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ชื่อเมธอด Python ต้องเป็น <code>snake_case</code> เท่านั้น (เช่น <code>get_window_count</code>) ถ้าตั้งชื่อแบบ camelCase หรือ PascalCase ระบบแปลงชื่ออัตโนมัติของ Robot Framework จะไม่ map เป็นคีย์เวิร์ดที่คาดหวัง`,
     example: `# ตัวอย่างไฟล์ Python คลาสเสริมระบบ
 class MyCustomLibrary:
     def verify_security_token(self, token):
@@ -524,8 +537,10 @@ Prepare Config Workspace
     Directory Should Exist    \${CONFIG_DIR}`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ RF Directory Constraints และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เพื่อหลีกเลี่ยงบั๊กโฟลเดอร์ไม่มีอยู่จริง (Folder not found error) ตอนบันทึกเขียนไฟล์สคริปต์เทส โมดูล OperatingSystem จัดเตรียมคำสั่งตรวจสอบขอบเขตระบบโฟลเดอร์มาให้ครบถ้วน เช่น <code>Create Directory</code> (ซึ่งทำหน้าที่คล้ายกับ mkdir -p ที่จะป้อนสร้างโฟลเดอร์แม่ขนานย่อยขึ้นมาให้อัตโนมัติโดยไม่แจ้งเตือนพังหากมีโฟลเดอร์นั้นอยู่แล้ว) และคำสั่งยืนยันพฤติกรรมความมีอยู่ <code>Directory Should Exist</code><br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Create Directory&nbsp;&nbsp;&nbsp;&nbsp;\${CONFIG_DIR}</code><br/>
+    <code>Directory Should Exist&nbsp;&nbsp;&nbsp;&nbsp;\${CONFIG_DIR}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>Create Directory</code> ทำงานคล้าย <code>mkdir -p</code> ไม่ error หากมีโฟลเดอร์อยู่แล้ว แต่ถ้าตัวแปร path พิมพ์ผิดชื่อ จะสร้างโฟลเดอร์ใหม่ผิดตำแหน่งเงียบ ๆ โดยไม่มี error เตือน`,
     example: `// การสแกนเช็คโฟลเดอร์เก็บรูปแคปหน้าจอเทสพัง
 Create Directory          \${SCREENSHOT_DIR}
 Directory Should Exist    \${SCREENSHOT_DIR}`,
@@ -573,8 +588,10 @@ Script Reload Spec Test
     [Teardown]    Cleanup And Quit`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Test Cases Inline Overrides และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>กรณีหน้าจอต้องการจำลองสถานการณ์พิเศษเฉพาะบางกรณีทดสอบ (เช่น ตัวรันเคสนี้จำเป็นต้องจำลองข้อบกพรณ์หรือสวิตช์เปิดปิดสิทธิ์ข้อมูล) เราสามารถล็อกหลีกเลี่ยงกระบวนการเริ่มรันหลักของ Suite (Suite Setup) โดยใช้คำสั่งป้ายสัญลักษณ์ปีกกาเหลี่ยม <code>[Setup]</code> และ <code>[Teardown]</code> ภายในแถวย่อยเพื่อเขียนจำลองเงื่อนไขส่วนตนขึ้นมาทับค่าเดิมโดยสมบูรณ์เฉพาะเคสตัวนี้<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>[Setup]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Create Config File</code><br/>
+    <code>[Teardown]&nbsp;&nbsp;&nbsp;&nbsp;Cleanup And Quit</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>[Setup]</code>/<code>[Teardown]</code> เฉพาะเคสจะ override ค่า Suite Setup/Teardown ทั้งหมด ไม่ใช่เสริมเพิ่ม — ถ้า Suite Setup เคยเตรียม environment ที่จำเป็นไว้ การ override โดยไม่เรียกคีย์เวิร์ดเดิมซ้ำ อาจทำให้ environment ไม่ครบ`,
     example: `*** Test Cases ***
 เทสทดสอบส่งอีเมลผิดพลาด
     [Setup]       BlockMailServerConnection
@@ -624,8 +641,10 @@ System Control Over osascript
     Should Be Equal As Integers    \${result.rc}    0`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ System CLI & Applescript Integration และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การสั่งโต้ตอบกระบวนการรันแอปบน macOS มักต้องอาศัย AppleScript (ผ่านคอมมานด์ <code>osascript</code>) ในการประมวลผลผ่านตัวรันเทส ใน Robot Framework เมธอด <code>Run Process</code> จะทำการคืนค่าผลลัพธ์ข้อมูลกลับออกมาเป็นตัวแปรโครงสร้างออบเจกต์ ซึ่งบรรจุข้อมูลตรวจสอบหลักคือ <strong><code>\${result.rc}</code></strong> (รหัส Return Code/Exit Code) ซึ่งหากมีสถานะเป็น 0 จะฟ้องว่าการทำงานระดับระบบปฏิบัติการเสร็จสิ้นเป็นปกติ ปราศจากความพัง<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>\${result}=&nbsp;&nbsp;&nbsp;&nbsp;Run Process&nbsp;&nbsp;&nbsp;&nbsp;osascript</code><br/>
+    <code>Should Be Equal As Integers&nbsp;&nbsp;&nbsp;&nbsp;\${result.rc}&nbsp;&nbsp;&nbsp;&nbsp;0</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>Run Process</code> เป็นแบบ blocking (รอจนจบก่อนไปบรรทัดถัดไป) ต่างจาก <code>Launch Process</code> ที่ non-blocking — ถ้าคำสั่งที่รันค้างนาน (เช่น osascript เปิด dialog รอ user คลิก) เทสทั้งตัวจะค้างตามจนกว่า timeout ของ Robot เอง`,
     example: `// การสั่งคำสั่งคอมมานด์ไลน์และดักข้อมูล Return code
 \${output}=    Run Process    git    status
 Should Be Equal As Integers    \${output.rc}    0`,
@@ -664,7 +683,7 @@ Retry Flaky Window Check
     Robot Framework มี BuiltIn keyword <strong><code>Wait Until Keyword Succeeds</code></strong> ที่ retry การเรียก keyword ตัวใน (ไม่ใช่ retry ทั้ง test case) ซ้ำไปเรื่อยๆ จนกว่าจะผ่านหรือครบจำนวนครั้ง/เวลาที่กำหนด รูปแบบคือ <code>Wait Until Keyword Succeeds    &lt;จำนวนครั้งหรือเวลารวม&gt;    &lt;ช่วงห่างระหว่างครั้ง&gt;    &lt;keyword&gt;    &lt;args...&gt;</code><br/><br/>
     ข้อแตกต่างสำคัญกับการ retry ทั้ง suite ด้วย CLI flag <code>--rerunfailed</code>: <code>Wait Until Keyword Succeeds</code> retry เฉพาะจุดที่ flaky จริง (granular, เร็ว) ส่วน <code>--rerunfailed</code> รันทั้ง test case ใหม่ทั้งหมด (coarse, ช้ากว่าแต่ครอบคลุมกรณี setup พังด้วย) ควรเลือก granular ก่อนเสมอถ้ารู้จุดที่ flaky ชัดเจน<br/><br/>
     💡 <strong>Mental Model & Syntax:</strong><br/>Robot Framework มี BuiltIn keyword <strong><code>Wait Until Keyword Succeeds</code></strong> ที่ retry การเรียก keyword ตัวใน (ไม่ใช่ retry ทั้ง test case) ซ้ำไปเรื่อยๆ จนกว่าจะผ่านหรือครบจำนวนครั้ง/เวลาที่กำหนด รูปแบบคือ <code>Wait Until Keyword Succeeds    &lt;จำนวนครั้งหรือเวลารวม&gt;    &lt;ช่วงห่างระหว่างครั้ง&gt;    &lt;keyword&gt;    &lt;args...&gt;</code><br/><br/><br/>ข้อแตกต่างสำคัญกับการ retry ทั้ง suite ด้วย CLI flag <code>--rerunfailed</code>: <code>Wait Until Keyword Succeeds</code> retry เฉพาะจุดที่ flaky จริง (granular, เร็ว) ส่วน <code>--rerunfailed</code> รันทั้ง test case ใหม่ทั้งหมด (coarse, ช้ากว่าแต่ครอบคลุมกรณี setup พังด้วย) ควรเลือก granular ก่อนเสมอถ้ารู้จุดที่ flaky ชัดเจน<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>Wait Until Keyword Succeeds</code> retry เฉพาะ keyword ที่ระบุเท่านั้น — ถ้า keyword ภายในมีผลข้างเคียง (เช่นคลิกปุ่มซ้ำทุกรอบ) การ retry อาจคลิกซ้ำหลายครั้งโดยไม่ตั้งใจ ต้องแน่ใจว่า keyword ที่ถูก retry เรียกซ้ำได้โดยไม่พังผลลัพธ์ (idempotent)`,
     example: `// ตัวอย่าง retry การเช็ค element ที่บางทีโหลดช้าบนหน้าเว็บ
 Wait Until Keyword Succeeds    10x    1s    Element Should Be Visible    id=submit-button`,
     task: `จงป้อนคำสั่งรับมือกับ keyword ตรวจสอบหน้าต่างแอปที่บางทีทำงานช้า (Flaky) โดย:<br/>
@@ -713,7 +732,7 @@ Type Into Ready Element Only
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ไม่ใช่ flaky ทุกตัวจะแก้ด้วยการเพิ่มเวลาหน่วง — ใน <code>KouenUILibrary.py</code> จริงมี keyword ชื่อ <strong><code>Wait For UI</code></strong> ที่ข้างในคือ <code>time.sleep(seconds)</code> เฉยๆ (ดูซอร์สจริง: <code>def wait_for_ui(self, seconds=1.0): time.sleep(float(seconds))</code>) — เดาเวลาแบบตายตัว ถ้าเครื่อง CI ช้ากว่าที่เดาไว้ ก็ยัง fail เหมือนเดิม เพิ่มเวลาเท่าไหร่ก็แค่ลดโอกาส ไม่ได้แก้ปัญหาที่ต้นตอ<br/><br/>
     keyword <code>Element Should Exist</code> ในไลบรารีเดียวกันตรวจสอบสภาพจริงผ่าน macOS Accessibility tree (เดินสคริปต์ <code>osascript</code> หา <code>AXIdentifier</code> จริงบนหน้าจอ) ไม่ใช่การเดาเวลา — ตรงกับแนวคิดเดียวกับ <code>_wait_for_window</code> ที่ <code>Launch Kouen</code> ใช้ภายใน (polling เช็คจำนวนหน้าต่างทุก 0.5 วินาทีจนกว่าจะเจอ แทนที่จะ sleep ค่าคงที่) แต่ library ไม่ได้บังคับเช็คแบบนี้ให้อัตโนมัติก่อน <code>Type Text</code> ทุกครั้ง — ผู้เขียนเทสต้องเรียก <code>Element Should Exist</code> เองก่อนพิมพ์ทุกครั้งที่ element นั้นอาจจะยังโหลดไม่เสร็จ<br/><br/>
     💡 <strong>Mental Model & Syntax:</strong><br/>keyword <code>Element Should Exist</code> ในไลบรารีเดียวกันตรวจสอบสภาพจริงผ่าน macOS Accessibility tree (เดินสคริปต์ <code>osascript</code> หา <code>AXIdentifier</code> จริงบนหน้าจอ) ไม่ใช่การเดาเวลา — ตรงกับแนวคิดเดียวกับ <code>_wait_for_window</code> ที่ <code>Launch Kouen</code> ใช้ภายใน (polling เช็คจำนวนหน้าต่างทุก 0.5 วินาทีจนกว่าจะเจอ แทนที่จะ sleep ค่าคงที่) แต่ library ไม่ได้บังคับเช็คแบบนี้ให้อัตโนมัติก่อน <code>Type Text</code> ทุกครั้ง — ผู้เขียนเทสต้องเรียก <code>Element Should Exist</code> เองก่อนพิมพ์ทุกครั้งที่ element นั้นอาจจะยังโหลดไม่เสร็จ<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>Element Should Exist</code> ผ่านครั้งเดียวไม่ได้แปลว่า element "พร้อมใช้งาน" 100% เสมอไป — แค่มีอยู่ใน Accessibility Tree ไม่ได้แปลว่า interactive แล้ว ถ้ายังมี animation transition เล่นอยู่ (เช่น field เพิ่งเลื่อนเข้าจอ) อาจต้องพิมพ์ไม่ทันหรือพิมพ์พลาดตำแหน่ง`,
     example: `// ไม่ควรทำ: Wait For UI คือ time.sleep() ตายตัว เดาเวลาไม่แม่น เครื่อง CI ช้ากว่าปกติก็ยัง fail
 Click UI Element    save-button
 Wait For UI    2
@@ -763,8 +782,11 @@ Confirm Before Closing Session
     Element Should Exist    dialog-confirm-close
     Click UI Element    dialog-confirm-close`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Confirm Dialog: เช็ค Accessibility Identifier ก่อน Automate เสมอ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>alert.addButton(withTitle: "Close Session")<br/><br/>alert.addButton(withTitle: "Cancel")<br/><br/>alert.buttons[0].keyEquivalent = ""<br/><br/>alert.buttons[1].keyEquivalent = ""</code><br/><br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>let alert = NSAlert()<br/><br/>ตรวจสอบซอร์สทั้ง repo แล้วพบว่า<strong>ไม่มีปุ่ม Alert ตัวไหนเลยที่ตั้งค่า <code>accessibilityIdentifier</code></strong> ไว้ — และ Dev ยังจงใจล้าง <code>keyEquivalent</code> ของทั้งสองปุ่มเป็นค่าว่าง (ปิดทางลัดคีย์บอร์ด Return/Escape ด้วย) ซึ่งหมายความว่า <strong>วันนี้ยังไม่มีทางอัตโนมัติคลิกปุ่มนี้ได้เลยสักทาง</strong> ทั้งผ่าน <code>Click UI Element</code> (หา AXIdentifier ไม่เจอ) และผ่านคีย์ลัด (ถูกปิดไว้)<br/><br/><br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในโค้ดจริงของ <code>confirmCloseSession()</code> (<code>KouenSidebarPanelViewController+RecentProjects.swift</code>) มี NSAlert ถามยืนยันก่อนปิด session แต่ตรวจสอบซอร์สทั้ง repo แล้วพบว่า<strong>ไม่มีปุ่ม Alert ตัวไหนเลยที่ตั้งค่า <code>accessibilityIdentifier</code></strong> ไว้ — และ Dev ยังจงใจล้าง <code>keyEquivalent</code> ของทั้งสองปุ่มเป็นค่าว่าง (ปิดทางลัดคีย์บอร์ด Return/Escape ด้วย) ซึ่งหมายความว่า <strong>วันนี้ยังไม่มีทางอัตโนมัติคลิกปุ่มนี้ได้เลยสักทาง</strong> ทั้งผ่าน <code>Click UI Element</code> (หา AXIdentifier ไม่เจอ) และผ่านคีย์ลัด (ถูกปิดไว้)<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>let alert = NSAlert()</code><br/>
+    <code>alert.addButton(withTitle: "Close Session")</code><br/>
+    <code>alert.buttons[0].keyEquivalent = ""</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> นี่คือปัญหาจริงที่พบบ่อยในงาน Automation: <strong>ไม่ใช่ทุกปัญหาแก้ได้ด้วยเทคนิค RF ที่ฉลาดขึ้น</strong> บางครั้ง UI ที่ Dev สร้างมายังไม่ได้ "เปิดช่องให้อัตโนมัติ" เลยด้วยซ้ำ ทางแก้ที่ถูกต้องคือ (1) เช็คด้วย <code>Element Should Exist</code> ก่อนคลิกทุกครั้ง ถ้าไม่เจอให้หยุดและแจ้งกลับทีม Dev ให้เพิ่ม <code>accessibilityIdentifier</code> พร้อมเสนอชื่อที่ตกลงกันไว้ล่วงหน้า ไม่ใช่ (2) วน retry คลิกซ้ำๆ ไปเรื่อยๆ เพราะปัญหาไม่ได้อยู่ที่ timing`,
     example: `// ตัวอย่างเช็คก่อนคลิกปุ่มลบ workspace ที่มี Alert แบบเดียวกัน (deleteWorkspaceFromMenu)
 Element Should Exist    dialog-delete-workspace-confirm
@@ -804,9 +826,14 @@ Wait For Task List Ready
 Wait For Task List Ready
     Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Loading State: เช็คให้ Loading หายไปก่อน ไม่ใช่หน่วงเวลาคงที่ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>...<br/><br/>if isLoading {<br/><br/>&nbsp;&nbsp;ProgressView().controlSize(.small)<br/><br/>}</code><br/><br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>@State private var isLoading = true<br/><br/>Task Dashboard แสดง <code>ProgressView</code> ระหว่างโหลดข้อมูลจริง เวลาโหลดขึ้นอยู่กับจำนวน session/task และความเร็วเครื่อง ไม่คงที่ — ใส่ <code>Wait For UI    2</code> เดาเวลาจึงพังได้ทั้งสองทาง (เร็วไปยัง loading อยู่, ช้าไปเสียเวลาฟรี)<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในโค้ดจริงของ <code>TaskDashboardView.swift</code> Task Dashboard แสดง <code>ProgressView</code> ระหว่างโหลดข้อมูลจริง เวลาโหลดขึ้นอยู่กับจำนวน session/task และความเร็วเครื่อง ไม่คงที่ — ใส่ <code>Wait For UI    2</code> เดาเวลาจึงพังได้ทั้งสองทาง (เร็วไปยัง loading อยู่, ช้าไปเสียเวลาฟรี)<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>@State private var isLoading = true</code><br/>
+    <code>...</code><br/>
+    <code>if isLoading {</code><br/>
+    <code>&nbsp;&nbsp;ProgressView().controlSize(.small)</code><br/>
+    <code>}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เทคนิคที่ถูกต้องคือรวม <code>Element Should Not Exist</code> (เช็คว่า loading indicator หายไปหรือยัง) เข้ากับ <code>Wait Until Keyword Succeeds</code> (จากบทที่ 12) เพื่อวนเช็คซ้ำจนกว่าจะหายไปจริงหรือครบจำนวนครั้ง — ผสานสองเทคนิคที่เรียนมาแล้วเข้าด้วยกันเป็นรูปแบบมาตรฐานสำหรับรอ Loading State ใดๆ`,
     example: `// ตัวอย่างรอ Loading หายไปก่อนอ่านค่าจำนวน Task ทั้งหมด
 Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading
 \${count}=    Get Window Count`,
@@ -863,9 +890,13 @@ Import Project Folder Via Open Panel
     Type Text    /tmp/demo-project
     Press Shortcut    return`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ File Import: เปิดโฟลเดอร์ผ่าน NSOpenPanel ด้วยคีย์ลัด และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>panel.canChooseDirectories = true<br/><br/>panel.canChooseFiles = false<br/><br/>panel.prompt = "Open"<br/><br/>panel.message = "Choose a project folder"<br/><br/>panel.begin { response in ... }</code><br/><br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><code>let panel = NSOpenPanel()<br/><br/><code>NSOpenPanel</code> เป็น <strong>system sheet ของ macOS เอง</strong> ไม่ใช่ SwiftUI view ที่ Dev เขียนขึ้นเอง — จะไปตั้งค่า <code>accessibilityIdentifier</code> ให้ปุ่ม/รายการไฟล์ข้างในแบบเดียวกับ UI ของแอปตัวเองไม่ได้ วิธีที่เสถียรที่สุดคือใช้ <strong>คีย์ลัดมาตรฐานของ macOS Open/Save Panel ทุกตัว</strong> (ใช้ได้กับทุกแอปที่ใช้ Open Panel ไม่ใช่แค่ Kouen): กด <code>Cmd+Shift+G</code> เพื่อเปิดช่อง "Go to Folder" พิมพ์ path เต็มลงไปตรงๆ แล้วกด <code>Enter</code> เพื่อยืนยัน — ข้าม UI element ทั้งหมดของ panel ไปเลย ไม่ต้องพึ่ง AXIdentifier ใดๆ<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในโค้ดจริงของ <code>addSession()</code> (<code>KouenSidebarPanelViewController.swift</code>) การเลือกโฟลเดอร์โปรเจกใหม่ใช้ <code>NSOpenPanel</code> ของระบบปฏิบัติการโดยตรง <code>NSOpenPanel</code> เป็น <strong>system sheet ของ macOS เอง</strong> ไม่ใช่ SwiftUI view ที่ Dev เขียนขึ้นเอง — จะไปตั้งค่า <code>accessibilityIdentifier</code> ให้ปุ่ม/รายการไฟล์ข้างในแบบเดียวกับ UI ของแอปตัวเองไม่ได้ วิธีที่เสถียรที่สุดคือใช้ <strong>คีย์ลัดมาตรฐานของ macOS Open/Save Panel ทุกตัว</strong> กด <code>Cmd+Shift+G</code> เพื่อเปิดช่อง "Go to Folder" พิมพ์ path เต็มลงไปตรงๆ แล้วกด <code>Enter</code> เพื่อยืนยัน — ข้าม UI element ทั้งหมดของ panel ไปเลย ไม่ต้องพึ่ง AXIdentifier ใดๆ<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>let panel = NSOpenPanel()</code><br/>
+    <code>panel.canChooseDirectories = true</code><br/>
+    <code>panel.prompt = "Open"</code><br/>
+    <code>panel.begin { response in ... }</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เทคนิคนี้ใช้ได้ทั่วไปกับ Native File Picker ของ macOS ทุกตัว แต่ต่างจากปุ่มในแอปเองที่ยังต้องพึ่ง <code>Click UI Element</code>/<code>AXIdentifier</code> ตามปกติ — อย่าเผลอใช้คีย์ลัด <code>Cmd+Shift+G</code> นี้กับ dialog ธรรมดาที่ไม่ใช่ Open/Save Panel เพราะจะไม่มีผลอะไรเลย`,
     example: `// ตัวอย่างเปิดไฟล์ (ไม่ใช่โฟลเดอร์) ผ่าน Open Panel ด้วยเทคนิคเดียวกัน
 Press Shortcut    cmd+shift+g
 Type Text         /Users/demo/config.yaml
@@ -952,7 +983,7 @@ Open Demo File From Palette
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การเขียนเทสจริงมักเจอขั้นตอนซ้ำๆ ที่ประกอบจากคีย์เวิร์ดพื้นฐานหลายตัวเรียงกันเสมอ (เปิดพาเลตคำสั่ง → พิมพ์ชื่อไฟล์ → กดยืนยัน) หากเขียนคีย์เวิร์ดพื้นฐานเหล่านี้ซ้ำในทุกเทสเคสที่ต้องเปิดไฟล์ จะบำรุงรักษายาก — ถ้าพฤติกรรมของ Command Palette เปลี่ยน (เช่น ต้องกดคีย์ลัดเพิ่มก่อนพิมพ์) ต้องไปแก้ทุกจุดที่เขียนซ้ำไว้<br/><br/>
     การ<strong>ประกอบคีย์เวิร์ด (Keyword Composition)</strong> คือการห่อคีย์เวิร์ดพื้นฐานหลายตัวไว้ในคีย์เวิร์ดใหม่ที่ตั้งชื่อสื่อความหมายระดับสูงขึ้น (เช่น <code>Open File Via Command Palette</code>) แล้วให้ทุกเทสเคสเรียกใช้คีย์เวิร์ดระดับสูงนี้แทน — ต่างจากบทที่ 3 ที่สอนแค่การรับอาร์กิวเมนต์ผ่าน <code>[Arguments]</code> ตัวเดียว บทนี้ต้องนำแนวคิดนั้นมาผสานกับการเรียงเรียกคีย์เวิร์ดสำเร็จรูปหลายตัวให้ทำงานเป็นชุดเดียว ซึ่งเป็นรูปแบบที่ใช้บ่อยที่สุดในการเขียน Test Suite จริงระดับ production<br/><br/>
     💡 <strong>Mental Model & Syntax:</strong><br/>การ<strong>ประกอบคีย์เวิร์ด (Keyword Composition)</strong> คือการห่อคีย์เวิร์ดพื้นฐานหลายตัวไว้ในคีย์เวิร์ดใหม่ที่ตั้งชื่อสื่อความหมายระดับสูงขึ้น (เช่น <code>Open File Via Command Palette</code>) แล้วให้ทุกเทสเคสเรียกใช้คีย์เวิร์ดระดับสูงนี้แทน — ต่างจากบทที่ 3 ที่สอนแค่การรับอาร์กิวเมนต์ผ่าน <code>[Arguments]</code> ตัวเดียว บทนี้ต้องนำแนวคิดนั้นมาผสานกับการเรียงเรียกคีย์เวิร์ดสำเร็จรูปหลายตัวให้ทำงานเป็นชุดเดียว ซึ่งเป็นรูปแบบที่ใช้บ่อยที่สุดในการเขียน Test Suite จริงระดับ production<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าคีย์เวิร์ดพื้นฐานตัวใดตัวหนึ่งภายในเปลี่ยนพฤติกรรม (เช่น <code>Open Command Palette</code> ต้องรอ animation ก่อนพิมพ์ได้) ต้องแก้แค่จุดเดียวในคีย์เวิร์ดที่ประกอบขึ้น ไม่ต้องไล่แก้ทุกเทสเคสที่เรียกใช้ — แต่ถ้าลืมอัปเดตจุดนี้ บั๊กจะกระจายไปทุกที่ที่เรียกใช้คีย์เวิร์ดประกอบตัวนี้`,
     example: `// ตัวอย่างคีย์เวิร์ดประกอบอีกแบบ: ปิดแท็บปัจจุบันพร้อมยืนยันว่าจำนวนแท็บลดลงจริง
 *** Keywords ***
 Close Current Tab And Verify
@@ -1005,7 +1036,8 @@ Load Recent Sessions List
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Debug Flaky Test: แก้ Sleep คงที่ด้วย Explicit Wait ให้ถูกจุด และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ทีมพัฒนามักแก้ flaky test ด้วยวิธีที่ผิดที่สุดโดยไม่รู้ตัว: เจอเทส fail บน CI ก็เพิ่มตัวเลขใน <code>Sleep</code> ให้นานขึ้นเรื่อยๆ (2s → 5s → 10s) ซึ่งไม่ได้แก้ต้นตอเลย เพราะ <code>Sleep</code> คือการเดาเวลาแบบตายตัว ไม่ว่าจะเดานานแค่ไหนก็ยังมีโอกาส fail ได้เสมอถ้าเครื่อง CI ช้ากว่าที่เดาไว้ในวันนั้น (และวันที่โหลดเร็วกว่าปกติก็เสียเวลารอฟรีทุก run)<br/><br/>
     รายชื่อ session ใน sidebar ของ Kouen โหลดจากการสแกน worktree ที่มีอยู่จริงในระบบไฟล์แบบ async เบื้องหลัง เวลาที่ใช้ขึ้นอยู่กับจำนวน session และความเร็วดิสก์ของเครื่องที่รันเทส ไม่คงที่ — การแก้ที่ถูกต้องคือรื้อ <code>Sleep</code> ทิ้งทั้งหมด แล้วแทนที่ด้วยการผสาน <code>Wait Until Keyword Succeeds</code> (วนรอ) เข้ากับ <code>Element Should Exist</code> (เช็คสภาพจริง) แบบเดียวกับที่เรียนมาแล้วในบทที่ 12 และ 15 — จุดต่างของบทนี้คือต้อง<strong>ดีบักโค้ดที่มีบั๊กอยู่แล้ว</strong>ด้วยตัวเอง ไม่ใช่แค่เติมช่องว่าง และต้องรู้ว่า "เพิ่มเวลา Sleep" ไม่ใช่ทางแก้ที่ยอมรับได้เลยไม่ว่าจะเพิ่มเท่าไหร่ก็ตาม<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Wait Until Keyword Succeeds&nbsp;&nbsp;&nbsp;&nbsp;8x&nbsp;&nbsp;&nbsp;&nbsp;1s&nbsp;&nbsp;&nbsp;&nbsp;Element Should Exist&nbsp;&nbsp;&nbsp;&nbsp;session-list-item</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> รายชื่อ session ใน sidebar ของ Kouen โหลดจากการสแกน worktree ที่มีอยู่จริงในระบบไฟล์แบบ async เบื้องหลัง เวลาที่ใช้ขึ้นอยู่กับจำนวน session และความเร็วดิสก์ของเครื่องที่รันเทส ไม่คงที่ — การแก้ที่ถูกต้องคือรื้อ <code>Sleep</code> ทิ้งทั้งหมด แล้วแทนที่ด้วยการผสาน <code>Wait Until Keyword Succeeds</code> (วนรอ) เข้ากับ <code>Element Should Exist</code> (เช็คสภาพจริง) แบบเดียวกับที่เรียนมาแล้วในบทที่ 12 และ 15 — จุดต่างของบทนี้คือต้อง<strong>ดีบักโค้ดที่มีบั๊กอยู่แล้ว</strong>ด้วยตัวเอง ไม่ใช่แค่เติมช่องว่าง และต้องรู้ว่า "เพิ่มเวลา Sleep" ไม่ใช่ทางแก้ที่ยอมรับได้เลยไม่ว่าจะเพิ่มเท่าไหร่ก็ตาม`,
     example: `// ตัวอย่างบั๊กแบบเดียวกันในหน้าจออื่น: รอผลลัพธ์คำสั่ง search แบบ async
 // ผิด: Sleep    3s ตามด้วยเช็คผล — เดาเวลาตายตัว

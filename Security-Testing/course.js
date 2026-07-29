@@ -373,8 +373,11 @@ test('error response ไม่หลุด stack trace ที่มี path แ�
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทที่ 4 (Sensitive Data Exposure) สอนให้เช็คคำเฉพาะที่บ่งบอกรายละเอียดภายใน เช่น <code>ENOENT</code>, <code>ECONNREFUSED</code>, <code>at Object</code> — วิธีนั้นใช้ได้ดีเมื่อรู้ล่วงหน้าว่าคำเหล่านั้นจะปรากฏ แต่ stack trace จริงมีรูปแบบที่หลากหลายกว่านั้นมาก (ชื่อฟังก์ชัน, ชื่อไฟล์, เลขบรรทัดที่เปลี่ยนไปเรื่อยๆ)<br/><br/>
     สิ่งที่<strong>คงที่เสมอ</strong>ในทุก stack trace ของ Node.js/V8 คือรูปแบบโครงสร้าง: <code>at &lt;function or &lt;anonymous&gt;&gt; (&lt;absolute path&gt;:&lt;line&gt;:&lt;column&gt;)</code> — path ตามด้วยเลขบรรทัดและเลขคอลัมน์ คั่นด้วย colon เสมอ นี่คือ "ลายเซ็น" ของ stack trace ที่ QA ระดับสูงควรจับด้วย pattern มากกว่าคำใดคำหนึ่ง เพราะครอบคลุมทุกกรณีของ error ภายในที่หลุดออกมาโดยไม่ต้องรู้ล่วงหน้าว่า error message จะเขียนว่าอะไร<br/><br/>
     <em>หมายเหตุ: <code>/api/reports/generate</code> เป็น endpoint สมมติสำหรับฝึกเทคนิคนี้ ไม่ใช่ endpoint จริงใน My-Investment-Port</em><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>สิ่งที่<strong>คงที่เสมอ</strong>ในทุก stack trace ของ Node.js/V8 คือรูปแบบโครงสร้าง: <code>at &lt;function or &lt;anonymous&gt;&gt; (&lt;absolute path&gt;:&lt;line&gt;:&lt;column&gt;)</code> — path ตามด้วยเลขบรรทัดและเลขคอลัมน์ คั่นด้วย colon เสมอ นี่คือ "ลายเซ็น" ของ stack trace ที่ QA ระดับสูงควรจับด้วย pattern มากกว่าคำใดคำหนึ่ง เพราะครอบคลุมทุกกรณีของ error ภายในที่หลุดออกมาโดยไม่ต้องรู้ล่วงหน้าว่า error message จะเขียนว่าอะไร<br/><br/><br/><em>หมายเหตุ: <code>/api/reports/generate</code> เป็น endpoint สมมติสำหรับฝึกเทคนิคนี้ ไม่ใช่ endpoint จริงใน My-Investment-Port</em><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>const response = await request.post('/api/reports/generate', { data: { reportId: 'invalid' } });</code><br/>
+    <code>const body = await response.json();</code><br/>
+    <code>expect(body.error).not.toMatch(/at .*\\(.*:\\d+:\\d+\\)/);</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> การเช็คแค่คำเฉพาะคำเดียวแบบบทที่ 4 (เช่น <code>ENOENT</code>) ไม่พอสำหรับบทนี้ เพราะ error จริงอาจไม่มีคำเหล่านั้นปนอยู่เลย แต่ยังหลุด path และเลขบรรทัดออกมาได้ — regex ที่ใช้จับ pattern ต้อง escape วงเล็บ (<code>\\(</code> <code>\\)</code>) ให้ถูกต้อง ไม่งั้น pattern จะไม่ match กับ stack trace จริงเลย`,
     example: `// อีกวิธีตรวจสอบแบบใกล้เคียงกัน: เช็คว่า response body ทั้งก้อนไม่มี field ชื่อ stack เปิดเผยตรงๆ เลย
 expect(body).not.toHaveProperty('stack');`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -427,8 +430,13 @@ test('endpoint ที่ต้องมี API Key ทั้งหมดปฏ�
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ ขั้นสูง 2: Auth Middleware ต้องถูกบังคับใช้ครบทุก Endpoint ที่ควรป้องกัน และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทนำและบทที่ 3 พิสูจน์แล้วว่า <code>/api/ai/recommend</code> ปฏิเสธ request ที่ไม่มี/มี API Key ผิดจริง — แต่นั่นพิสูจน์แค่ endpoint เดียว การสรุปว่า "middleware ทำงานถูกต้อง" จาก endpoint เดียวเป็นการสรุปที่เร็วเกินไป เพราะ middleware ใน Express ต้องถูก<strong>ผูก (attach) แยกทีละ route</strong> — การลืมผูก middleware กับ route ใหม่ที่เพิ่มเข้ามาทีหลังเป็นบั๊กที่พบได้จริงบ่อยมาก และจะไม่ถูกจับได้เลยถ้า QA ทดสอบซ้ำแค่ endpoint เดิมที่รู้อยู่แล้วว่าทำงานถูก<br/><br/>
     <strong>ความครอบคลุม (coverage) คือหัวใจของบทนี้:</strong> ต้องยืนยันว่า<strong>ทุก</strong>endpoint ที่ควรมี auth (ตามที่ยืนยันจากโค้ดจริงไว้ในบทนำ) ปฏิเสธ request ที่ไม่มี key จริง ไม่ใช่แค่ตัวใดตัวหนึ่ง — ในทางกลับกัน ก็ต้องรู้ด้วยว่า <code>/api/ai/panel</code> (บทที่ 4) ไม่ได้อยู่ในกลุ่มนี้ เพราะไม่มี middleware ผูกไว้จริง การรู้ว่า "endpoint ไหนควรป้องกันและไหนไม่ควร" สำคัญพอๆ กับการทดสอบว่ามันป้องกันจริง<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ความครอบคลุม (coverage) คือหัวใจของบทนี้:</strong> ต้องยืนยันว่า<strong>ทุก</strong>endpoint ที่ควรมี auth (ตามที่ยืนยันจากโค้ดจริงไว้ในบทนำ) ปฏิเสธ request ที่ไม่มี key จริง ไม่ใช่แค่ตัวใดตัวหนึ่ง — ในทางกลับกัน ก็ต้องรู้ด้วยว่า <code>/api/ai/panel</code> (บทที่ 4) ไม่ได้อยู่ในกลุ่มนี้ เพราะไม่มี middleware ผูกไว้จริง การรู้ว่า "endpoint ไหนควรป้องกันและไหนไม่ควร" สำคัญพอๆ กับการทดสอบว่ามันป้องกันจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>const protectedEndpoints = ['/api/ai/portfolio-snapshot', '/api/ai/price-history', '/api/ai/model/switch'];</code><br/>
+    <code>for (const endpoint of protectedEndpoints) {</code><br/>
+    <code>&nbsp;&nbsp;const response = await request.post(endpoint, { data: {} });</code><br/>
+    <code>&nbsp;&nbsp;expect(response.status()).toBe(401);</code><br/>
+    <code>}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ห้ามสรุปว่า middleware ทำงานถูกต้องจากการทดสอบ endpoint เดียวแล้วปั๊ดตกไปว่าที่เหลือถูกต้องเหมือนกันหมด — ใน Express middleware ต้องถูกผูก (attach) แยกทีละ route การเพิ่ม endpoint ใหม่แล้วลืมผูก <code>validateApiKey</code> ไว้เป็นบั๊กที่พบได้จริงบ่อยและจะไม่ถูกจับได้เลยถ้าทดสอบซ้ำแค่ endpoint เดิม`,
     example: `// ตัวอย่างเช็คด้านตรงข้าม: ยืนยันว่า endpoint ที่ไม่ได้ผูก middleware จริง (เช่น /api/ai/panel)
 // ไม่ตอบ 401 แม้ไม่มี API Key เลย (เพื่อยืนยันความเข้าใจที่ถูกต้องเกี่ยวกับขอบเขตของ middleware)
 const panelResponse = await request.get('/api/ai/panel');
@@ -553,9 +561,23 @@ test('rate limiter บล็อก request หลังเกิน quota ที
   expect(body.error).toBe('Too many requests, please try again later');
 });`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Rate Limiting</strong> จำกัดจำนวน request ต่อช่วงเวลาต่อ IP เพื่อป้องกัน brute-force (เดา API Key/รหัสผ่านซ้ำๆ) และลดผลกระทบของ DoS แบบง่ายๆ — เป็นกลไกป้องกันคนละชั้นกับ auth (auth เช็คว่า "คุณคือใคร" ส่วน rate limit เช็คว่า "คุณยิงถี่เกินไปหรือเปล่า" ไม่ว่าคุณจะเป็นใคร)<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/><br/>&nbsp;&nbsp;max: 100, // 100 requests ต่อนาทีต่อ IP<br/><br/>&nbsp;&nbsp;message: { error: 'Too many requests, please try again later' },<br/><br/>&nbsp;&nbsp;standardHeaders: false,<br/><br/>&nbsp;&nbsp;skip: (req) => process.env.NODE_ENV === 'development'<br/><br/>});</code><br/><br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ค่าที่ตั้งไว้จริงใน <code>server/index.js</code> บรรทัด 40-50:</strong><br/><br/><br/><code>const limiter = rateLimit({<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>ค่าที่ตั้งไว้จริงใน <code>server/index.js</code> บรรทัด 40-50:</strong><br/><br/>
+    <code>const limiter = rateLimit({<br/>
+    &nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/>
+    &nbsp;&nbsp;max: 100, // 100 requests ต่อนาทีต่อ IP<br/>
+    &nbsp;&nbsp;message: { error: 'Too many requests, please try again later' },<br/>
+    &nbsp;&nbsp;standardHeaders: false,<br/>
+    &nbsp;&nbsp;skip: (req) => process.env.NODE_ENV === 'development'<br/>
+    });</code><br/><br/>
+    เมื่อ <code>standardHeaders: false</code> ระบบจะ<strong>ไม่ส่ง</strong> header ตระกูล <code>RateLimit-*</code> กลับมาเลย QA จึงต้องอาศัย status code (429) และข้อความใน body เป็นหลักฐานแทนการอ่าน header<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>const maxRequests = 100;</code><br/>
+    <code>let lastResponse;</code><br/>
+    <code>for (let i = 0; i <= maxRequests; i++) {</code><br/>
+    <code>&nbsp;&nbsp;lastResponse = await request.get('/api/ai/health');</code><br/>
+    <code>}</code><br/>
+    <code>expect(lastResponse.status()).toBe(429);</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>skip: (req) => process.env.NODE_ENV === 'development'</code> ทำให้ limiter ถูกข้ามไปเงียบๆ ทุกครั้งถ้า environment ที่รัน test ตั้ง <code>NODE_ENV=development</code> — เป็นสาเหตุคลาสสิกที่ test rate-limiting "ผ่านตลอด" ทั้งที่ไม่เคยเจอ 429 จริงเลยสักครั้ง ต้องรันด้วย environment ที่ไม่ใช่ development ผลถึงจะสะท้อนความจริง`,
     example: `// ตัวอย่างเสริม: ยืนยันด้านตรงข้ามด้วยว่า request ที่ยังไม่เกินโควต้าต้องผ่านได้ปกติ (positive case คู่กัน)
 const okResponse = await request.get('/api/ai/health');
 expect(okResponse.status()).not.toBe(429);`,
@@ -739,8 +761,16 @@ test('npm audit ต้องไม่มี critical vulnerability ใน produc
     • <code>npm audit --json</code> (รวม devDependencies ด้วย) → รายงานสูงถึง 35 ช่องโหว่ (2 low, 15 moderate, 16 high, 2 critical)<br/><br/>
     <strong>บทเรียนสำคัญจากตัวเลขสองชุดนี้:</strong> devDependency (เช่น build tool, test runner) ไม่เคยถูกส่งไปรันจริงบน production ผู้ใช้ปลายทางเข้าถึงไม่ได้เลย — QA gate ที่ fail build ทุกครั้งที่เจอช่องโหว่ใน devDependency (35 รายการ) จะกลายเป็น noise ที่ทีมเริ่มเมินเฉย (เหมือน "the boy who cried wolf") ดังนั้น gate ที่มีประโยชน์จริงมักจำกัดขอบเขตด้วย <code>--omit=dev</code> ก่อน แล้วค่อยตัดสินใจ threshold (เช่น fail เฉพาะ critical)<br/><br/>
     <strong>กับดักทางเทคนิค (ยืนยันจาก Node.js docs):</strong> <code>npm audit</code> จะ exit ด้วย code ที่ไม่ใช่ 0 เมื่อเจอช่องโหว่ตาม <code>--audit-level</code> ที่ตั้งไว้ (ค่า default ตรวจทุกระดับ) — เมื่อรันผ่าน Node's <code>execSync()</code> พฤติกรรม exit ไม่เป็น 0 จะทำให้ฟังก์ชัน<strong>throw Error ทันที</strong> ไม่ return string ตามปกติ แต่ error object ที่ throw ออกมามี property <code>stdout</code>/<code>stderr</code> เก็บ output ตัวเต็มที่ capture ไว้ก่อน throw อยู่แล้ว โค้ดที่ไม่ catch ตรงนี้จะ crash ก่อนได้ตรวจสอบอะไรเลย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ความจริงที่ตรงไปตรงมา (ตรวจสอบแล้ว ณ วันที่เตรียมบทเรียนนี้ 2026-07-29):</strong> My-Investment-Port ไม่มี CI gate ตรวจเรื่องนี้เลย — ไม่มีโฟลเดอร์ <code>.github/workflows/</code> และไม่มี script <code>npm audit</code> อยู่ใน <code>package.json</code> เลยสักบรรทัด รันคำสั่งจริงแล้วพบ:<br/><br/><br/>• <code>npm audit --omit=dev --json</code> (เฉพาะ dependency ที่ใช้จริงตอน production) → <code>metadata.vulnerabilities</code> เท่ากับ <code>{ moderate: 1, high: 4, critical: 1, total: 6 }</code> — รวมถึงช่องโหว่ระดับ critical จริงใน dependency ชื่อ <code>seroval</code> (type confusion ระหว่าง deserialize)<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>let output;</code><br/>
+    <code>try {</code><br/>
+    <code>&nbsp;&nbsp;output = execSync('npm audit --omit=dev --json', { encoding: 'utf-8' });</code><br/>
+    <code>} catch (err) {</code><br/>
+    <code>&nbsp;&nbsp;output = err.stdout;</code><br/>
+    <code>}</code><br/>
+    <code>const report = JSON.parse(output);</code><br/>
+    <code>expect(report.metadata.vulnerabilities.critical).toBe(0);</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>npm audit</code> exit ด้วย code ที่ไม่ใช่ 0 ทันทีที่เจอช่องโหว่ตาม <code>--audit-level</code> ที่ตั้งไว้ ทำให้ <code>execSync()</code> <strong>throw Error แทนที่จะ return string</strong> — ถ้าไม่ใส่ <code>try/catch</code> โค้ดจะ crash ก่อนได้อ่าน output เลย ต้องดึงค่าจาก <code>err.stdout</code> (ไม่ใช่ <code>err.message</code>) ถึงจะได้ JSON report ตัวเต็มมา parse ต่อได้`,
     example: `// อีกวิธี: ใช้ --audit-level=high แล้วอาศัย exit code ตรงๆ แทนการ parse JSON เอง
 try {
   execSync('npm audit --omit=dev --audit-level=high', { encoding: 'utf-8' });

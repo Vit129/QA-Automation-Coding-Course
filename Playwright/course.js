@@ -275,8 +275,11 @@ export async function setupTestData(page: Page, baseline: any) {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Fixtures & Test Data Management และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>กลไกการป้อนข้อมูลจำลองเริ่มต้น (Data Seeding) เพื่อล้างสถานะและพร้อมทดสอบอย่างสม่ำเสมอ ใน Playwright การใช้คำสั่ง <code>page.addInitScript()</code> เป็นหนทางที่เสถียรที่สุดในการเตรียมสภาพแวดล้อม เพราะมันจะแทรกการทำงานของ JavaScript เข้าไปประมวลผลภายใน DOM ทันทีตั้งแต่ช่วงเริ่มสถาปนาหน้าเอกสาร (Document Creation) ก่อนที่โค้ดประมวลผลเว็บหลักหรือเฟรมเวิร์กอย่าง React/Next.js จะรันขึ้นมาเช็คค่า ทำให้ค่า LocalStorage มีข้อมูลพร้อมใช้ทันเวลาหน้าจอโชว์ตัว<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await page.addInitScript((data) => {</code><br/>
+    <code>&nbsp;&nbsp;window.localStorage.setItem('portfolio_holdings', JSON.stringify(data));</code><br/>
+    <code>}, baseline);</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ฟังก์ชันที่ส่งเข้า <code>addInitScript()</code> รันในบริบทเบราว์เซอร์แยกจาก Node.js — ห้ามอ้างอิงตัวแปรภายนอกผ่าน Closure โดยตรง (เช่น <code>baseline</code>) ต้องส่งผ่านพารามิเตอร์ตัวที่สองของ <code>addInitScript()</code> เท่านั้น ไม่งั้นจะได้ <code>ReferenceError</code>`,
     example: `// เซ็ตค่าธีมสีดำลงในหน้าต่างของเครื่องก่อนหน้าเว็บถูกเรนเดอร์โชว์
 await page.addInitScript(() => {
   window.localStorage.setItem('theme', 'dark');
@@ -326,8 +329,10 @@ export class HoldingsPage {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Locator Strategy & Priority และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การตีกรอบ Locator ย่อยภายใต้เป้าหมายเดิม (Scoped Locator) ช่วยแก้ไขปัญหากล่องฟังก์ชันชนกัน เช่น บนหน้าเว็บมีโมดอลขึ้นมาทับ และมีปุ่มเซฟทั้งในแบบฟอร์มเบื้องหลังและในปุ่มโมดอลด้านบน หากดึงตรง ๆ จะเกิดข้อบกพร่องจับอิลิเมนต์หลายชิ้นพร้อมกัน (Strict Mode violation) การดึงจาก <code>this.formPanel.getByTestId('child')</code> จะจำกัดวงคิวรี DOM ลงใต้โฟลเดอร์ Parent เท่านั้น ทำให้รวดเร็วและปลอดภัยยิ่งกว่าการสืบหาผ่าน XPath ยาวเหยียด<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>this.formPanel = page.getByTestId('holdings-form-panel');</code><br/>
+    <code>this.formSaveBtn = this.formPanel.getByTestId('form-save-btn');</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าเรียก <code>page.getByTestId('form-save-btn')</code> ตรง ๆ โดยไม่ scope ผ่าน <code>formPanel</code> ก่อน แล้วหน้าเว็บมีอิลิเมนต์ id ซ้ำ (เช่น ปุ่มเดียวกันในฟอร์มกับใน Modal) จะเจอ Strict Mode violation เพราะ Playwright เจอ element ตรงเป้ามากกว่า 1 ตัว`,
     example: `// การเข้าถึงกล่องย่อยของโมเดลผ่าน Parent Container
 const modal = page.getByRole('dialog');
 const okBtn = modal.getByRole('button', { name: 'ตกลง' });`,
@@ -377,8 +382,10 @@ async function verifyHoldingsRedirect(page: Page, formPanel: Locator) {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Assertions & Waits (Auto-retry) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>หลีกเลี่ยงการใช้คำสั่ง <code>page.waitForTimeout()</code> เพราะเป็นสาเหตุทำสคริปต์เทสสะดุดโดยไร้เหตุผลเนื่องจากไม่สัมพันธ์กับประสิทธิภาพเครื่องรันเบื้องหลัง การยืนยันผลควรใช้งานคำสั่งกลุ่ม <strong>Web-first assertions</strong> ซึ่งเมื่อนำหน้าร่วมกับคีย์เวิร์ด <code>expect</code> ระบบจะคอยยิงสุ่มเช็คสถานะอิลิเมนต์ถี่ ๆ บนหน้าเว็บจนกว่าจะตรงเป้าหมาย ช่วยให้ความเร็วขึ้นสูงสุดและเสถียรที่สุด<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await expect(formPanel).not.toBeVisible();</code><br/>
+    <code>await expect(page).toHaveURL(/\/holdings/);</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> อย่าใช้ <code>await formPanel.isVisible()</code> แล้วเอา boolean ไปเทียบเอง — เมธอดนี้เช็คสถานะทันที ณ ขณะนั้นครั้งเดียว ไม่ auto-retry เหมือน <code>expect().toBeVisible()</code> ถ้าฟอร์มยังไม่ทันซ่อนจะ fail ทันทีโดยไม่รอ`,
     example: `// การยืนยันผลลัพธ์ว่าหน้าเว็บเปลี่ยนเส้นทางลิงก์สำเร็จ
 await expect(page).toHaveURL(/\\/dashboard/);
 await expect(page.getByRole('heading')).toBeVisible();`,
@@ -436,8 +443,11 @@ async function mockGoogleScript(page: Page) {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ API Intercept & Mocking และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เพื่อป้องกันไม่ให้การรันเทสส่งผลกระทบเขียนทับข้อมูลจริงฝั่งโปรดักชัน หรือแก้ปัญหาระบบเซิร์ฟเวอร์ภายนอกที่กำลังเรียกใช้งานล่มบ่อย Playwright เตรียมฟังก์ชัน <code>page.route()</code> ในการสืบดักจับเน็ตเวิร์กสัญญาณบราวเซอร์ และประมวลผลส่งคำตอบปลอมออกไปแทนด้วย <code>route.fulfill()</code> ทำให้รวดเร็วและสามารถระบุข้อมูลสมมติที่ต้องการจำลองเทสได้อย่างอิสระ<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await page.route('**/script.google.com/**', route => {</code><br/>
+    <code>&nbsp;&nbsp;route.fulfill({ status: 200, body: JSON.stringify({ ok: true }) });</code><br/>
+    <code>});</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องเรียก <code>page.route()</code> ลงทะเบียนดักจับ "ก่อน" action ที่ทำให้เกิด request (เช่น <code>page.goto()</code> หรือคลิกปุ่ม) เสมอ ถ้าลงทะเบียนหลัง request ยิงออกไปแล้วจะดักไม่ทัน`,
     example: `// การดักและตอบกลับข้อมูลสินค้าปลอมลงในหน้าแคตตาล็อกสินค้า
 await page.route('**/api/products', route => {
   route.fulfill({
@@ -488,8 +498,10 @@ test.describe('Holdings Suite', () => {
 });`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Advanced Execution & Auth และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>โดยปกติ Playwright จะสุ่มทำงานแบบขนานเพื่อรันความเร็วสูงสุด แต่สำหรับสคริปต์การทดสอบที่เกี่ยวพันกับลำดับขั้นตอน (เช่นเคส เพิ่ม ลบ แก้ไข ข้อมูลพอร์ตหุ้นแบบ CRUD) การขนานจะขัดแย้งทำลายข้อมูลตัวแปรกันเอง เราสามารถล็อกลำดับความเรียงของกลุ่มเทสเคสย่อยให้ออกคิวต่อเรียงหน้ากระดานได้โดยการเซ็ตโหมด <code>test.describe.configure({ mode: 'serial' })</code> ซึ่งหากเคสย่อยตัวใดตัวหนึ่งพบปัญหาพัง ตัวเทสลำดับถัดไปในแถวจะข้ามยกเลิกทำงานอัตโนมัติเพื่อป้องกันข้อมูลขยะคั่งค้าง<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>test.describe.configure({ mode: 'serial' });</code><br/>
+    <code>test('TC-01: เพิ่มหุ้น', async ({ page }) => { /* ... */ });</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องเรียก <code>test.describe.configure()</code> เป็นบรรทัดแรกสุดในบล็อก <code>describe</code> ก่อนประกาศ <code>test()</code> ตัวแรกเสมอ ถ้าเรียกหลังจากนั้นจะไม่มีผลใด ๆ`,
     example: `// ล็อกลำดับเรียงชุดเทสภายในกลุ่ม describe
 test.describe('บล็อกลงทะเบียนและล็อกอิน', () => {
   test.describe.configure({ mode: 'serial' });
@@ -544,8 +556,11 @@ function listenBrowserErrors(page: Page) {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Systematic Debugging & Trace และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ความบกพร่องที่ร้ายแรงที่สุดส่วนใหญ่ไม่ได้ขึ้นโชว์เด่นชัดหน้าจอเบราว์เซอร์ แต่ซ่อนตัวอยู่ใน Uncaught JavaScript Errors ฝั่ง Console ของเบราว์เซอร์ การผูกฟังก์ชันดักรับเหตุการณ์ในสคริปต์เทสผ่านเมธอด <code>page.on('console', msg => { ... })</code> จะช่วยสตรีมข้อความเตือนเหล่านั้นกลับมาสกรีนรายงานผลลัพธ์ผ่านหน้าจอเทอร์มินัลของฝั่งรันสคริปต์เพื่อทำการวิเคราะห์หาสาเหตุในระบบเบื้องหลังได้รวดเร็วขึ้น<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>page.on('console', msg => {</code><br/>
+    <code>&nbsp;&nbsp;if (msg.type() === 'error') console.log(msg.text());</code><br/>
+    <code>});</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องผูก <code>page.on('console', ...)</code> ก่อนสั่ง <code>page.goto()</code> เสมอ ถ้าผูกหลังนำทางหน้าไปแล้ว error ที่เกิดขึ้นระหว่างโหลดหน้าแรกจะหลุดไม่ถูกดักจับ`,
     example: `// ดักจับและพิมพ์ประวัติล็อกเตือนเหลืองและแดงของระบบเว็บทุกลูก
 page.on('console', message => {
   if (message.type() === 'warning' || message.type() === 'error') {
@@ -601,8 +616,10 @@ async function inputSalaryAndSave(page: Page, salaryInput: Locator, saveBtn: Loc
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ React-specific Web Testing และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Controlled Component ใน React จะซิงค์ข้อความภายในช่องฟอร์มผูกเข้ากับ State ของ JavaScript ตลอดเวลา หลีกเลี่ยงการใช้คำสั่ง <code>locator.type()</code> ในการจำลองการพิมพ์ทีละปุ่ม เพราะหากบราวเซอร์โหลดการรันสเตตช้าตัวอักษรบางตัวอาจตกหล่นหายไประหว่างทาง การใช้งานเมธอด <code>locator.fill()</code> จะสั่งให้ล้างอักขระเก่าทิ้งและนำประโยคใหม่วางทับแบบจำลอง Direct Value Assignment ทันที ซึ่งเสถียรและกระตุ้น <code>onChange</code> สเตตได้แน่นอนครบถ้วนกว่า<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await salaryInput.fill('65000');</code><br/>
+    <code>await expect(saveBtn).toBeEnabled();</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>fill()</code> set ค่าตรง ๆ ทันทีโดยไม่จำลอง keydown/keyup ทีละตัวอักษร ถ้าคอมโพเนนต์มี handler เฉพาะที่ฟังทีละคีย์ (เช่น debounce autocomplete) การทดสอบด้วย <code>fill()</code> อาจไม่ trigger logic นั้น ต้องใช้ <code>pressSequentially()</code> แทนในกรณีนั้น`,
     example: `// การกรอกฟอร์มเข้าสู่ระบบใน React ให้ปลอดภัยสูงสุด
 await page.getByLabel('รหัสผ่าน').fill('my-pass-code');
 await expect(page.getByRole('button', { name: 'ยืนยัน' })).toBeEnabled();`,
@@ -654,8 +671,11 @@ async function testLayouts(page: Page) {
 }`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Responsive Loop Layout Simulation และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การทดสอบแบบจำลองการรองรับขนาดอุปกรณ์หน้าจอ (Responsive Testing) เพื่อป้องกันปัญหาอิลิเมนต์เลื่อนเบียดบังทับซ้อนกัน หรือปุ่มหายบนหน้าจอมือถือ แทนที่เราจะเปิดปิดเบราว์เซอร์ใหม่แยกโปรเจคทุก ๆ ครั้ง การสุ่มวนลูปและใช้คำสั่ง <strong><code>page.setViewportSize({ width, height })</code></strong> ภายในเทสเคสเดิมบนแท็บหน้าเว็บเดิมจะช่วยทดสอบความเรียบร้อยของ UI ได้เร็วกว่า และใช้ทรัพยากรคุ้มค่าที่สุด<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>for (const vp of viewports) {</code><br/>
+    <code>&nbsp;&nbsp;await page.setViewportSize(vp);</code><br/>
+    <code>}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>setViewportSize()</code> เปลี่ยนแค่ขนาดหน้าต่างเท่านั้น ไม่ได้เปลี่ยน User-Agent หรือ touch support ให้เหมือนมือถือจริง ถ้าต้องการจำลองอุปกรณ์เต็มรูปแบบต้องสร้าง context ใหม่ด้วย <code>browser.newContext({ ...devices['iPhone 13'] })</code> แทน`,
     example: `// วนลูปตรวจสอบเลย์เอาท์หน้าแสดงผล
 const screens = [{ width: 412, height: 915 }, { width: 1280, height: 800 }];
 for (const sc of screens) {
@@ -724,7 +744,10 @@ test('TC-11: ค่า Resistance R1 ที่ API ส่งมาต้อง�
 });`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Hybrid Testing: Cross-check API Response กับ UI ที่เรนเดอร์จริง และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ข้อดีของเทคนิคนี้: ถ้า Backend คำนวณถูกแต่ Frontend เอาไปแสดงผิด (ปัดเศษผิด, ต่อ field ผิดตัว, ฟอร์แมตทศนิยมผิด) การทดสอบแบบนี้จะจับได้ทันที ต่างจาก UI test ทั่วไปที่ hardcode ค่าคาดหวังไว้ล่วงหน้า ซึ่งจะไม่รู้เลยว่าค่านั้น "ผิดตั้งแต่ต้นทาง" หรือ "ถูกต้นทางแต่แสดงผิด"<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>const body = await (await request.get('/api/ta/levels?ticker=AAPL')).json();</code><br/>
+    <code>await page.goto('/holdings');</code><br/>
+    <code>await expect(page.getByText('$' + body.resistance[0].toFixed(2))).toBeVisible();</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> คอมโพเนนต์จริง <code>PivotPoints.jsx</code> ในโปรเจก My-Investment-Port ดึงข้อมูลจาก <code>/api/ta/levels</code> ผ่าน <code>fetch()</code> แล้วเรนเดอร์ค่า <code>resistance</code>/<code>support</code> ออกมาเป็นข้อความบนหน้าจอ โดยขึ้นต้นด้วยตัวอักษร <code>$</code> ตามด้วยค่าตัวเลขจาก <code>value.toFixed(2)</code> และ<strong>ไม่มี <code>data-testid</code> กำกับไว้เลย</strong> — สถานการณ์แบบนี้พบบ่อยมากในโค้ดจริง ทำให้ต้องอ้างอิงด้วย <code>getByText()</code> จับข้อความที่เรนเดอร์แทน<br/><br/>`,
     example: `// ตัวอย่างยืนยันว่าค่าจาก API ตรงกับข้อความที่แสดงบนหน้าจอ
 const response = await request.get('/api/ai/health');
@@ -929,8 +952,11 @@ test('TC-14: กดลบ Holdings ต้องเจอ Confirm Dialog ก่�
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บั๊กอัตโนมัติที่พบบ่อยมากคือ: สคริปต์คลิกปุ่ม "ลบ" แล้วรีบไปตรวจสอบผลลัพธ์ทันที ทั้งที่จริงแล้วแอปมี <strong>Confirm Dialog</strong> คั่นกลางอยู่ก่อนข้อมูลจะถูกลบจริง — ถ้าไม่คลิกยืนยันในไดอะล็อก ข้อมูลจะไม่หายไปไหนเลย แต่เทสอาจ "ผ่าน" แบบหลอกๆ เพราะดันไปจับ error อื่นแทนที่จะรู้ว่าไม่ได้ลบจริง<br/><br/>
     ในโปรเจก My-Investment-Port หน้า <code>/holdings</code> ปุ่มลบแต่ละแถวมี Test ID <code>btn-delete-holding</code> (ดูจริงใน <code>HoldingsLedger.jsx</code>) กดแล้วจะเปิด <code>ConfirmDialog</code> component (<code>src/components/modals/ConfirmDialog.jsx</code>) ซึ่ง <strong>ใช้ Test ID เดียวกันซ้ำทั้งแอป</strong> ไม่ว่าจะลบ Holdings, RMF Fund, หรือ Passive Income: ปุ่มยืนยันคือ <code>confirm-dialog-confirm</code> ปุ่มยกเลิกคือ <code>confirm-dialog-cancel</code><br/><br/>
     หลักการ: ก่อนคลิกปุ่มยืนยันในไดอะล็อกใดๆ ต้องยืนยันก่อนด้วย <code>toBeVisible()</code> ว่ามันเปิดขึ้นมาจริงแล้ว (ไม่ใช่คลิกไปมั่วๆ ตำแหน่งเดิมที่เคยมี dialog) เพราะถ้า dialog ยังไม่ทันเปิด การคลิกจะพลาดเป้าและ test จะ fail ด้วยสาเหตุที่เข้าใจผิดได้ง่าย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ในโปรเจก My-Investment-Port หน้า <code>/holdings</code> ปุ่มลบแต่ละแถวมี Test ID <code>btn-delete-holding</code> (ดูจริงใน <code>HoldingsLedger.jsx</code>) กดแล้วจะเปิด <code>ConfirmDialog</code> component (<code>src/components/modals/ConfirmDialog.jsx</code>) ซึ่ง <strong>ใช้ Test ID เดียวกันซ้ำทั้งแอป</strong> ไม่ว่าจะลบ Holdings, RMF Fund, หรือ Passive Income: ปุ่มยืนยันคือ <code>confirm-dialog-confirm</code> ปุ่มยกเลิกคือ <code>confirm-dialog-cancel</code><br/><br/><br/>หลักการ: ก่อนคลิกปุ่มยืนยันในไดอะล็อกใดๆ ต้องยืนยันก่อนด้วย <code>toBeVisible()</code> ว่ามันเปิดขึ้นมาจริงแล้ว (ไม่ใช่คลิกไปมั่วๆ ตำแหน่งเดิมที่เคยมี dialog) เพราะถ้า dialog ยังไม่ทันเปิด การคลิกจะพลาดเป้าและ test จะ fail ด้วยสาเหตุที่เข้าใจผิดได้ง่าย<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await page.getByTestId('btn-delete-holding').first().click();</code><br/>
+    <code>await expect(page.getByTestId('confirm-dialog-confirm')).toBeVisible();</code><br/>
+    <code>await page.getByTestId('confirm-dialog-confirm').click();</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>confirm-dialog-confirm</code> เป็น Test ID เดียวกันที่ใช้ซ้ำทั้งแอปสำหรับทุก modal ยืนยัน — ถ้าเผลอเปิดสอง dialog ซ้อนกัน (เช่น toast แจ้งเตือนทับ confirm dialog) locator นี้จะจับหลายอิลิเมนต์พร้อมกันจนเจอ Strict Mode violation`,
     example: `// ตัวอย่าง cancel flow: กดลบแล้วเปลี่ยนใจกดยกเลิก ข้อมูลต้องยังอยู่เหมือนเดิม
 await page.getByTestId('btn-delete-holding').first().click();
 await expect(page.getByTestId('confirm-dialog-cancel')).toBeVisible();
@@ -992,9 +1018,13 @@ test('TC-15: ถามคำถาม AI แล้วต้องรอคำต
   await expect(page.getByTestId('ai-overview-chat-send')).toBeEnabled();
 });`,
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Loading State: รอผลลัพธ์จริง ไม่ใช่เดาเวลา และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>...<br/><br/>disabled={!input.trim() || loading}<br/><br/>{loading ? 'Thinking...' : 'Send'}</code><br/><br/><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ในโปรเจก My-Investment-Port หน้าแรก <code>/</code> (route <code>path: '/'</code> ใน <code>src/routes/index.jsx</code>) มี <code>OverviewChatPanel</code> ที่เขียนโค้ดจริงไว้ชัดเจน:<br/><br/><code>const [loading, setLoading] = useState(false);<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ฟีเจอร์ที่เรียก AI/LLM ตอบคำถาม (เช่น chat panel) มีเวลาตอบสนองที่ "ไม่คงที่" โดยธรรมชาติ — บางครั้งเร็ว บางครั้งช้ากว่าเดิมหลายเท่า การใส่ <code>waitForTimeout(3000)</code> เดาเวลาจึงเป็นทางแก้ที่ผิดเสมอ: เดาน้อยไปก็ flaky เดามากไปก็เสียเวลาทุก run ในโปรเจก My-Investment-Port หน้าแรก <code>/</code> มี <code>OverviewChatPanel</code> ที่ผูกปุ่มส่งเข้ากับ state <code>loading</code> โดยตรง วิธีที่เสถียรคือรอ Web-first assertion เช็คสถานะปุ่มแทนการเดาเวลา<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>const [loading, setLoading] = useState(false);</code><br/>
+    <code>&lt;button disabled={!input.trim() || loading}&gt;</code><br/>
+    <code>&nbsp;&nbsp;{loading ? 'Thinking...' : 'Send'}</code><br/>
+    <code>&lt;/button&gt;</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ห้ามใช้ <code>page.waitForTimeout(3000)</code> เดาเวลาที่ AI จะตอบเด็ดขาด เพราะเวลาตอบสนองไม่คงที่ — ให้รอด้วย <code>expect(sendBtn).toBeEnabled()</code> ซึ่งจะ poll สถานะปุ่มจนกว่า Backend ตอบกลับจริงแทน`,
     example: `// ตัวอย่างรอ loading indicator หายไปก่อนอ่านผลลัพธ์ (รูปแบบทั่วไป)
 await page.getByTestId('submit-btn').click();
 await expect(page.getByTestId('loading-spinner')).toBeHidden();
@@ -1054,8 +1084,10 @@ test('TC-16: นำเข้าไฟล์ CSV ผ่านหน้าจอ H
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>หมายเหตุสำคัญ:</strong> โปรเจก My-Investment-Port ปัจจุบัน<strong>ไม่มี</strong> input อัปโหลดไฟล์เลยสักจุด (เช็คแล้วทั้ง repo ไม่พบ <code>&lt;input type="file"&gt;</code> หรือ endpoint สำหรับ import ไฟล์) — บทเรียนนี้จึงสอนเทคนิคที่จำเป็นล่วงหน้า เผื่อวันที่แอปมีฟีเจอร์นี้จริง หรือไปเจอในโปรเจกอื่น<br/><br/>
     การทดสอบ <code>&lt;input type="file"&gt;</code> ห้ามคลิกเปิดหน้าต่างเลือกไฟล์ของ OS จริง (Native File Picker) เพราะ browser automation ควบคุมหน้าต่าง OS แบบนั้นไม่ได้และไม่เสถียร วิธีที่ถูกต้องคือใช้ <code>page.setInputFiles()</code> ซึ่งจะ "แนบไฟล์" เข้ากับ <code>&lt;input&gt;</code> โดยตรง ข้าม Native Picker ไปเลย ทำให้เทสเร็วและเสถียร 100%<br/><br/>
     รับ path เดียว (<code>string</code>) สำหรับไฟล์เดียว หรือ array ของ path สำหรับหลายไฟล์พร้อมกัน (<code>setInputFiles(['a.csv', 'b.csv'])</code>) และใช้ <code>setInputFiles([])</code> เพื่อล้างค่าไฟล์ที่เลือกไว้ก่อนหน้า<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>การทดสอบ <code>&lt;input type="file"&gt;</code> ห้ามคลิกเปิดหน้าต่างเลือกไฟล์ของ OS จริง (Native File Picker) เพราะ browser automation ควบคุมหน้าต่าง OS แบบนั้นไม่ได้และไม่เสถียร วิธีที่ถูกต้องคือใช้ <code>page.setInputFiles()</code> ซึ่งจะ "แนบไฟล์" เข้ากับ <code>&lt;input&gt;</code> โดยตรง ข้าม Native Picker ไปเลย ทำให้เทสเร็วและเสถียร 100%<br/><br/><br/>รับ path เดียว (<code>string</code>) สำหรับไฟล์เดียว หรือ array ของ path สำหรับหลายไฟล์พร้อมกัน (<code>setInputFiles(['a.csv', 'b.csv'])</code>) และใช้ <code>setInputFiles([])</code> เพื่อล้างค่าไฟล์ที่เลือกไว้ก่อนหน้า<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await page.getByTestId('import-csv-input').setInputFiles('./fixtures/holdings-sample.csv');</code><br/>
+    <code>await expect(page.getByTestId('import-result-message')).toContainText('Imported');</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>setInputFiles()</code> ต้องเรียกกับ Locator ของ <code>&lt;input type="file"&gt;</code> โดยตรงเท่านั้น (แม้ตัว input จะถูกซ่อนด้วย CSS ก็ยังเรียกได้ปกติ) ห้ามพยายามคลิกเปิด Native File Picker ก่อนเด็ดขาด เพราะ browser automation ควบคุมหน้าต่าง OS แบบนั้นไม่ได้`,
     example: `// ตัวอย่างอัปโหลดหลายไฟล์พร้อมกัน และล้างค่าไฟล์ที่เลือกไว้
 await page.getByTestId('attachment-input').setInputFiles(['receipt1.pdf', 'receipt2.pdf']);
 // ...
@@ -1114,8 +1146,10 @@ test('TC-17: อัปโหลดไฟล์ .exe ต้องขึ้น Err
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ File Type Validation: UI ต้องแจ้ง Error เมื่ออัปโหลดไฟล์ผิดประเภท และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทที่แล้วสอน happy path ของการอัปโหลด บทนี้ต่อยอดเช็คว่า UI แจ้งเตือนถูกต้องเมื่อผู้ใช้เลือกไฟล์ผิดประเภทหรือเปล่า — จุดสำคัญคือ<strong>การ Validate ควรเกิดตั้งแต่ฝั่ง Client</strong> (ก่อนแม้แต่จะส่งไปหา Backend) เพื่อ feedback ผู้ใช้ทันทีโดยไม่ต้องรอ round-trip เครือข่าย ถึงแม้ว่า Backend เองก็ต้อง validate ซ้ำอีกชั้นเสมอ (Client-side validation หลอกได้ ห้ามเชื่อฝั่งเดียว ดู track API Testing บทที่ 11)<br/><br/>
     เทคนิคสำคัญ: <code>page.setInputFiles()</code> ไม่จำเป็นต้องมีไฟล์จริงอยู่บนดิสก์เสมอไป — รับ <code>string</code> path ก็ได้ (ต้องมีไฟล์จริงตามที่ระบุ) แต่ก็รับ object <code>{ name, mimeType, buffer }</code> ได้ด้วย (สร้างไฟล์จำลองขึ้นในหน่วยความจำตรงๆ ไม่ต้องมีไฟล์จริง) — บทถัดไปจะสอนรูปแบบหลังสำหรับทดสอบไฟล์ขนาดใหญ่โดยไม่ต้อง commit ไฟล์จริงติด repo<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>เทคนิคสำคัญ: <code>page.setInputFiles()</code> ไม่จำเป็นต้องมีไฟล์จริงอยู่บนดิสก์เสมอไป — รับ <code>string</code> path ก็ได้ (ต้องมีไฟล์จริงตามที่ระบุ) แต่ก็รับ object <code>{ name, mimeType, buffer }</code> ได้ด้วย (สร้างไฟล์จำลองขึ้นในหน่วยความจำตรงๆ ไม่ต้องมีไฟล์จริง) — บทถัดไปจะสอนรูปแบบหลังสำหรับทดสอบไฟล์ขนาดใหญ่โดยไม่ต้อง commit ไฟล์จริงติด repo<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await page.getByTestId('import-csv-input').setInputFiles('./fixtures/malware.exe');</code><br/>
+    <code>await expect(page.getByTestId('import-result-message')).toContainText('Only CSV files are allowed');</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> Client-side validation หลอกได้ง่าย (แก้ MIME type header หรือยิง request ตรงข้าม UI) — ต้องเช็คซ้ำฝั่ง Backend เสมอ อย่าเชื่อแค่ error message ที่ UI แสดงว่าไฟล์ถูกบล็อกจริง`,
     example: `// ตัวอย่างสร้างไฟล์จำลองในหน่วยความจำแทนการอ้างอิง path จริง (ไม่ต้องมีไฟล์จริงบนดิสก์)
 await page.getByTestId('import-csv-input').setInputFiles({
   name: 'notes.txt',
@@ -1181,8 +1215,11 @@ test('TC-18: อัปโหลดไฟล์ใหญ่เกิน 5MB ต�
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ File Size Validation: UI ต้องปฏิเสธไฟล์ใหญ่เกินโดยไม่ต้องมีไฟล์จริง และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การทดสอบไฟล์ขนาดใหญ่ไม่จำเป็นต้อง commit ไฟล์ 6MB ติด test repo จริงๆ — ใช้รูปแบบ object ของ <code>setInputFiles({ name, mimeType, buffer })</code> สร้างไฟล์จำลองขึ้นในหน่วยความจำแทน (<code>Buffer.alloc(6 * 1024 * 1024)</code> จองพื้นที่ 6MB เปล่าๆ ในหน่วยความจำตอนรัน ไม่ต้องมีไฟล์จริงบนดิสก์เลย) — เร็วกว่า ไม่ทำให้ repo บวม และ reproducible 100% ทุกเครื่องที่รัน<br/><br/>
     UI ที่ดีควรเช็คขนาดไฟล์<strong>ฝั่ง Client ทันทีที่เลือกไฟล์</strong> (ผ่าน <code>File.size</code> ใน JavaScript) ก่อนจะอัปโหลดขึ้น Backend ด้วยซ้ำ — ประหยัด bandwidth และให้ feedback ผู้ใช้เร็วกว่ารอ round-trip เครือข่ายไปเจอ 413 กลับมา (แต่ฝั่ง Backend ก็ต้องเช็คซ้ำเสมอ เพราะ client-side validation ข้ามได้เสมอถ้ายิง request ตรงแบบ track API Testing บทที่ 12)<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>UI ที่ดีควรเช็คขนาดไฟล์<strong>ฝั่ง Client ทันทีที่เลือกไฟล์</strong> (ผ่าน <code>File.size</code> ใน JavaScript) ก่อนจะอัปโหลดขึ้น Backend ด้วยซ้ำ — ประหยัด bandwidth และให้ feedback ผู้ใช้เร็วกว่ารอ round-trip เครือข่ายไปเจอ 413 กลับมา (แต่ฝั่ง Backend ก็ต้องเช็คซ้ำเสมอ เพราะ client-side validation ข้ามได้เสมอถ้ายิง request ตรงแบบ track API Testing บทที่ 12)<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await page.getByTestId('import-csv-input').setInputFiles({</code><br/>
+    <code>&nbsp;&nbsp;name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024)</code><br/>
+    <code>});</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>Buffer.alloc(n)</code> จองพื้นที่หน่วยความจำจริง — ถ้าทดสอบไฟล์หลาย GB พร้อมกันหลาย test อาจกิน RAM เครื่องรันเทสจนช้าหรือ crash ควรใช้ขนาดที่ใหญ่กว่า limit แค่พอสมควร ไม่ต้องจำลองใหญ่เกินจำเป็น`,
     example: `// ตัวอย่างไฟล์ขนาดพอดี limit ต้องผ่าน ไม่ใช่โดนบล็อก
 await page.getByTestId('import-csv-input').setInputFiles({
   name: 'ok.csv',
@@ -1244,7 +1281,9 @@ test('TC-ADV1: กดปุ่มรีเฟรชราคาแล้วร�
     theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Race Condition</strong> เป็นสาเหตุของ flaky test ที่พบบ่อยกว่าที่คิด: โค้ดคลิกปุ่มแล้ว "อ่านค่า" ออกมาทันทีด้วยเมธอด synchronous อย่าง <code>innerText()</code>/<code>textContent()</code> แล้วนำค่านั้นไปเทียบด้วย <code>expect(value).toBe(...)</code> ธรรมดา — ปัญหาคือ ณ จังหวะที่อ่านค่า React อาจยังไม่ re-render เสร็จเลย ค่าที่ได้จึงเป็นค่าเก่าบ้าง ค่าใหม่บ้าง แล้วแต่จังหวะเครื่องรันเร็วช้าแค่ไหนในแต่ละรอบ<br/><br/>
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Race Condition</strong> เป็นสาเหตุของ flaky test ที่พบบ่อยกว่าที่คิด: โค้ดคลิกปุ่มแล้ว "อ่านค่า" ออกมาทันทีด้วยเมธอด synchronous อย่าง <code>innerText()</code>/<code>textContent()</code> แล้วนำค่านั้นไปเทียบด้วย <code>expect(value).toBe(...)</code> ธรรมดา — ปัญหาคือ ณ จังหวะที่อ่านค่า React อาจยังไม่ re-render เสร็จเลย ค่าที่ได้จึงเป็นค่าเก่าบ้าง ค่าใหม่บ้าง แล้วแต่จังหวะเครื่องรันเร็วช้าแค่ไหนในแต่ละรอบ<br/><br/>
     บทที่ 12 (Flaky-Test Retry Strategy) สอนเรื่อง <code>retries</code> ไว้เป็น "ทางสำรอง" สำหรับ timing ที่ควบคุมไม่ได้จริง ๆ แต่บทนี้สอน "ทางแก้ที่ต้นเหตุ": อย่าอ่านค่าออกมาเช็คเองเลย ให้ส่ง Locator ตรงเข้า <code>expect()</code> แล้วใช้ Web-first assertion ตระกูล <code>toHaveText()</code> แทน — ตัวมันจะ poll ตรวจ DOM ซ้ำเองจนกว่าข้อความจะตรงตามที่คาดหรือ timeout ของ test เอง ไม่ต้องพึ่ง retry ทั้งเทสหรือเดาเวลาหน่วงเลยแม้แต่น้อย<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>await page.getByTestId('btn-refresh-price').click();</code><br/>
+    <code>await expect(page.getByTestId('current-price')).toHaveText('$150.25');</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> บทที่ 12 (Flaky-Test Retry Strategy) สอนเรื่อง <code>retries</code> ไว้เป็น "ทางสำรอง" สำหรับ timing ที่ควบคุมไม่ได้จริง ๆ แต่บทนี้สอน "ทางแก้ที่ต้นเหตุ": อย่าอ่านค่าออกมาเช็คเองเลย ให้ส่ง Locator ตรงเข้า <code>expect()</code> แล้วใช้ Web-first assertion ตระกูล <code>toHaveText()</code> แทน — ตัวมันจะ poll ตรวจ DOM ซ้ำเองจนกว่าข้อความจะตรงตามที่คาดหรือ timeout ของ test เอง ไม่ต้องพึ่ง retry ทั้งเทสหรือเดาเวลาหน่วงเลยแม้แต่น้อย`,
     example: `// ตัวอย่างอื่น: แก้ Race Condition ของ badge สถานะซิงก์ข้อมูลหลังกดปุ่ม Sync
 // ผิด: อ่านค่าทันทีหลังคลิกแล้วเทียบแบบ manual (แข่งกับ state ที่ยังอัปเดตไม่เสร็จ)
@@ -1336,8 +1375,11 @@ export class HoldingsPage {
     ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Page Object Model (POM)</strong> ที่ดีไม่ใช่แค่เก็บ Locator ไว้เฉย ๆ แต่ห่อหุ้ม (encapsulate) พฤติกรรมของหน้านั้นไว้เป็นเมธอดระดับสูงที่อ่านง่าย เพื่อให้ไฟล์เทสจริงเรียกใช้ได้โดยไม่ต้องรู้รายละเอียด Locator ภายใน เช่น เทสไฟล์เรียก <code>await holdingsPage.searchTicker('AAPL')</code> แทนที่จะเขียน <code>page.getByTestId('search-input').fill('AAPL')</code> ซ้ำทุกไฟล์<br/><br/>
     ข้อดีสำคัญ: ถ้าวันหนึ่ง Dev เปลี่ยนวิธีค้นหา Locator ของช่องค้นหา (เช่น เปลี่ยน Test ID) จะต้องแก้แค่จุดเดียวในคลาส <code>HoldingsPage</code> ไม่ต้องไล่แก้ทุกไฟล์เทสที่เรียกใช้ — นี่คือหลักการ <strong>DRY (Don't Repeat Yourself)</strong> ที่ทำให้ test suite ขนาดใหญ่ดูแลรักษาง่ายในระยะยาว<br/><br/>
     เมธอดในคลาสควรรับพารามิเตอร์ที่จำเป็น (เช่น <code>ticker</code>) แทนการ hardcode ค่าตายตัว เพื่อให้นำเมธอดเดิมไปใช้ซ้ำได้กับทุกกรณีทดสอบ ไม่ใช่แค่เคสเดียว<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>ข้อดีสำคัญ: ถ้าวันหนึ่ง Dev เปลี่ยนวิธีค้นหา Locator ของช่องค้นหา (เช่น เปลี่ยน Test ID) จะต้องแก้แค่จุดเดียวในคลาส <code>HoldingsPage</code> ไม่ต้องไล่แก้ทุกไฟล์เทสที่เรียกใช้ — นี่คือหลักการ <strong>DRY (Don't Repeat Yourself)</strong> ที่ทำให้ test suite ขนาดใหญ่ดูแลรักษาง่ายในระยะยาว<br/><br/><br/>เมธอดในคลาสควรรับพารามิเตอร์ที่จำเป็น (เช่น <code>ticker</code>) แทนการ hardcode ค่าตายตัว เพื่อให้นำเมธอดเดิมไปใช้ซ้ำได้กับทุกกรณีทดสอบ ไม่ใช่แค่เคสเดียว<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
+    💡 <strong>Mental Model:</strong><br/>
+    <code>async searchTicker(ticker: string) {</code><br/>
+    <code>&nbsp;&nbsp;await this.searchInput.fill(ticker);</code><br/>
+    <code>}</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> อย่าให้เมธอดของคลาสเรียก <code>page.getByTestId(...)</code> ตรง ๆ ซ้ำใหม่ทุกครั้ง — ต้องใช้ Locator ที่ประกาศไว้ใน constructor เท่านั้น (<code>this.searchInput</code>) ไม่งั้นเสียประโยชน์ของ POM ที่แก้จุดเดียวได้ทั้งคลาส`,
     example: `// ตัวอย่างการใช้งานคลาส Page Object ในไฟล์เทสจริง (ไม่ต้องรู้ Locator ภายใน)
 const holdingsPage = new HoldingsPage(page);
 await page.goto('/holdings');
