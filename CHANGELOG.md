@@ -3,6 +3,16 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.7.0] - 2026-07-28
+
+### Added
+- Add lazygit teaching content to CLI-Essentials git track ([`44b46c3`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/44b46c3efd9d726354d24607e0fbaf70a079f3fe))
+- Add 48 new git/vim/unix lessons to CLI-Essentials — amend/tag/status/log/diff/add-p/clone/remote/reset/revert/rebase-i/cherry-pick/reflog/bisect/worktree (git), quit-variants/search/macros/registers/splits/global-command/marks (vim), and chmod/cd/mkdir/symlink/ls/cat/head-tail/cp-mv/rm/wc/redirection/xargs/ps-kill/curl/tar/sed/export/background-jobs/awk/rsync/ssh-scp/cron/lsof (unix) ([`be0c142`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/be0c142d8df8011c6d4faad5275d85ca42295622))
+
+### Fixed
+- Enable arrow-key line editing in ship commit-message prompt ([`72938b6`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/72938b6bb4f98d7f228f5f1697c2fc0ca53851f4))
+- Sync homepage per-track lesson-count tags with actual course.js totals across all 12 tracks ([`be0c142`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/be0c142d8df8011c6d4faad5275d85ca42295622))
+
 ## [0.6.1] - 2026-07-22
 
 ### Added
