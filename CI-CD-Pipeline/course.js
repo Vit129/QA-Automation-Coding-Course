@@ -512,6 +512,247 @@ jobs:
     task: `จากอาการ "deploy รันก่อน e2e_test เสร็จ" จงแก้ไข YAML ด้านบนโดย:<br/>
     1. หาต้นเหตุที่แท้จริงว่าทำไม GitHub Actions ถึงปล่อยให้ deploy รันไม่รอ e2e_test<br/>
     2. แก้ไขให้ job <code>deploy</code> มี <code>needs: e2e_test</code> เพื่อบังคับลำดับการรันจริง (ห้ามลบ job ใดออก และห้ามใช้วิธีสลับลำดับ job เฉยๆ)`
+  },
+  {
+    id: "env_var_pinning",
+    meta: "บทที่ 7",
+    title: "env: กำหนดตัวแปรระดับ Workflow เพื่อ Pin เวอร์ชัน Dependency",
+    template: `# สถานการณ์: package.json ระบุ "@playwright/test": "^1.48.0" — เครื่องหมาย ^ ทำให้ npm install ได้เวอร์ชัน patch/minor ใหม่กว่าเสมอ
+# ถ้า Playwright ออกเวอร์ชันใหม่ที่เปลี่ยนพฤติกรรม (breaking change) CI จะพังกะทันหันโดยไม่มีใครแตะโค้ดเลยสักบรรทัด
+# 1. ประกาศตัวแปรระดับ workflow ชื่อ PLAYWRIGHT_VERSION ค่า "1.48.0" ไว้ใน env: (นอก jobs: เพื่อให้ทุก job เรียกใช้ได้)
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการตั้งค่า env:...");
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasEnvBlock = /^env:\s*$/m.test(stripped);
+      const hasVersionVar = /^\s*PLAYWRIGHT_VERSION:\s*["']1\.48\.0["']\s*$/m.test(stripped);
+      if (!hasEnvBlock) {
+        throw new Error("ไม่พบ env: ที่ระดับบนสุดของไฟล์ (นอก jobs:)");
+      }
+      if (!hasVersionVar) {
+        throw new Error("ไม่พบตัวแปร PLAYWRIGHT_VERSION: \"1.48.0\" ใต้ env:");
+      }
+      log("✓ ตั้งค่า env: ถูกต้อง");
+    },
+    hint: "มี key ระดับบนสุดสำหรับประกาศตัวแปรที่ใช้ได้ทุก job/step ในไฟล์เดียวกัน วางคู่กับ on: และ jobs: (ไม่ซ้อนอยู่ใต้ job ใดๆ) ค่าที่กำหนดตรงนี้เรียกใช้ซ้ำได้ทุกที่ในไฟล์ผ่าน syntax ${{ env.<ชื่อตัวแปร> }}",
+    solution: `env:
+  PLAYWRIGHT_VERSION: "1.48.0"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install -D @playwright/test@\${{ env.PLAYWRIGHT_VERSION }}
+      - run: npx playwright test`,
+    theory: `<code>env:</code> ระดับบนสุด (workflow-level) ประกาศตัวแปรที่<strong>ทุก job และทุก step ในไฟล์เดียวกันเรียกใช้ได้หมด</strong> ผ่าน <code>\${{ env.ชื่อตัวแปร }}</code> — ต่างจากตัวแปรที่ประกาศไว้ใน <code>env:</code> ระดับ job (ใช้ได้แค่ job นั้น) หรือระดับ step (ใช้ได้แค่ step นั้น)<br/><br/>
+    ประโยชน์ที่สำคัญที่สุดสำหรับ QA: <strong>pin เวอร์ชันของ tool/dependency ไว้ที่จุดเดียว</strong> แทนที่จะกระจายเลขเวอร์ชันเดียวกันไปพิมพ์ซ้ำในหลาย step — ถ้าต้องอัปเดตเวอร์ชัน แก้ที่เดียวจบ ไม่ต้องไล่หาทุกจุดที่พิมพ์เลขเวอร์ชันไว้ (ซึ่งพลาดง่ายมากถ้าทำมือ)<br/><br/>
+    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> (บรรทัด 14-21) ใช้แนวคิดนี้จริง เพื่อ pin เวอร์ชัน Xcode พร้อมคอมเมนต์อธิบายเหตุผลไว้ตรงๆ:<br/><br/>
+    <code>env:<br/>
+    &nbsp;&nbsp;# Pin the toolchain to a known major so a \`latest-stable\` jump (e.g. to a new Xcode with<br/>
+    &nbsp;&nbsp;# source-breaking changes) can't turn a green main red without a deliberate bump here.<br/>
+    &nbsp;&nbsp;XCODE_VERSION: "26.5"</code><br/><br/>
+    คอมเมนต์นี้อธิบายตรงประเด็นที่สุด: ถ้าไม่ pin เวอร์ชันไว้ CI ที่เคย "เขียว" อาจกลายเป็น "แดง" ได้เอง<strong>โดยไม่มีใครเปลี่ยนโค้ดเลยสักบรรทัด</strong> เพียงเพราะ toolchain รุ่นใหม่กว่าที่ดึงมาอัตโนมัติมีพฤติกรรมเปลี่ยนไป — ตัวอย่างนี้ปรับจาก Xcode version มาเป็น Playwright version สำหรับบริบท Node/npm`,
+    example: `# ตัวอย่าง env: ระดับ job override ค่า workflow-level เฉพาะ job นั้น (เช่น job ทดสอบ Playwright เวอร์ชันถัดไปแยกต่างหาก)
+jobs:
+  test-next:
+    env:
+      PLAYWRIGHT_VERSION: "1.49.0"
+    runs-on: ubuntu-latest`,
+    task: `จงเขียน YAML ให้สมบูรณ์ โดย:<br/>
+    1. ประกาศ <code>env:</code> ระดับบนสุด (นอก jobs:)<br/>
+    2. กำหนดตัวแปร <code>PLAYWRIGHT_VERSION: "1.48.0"</code> ไว้ข้างใน`
+  },
+  {
+    id: "paths_filter_skip_docs",
+    meta: "บทที่ 8",
+    title: "paths-ignore: ข้าม CI เมื่อแก้แค่ไฟล์เอกสาร",
+    template: `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+# สถานการณ์: ทีมแก้ไขแค่ README.md หรือไฟล์ในโฟลเดอร์ docs/ บ่อยมาก (แก้ typo, เพิ่มคำอธิบาย) ไม่ได้แตะโค้ดทดสอบเลยสักบรรทัด
+# แต่ push ทุกครั้งก็ยังรัน npx playwright test เต็มรูปแบบเหมือนเดิม เสีย compute โดยไม่จำเป็น เพราะไฟล์เอกสารไม่มีทางทำให้ test ผ่านหรือ fail ต่างไปเลย
+# 1. เพิ่ม paths-ignore ใต้ push: ให้ข้าม CI เมื่อไฟล์ที่เปลี่ยนอยู่ใน docs/** หรือเป็น README.md เท่านั้น
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการตั้งค่า paths-ignore...");
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasPathsIgnore = /^\s*paths-ignore:\s*$/m.test(stripped);
+      const hasDocsPath = /^\s*-\s*docs\/\*\*\s*$/m.test(stripped);
+      const hasReadmePath = /^\s*-\s*README\.md\s*$/m.test(stripped);
+      if (!hasPathsIgnore) {
+        throw new Error("ไม่พบ paths-ignore: ใต้ push:");
+      }
+      if (!hasDocsPath || !hasReadmePath) {
+        throw new Error("paths-ignore ต้องมีครบทั้ง docs/** และ README.md");
+      }
+      log("✓ ตั้งค่า paths-ignore ถูกต้อง");
+    },
+    hint: "on.push มี key ย่อยที่ระบุ 'รายการ path ที่ไม่ต้องสน' ได้ (มี key พี่น้องอีกตัวที่ทำตรงข้ามคือระบุเฉพาะ path ที่ต้องสนเท่านั้น — สองตัวนี้ใช้พร้อมกันใน event เดียวกันไม่ได้) รับค่าเป็น list ของ path/glob pattern เหมือน branches: ที่เรียนมาแล้ว",
+    solution: `name: CI
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - docs/**
+      - README.md
+  pull_request:`,
+    theory: `<code>paths-ignore</code> ระบุรายการไฟล์/โฟลเดอร์ที่ถ้ามีการเปลี่ยนแปลง <strong>เฉพาะ</strong>ไฟล์เหล่านั้น (ไม่มีไฟล์อื่นเปลี่ยนเลย) จะข้ามการรัน workflow ทั้งก้อนไปเลย — ตรงข้ามกับ <code>paths</code> ที่ระบุ "เฉพาะไฟล์เหล่านี้เท่านั้นถึงจะรัน" (allow-list) ใช้ <code>paths</code> หรือ <code>paths-ignore</code> อย่างใดอย่างหนึ่งเท่านั้นใน event เดียวกัน ใช้พร้อมกันไม่ได้<br/><br/>
+    ประโยชน์: แก้ README/เอกสารบ่อยแค่ไหนก็ไม่เสีย compute รัน test ที่ไม่มีทางเปลี่ยนผลเลย — feedback ของ push ที่แก้โค้ดจริงก็เร็วขึ้นด้วยเพราะไม่ต้องแย่ง runner กับ run ที่ไม่จำเป็น<br/><br/>
+    <strong>ข้อควรระวังสำคัญ</strong> (จากเอกสารทางการของ GitHub เรื่อง "Skipping workflow runs"): ถ้า workflow นี้ถูกตั้งเป็น <strong>required status check</strong> ใน branch protection แล้ว PR ที่แก้แค่เอกสาร (ซึ่ง workflow ถูกข้ามไปเพราะ paths-ignore) จะมี check ค้างสถานะ "Pending" ตลอดไป เพราะ GitHub ไม่รู้ว่า "ข้าม" กับ "ยังไม่รัน" ต่างกันยังไงสำหรับ required check — ทำให้ merge ไม่ได้ทั้งที่ไม่มีอะไรผิดเลย ทางแก้คือสร้าง workflow เสริมชื่อเดียวกับ check ที่ required ไว้ ให้รันแบบ no-op เมื่อ trigger ตรงเงื่อนไข paths-ignore แทน<br/><br/>
+    <em>หมายเหตุความถูกต้อง:</em> ยืนยันจากเอกสารทางการของ GitHub Actions (docs.github.com — Workflow syntax, Skipping workflow runs) ไม่ใช่จากไฟล์ ci.yml จริงของโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนใช้ paths-ignore จริง`,
+    example: `# ตัวอย่างตรงข้าม: paths: (allow-list) รัน CI เฉพาะเมื่อมีไฟล์ .ts หรือ .tsx เปลี่ยนเท่านั้น
+on:
+  push:
+    paths:
+      - '**.ts'
+      - '**.tsx'`,
+    task: `จงเขียน YAML ให้สมบูรณ์ โดย:<br/>
+    1. เพิ่ม <code>paths-ignore</code> ใต้ <code>push:</code><br/>
+    2. ระบุ path ครบทั้ง <code>docs/**</code> และ <code>README.md</code>`
+  },
+  {
+    id: "matrix_fail_fast",
+    meta: "ขั้นสูง 3",
+    title: "fail-fast: false — อย่าให้ Browser ตัวเดียว Fail แล้วดับทุก Browser ที่เหลือ",
+    template: `jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test --project=\${{ matrix.browser }}
+
+# บทที่ 4 สอนตั้งค่า matrix ให้รัน 3 browser พร้อมกัน แต่ไม่ได้พูดถึง fail-fast เลย (ค่า default คือ true)
+# สถานการณ์: chromium รันผ่านแล้ว แต่ firefox ดัน fail ก่อน webkit จะรันเสร็จ — ด้วยค่า default ของ GitHub Actions
+# job webkit ที่ยังรันค้างอยู่จะถูก "ยกเลิกทันที" ทำให้ไม่รู้เลยว่า webkit จะผ่านหรือ fail ด้วย ต้องมานั่งรันซ้ำทั้งหมดอีกรอบเพื่อดูผลจริงของทุก browser
+# 1. เพิ่ม fail-fast: false ใน strategy (ระดับเดียวกับ matrix:) เพื่อให้ทุก browser รันจนจบเสมอ ไม่ว่า browser ไหนจะ fail ก่อนก็ตาม
+# WRITE YOUR CODE HERE (แก้ไขโดยตรงในโค้ดด้านบน)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการตั้งค่า fail-fast...");
+      const stripped = code.replace(/#.*$/gm, '');
+      const hasMatrixBrowsers = /^\s*browser:\s*\[\s*chromium\s*,\s*firefox\s*,\s*webkit\s*\]\s*$/m.test(stripped);
+      if (!hasMatrixBrowsers) {
+        throw new Error("ห้ามลบการตั้งค่า matrix.browser เดิมออก ต้องคงไว้ครบทั้ง chromium, firefox, webkit");
+      }
+      const hasFailFastFalse = /^\s*fail-fast:\s*false\s*$/m.test(stripped);
+      if (!hasFailFastFalse) {
+        throw new Error("ไม่พบ fail-fast: false ใน strategy: (ค่า default ของ fail-fast คือ true — ยกเลิก job อื่นในทันทีเมื่อมี job หนึ่ง fail)");
+      }
+      log("✓ ตั้งค่า fail-fast: false ถูกต้อง");
+    },
+    hint: "strategy: มี key พี่น้องของ matrix: อีกตัวหนึ่งที่ควบคุมว่าจะยกเลิก job อื่นในกลุ่มเดียวกันหรือไม่เมื่อมี job หนึ่ง fail (ค่า default เป็น true อยู่แล้วโดยไม่ต้องเขียนเอง) ตั้งค่าเป็น boolean false เพื่อพลิกพฤติกรรมนั้น ให้ทุก combination รันจนจบเสมอ",
+    solution: `jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test --project=\${{ matrix.browser }}`,
+    theory: `บทที่ 4 สอนให้รัน test ซ้ำ 3 browser พร้อมกันด้วย matrix — แต่ไม่ได้พูดถึงพฤติกรรมเมื่อ browser ใดตัวหนึ่ง fail เลย ความจริงคือ GitHub Actions มีค่า default ซ่อนอยู่ที่ไม่มีใครเห็นในไฟล์: <code>fail-fast: true</code><br/><br/>
+    <strong>ตามเอกสารทางการของ GitHub:</strong> เมื่อ <code>fail-fast</code> เป็น <code>true</code> (default) — ถ้ามี job ใดใน matrix fail ขึ้นมา GitHub จะ<strong>ยกเลิก job อื่นที่ยังรันอยู่หรือรอคิวอยู่ในกลุ่มเดียวกันทันที</strong> ฟังดูสมเหตุสมผลตอนแรก (ประหยัด compute เมื่อรู้แล้วว่ามีอะไรพัง) แต่สำหรับ matrix ที่ทดสอบข้าม browser การยกเลิกนี้<strong>ทำลายจุดประสงค์เดิมของการรัน matrix ไปเลย</strong> — เหตุผลที่รันแยก 3 browser ตั้งแต่แรกคือต้องการรู้ผลของ<strong>ทุก</strong>ตัวพร้อมกัน ถ้า firefox fail แล้ว webkit ที่ยังไม่ทันรันเสร็จถูกยกเลิกไปด้วย ทีมจะไม่มีทางรู้เลยว่า webkit ผ่านหรือ fail จนกว่าจะแก้ firefox แล้วรันใหม่ทั้งหมดอีกรอบ<br/><br/>
+    <code>fail-fast: false</code> วางไว้ระดับเดียวกับ <code>matrix:</code> ภายใต้ <code>strategy:</code> เดียวกัน — พลิกพฤติกรรม default ให้ทุก combination ใน matrix รันจนจบเสมอไม่ว่าตัวไหนจะ fail ก่อน ทำให้เห็นผลครบทั้ง 3 browser ในรอบเดียว (บอกได้ตรงๆ ว่า "fail เฉพาะ firefox" หรือ "fail หลาย browser พร้อมกัน" ซึ่งเป็นข้อมูลที่ต่างกันมากตอนวิเคราะห์ต้นเหตุ)<br/><br/>
+    <em>หมายเหตุความถูกต้อง:</em> พฤติกรรมนี้ยืนยันจากเอกสารทางการของ GitHub Actions (Workflow syntax for GitHub Actions — <code>jobs.&lt;job_id&gt;.strategy.fail-fast</code>) ไม่ใช่จากไฟล์จริงในโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนที่ใช้ matrix strategy จริงกับ Playwright ในลักษณะนี้`,
+    example: `# ใช้คู่กับ max-parallel ได้ด้วย เพื่อจำกัดจำนวน browser ที่รันพร้อมกันสูงสุด (ประหยัด runner quota)
+strategy:
+  fail-fast: false
+  max-parallel: 2
+  matrix:
+    browser: [chromium, firefox, webkit]`,
+    task: `จากพฤติกรรม default ของ matrix strategy จงแก้ไข YAML ด้านบนโดย:<br/>
+    1. เพิ่ม <code>fail-fast: false</code> ใน <code>strategy:</code> (ระดับเดียวกับ <code>matrix:</code>)<br/>
+    2. ห้ามลบหรือแก้ไข <code>matrix.browser</code> เดิม ต้องคงไว้ครบทั้ง 3 browser`
+  },
+  {
+    id: "environment_protection_deploy",
+    meta: "ขั้นสูง 4",
+    title: "environment: ผูก Job Deploy เข้ากับ Protection Rule ก่อนขึ้น Production จริง",
+    template: `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test
+
+  # บทก่อนหน้าแก้ให้ deploy รอ e2e_test ผ่านก่อนแล้วด้วย needs: e2e_test — แต่พอ test ผ่านปุ๊บ deploy.sh ก็รันขึ้น production ทันทีอัตโนมัติ
+  # ไม่มีคนอนุมัติเลยสักขั้นตอน ทีมต้องการให้ tech lead กด approve ก่อนเสมอถึงจะ deploy จริงขึ้น production ได้ แม้ test จะผ่านหมดแล้วก็ตาม
+  # (protection rule "ต้องมี required reviewer" ถูกตั้งค่าไว้แล้วที่ GitHub repo Settings > Environments > production — งานฝั่ง YAML คือผูก job นี้เข้ากับ environment นั้นให้ถูกชื่อ)
+  # 1. เพิ่ม environment: production ใน job deploy
+  deploy:
+    needs: e2e_test
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh
+# WRITE YOUR CODE HERE (แก้ไขโดยตรงในโค้ดด้านบน)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการผูก Job เข้ากับ Environment...");
+      const stripped = code.replace(/#.*$/gm, '');
+      const deployIdx = stripped.search(/^\s*deploy:\s*$/m);
+      if (deployIdx === -1) {
+        throw new Error("ห้ามลบ job deploy ออก ต้องแก้ที่ job เดิม ไม่ใช่สร้างใหม่หรือลบทิ้ง");
+      }
+      const deployBlock = stripped.slice(deployIdx);
+      const hasNeedsE2e = /^\s*needs:\s*e2e_test\s*$/m.test(deployBlock);
+      if (!hasNeedsE2e) {
+        throw new Error("ห้ามลบ needs: e2e_test ที่มีอยู่แล้วออก ต้องคงไว้เหมือนเดิม");
+      }
+      const hasEnvironment = /^\s*environment:\s*production\s*$/m.test(deployBlock);
+      if (!hasEnvironment) {
+        throw new Error("ไม่พบ environment: production ใน job deploy — key นี้ผูก job เข้ากับ protection rule ที่ตั้งไว้ใน repo Settings");
+      }
+      log("✓ ผูก Job deploy เข้ากับ Environment ถูกต้อง");
+    },
+    hint: "job มี key ระดับเดียวกับ needs: และ runs-on: อีกตัวหนึ่งที่รับค่าเป็นชื่อ environment ตรงๆ (string) — ชื่อ environment นี้ต้องตรงกับที่ตั้งค่า protection rule ไว้ใน repo Settings ให้ตรงเป๊ะ ตัว YAML เองไม่ได้กำหนด reviewer หรือเงื่อนไขใดๆ เลย แค่ 'อ้างอิง' ชื่อ environment เท่านั้น",
+    solution: `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx playwright test
+
+  deploy:
+    needs: e2e_test
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh`,
+    theory: `ขั้นสูง 1-2 สอน <code>needs:</code> ซึ่งเป็นการรอ<strong>อีก job หนึ่งให้ทำงานเสร็จ</strong> — แต่บทนี้คือการรอ<strong>คนคนหนึ่งกดอนุมัติ</strong> ซึ่งเป็นกลไกคนละแบบกันเลย: <code>needs:</code> คือ dependency ระหว่าง job, <code>environment:</code> คือ gate ที่ต้องพึ่งการตัดสินใจของมนุษย์<br/><br/>
+    <code>environment: production</code> ผูก job นั้นเข้ากับ environment ชื่อ <code>production</code> ที่ตั้งค่าไว้ใน repo (Settings → Environments) — ถ้า environment นั้นมี <strong>protection rule</strong> (เช่น required reviewers, wait timer, จำกัดว่า deploy ได้จาก branch ไหนบ้าง) ตั้งไว้ job จะ<strong>ค้างรอ</strong>ที่สถานะ "Waiting" จนกว่าเงื่อนไขจะผ่านก่อนถึงจะรัน step ข้างในต่อ แม้ <code>needs: e2e_test</code> จะผ่านหมดแล้วก็ตาม<br/><br/>
+    จุดสำคัญที่สุดที่พลาดกันบ่อย: <strong>protection rule เอง (required reviewer คือใคร, ต้องรอกี่นาที ฯลฯ) ไม่ได้เขียนอยู่ใน YAML เลยสักตัว</strong> — ตั้งค่าอยู่ใน repo Settings เท่านั้น ฝั่ง YAML มีหน้าที่แค่ "อ้างอิงชื่อ environment ให้ตรง" เท่านั้น ถ้า Settings ยังไม่ได้สร้าง environment ชื่อ <code>production</code> หรือยังไม่ตั้ง protection rule ไว้ การเขียน <code>environment: production</code> เฉยๆ ก็ไม่มี gate อะไรเกิดขึ้นจริง<br/><br/>
+    <em>หมายเหตุความถูกต้อง:</em> ยืนยันจากเอกสารทางการของ GitHub Actions (Environments — protection rules ตั้งค่าใน repository Settings) ไม่ใช่จากไฟล์ ci.yml จริงของโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนที่ตั้งค่า deployment environment ผ่าน GitHub Actions จริง`,
+    example: `# environment รองรับ object form ด้วย เพิ่ม url ที่จะโชว์เป็นลิงก์ "View deployment" บนหน้า PR
+deploy:
+  needs: e2e_test
+  environment:
+    name: production
+    url: https://app.example.com
+  runs-on: ubuntu-latest`,
+    task: `จากสถานการณ์ "deploy รันขึ้น production ทันทีโดยไม่มีคนอนุมัติ" จงแก้ไข YAML ด้านบนโดย:<br/>
+    1. เพิ่ม <code>environment: production</code> ใน job <code>deploy</code><br/>
+    2. ห้ามลบ <code>needs: e2e_test</code> เดิมออก`
   }
 ];
 

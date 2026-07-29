@@ -430,6 +430,329 @@ expect(panelResponse.status()).not.toBe(401);`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
     1. ยิง POST ไปยัง endpoint ทั้ง 3 ตัวที่เหลือซึ่งต้องมี API Key: <code>/api/ai/portfolio-snapshot</code>, <code>/api/ai/price-history</code>, <code>/api/ai/model/switch</code> แบบไม่ใส่ header <code>X-API-Key</code><br/>
     2. เขียน assertion จริงว่าทุก endpoint ต้องตอบกลับ status <code>401</code>`
+  },
+  {
+    id: "cors_reflected_origin",
+    meta: "บทที่ 6",
+    title: "CORS Misconfiguration: Origin ที่ยิงมา ไม่ควรถูกสะท้อนกลับแบบไม่ตรวจสอบ",
+    template: `// สถานการณ์จริง: server/index.js (dev server) ผูก CORS ไว้แบบ whitelist เดียว
+// app.use(cors({ origin: corsOrigin, credentials: true, ... })) — corsOrigin มาจาก env CORS_ORIGIN
+// แต่ functions/index.js (production Cloud Functions ตัวจริงที่ deploy ใช้งานจริง) เขียนต่างออกไป:
+// const corsOptions = { origin: true, credentials: true, ... } — comment ในโค้ดเขียนตรงๆ ว่า
+// "reflect request origin (allows all)" คือสะท้อน Origin ที่ผู้ยิงส่งมากลับไปตรงๆ ไม่ตรวจสอบเลย
+// เมื่อรวมกับ credentials: true (อนุญาต cookie/credential ข้าม origin) นี่คือ pattern ที่ OWASP
+// เตือนว่าเสี่ยง เพราะ Origin header เป็นค่าที่ client ปลอมได้เอง ไม่ควรใช้ยืนยันตัวตน
+// 1. ยิง GET ไปที่ /api/ai/health พร้อม header Origin เป็นโดเมนแปลกปลอมที่ไม่เกี่ยวข้อง
+// 2. ตรวจสอบว่า response header access-control-allow-origin ต้องไม่เท่ากับ origin แปลกปลอมนั้น
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการทดสอบ CORS ด้วย Origin แปลกปลอม...");
+      const stripped = stripComments(code);
+      const hasRequest = /request\.get\(['"`].*\/api\/ai\/health['"`]/.test(stripped);
+      const hasOriginHeader = /Origin\s*:/.test(stripped) && /(attacker|evil)/i.test(stripped);
+      const hasHeadersRead = /response\.headers\(\)/.test(stripped);
+      const hasNegativeAssertion = /expect\(\s*headers\[['"]access-control-allow-origin['"]\]\s*\)\.not\.toBe\(/.test(stripped);
+      if (!hasRequest) {
+        throw new Error("ไม่พบการยิง GET ไปที่ /api/ai/health\nตัวอย่าง: const response = await request.get('/api/ai/health', { headers: {...} });");
+      }
+      if (!hasOriginHeader) {
+        throw new Error("ไม่พบการใส่ header Origin เป็นโดเมนแปลกปลอมในการยิง request\nตัวอย่าง: headers: { Origin: 'https://attacker-evil.example' }");
+      }
+      if (!hasHeadersRead) {
+        throw new Error("ไม่พบการอ่าน response.headers()\nตัวอย่าง: const headers = response.headers();");
+      }
+      if (!hasNegativeAssertion) {
+        throw new Error("ไม่พบการตรวจสอบว่า header access-control-allow-origin ไม่เท่ากับ origin แปลกปลอมที่ยิงไป\nตัวอย่าง: expect(headers['access-control-allow-origin']).not.toBe(evilOrigin);");
+      }
+      log("✓ ยืนยันได้ว่าเขียน assertion ตรวจสอบพฤติกรรม CORS ต่อ Origin แปลกปลอมถูกต้อง");
+    },
+    hint: "Playwright's request fixture เป็น Node.js HTTP client ไม่ใช่ browser fetch() จึงใส่ header Origin เองตรงๆ ได้ (browser จริงห้ามแก้ header นี้ แต่ request fixture ไม่ห้าม) ยิงไปพร้อม Origin ปลอม แล้วอ่าน response.headers() มาดูว่าค่า access-control-allow-origin ที่ตอบกลับมาคืออะไร — ถ้าระบบ 'สะท้อน' origin ที่ส่งไปกลับมาตรงๆ โดยไม่ตรวจสอบเลย นั่นคือสิ่งที่ต้องจับได้ด้วย assertion ฝั่ง not",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('CORS ไม่ควร reflect origin แปลกปลอมกลับมาแบบไม่ตรวจสอบ', async ({ request }) => {
+  const evilOrigin = 'https://attacker-evil.example';
+  const response = await request.get('/api/ai/health', {
+    headers: { Origin: evilOrigin },
+  });
+  const headers = response.headers();
+
+  expect(headers['access-control-allow-origin']).not.toBe(evilOrigin);
+});`,
+    theory: `<strong>CORS (Cross-Origin Resource Sharing)</strong> คือกลไกที่เบราว์เซอร์ใช้ตัดสินใจว่าเว็บไซต์หนึ่ง (origin หนึ่ง) จะเรียก API ของอีก origin หนึ่งได้หรือไม่ — server ตอบกลับด้วย header <code>Access-Control-Allow-Origin</code> เพื่อ "อนุญาต" origin ที่ระบุไว้เท่านั้น<br/><br/>
+    <strong>สิ่งที่พบจริงในโค้ด (ตรวจสอบทั้งสองไฟล์แล้ว):</strong> <code>server/index.js</code> (dev server ที่รันบนเครื่อง) ตั้งค่า CORS แบบ whitelist origin เดียวจาก env: <code>origin: corsOrigin</code> (default <code>http://localhost:5173</code>) — แต่ <code>functions/index.js</code> (Cloud Functions ที่ deploy ใช้งานจริงบน production) เขียนต่างออกไปโดยสิ้นเชิง:<br/><br/>
+    <code>const corsOptions = {<br/>
+    &nbsp;&nbsp;origin: true, // reflect request origin (allows all)<br/>
+    &nbsp;&nbsp;credentials: true,<br/>
+    &nbsp;&nbsp;...<br/>
+    };</code><br/><br/>
+    <code>origin: true</code> ใน cors middleware แปลว่า "สะท้อนค่า Origin header ที่ client ส่งมากลับไปเป็น <code>Access-Control-Allow-Origin</code> ตรงๆ เสมอ" — เท่ากับอนุญาตทุก origin จริงๆ ตามที่ comment ในโค้ดบอกไว้ตรงๆ เมื่อรวมกับ <code>credentials: true</code> (อนุญาตส่ง cookie/credential ข้าม origin ได้) นี่คือ pattern ที่ OWASP เตือนไว้ชัดเจนว่าเสี่ยง เพราะ <code>Origin</code> เป็น header ที่ client ปลอมค่าได้เองอย่างอิสระ ไม่ควรถูกใช้เป็นกลไกยืนยันตัวตนหรือสิทธิ์การเข้าถึง<br/><br/>
+    <strong>ความเป็นธรรมของ pattern นี้:</strong> สำหรับ Cloud Functions ที่ frontend ถูก deploy อยู่ origin เดียวชัดเจน การใช้ <code>origin: true</code> อาจเป็น tradeoff ที่ตั้งใจ (ลดความยุ่งยากเรื่อง env config ข้าม environment) แต่ก็ยังเป็นความเสี่ยงที่ QA ควรยืนยันด้วย assertion จริง ไม่ใช่แค่รู้ว่ามันมีอยู่`,
+    example: `// อีกวิธีตรวจสอบแบบใกล้เคียงกัน: ยิง preflight OPTIONS request แล้วดูว่า header เดียวกันตอบกลับมาอย่างไร
+const preflight = await request.fetch('/api/ai/panel', {
+  method: 'OPTIONS',
+  headers: { Origin: 'https://attacker-evil.example', 'Access-Control-Request-Method': 'POST' },
+});
+expect(preflight.headers()['access-control-allow-origin']).not.toBe('https://attacker-evil.example');`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ยิง GET ไปที่ <code>/api/ai/health</code> พร้อม header <code>Origin</code> เป็นโดเมนแปลกปลอม เช่น <code>https://attacker-evil.example</code><br/>
+    2. ตรวจสอบว่า <code>response.headers()['access-control-allow-origin']</code> ต้อง<strong>ไม่</strong>เท่ากับ origin แปลกปลอมที่ยิงไป`
+  },
+  {
+    id: "rate_limit_verification",
+    meta: "บทที่ 7",
+    title: "Rate Limiting: ยืนยันว่าระบบบล็อก Request ที่ถี่เกินไปจริง",
+    template: `// สถานการณ์จริง (ยืนยันจากโค้ด server/index.js บรรทัด 40-50):
+// const limiter = rateLimit({ windowMs: 1 * 60 * 1000, max: 100,
+//   message: { error: 'Too many requests, please try again later' },
+//   standardHeaders: false, skip: (req) => process.env.NODE_ENV === 'development' });
+// app.use(limiter); // ผูกกับทุก route จริง (บรรทัด 50)
+// ข้อควรระวังจริงจากโค้ด: standardHeaders: false แปลว่าไม่มี header ตระกูล RateLimit-* ส่งกลับมาเลย
+// ต้องเช็คจาก status code + body เท่านั้น และ skip ทำให้ limiter หายไปเงียบๆ ถ้า test รันตอน
+// NODE_ENV=development
+// 1. ยิง GET ไปที่ /api/ai/health ซ้ำๆ จนเกินโควต้า 100 ครั้ง/นาทีที่กำหนดไว้จริง
+// 2. ตรวจสอบว่า response สุดท้ายได้ status 429 พร้อม body.error ตรงกับข้อความที่ระบบกำหนดไว้จริง
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการทดสอบ Rate Limiting...");
+      const stripped = stripComments(code);
+      const hasLoop = /for\s*\(|while\s*\(/.test(stripped);
+      const hasRequest = /request\.get\(['"`].*\/api\/ai\/health['"`]/.test(stripped);
+      const has429 = /expect\(\s*\w+\.status\(\)\s*\)\.toBe\(429\)/.test(stripped);
+      const hasMessageCheck = /Too many requests/.test(stripped) && /body\.error/.test(stripped);
+      if (!hasLoop) {
+        throw new Error("ไม่พบการยิง request ซ้ำหลายครั้ง (ต้องใช้ loop ยิงจนเกินโควต้า)\nตัวอย่าง: for (let i = 0; i <= 100; i++) { ... }");
+      }
+      if (!hasRequest) {
+        throw new Error("ไม่พบการยิง GET ไปที่ /api/ai/health ภายใน loop");
+      }
+      if (!has429) {
+        throw new Error("ไม่พบการตรวจสอบ status 429 จาก response ตัวสุดท้าย\nตัวอย่าง: expect(lastResponse.status()).toBe(429);");
+      }
+      if (!hasMessageCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่า body.error ตรงกับข้อความที่ระบบกำหนดไว้จริง\nตัวอย่าง: expect(body.error).toBe('Too many requests, please try again later');");
+      }
+      log("✓ ยืนยันได้ว่า rate limiter บล็อก request ที่เกินโควต้าจริงตามที่ระบบออกแบบไว้");
+    },
+    hint: "ต้องยิง request มากกว่าค่า max ที่ middleware กำหนดไว้ (ดูค่าจริงใน theory) ด้วย loop เก็บ response ตัวล่าสุดไว้ในตัวแปรนอก loop แล้วค่อยตรวจสอบ status และ body หลัง loop จบ — ระวังว่าถ้า test suite รันด้วย NODE_ENV=development limiter จะถูกข้ามไปเงียบๆ ทุกครั้ง (ต้องรันด้วย environment ที่ไม่ใช่ development ผลถึงจะออกมาตามจริง)",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('rate limiter บล็อก request หลังเกิน quota ที่กำหนดไว้', async ({ request }) => {
+  const maxRequests = 100;
+  let lastResponse;
+
+  for (let i = 0; i <= maxRequests; i++) {
+    lastResponse = await request.get('/api/ai/health');
+  }
+
+  expect(lastResponse.status()).toBe(429);
+
+  const body = await lastResponse.json();
+  expect(body.error).toBe('Too many requests, please try again later');
+});`,
+    theory: `<strong>Rate Limiting</strong> จำกัดจำนวน request ต่อช่วงเวลาต่อ IP เพื่อป้องกัน brute-force (เดา API Key/รหัสผ่านซ้ำๆ) และลดผลกระทบของ DoS แบบง่ายๆ — เป็นกลไกป้องกันคนละชั้นกับ auth (auth เช็คว่า "คุณคือใคร" ส่วน rate limit เช็คว่า "คุณยิงถี่เกินไปหรือเปล่า" ไม่ว่าคุณจะเป็นใคร)<br/><br/>
+    <strong>ค่าที่ตั้งไว้จริงใน <code>server/index.js</code> บรรทัด 40-50:</strong><br/><br/>
+    <code>const limiter = rateLimit({<br/>
+    &nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/>
+    &nbsp;&nbsp;max: 100, // 100 requests ต่อนาทีต่อ IP<br/>
+    &nbsp;&nbsp;message: { error: 'Too many requests, please try again later' },<br/>
+    &nbsp;&nbsp;standardHeaders: false,<br/>
+    &nbsp;&nbsp;skip: (req) => process.env.NODE_ENV === 'development'<br/>
+    });</code><br/><br/>
+    <strong>รายละเอียดที่ QA ต้องรู้ (ยืนยันจาก README ของ express-rate-limit และ source ของ package จริงที่ติดตั้งไว้ v8.4.1):</strong> เมื่อ <code>standardHeaders: true</code> ระบบจะส่ง header ตระกูล <code>RateLimit-*</code> กลับมาด้วย (บอกโควต้าที่เหลือ) — แต่โค้ดนี้ตั้ง <code>standardHeaders: false</code> ตรงๆ แปลว่า<strong>ไม่มี</strong> header เหล่านี้ส่งกลับมาเลย QA จึงต้องอาศัย <strong>status code (ยืนยันแล้วว่า default คือ 429) และข้อความใน body</strong> เป็นหลักฐานแทนการอ่าน header<br/><br/>
+    <strong>กับดักสำคัญ:</strong> <code>skip: (req) => process.env.NODE_ENV === 'development'</code> ทำให้ limiter ถูกข้ามไปเงียบๆ ทุกครั้งถ้า environment ที่รัน server (หรือ test) ตั้ง <code>NODE_ENV=development</code> — เป็นสาเหตุคลาสสิกที่ test rate-limiting "ผ่านตลอด" ทั้งที่ไม่เคยตรวจสอบอะไรจริง เพราะ 429 ไม่มีวันเกิดขึ้นในสภาพแวดล้อมนั้น`,
+    example: `// ตัวอย่างเสริม: ยืนยันด้านตรงข้ามด้วยว่า request ที่ยังไม่เกินโควต้าต้องผ่านได้ปกติ (positive case คู่กัน)
+const okResponse = await request.get('/api/ai/health');
+expect(okResponse.status()).not.toBe(429);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ยิง GET ไปที่ <code>/api/ai/health</code> ซ้ำด้วย loop จนเกิน <code>max</code> ที่กำหนดไว้ (100 ครั้ง/นาที)<br/>
+    2. ตรวจสอบว่า response ตัวสุดท้ายได้ <code>status</code> เป็น <code>429</code> และ <code>body.error</code> เท่ากับ <code>'Too many requests, please try again later'</code>`
+  },
+  {
+    id: "insecure_cookie_flags",
+    meta: "บทที่ 8",
+    title: "Cookie Flags: HttpOnly, Secure, SameSite ป้องกันความเสี่ยงอะไรบ้าง",
+    template: `// สถานการณ์ (สมมติ เพื่อฝึกเทคนิค — ตรวจสอบโค้ดจริงของ My-Investment-Port แล้วพบว่าทั้ง
+// server/index.js และ functions/index.js ไม่มีการเซ็ต cookie เลยสักบรรทัด เพราะระบบใช้ API Key
+// ผ่าน header X-API-Key แทน ไม่ใช้ session cookie เลย — บทนี้จึงเป็นเทคนิคทั่วไป ไม่ได้อิงโค้ดจริง
+// จากโปรเจกต์นี้ เหมือนบท XSS Prevention ก่อนหน้า):
+// สมมติมี endpoint /login ที่ตั้งค่า session cookie ชื่อ 'sessionId' หลัง login สำเร็จ
+// 1. ทำ login ให้สำเร็จ แล้วอ่าน cookie ทั้งหมดจาก browser context ด้วย page.context().cookies()
+// 2. หา cookie ชื่อ 'sessionId' แล้วตรวจสอบว่า httpOnly และ secure ต้องเป็น true ทั้งคู่
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการทดสอบ Cookie Security Flags...");
+      const stripped = stripComments(code);
+      const hasCookiesCall = /page\.context\(\)\.cookies\(\)/.test(stripped);
+      const hasFind = /\.find\(\s*\(?\w*\)?\s*=>\s*\w+\.name\s*===?\s*['"]sessionId['"]/.test(stripped);
+      const hasHttpOnlyCheck = /expect\(\s*\w+\.httpOnly\s*\)\.toBe\(true\)/.test(stripped);
+      const hasSecureCheck = /expect\(\s*\w+\.secure\s*\)\.toBe\(true\)/.test(stripped);
+      if (!hasCookiesCall) {
+        throw new Error("ไม่พบการอ่าน cookies ด้วย page.context().cookies()\nตัวอย่าง: const cookies = await page.context().cookies();");
+      }
+      if (!hasFind) {
+        throw new Error("ไม่พบการหา cookie ชื่อ 'sessionId' ด้วย .find()\nตัวอย่าง: const sessionCookie = cookies.find((c) => c.name === 'sessionId');");
+      }
+      if (!hasHttpOnlyCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่า httpOnly เป็น true\nตัวอย่าง: expect(sessionCookie.httpOnly).toBe(true);");
+      }
+      if (!hasSecureCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่า secure เป็น true\nตัวอย่าง: expect(sessionCookie.secure).toBe(true);");
+      }
+      log("✓ ยืนยันได้ว่า session cookie ตั้งค่า HttpOnly และ Secure flag ถูกต้อง");
+    },
+    hint: "page.context().cookies() คืนค่าเป็น array ของ cookie object ที่มี field httpOnly และ secure เป็น boolean ตรงตัวอยู่แล้ว หา cookie ที่ต้องการด้วย .find() ตาม name แล้วเช็คค่าทั้งสอง field นั้นตรงๆ ด้วย expect()",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('session cookie ต้องมี HttpOnly และ Secure flag', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByTestId('email-input').fill('test@example.com');
+  await page.getByTestId('password-input').fill('password123');
+  await page.getByTestId('login-submit-btn').click();
+
+  const cookies = await page.context().cookies();
+  const sessionCookie = cookies.find((c) => c.name === 'sessionId');
+
+  expect(sessionCookie.httpOnly).toBe(true);
+  expect(sessionCookie.secure).toBe(true);
+});`,
+    theory: `<strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ดจริงของ My-Investment-Port แล้ว (ทั้ง <code>server/index.js</code> และ <code>functions/index.js</code>) ไม่มีการเซ็ต cookie เลยสักบรรทัด — ระบบใช้ API Key ผ่าน header แทนทั้งหมด จึงไม่มี session cookie ให้ทดสอบจริงในโปรเจกต์นี้ บทนี้เป็นเทคนิคทั่วไปสำหรับระบบที่ใช้ session cookie (พบได้ทั่วไปในเว็บแอปจริงจำนวนมาก) ไม่ได้อิงโค้ดจริงจากโปรเจกต์นี้<br/><br/>
+    <strong>Cookie attribute แต่ละตัว (ยืนยันจาก MDN):</strong><br/><br/>
+    • <code>HttpOnly</code> — ห้าม JavaScript ฝั่ง client อ่านค่า cookie ผ่าน <code>document.cookie</code> (cookie ยังถูกส่งไปกับ request อัตโนมัติตามปกติ) ป้องกันไม่ให้ XSS ที่หลุดรอดมาได้ขโมย session cookie ไปใช้ต่อ<br/>
+    • <code>Secure</code> — cookie จะถูกส่งเฉพาะผ่าน HTTPS เท่านั้น ป้องกันการดักฟังผ่าน connection ที่ไม่เข้ารหัส (MITM)<br/>
+    • <code>SameSite</code> — ควบคุมว่า cookie จะถูกส่งไปกับ cross-site request หรือไม่ ช่วยลดความเสี่ยง CSRF โดยมี 3 ค่า: <code>Strict</code> (ส่งเฉพาะ same-site เท่านั้น), <code>Lax</code> (ส่งกับ same-site และ top-level navigation แบบ GET จาก cross-site), <code>None</code> (ส่งได้ทั้ง cross-site และ same-site แต่<strong>ต้องคู่กับ <code>Secure</code> เสมอ</strong>)<br/><br/>
+    Playwright's <code>page.context().cookies()</code> คืนค่า cookie object ที่มี field <code>httpOnly</code>, <code>secure</code>, <code>sameSite</code> ('Strict'|'Lax'|'None') เป็นชื่อ field ตรงตัวพร้อมใช้ assert ได้เลย ไม่ต้อง parse ค่า Set-Cookie header เอง`,
+    example: `// ตัวอย่างเช็ค SameSite เพิ่มเติม (ป้องกัน CSRF)
+expect(['Strict', 'Lax']).toContain(sessionCookie.sameSite);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. Login สำเร็จ แล้วอ่าน cookie ทั้งหมดด้วย <code>page.context().cookies()</code><br/>
+    2. หา cookie ชื่อ <code>sessionId</code> แล้วตรวจสอบว่า <code>httpOnly</code> และ <code>secure</code> ต้องเป็น <code>true</code> ทั้งคู่`
+  },
+  {
+    id: "idor_awareness",
+    meta: "บทที่ 9",
+    title: "IDOR (Insecure Direct Object Reference): มี Key ที่ถูกต้อง ไม่ได้แปลว่าเห็นข้อมูลของใครก็ได้",
+    template: `// สถานการณ์ (สมมติ เพื่อฝึกเทคนิค — ตรวจสอบโค้ดจริงของ My-Investment-Port แล้วพบว่าเป็นแอป
+// single-user ล้วนๆ ไม่มี endpoint แบบ /api/portfolio/:id ที่แยกข้อมูลเป็นของผู้ใช้แต่ละคนจริง
+// (grep endpoint ทั้งหมดใน server/index.js แล้วไม่มี route รูปแบบนี้เลย) บทนี้จึงเป็นสถานการณ์
+// สมมติที่ขยายจาก domain พอร์ตโฟลิโอของโปรเจกต์นี้ ไม่ได้อิงโค้ดจริง เหมือนบท Stack Trace Leak):
+// สมมติมี endpoint GET /api/portfolio/:portfolioId ผู้ใช้ A (apiKeyA) เป็นเจ้าของ 'a-111'
+// ผู้ใช้ B เป็นเจ้าของ 'b-222' — มี API Key ที่ถูกต้อง (ของตัวเอง) ไม่ได้แปลว่าควรเห็นพอร์ตของคนอื่น
+// 1. ใช้ apiKeyA (ของผู้ใช้ A ซึ่งถูกต้องจริง ไม่ใช่ key ปลอม) ยิง GET ไปที่ /api/portfolio/b-222
+// 2. ตรวจสอบว่า status ต้องเป็น 403 หรือ 404 ไม่ใช่ 200 (ห้ามเห็นข้อมูลพอร์ตของผู้ใช้คนอื่น)
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการทดสอบ IDOR...");
+      const stripped = stripComments(code);
+      const hasRequest = /request\.get\(['"`].*\/api\/portfolio\/b-222['"`]/.test(stripped);
+      const hasOwnKey = /apiKeyA/.test(stripped) || /X-API-Key/.test(stripped);
+      const hasDenyStatus = /expect\(response\.status\(\)\)\.toBe\((403|404)\)/.test(stripped);
+      if (!hasRequest) {
+        throw new Error("ไม่พบการยิง GET ไปที่ /api/portfolio/b-222 (พอร์ตของผู้ใช้อื่น)\nตัวอย่าง: const response = await request.get('/api/portfolio/b-222', { headers: {...} });");
+      }
+      if (!hasOwnKey) {
+        throw new Error("ไม่พบการใส่ API Key ของผู้ใช้ A (ต้องเป็น key ที่ถูกต้องจริง ไม่ใช่ key ปลอม — จุดสำคัญของ IDOR คือ auth ผ่านแล้ว แต่ authorization ต้องถูกเช็คแยกต่างหาก)");
+      }
+      if (!hasDenyStatus) {
+        throw new Error("ไม่พบการตรวจสอบว่า status เป็น 403 หรือ 404 (ห้ามเป็น 200)\nตัวอย่าง: expect(response.status()).toBe(403);");
+      }
+      log("✓ ยืนยันได้ว่าระบบปฏิเสธการเข้าถึงพอร์ตของผู้ใช้อื่นแม้ API Key จะถูกต้องจริง");
+    },
+    hint: "บทนี้ไม่ได้ทดสอบว่า key ถูกหรือผิด (นั่นคือ authentication ทดสอบไปแล้วในบทนำ/บทที่ 3) แต่ทดสอบว่า key ที่ถูกต้องของคนหนึ่งถูกใช้ไปยิง resource ID ของอีกคนได้หรือไม่ (authorization) — ยิง GET ไปยัง portfolioId ที่ไม่ใช่ของเจ้าของ key แล้วดูว่า status ที่ตอบกลับมาเป็น 403/404 (ปฏิเสธ) ไม่ใช่ 200 (เห็นข้อมูลคนอื่น)",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('ห้ามเห็นพอร์ตของผู้ใช้คนอื่นแม้ API Key จะถูกต้อง (IDOR)', async ({ request }) => {
+  const apiKeyA = 'user-a-real-api-key';
+
+  const response = await request.get('/api/portfolio/b-222', {
+    headers: { 'X-API-Key': apiKeyA },
+  });
+
+  expect(response.status()).toBe(403);
+});`,
+    theory: `<strong>IDOR (Insecure Direct Object Reference)</strong> เกิดขึ้นเมื่อระบบใช้ ID ที่ client ส่งมา (เช่น <code>portfolioId</code> ใน URL) ไปดึงข้อมูลตรงๆ โดย<strong>ไม่ตรวจสอบว่าผู้ยิง request คนนี้เป็นเจ้าของ resource นั้นจริงหรือไม่</strong> — จัดอยู่ในหมวด <strong>A01:2021 Broken Access Control</strong> ตาม OWASP Top 10 (ยืนยันแล้วจาก owasp.org)<br/><br/>
+    <strong>จุดที่ต่างจากบทก่อนหน้า:</strong> บทนำและบทที่ 3 ทดสอบ <em>authentication</em> — "คุณมี API Key ที่ถูกต้องไหม" บทนี้ทดสอบ <em>authorization</em> คนละชั้น — "ต่อให้ Key คุณถูกต้องจริง คุณควรเห็น<strong>ข้อมูลชิ้นนี้โดยเฉพาะ</strong>ไหม" ระบบที่เช็ค auth ถูกต้องสมบูรณ์ (เหมือน <code>validateApiKey</code> ที่ยืนยันแล้วในบทก่อนๆ) ก็ยังมี IDOR ได้ ถ้า handler ดึงข้อมูลด้วย ID จาก URL ตรงๆ โดยไม่เช็คว่า <code>portfolio.ownerId === req.user.id</code> ก่อนส่งข้อมูลกลับ<br/><br/>
+    <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ดจริงของ My-Investment-Port แล้วเป็นแอป single-user (ไม่มี multi-tenant, ไม่มี endpoint แบบ <code>/api/portfolio/:id</code> ที่แยกข้อมูลตามเจ้าของจริง) จึงไม่มี IDOR ให้ทดสอบตรงๆ ในโปรเจกต์นี้ บทนี้จึงเป็นสถานการณ์สมมติที่ขยายจาก domain พอร์ตโฟลิโอของโปรเจกต์ เพื่อฝึกเทคนิคการทดสอบ IDOR ซึ่งเป็นช่องโหว่ที่พบบ่อยมากในระบบ multi-tenant จริง (เช่น SaaS ที่มีหลายผู้ใช้)`,
+    example: `// ตัวอย่างเช็คด้านตรงข้าม: ผู้ใช้ A ใช้ key ของตัวเองเข้าถึงพอร์ตของตัวเองต้องผ่านได้ปกติ (positive case คู่กัน)
+const ownResponse = await request.get('/api/portfolio/a-111', {
+  headers: { 'X-API-Key': apiKeyA },
+});
+expect(ownResponse.status()).toBe(200);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ใช้ <code>apiKeyA</code> (API Key ที่ถูกต้องจริงของผู้ใช้ A) ยิง GET ไปที่ <code>/api/portfolio/b-222</code> (พอร์ตของผู้ใช้ B)<br/>
+    2. ตรวจสอบว่า status ต้องเป็น <code>403</code> หรือ <code>404</code> ไม่ใช่ <code>200</code>`
+  },
+  {
+    id: "npm_audit_gate",
+    meta: "ขั้นสูง 3",
+    title: "ขั้นสูง 3: npm audit เป็น QA Gate ตรวจ Dependency Vulnerability",
+    template: `// สถานการณ์จริง (ตรวจสอบแล้ว ณ วันที่เตรียมบทเรียนนี้ 2026-07-29): My-Investment-Port ไม่มี CI
+// gate ตรวจ dependency vulnerability เลย (ไม่มีโฟลเดอร์ .github/workflows/ และไม่มี script npm audit
+// ใน package.json) รันคำสั่ง npm audit --omit=dev --json จริงแล้วพบ 6 ช่องโหว่ (1 moderate, 4 high,
+// 1 critical) รวมถึงช่องโหว่ critical จริงใน dependency ชื่อ seroval — ตัวเลขนี้จะเปลี่ยนไปตามเวลาที่
+// dependency ถูกอัปเดต แต่เทคนิคการเขียน gate นี้ใช้ได้เสมอ
+// ข้อควรระวังทางเทคนิค (ยืนยันจาก Node.js docs): npm audit จะ exit ด้วย code ที่ไม่ใช่ 0 เมื่อเจอ
+// ช่องโหว่ (ตาม --audit-level ที่ตั้งไว้) ซึ่งทำให้ execSync ของ Node.js throw error ทันที (ไม่ return
+// output ธรรมดา) ต้อง catch แล้วอ่าน err.stdout แทน ไม่งั้นโค้ดจะ crash ก่อนได้ตรวจสอบอะไรเลย
+// 1. รันคำสั่ง npm audit --omit=dev --json ด้วย execSync แล้ว catch error เพื่ออ่าน stdout ที่มี JSON report
+// 2. parse JSON แล้วตรวจสอบว่า metadata.vulnerabilities.critical ต้องเท่ากับ 0
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการเขียน npm audit gate (ขั้นสูง)...");
+      const stripped = stripComments(code);
+      const hasAuditCommand = /npm audit/.test(stripped) && /--json/.test(stripped);
+      const hasTryCatch = /try\s*{[\s\S]*}\s*catch/.test(stripped) && /\.stdout/.test(stripped);
+      const hasJsonParse = /JSON\.parse/.test(stripped);
+      const hasCriticalAssertion = /expect\(\s*\w+(\.metadata)?\.vulnerabilities\.critical\s*\)\.toBe\(0\)/.test(stripped);
+      if (!hasAuditCommand) {
+        throw new Error("ไม่พบคำสั่ง npm audit --json\nตัวอย่าง: execSync('npm audit --omit=dev --json', { encoding: 'utf-8' });");
+      }
+      if (!hasTryCatch) {
+        throw new Error("ไม่พบการดักจับ error ด้วย try/catch พร้อมอ่านค่า err.stdout — npm audit exit code ไม่เป็น 0 เมื่อเจอช่องโหว่ ทำให้ execSync throw ก่อนได้ output เสมอถ้าไม่ดักไว้\nตัวอย่าง: catch (err) { output = err.stdout; }");
+      }
+      if (!hasJsonParse) {
+        throw new Error("ไม่พบการ parse JSON ด้วย JSON.parse()\nตัวอย่าง: const report = JSON.parse(output);");
+      }
+      if (!hasCriticalAssertion) {
+        throw new Error("ไม่พบการตรวจสอบว่า vulnerabilities.critical เท่ากับ 0\nตัวอย่าง: expect(report.metadata.vulnerabilities.critical).toBe(0);");
+      }
+      log("✓ ยืนยันได้ว่าเขียน npm audit gate ที่ parse ผลจริงและ assert ค่าที่คาดหวังถูกต้อง");
+    },
+    hint: "npm audit จะ exit ด้วย code ที่ไม่ใช่ 0 เมื่อเจอช่องโหว่ตามระดับที่ตั้งไว้ — Node.js execSync() จะ throw Error ทันทีในกรณีนี้ (ไม่ return ค่าปกติ) แต่ error object ที่ throw ออกมามี property stdout ที่เก็บ output ตัวเต็มไว้อยู่แล้ว ลอง catch แล้วดึง stdout ออกมา parse เป็น JSON จากนั้นเจาะเข้าไปที่ field ที่เก็บจำนวนช่องโหว่ระดับ critical",
+    solution: `import { test, expect } from '@playwright/test';
+import { execSync } from 'node:child_process';
+
+test('npm audit ต้องไม่มี critical vulnerability ใน production dependencies', () => {
+  let output;
+  try {
+    output = execSync('npm audit --omit=dev --json', { encoding: 'utf-8' });
+  } catch (err) {
+    output = err.stdout;
+  }
+  const report = JSON.parse(output);
+
+  expect(report.metadata.vulnerabilities.critical).toBe(0);
+});`,
+    theory: `<strong>Dependency Vulnerability Awareness</strong> คือการยอมรับว่าโค้ดที่ทีมเขียนเองไม่ใช่ความเสี่ยงด้าน security เพียงอย่างเดียว — library ที่ติดตั้งผ่าน npm ก็มีช่องโหว่ที่ถูกค้นพบใหม่ได้ตลอดเวลา <code>npm audit</code> เทียบ dependency ที่ติดตั้งจริงกับฐานข้อมูลช่องโหว่ (GitHub Advisory Database) แล้วรายงานเป็นระดับ info/low/moderate/high/critical<br/><br/>
+    <strong>ความจริงที่ตรงไปตรงมา (ตรวจสอบแล้ว ณ วันที่เตรียมบทเรียนนี้ 2026-07-29):</strong> My-Investment-Port ไม่มี CI gate ตรวจเรื่องนี้เลย — ไม่มีโฟลเดอร์ <code>.github/workflows/</code> และไม่มี script <code>npm audit</code> อยู่ใน <code>package.json</code> เลยสักบรรทัด รันคำสั่งจริงแล้วพบ:<br/><br/>
+    • <code>npm audit --omit=dev --json</code> (เฉพาะ dependency ที่ใช้จริงตอน production) → <code>metadata.vulnerabilities</code> เท่ากับ <code>{ moderate: 1, high: 4, critical: 1, total: 6 }</code> — รวมถึงช่องโหว่ระดับ critical จริงใน dependency ชื่อ <code>seroval</code> (type confusion ระหว่าง deserialize)<br/>
+    • <code>npm audit --json</code> (รวม devDependencies ด้วย) → รายงานสูงถึง 35 ช่องโหว่ (2 low, 15 moderate, 16 high, 2 critical)<br/><br/>
+    <strong>บทเรียนสำคัญจากตัวเลขสองชุดนี้:</strong> devDependency (เช่น build tool, test runner) ไม่เคยถูกส่งไปรันจริงบน production ผู้ใช้ปลายทางเข้าถึงไม่ได้เลย — QA gate ที่ fail build ทุกครั้งที่เจอช่องโหว่ใน devDependency (35 รายการ) จะกลายเป็น noise ที่ทีมเริ่มเมินเฉย (เหมือน "the boy who cried wolf") ดังนั้น gate ที่มีประโยชน์จริงมักจำกัดขอบเขตด้วย <code>--omit=dev</code> ก่อน แล้วค่อยตัดสินใจ threshold (เช่น fail เฉพาะ critical)<br/><br/>
+    <strong>กับดักทางเทคนิค (ยืนยันจาก Node.js docs):</strong> <code>npm audit</code> จะ exit ด้วย code ที่ไม่ใช่ 0 เมื่อเจอช่องโหว่ตาม <code>--audit-level</code> ที่ตั้งไว้ (ค่า default ตรวจทุกระดับ) — เมื่อรันผ่าน Node's <code>execSync()</code> พฤติกรรม exit ไม่เป็น 0 จะทำให้ฟังก์ชัน<strong>throw Error ทันที</strong> ไม่ return string ตามปกติ แต่ error object ที่ throw ออกมามี property <code>stdout</code>/<code>stderr</code> เก็บ output ตัวเต็มที่ capture ไว้ก่อน throw อยู่แล้ว โค้ดที่ไม่ catch ตรงนี้จะ crash ก่อนได้ตรวจสอบอะไรเลย`,
+    example: `// อีกวิธี: ใช้ --audit-level=high แล้วอาศัย exit code ตรงๆ แทนการ parse JSON เอง
+try {
+  execSync('npm audit --omit=dev --audit-level=high', { encoding: 'utf-8' });
+  // ไม่ throw = ไม่มีช่องโหว่ระดับ high ขึ้นไป
+} catch (err) {
+  throw new Error('พบช่องโหว่ระดับ high หรือสูงกว่าใน production dependencies: ' + err.stdout);
+}`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. รันคำสั่ง <code>npm audit --omit=dev --json</code> ด้วย <code>execSync</code> พร้อม <code>try/catch</code> เพื่ออ่าน <code>err.stdout</code> เมื่อ command exit ไม่เป็น 0<br/>
+    2. <code>JSON.parse</code> ผลลัพธ์ แล้วตรวจสอบว่า <code>report.metadata.vulnerabilities.critical</code> ต้องเท่ากับ <code>0</code>`
   }
 ];
 

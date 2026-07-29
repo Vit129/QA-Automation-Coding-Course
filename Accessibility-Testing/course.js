@@ -452,6 +452,285 @@ const results = await new AxeBuilder({ page })
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
     1. ใช้ <code>AxeBuilder</code> จำกัดให้สแกนเฉพาะ <code>withRules(['aria-required-attr'])</code><br/>
     2. ตรวจสอบว่า <code>violations.length</code> เป็น <code>0</code>`
+  },
+  {
+    id: "table_scope_association",
+    meta: "ขั้นสูง 3",
+    title: "Table Header Scope: ผูก <th> เข้ากับคอลัมน์ข้อมูลด้วย scope Attribute",
+    template: `// สถานการณ์: PortfolioTable.jsx จริงของ My-Investment-Port render ตาราง Holdings ด้วย <table><thead><tr>
+// วนลูป headers.map() แล้ว render <th> ให้แต่ละคอลัมน์ (Ticker, Quantity, Price, ...) — แต่ยังไม่ได้ใส่
+// attribute ที่บอก screen reader ว่า <th> แต่ละอันเป็นหัวข้อของ "คอลัมน์" ไม่ใช่ "แถว"
+// เวลาผู้ใช้ screen reader เลื่อนไปยังเซลล์ข้อมูลกลางตาราง (เช่น เลขราคาช่องหนึ่ง) เครื่องมือควรอ่านชื่อคอลัมน์
+// กำกับให้ทุกครั้ง แต่ถ้าไม่มี scope attribute ผูกไว้ ผู้ใช้จะได้ยินแค่ตัวเลขลอยๆ ไม่รู้ว่าคือคอลัมน์อะไร
+// 1. ดึง <th> ทั้งหมดในตารางด้วย page.locator('table th')
+// 2. วนลูปตรวจสอบว่าทุก th มี attribute scope เป็น 'col'
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ scope attribute ของ th ในตาราง...");
+      const clean = stripComments(code);
+      const hasLocator = /page\.locator\(['"]table th['"]\)/.test(clean);
+      const hasCount = /\.count\(\)/.test(clean);
+      const hasScopeGet = /getAttribute\(['"]scope['"]\)/.test(clean);
+      const hasColCheck = /expect\([^)]*\)\.toBe\(['"]col['"]\)/.test(clean);
+      if (!hasLocator || !hasCount) {
+        throw new Error("ไม่พบการดึง th ทั้งหมดด้วย page.locator('table th') และ .count()");
+      }
+      if (!hasScopeGet) {
+        throw new Error("ไม่พบการตรวจสอบ attribute scope\nตัวอย่าง: await headers.nth(i).getAttribute('scope')");
+      }
+      if (!hasColCheck) {
+        throw new Error("ไม่พบการตรวจสอบว่า scope เป็น 'col'\nตัวอย่าง: expect(scope).toBe('col');");
+      }
+      log('✓ ทุก th ในตารางผูก scope="col" ถูกต้อง');
+    },
+    hint: "ต้องวนลูปตามจำนวน th ทั้งหมดที่เจอ แล้วดึงค่า attribute ที่บอกว่า header นี้เป็นหัวข้อของคอลัมน์หรือแถว ออกมาทีละตัว จากนั้นตรวจสอบด้วย expect ว่าค่าที่ได้ตรงกับคำที่สื่อความหมายว่าเป็น 'คอลัมน์'",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('ทุก th ในตาราง Holdings ผูก scope="col" ถูกต้อง', async ({ page }) => {
+  await page.goto('/holdings');
+  const headers = page.locator('table th');
+  const count = await headers.count();
+
+  for (let i = 0; i < count; i++) {
+    const scope = await headers.nth(i).getAttribute('scope');
+    expect(scope).toBe('col');
+  }
+});`,
+    theory: `<code>scope</code> attribute บน <code>&lt;th&gt;</code> ประกาศชัดเจนว่า header เซลล์นี้เป็นหัวข้อของ "คอลัมน์" (<code>scope="col"</code>) หรือ "แถว" (<code>scope="row"</code>) — screen reader ใช้ข้อมูลนี้ประกาศชื่อคอลัมน์กำกับทุกครั้งที่ผู้ใช้เลื่อนไปยังเซลล์ข้อมูลกลางตาราง (เช่น "Price, column, 245.30" แทนที่จะได้ยินแค่ "245.30" ลอยๆ ไม่รู้บริบท)<br/><br/>
+    <strong>Real grounding:</strong> <code>PortfolioTable.jsx</code> ของ My-Investment-Port render ตาราง Holdings จริงด้วย <code>&lt;table&gt;&lt;thead&gt;&lt;tr&gt;</code> วนลูป <code>table.getHeaderGroups()</code> แล้ว render <code>&lt;th&gt;</code> ให้แต่ละคอลัมน์ (Ticker, Quantity, Price ฯลฯ) — แต่ตรวจสอบซอร์สโค้ดจริงแล้วพบว่ายังไม่มี <code>scope</code> attribute ผูกไว้กับ <code>&lt;th&gt;</code> เลยสักตัว (มีแค่ class/style สำหรับจัดหน้าตา) บทนี้สอนวิธีปิดช่องว่างนี้ให้ถูกต้อง<br/><br/>
+    axe-core มี rule <code>scope-attr-valid</code> (ตรวจว่าค่า <code>scope</code> ที่ใส่ถูกต้องตามสเปก) และ <code>th-has-data-cells</code> (ตรวจว่า <code>th</code> แต่ละตัวมีเซลล์ข้อมูลที่มันอธิบายอยู่จริงในตาราง) คอยตรวจสอบเรื่องนี้อัตโนมัติได้ — แต่กรณีตารางเรียบง่ายแบบ Holdings (header แถวเดียว ไม่มี header ซ้อนหลายชั้น) การใส่ <code>scope="col"</code> ตรงๆ ก็เพียงพอแล้วตามหลัก WCAG 1.3.1 Info and Relationships (Level A) ที่เคยเรียนมาแล้วในบทขั้นสูง 1<br/><br/>
+    ข้อสังเกตเพิ่ม: ถ้า <code>&lt;th&gt;</code> ตัวไหนเป็นหัวข้อของ "แถว" แทน (เช่น คอลัมน์แรกสุดที่เป็นชื่อ ticker กำกับทั้งแถวนั้น) ต้องใช้ <code>scope="row"</code> แทน <code>scope="col"</code> — ต้องดูโครงสร้างตารางจริงว่า header ตัวไหนอธิบาย "แนวตั้ง" (คอลัมน์) หรือ "แนวนอน" (แถว)`,
+    example: `// ตัวอย่างตารางที่มี header ทั้งแนวตั้งและแนวนอนพร้อมกัน (คอลัมน์แรกเป็น scope="row")
+// <th scope="col">Price</th>
+// <th scope="row">AAPL</th>`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ดึง <code>&lt;th&gt;</code> ทั้งหมดด้วย <code>page.locator('table th')</code><br/>
+    2. วนลูปตรวจสอบว่าทุกตัวมี <code>scope</code> เป็น <code>'col'</code>`
+  },
+  {
+    id: "toast_live_region",
+    meta: "ขั้นสูง 4",
+    title: "Live Region: Toast Notification ต้องประกาศสถานะให้ Screen Reader โดยไม่ขัดจังหวะ",
+    template: `// สถานการณ์: Toast.jsx และ ToastContext.jsx จริงของ My-Investment-Port แสดง notification popup ชั่วคราว
+// (เช่น "บันทึกสำเร็จ") ที่ auto-dismiss เองหลังผ่านไปตามเวลาที่กำหนด (duration) โดยไม่ต้องให้ผู้ใช้กดอะไรเลย
+// แต่ popup นี้โผล่ขึ้นมาแบบเงียบๆ ในมุมมองของ screen reader — ถ้าผู้ใช้กำลังโฟกัสอยู่ที่จุดอื่นของหน้า
+// (เช่น กำลังกรอกฟอร์มอยู่) จะไม่มีทางรู้เลยว่ามี toast ขึ้นมาแล้วหายไป เพราะไม่มีอะไรบอก screen reader
+// ว่าเนื้อหาส่วนนี้เพิ่งเปลี่ยนแปลง
+// 1. คลิกปุ่มบันทึกเพื่อ trigger toast (page.getByRole('button', { name: 'Save' }))
+// 2. ตรวจสอบว่ามี element ที่ประกาศสถานะ (page.getByRole('status')) ปรากฏขึ้นมาและมองเห็นได้
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Live Region ของ Toast Notification...");
+      const clean = stripComments(code);
+      const hasClick = /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]Save['"]\s*\}\)\.click\(\)/.test(clean);
+      const hasStatusCheck = /expect\(\s*page\.getByRole\(['"]status['"]\)\s*\)\.toBeVisible\(\)/.test(clean);
+      if (!hasClick) {
+        throw new Error("ไม่พบการคลิกปุ่มบันทึกด้วย page.getByRole('button', { name: 'Save' }).click()");
+      }
+      if (!hasStatusCheck) {
+        throw new Error("ไม่พบการตรวจสอบ toBeVisible() บน element ที่หาเจอผ่าน page.getByRole('status')");
+      }
+      log('✓ Toast แสดงผ่าน live region ที่ screen reader ประกาศได้ถูกต้อง');
+    },
+    hint: "หลังจาก trigger ให้ toast ปรากฏขึ้น ต้องหา element ที่ประกาศสถานะผ่าน accessible role ที่บอกความหมายว่า 'เป็นข้อความสถานะที่เพิ่งเปลี่ยนแปลง' (implicit role ที่ผูกกับ aria-live แบบไม่ขัดจังหวะผู้ใช้) แล้วตรวจสอบว่ามันแสดงผลอยู่จริง",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('Toast แสดงผ่าน live region ให้ screen reader ประกาศอัตโนมัติ', async ({ page }) => {
+  await page.goto('/settings');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('status')).toBeVisible();
+});`,
+    theory: `<strong>WCAG 4.1.3 Status Messages (Level AA)</strong> กำหนดว่าข้อความสถานะ (status message) ที่ปรากฏขึ้นโดยไม่ได้ย้าย focus ไปหามัน ต้องสามารถระบุได้ผ่าน role หรือ property ทาง code เพื่อให้ assistive technology แจ้งผู้ใช้ได้ — Toast notification เป็นตัวอย่างคลาสสิกของสิ่งนี้: มันโผล่มา "ข้างๆ" สิ่งที่ผู้ใช้กำลังทำอยู่ ไม่เคยขโมย focus ไปเลย<br/><br/>
+    <strong>Real grounding:</strong> <code>Toast.jsx</code> และ <code>ToastContext.jsx</code> ของ My-Investment-Port เป็น component จริงที่ใช้งานทั่วทั้งแอป (เรียกผ่าน <code>useToast()</code> hook) — <code>ToastContext.jsx</code> render toast ทั้งหมดไว้ใน <code>&lt;div className="toast-container"&gt;</code> ที่อยู่คงที่ใน DOM แล้วเพิ่ม/ลบ <code>&lt;Toast&gt;</code> ตาม state แต่ตรวจสอบซอร์สโค้ดจริงแล้วพบว่าทั้ง <code>toast-container</code> และตัว toast เองไม่มี <code>aria-live</code> หรือ <code>role</code> ใดๆ กำกับไว้เลย (ต่างจาก <code>Spinner.jsx</code> ของโปรเจกต์เดียวกันที่มี <code>role="status"</code> ถูกต้องอยู่แล้ว) — เป็นช่องว่างจริงที่บทนี้สอนวิธีปิด<br/><br/>
+    วิธีปิดช่องว่างนี้คือใส่ <code>role="status"</code> (implicit <code>aria-live="polite"</code> — รอจังหวะที่ผู้ใช้ว่างก่อนค่อยประกาศ เหมาะกับ toast ประเภท success/info) หรือ <code>role="alert"</code> (implicit <code>aria-live="assertive"</code> — ขัดจังหวะประกาศทันที เหมาะกับ toast ประเภท error ที่ต้องรู้ทันที) — เลือกตาม <code>type</code> ของ toast: <code>success</code>/<code>info</code>/<code>warning</code> ใช้ <code>role="status"</code>, <code>error</code> ใช้ <code>role="alert"</code><br/><br/>
+    ข้อควรระวัง: <code>aria-live</code>/<code>role</code> ต้องอยู่บน element ที่มีอยู่ใน DOM <strong>ตั้งแต่ก่อน</strong> เนื้อหาจะเปลี่ยน (เช่น container ที่คงที่อยู่แล้ว) ถ้าใส่ role นี้บน element ที่เพิ่งถูกสร้างขึ้นมาใหม่พร้อมกับข้อความเลย บาง screen reader จะไม่ทันประกาศ เพราะมันตรวจจับการ "เปลี่ยนแปลงภายใน" element ที่มีอยู่แล้ว ไม่ใช่การ "เพิ่ม element ใหม่" เข้ามาทั้งก้อน`,
+    example: `// เลือก role ตามความรุนแรงของ toast
+const role = toastType === 'error' ? 'alert' : 'status';
+// <div role={role}>{message}</div>`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. คลิกปุ่มบันทึกด้วย <code>page.getByRole('button', { name: 'Save' })</code><br/>
+    2. ตรวจสอบว่า <code>page.getByRole('status')</code> แสดงผล (<code>toBeVisible()</code>)`
+  },
+  {
+    id: "reduced_motion_vestibular",
+    meta: "ขั้นสูง 5",
+    title: "prefers-reduced-motion: เคารพผู้ใช้ที่มีอาการ Vestibular Disorder",
+    template: `// สถานการณ์: My-Investment-Port จริงมี CSS หลายไฟล์ (toast-styles.css, button-styles.css, form-styles.css,
+// animation-styles.css, card-styles.css, table-styles.css ฯลฯ) ที่เขียน @media (prefers-reduced-motion: reduce)
+// ปิด animation/transition ทั้งหมดไว้อยู่แล้ว เพื่อผู้ใช้ที่ตั้งค่าระบบปฏิเสธการเคลื่อนไหว — กลุ่มผู้ใช้ที่มีอาการ
+// vestibular disorder (เวียนหัว/คลื่นไส้จาก motion บนจอ เช่น parallax, slide transition, spinning loader)
+// พึ่งพา setting นี้เพื่อใช้งานเว็บได้โดยไม่ป่วย
+// แค่เขียน CSS ไว้ไม่พอ ต้องมี Playwright test ยืนยันว่าเมื่อจำลอง setting นี้ในเบราว์เซอร์แล้ว หน้าเว็บจริง
+// นิ่งสนิทไม่มี animation เล่นอยู่เลย (สังเกตว่าเทคนิคเดียวกันนี้เคยใช้ในบทเรียน flaky_font_animation_fix
+// ของ track Visual-Regression-Testing มาแล้ว — แต่ที่นั่นใช้เพื่อ "กันไม่ให้ screenshot diff fail แบบสุ่ม" บทนี้
+// ใช้เพื่อ "พิสูจน์ผลลัพธ์ที่ผู้ใช้จริงที่มีอาการ vestibular ได้รับ" ซึ่งเป็นคนละเป้าหมายกัน)
+// 1. จำลอง setting ระบบด้วย page.emulateMedia({ reducedMotion: 'reduce' })
+// 2. ถ่ายภาพเปรียบเทียบด้วย toHaveScreenshot() หลังจำลองค่านี้แล้ว
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการจำลอง prefers-reduced-motion ก่อนถ่ายภาพ...");
+      const clean = stripComments(code);
+      const hasEmulate = /page\.emulateMedia\(\s*\{\s*reducedMotion:\s*['"]reduce['"]\s*\}\s*\)/.test(clean);
+      const hasScreenshot = /toHaveScreenshot\(/.test(clean);
+      if (!hasEmulate) {
+        throw new Error("ไม่พบการจำลอง prefers-reduced-motion ด้วย page.emulateMedia({ reducedMotion: 'reduce' })");
+      }
+      if (!hasScreenshot) {
+        throw new Error("ไม่พบการเรียก toHaveScreenshot()");
+      }
+      const emulateIndex = clean.indexOf('emulateMedia');
+      const screenshotIndex = clean.indexOf('toHaveScreenshot');
+      if (emulateIndex > screenshotIndex) {
+        throw new Error("ต้องจำลอง prefers-reduced-motion ด้วย emulateMedia() ก่อนถ่ายภาพด้วย toHaveScreenshot() เสมอ ไม่ใช่หลัง");
+      }
+      log("✓ จำลอง prefers-reduced-motion และถ่ายภาพถูกต้อง");
+    },
+    hint: "Playwright มีเมธอดจำลองการตั้งค่า media feature ของระบบปฏิบัติการได้โดยตรง รับ object ที่ระบุ key ตรงกับชื่อ media feature และค่าที่ต้องการจำลอง — ต้องเรียกเมธอดนี้ก่อนขั้นตอนถ่ายภาพเปรียบเทียบเสมอ เพื่อให้ค่านั้นมีผลตอน render จริง",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('หน้าเว็บไม่มี animation เมื่อจำลอง prefers-reduced-motion: reduce', async ({ page }) => {
+  await page.goto('/');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(page).toHaveScreenshot();
+});`,
+    theory: `<strong>WCAG 2.3.3 Animation from Interactions (Level AAA)</strong> กำหนดว่า motion animation ที่เกิดจากการกระทำของผู้ใช้ (ไม่ใช่ animation ที่จำเป็นต่อการสื่อความหมาย) ต้องสามารถปิดได้ — เอกสารทางการของ WCAG ระบุ <code>prefers-reduced-motion</code> CSS media query เป็นเทคนิคที่เพียงพอสำหรับข้อนี้โดยตรง (แม้เป็นระดับ AAA ซึ่งสูงกว่าเป้าหมาย AA ที่ track นี้ตั้งไว้ตั้งแต่บทนำ แต่เป็นแนวปฏิบัติที่ดีที่อุตสาหกรรมทำตามกันอย่างกว้างขวางเพราะกระทบผู้ใช้จริงชัดเจน)<br/><br/>
+    <strong>Vestibular disorder</strong> คือความผิดปกติของระบบการทรงตัวในหูชั้นใน — ผู้ป่วยกลุ่มนี้อาจเวียนหัว คลื่นไส้ หรือถึงขั้นเป็นไมเกรนได้จาก motion บนจอที่คนทั่วไปมองว่าไม่มีอะไร เช่น parallax scroll, carousel เลื่อนอัตโนมัติ, spinning loader, slide transition — เป็นความพิการทางร่างกายอีกกลุ่มที่แยกจากตาบอด/หูหนวก/มือสั่นที่เคยเรียนมาในบทก่อนๆ<br/><br/>
+    <strong>Real grounding:</strong> My-Investment-Port เป็นตัวอย่างที่ทำเรื่องนี้ถูกต้อง<strong>สม่ำเสมอทั้งโปรเจกต์</strong> — ตรวจสอบซอร์สโค้ดพบ <code>@media (prefers-reduced-motion: reduce)</code> block จริงอยู่ในอย่างน้อย 7 ไฟล์ CSS: <code>toast-styles.css</code>, <code>animation-styles.css</code>, <code>button-styles.css</code>, <code>form-styles.css</code>, <code>card-styles.css</code>, <code>table-styles.css</code>, <code>swipe-metric-table.css</code> — แต่ละไฟล์มีคอมเมนต์กำกับตรงๆ ว่า <code>/* Accessibility: Respect prefers-reduced-motion */</code> ยืนยันว่าทีมตั้งใจทำเรื่องนี้จริง ไม่ใช่บังเอิญ เช่นใน <code>toast-styles.css</code>: <code>.toast, .toast-close, .toast-progress, .toast-icon { animation: none !important; transition: none !important; }</code> ภายใต้ media query นี้<br/><br/>
+    CSS ฝั่งเดียวพิสูจน์ไม่ได้ว่า "ทำงานจริง" — ต้องมี test ยืนยันด้วยว่าเมื่อจำลอง setting นี้ในเบราว์เซอร์แล้ว หน้าเว็บที่ render ออกมานิ่งจริง <code>page.emulateMedia({ reducedMotion: 'reduce' })</code> จำลอง media feature นี้ในบริบทของ Playwright แล้วถ่ายภาพเทียบ baseline สองเวอร์ชัน (ปกติ vs reduced-motion) ถ้า CSS ทำงานถูกต้อง สอง baseline นี้ควรจะนิ่งเหมือนกันทุกครั้งที่รัน (ไม่มี frame กลางๆ ของ animation หลุดเข้ามาสุ่ม)`,
+    example: `// เปรียบเทียบพฤติกรรมปกติ (มี animation) กับ reduced-motion (ไม่มี animation) ในไฟล์เดียวกัน
+test('มี animation ตามปกติเมื่อไม่ได้ตั้งค่า reduced motion', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveScreenshot({ animations: 'allow' });
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. จำลอง <code>page.emulateMedia({ reducedMotion: 'reduce' })</code> ก่อนถ่ายภาพ<br/>
+    2. ถ่ายภาพเปรียบเทียบด้วย <code>toHaveScreenshot()</code>`
+  },
+  {
+    id: "focus_visible_indicator",
+    meta: "ขั้นสูง 6",
+    title: "Focus Visible: ห้ามลบ Outline เริ่มต้นโดยไม่มีของทดแทน",
+    template: `/* สถานการณ์: form-styles.css และ button-styles.css จริงของ My-Investment-Port เคยเจอปัญหาเดียวกับที่เว็บจำนวนมากทำพลาด
+   นักพัฒนาลบ outline เริ่มต้นของ browser ออกเพราะมันดูไม่เข้ากับดีไซน์ (outline: none;) — ผู้ใช้เมาส์ไม่รู้สึกอะไรเลย
+   เพราะไม่เคยเห็น outline อยู่แล้ว แต่ผู้ใช้ที่ควบคุมด้วยคีย์บอร์ดล้วนกด Tab ไล่ไปเรื่อยๆ โดยไม่รู้เลยว่าตอนนี้
+   focus อยู่ตรงไหนของหน้า (ผิดกับบทที่ 3 ที่แค่พิสูจน์ว่า "focus ไปถึงจริง" บทนี้พิสูจน์อีกขั้นว่า
+   "focus นั้นมองเห็นได้ด้วยตา") */
+.input-field {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 14px;
+  outline: none;
+}
+
+/* แก้ไข CSS ด้านบน: เพิ่ม rule .input-field:focus-visible ที่กำหนด outline แบบมองเห็นได้จริง
+   (ความหนาเป็น px + solid + สี) ทดแทน outline ที่ถูกลบไปด้านบน */
+/* WRITE YOUR CODE HERE */
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Focus Visible Indicator...");
+      const clean = stripComments(code);
+      const focusVisibleMatch = clean.match(/\.input-field:focus-visible\s*\{([^}]*)\}/);
+      if (!focusVisibleMatch) {
+        throw new Error("ไม่พบ selector .input-field:focus-visible { ... }");
+      }
+      const block = focusVisibleMatch[1];
+      const hasVisibleOutline = /outline:\s*[1-9]\d*px\s+solid\s+\S+/i.test(block);
+      const hasNoneInBlock = /outline:\s*none/i.test(block);
+      if (hasNoneInBlock) {
+        throw new Error("อย่าใส่ outline: none ซ้ำใน .input-field:focus-visible — จุดประสงค์ของ selector นี้คือทดแทน outline ที่ถูกลบไป ไม่ใช่ลบซ้ำ");
+      }
+      if (!hasVisibleOutline) {
+        throw new Error("ใน .input-field:focus-visible ต้องกำหนด outline ที่มองเห็นได้จริง (ความหนาเป็น px + solid + สี) ไม่ใช่ outline: none หรือปล่อยว่าง\nตัวอย่าง: outline: 2px solid #10b981;");
+      }
+      log("✓ เพิ่ม Focus Visible Indicator ทดแทน outline ที่ถูกลบไปถูกต้อง");
+    },
+    hint: "ต้องเพิ่ม selector ใหม่ที่ใช้ pseudo-class ซึ่งต่างจาก :focus ตรงที่มันฉลาดพอจะรู้ว่า focus นี้มาจากคีย์บอร์ดจริงๆ (ไม่ใช่จากการคลิกเมาส์) แล้วกำหนด outline ที่มีความหนาเป็นพิกเซล เส้นทึบ (solid) และสีที่มองเห็นชัดเจนบนพื้นหลังจริง",
+    solution: `.input-field {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 14px;
+  outline: none;
+}
+
+.input-field:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}`,
+    theory: `<strong>WCAG 2.4.7 Focus Visible (Level AA)</strong> กำหนดว่า element ที่ควบคุมได้ด้วยคีย์บอร์ดต้องมีโหมดที่ตัวชี้ focus มองเห็นได้เสมอ — เพราะผู้ใช้คีย์บอร์ดล้วนไม่มีเคอร์เซอร์เมาส์ให้ดูว่า "ตอนนี้กำลังจะโต้ตอบกับอะไร" ตัว focus indicator (มักเป็น outline รอบ element) คือสิ่งเดียวที่บอกตำแหน่งปัจจุบันของพวกเขา<br/><br/>
+    <strong>Real grounding:</strong> <code>form-styles.css</code> ของ My-Investment-Port มี <code>.input-field { outline: none; }</code> จริงบรรทัดที่ตั้งค่า base style — แต่ตามด้วย <code>.input-field:focus-visible { outline: 2px solid var(--accent, #10b981); outline-offset: 2px; }</code> ทันที ทดแทนไว้ให้ครบ เช่นเดียวกับ <code>button-styles.css</code> ที่มี <code>.btn { outline: none; }</code> คู่กับ <code>.btn:focus-visible { outline: 2px solid rgba(16, 185, 129, 0.6); outline-offset: 2px; }</code> ภายใต้คอมเมนต์กำกับตรงๆ ว่า <code>/* Accessibility: Focus Visible */</code> — ยืนยันว่าทีมตั้งใจทำถูกต้องตามแพทเทิร์นนี้จริง ไม่ใช่บังเอิญ<br/><br/>
+    <strong>ทำไมใช้ <code>:focus-visible</code> แทน <code>:focus</code> ธรรมดา:</strong> <code>:focus</code> ทำงานกับทุกการ focus ไม่ว่าจะมาจากคีย์บอร์ดหรือ<strong>คลิกเมาส์</strong>ก็ตาม — ถ้าใส่ outline บน <code>:focus</code> ตรงๆ ผู้ใช้เมาส์จะเห็นกรอบ outline โผล่ขึ้นมาทุกครั้งที่คลิกปุ่ม (ซึ่งนักออกแบบมักมองว่า "ดูไม่เรียบร้อย") <code>:focus-visible</code> เป็น pseudo-class ที่ browser คำนวณเองว่า focus ครั้งนี้ "น่าจะมาจากคีย์บอร์ด" (เช่น กด Tab) หรือมาจากการคลิกเมาส์ — แสดง outline เฉพาะกรณีแรกเท่านั้น ทำให้ได้ทั้งดีไซน์ที่สะอาดสำหรับผู้ใช้เมาส์ และ accessibility ที่ครบสำหรับผู้ใช้คีย์บอร์ดพร้อมกัน<br/><br/>
+    บั๊กที่พบบ่อยที่สุดในโลกจริง: ทีมลบ <code>outline: none</code> ทั้งเว็บเพราะ "ไม่สวย" โดยไม่ใส่อะไรทดแทนเลย — ผลคือผู้ใช้คีย์บอร์ดล้วนใช้เว็บไม่ได้จริงๆ ทั้งเว็บ (WCAG 2.4.7 fail ทั้งไซต์) แม้ว่าฟังก์ชันการทำงานทุกอย่างจะยัง "ทำงานได้" ถ้ามองจากมุมมองเมาส์`,
+    example: `/* Global reset ที่ครอบคลุมทุก element พร้อมกัน แทนการเขียนแยกทีละ component */
+*:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}`,
+    task: `จงแก้ไข CSS ด้านบนให้เพิ่ม Focus Visible Indicator:<br/>
+    1. เพิ่ม selector <code>.input-field:focus-visible</code><br/>
+    2. กำหนด <code>outline</code> ที่มองเห็นได้จริง (ความหนาเป็น px, <code>solid</code>, มีสี) ทดแทน <code>outline: none</code> ที่ถูกลบไป`
+  },
+  {
+    id: "modal_focus_trap",
+    meta: "ขั้นสูง 7",
+    title: "Focus Trap: Modal Dialog ต้องมี role, ปิดด้วย Escape ได้",
+    template: `// สถานการณ์: ConfirmDialog.jsx จริงของ My-Investment-Port เปิด modal ผ่าน createPortal พร้อมล็อค scroll ของ
+// หน้าเว็บหลังไว้ (document.documentElement/body.style.overflow = 'hidden') ระหว่างที่ dialog เปิดอยู่ —
+// แต่ตรวจสอบซอร์สโค้ดจริงของ ConfirmDialog.jsx, FormModal.jsx และ SettingsModal.jsx แล้วไม่พบ role="dialog",
+// aria-modal, หรือการปิดด้วยปุ่ม Escape เลยสักที่ ผู้ใช้คีย์บอร์ดที่กด Tab ตอนนี้จะเลื่อน focus ทะลุออกไปยัง
+// element ของหน้าเว็บด้านหลัง (ที่มองไม่เห็นเพราะโดน overlay บังอยู่) ได้ และไม่มีวิธีปิด dialog ด้วยคีย์บอร์ดเลย
+// สมมติว่าทีมแก้ไขแล้วให้ container หลักของ dialog มี role="dialog" กำกับ
+// 1. คลิกปุ่มเปิด dialog (page.getByRole('button', { name: 'Delete Account' })) แล้วตรวจสอบว่า dialog
+//    (page.getByRole('dialog')) แสดงผลอยู่
+// 2. กด Escape (page.keyboard.press('Escape')) แล้วตรวจสอบว่า dialog หายไปแล้ว (toBeHidden())
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ role และการปิด Modal Dialog ด้วย Escape...");
+      const clean = stripComments(code);
+      const hasOpenClick = /getByRole\(['"]button['"],\s*\{\s*name:\s*['"]Delete Account['"]\s*\}\)\.click\(\)/.test(clean);
+      const hasDialogVisible = /expect\(\s*page\.getByRole\(['"]dialog['"]\)\s*\)\.toBeVisible\(\)/.test(clean);
+      const hasEscape = /page\.keyboard\.press\(['"]Escape['"]\)/.test(clean);
+      const hasDialogHidden = /expect\(\s*page\.getByRole\(['"]dialog['"]\)\s*\)\.toBeHidden\(\)/.test(clean);
+      if (!hasOpenClick) {
+        throw new Error("ไม่พบการคลิกปุ่มเปิด dialog ด้วย page.getByRole('button', { name: 'Delete Account' }).click()");
+      }
+      if (!hasDialogVisible) {
+        throw new Error("ไม่พบการตรวจสอบว่า page.getByRole('dialog') แสดงผลอยู่ (toBeVisible())");
+      }
+      if (!hasEscape) {
+        throw new Error("ไม่พบการกด Escape ด้วย page.keyboard.press('Escape')");
+      }
+      if (!hasDialogHidden) {
+        throw new Error("ไม่พบการตรวจสอบว่า dialog หายไปแล้วหลังกด Escape\nตัวอย่าง: expect(page.getByRole('dialog')).toBeHidden();");
+      }
+      log("✓ Modal Dialog มี role และปิดด้วย Escape ได้ถูกต้อง");
+    },
+    hint: "ต้องเปิด dialog ก่อนแล้วยืนยันว่ามันหา element ที่มี role สื่อความหมายว่าเป็นกล่องโต้ตอบเจอและมองเห็นได้จริง จากนั้นจำลองการกดปุ่มที่ใช้ปิดหน้าต่างโต้ตอบตามธรรมเนียมสากล แล้วตรวจสอบด้วย element เดิมว่ามันหายไปจากการมองเห็นแล้ว",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('Escape ปิด Modal Dialog ที่มี role ถูกต้อง', async ({ page }) => {
+  await page.goto('/settings');
+  await page.getByRole('button', { name: 'Delete Account' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+});`,
+    theory: `ตาม ARIA Authoring Practices Guide (APG) แพทเทิร์น <strong>Dialog (Modal)</strong> กำหนดพฤติกรรมที่ต้องมีครบ 5 อย่าง: (1) container หลักต้องมี <code>role="dialog"</code> (2) เมื่อเปิด focus ต้องย้ายเข้าไปอยู่ใน element ข้างในทันที (3) กด <code>Tab</code>/<code>Shift+Tab</code> ต้องวนอยู่แค่ภายใน dialog เท่านั้น ("focus trap" — ห้ามหลุดออกไปยัง element ของหน้าเว็บด้านหลัง) (4) ปุ่ม <code>Escape</code> ต้องปิด dialog ได้ (5) เมื่อปิดแล้ว focus ต้องย้อนกลับไปที่ element ที่เป็นตัวเปิด dialog นั้น — และถ้า background ถูกทำให้ interact ไม่ได้เลยจริงๆ ควรเสริม <code>aria-modal="true"</code> เพื่อบอก assistive technology ว่าเนื้อหาข้างนอกถูกปิดกั้นสนิท<br/><br/>
+    <strong>Real grounding:</strong> <code>ConfirmDialog.jsx</code> ของ My-Investment-Port render ผ่าน <code>createPortal</code> พร้อม overlay + กล่องโต้ตอบ และมีโค้ดล็อค scroll ของหน้าเว็บหลังไว้จริงตอน dialog เปิด: <code>document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; document.body.style.touchAction = 'none';</code> (แล้วคืนค่าเดิมตอนปิด) — พิสูจน์ว่าทีมคิดเรื่อง "หน้าเว็บด้านหลังต้องหยุดโต้ตอบได้" มาแล้วในระดับ visual/scroll แต่ตรวจสอบซอร์สโค้ดของ <code>ConfirmDialog.jsx</code>, <code>FormModal.jsx</code>, และ <code>SettingsModal.jsx</code> ทั้ง 3 ไฟล์แล้ว<strong>ไม่พบ</strong> <code>role="dialog"</code>, <code>aria-modal</code>, การจัดการ <code>Escape</code>, หรือ focus trap ใดๆ เลยสักไฟล์ — เป็นช่องว่างจริงที่พบบ่อยมาก: ทำถูกฝั่ง visual (บังหน้าจอ, ล็อค scroll) แต่ลืมทำฝั่ง keyboard/screen-reader โดยสิ้นเชิง<br/><br/>
+    บทนี้ validate เฉพาะส่วนที่ทดสอบผ่าน Playwright ได้ตรงไปตรงมา (role กับ Escape) — ส่วนการทดสอบว่า Tab loop ไม่หลุดออกนอก dialog จริง ต้องรวมเทคนิคจากตัวอย่างท้ายบท keyboard_navigation (กด Tab วนหลายครั้งแล้วเช็คว่า activeElement ยังอยู่ภายใน dialog เสมอ ไม่เคยหลุดไปเป็น element นอกกล่อง) เข้ากับบทนี้`,
+    example: `// ตรวจสอบว่า focus ไม่หลุดออกนอก dialog แม้กด Tab เกินจำนวน element ที่ focusable ได้ข้างใน
+const dialog = page.getByRole('dialog');
+for (let i = 0; i < 15; i++) {
+  await page.keyboard.press('Tab');
+}
+await expect(dialog.locator(':focus')).toBeVisible();`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. คลิกปุ่มเปิด dialog ด้วย <code>page.getByRole('button', { name: 'Delete Account' })</code> แล้วตรวจสอบว่า <code>page.getByRole('dialog')</code> <code>toBeVisible()</code><br/>
+    2. กด <code>page.keyboard.press('Escape')</code> แล้วตรวจสอบว่า dialog <code>toBeHidden()</code>`
   }
 ];
 

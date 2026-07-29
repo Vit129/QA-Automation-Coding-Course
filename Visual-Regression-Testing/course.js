@@ -344,6 +344,216 @@ await expect(page).toHaveScreenshot();`,
     1. เอา <code>page.waitForTimeout()</code> (blind wait) ออก<br/>
     2. ปิด CSS animation ด้วย <code>reducedMotion: 'reduce'</code><br/>
     3. รอ font โหลดเสร็จด้วย <code>document.fonts.ready</code> (หรือรอ <code>page.waitForLoadState('networkidle')</code>) ก่อนถ่ายภาพด้วย <code>toHaveScreenshot()</code>`
+  },
+  {
+    id: "clip_screenshot",
+    meta: "บทที่ 5",
+    title: "Clip: ถ่ายภาพเฉพาะพิกัดที่ต้องการ",
+    template: `// สถานการณ์: Header banner ของหน้า Dashboard เป็นพื้นหลัง gradient รวมปุ่มหลายตัว ไม่มี data-testid เดี่ยวๆ ให้เจาะจง
+// ต้องการถ่ายภาพเฉพาะแถบบนสุด กว้าง 1280 สูง 120 พิกเซล โดยไม่ต้องเทียบทั้งหน้า
+// 1. ถ่ายภาพเปรียบเทียบด้วย toHaveScreenshot() พร้อมตั้งค่า clip ระบุ x: 0, y: 0, width: 1280, height: 120
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการใช้ clip...");
+      const src = stripComments(code);
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
+      if (!hasScreenshot) {
+        throw new Error("ไม่พบการเรียก toHaveScreenshot()");
+      }
+      const hasClip = /clip:\s*\{/.test(src);
+      if (!hasClip) {
+        throw new Error("ไม่พบ option clip: {...}\nตัวอย่าง: await expect(page).toHaveScreenshot({ clip: { x: 0, y: 0, width: 1280, height: 120 } });");
+      }
+      const hasX = /x:\s*0\b/.test(src);
+      const hasY = /y:\s*0\b/.test(src);
+      const hasWidth = /width:\s*1280\b/.test(src);
+      const hasHeight = /height:\s*120\b/.test(src);
+      if (!hasX || !hasY || !hasWidth || !hasHeight) {
+        throw new Error("clip ต้องระบุครบทั้ง 4 ค่า: x: 0, y: 0, width: 1280, height: 120");
+      }
+      log("✓ ถ่ายภาพเฉพาะพิกัดที่ต้องการถูกต้อง");
+    },
+    hint: "toHaveScreenshot() รับ option clip เป็น object 4 key: x, y (จุดเริ่มถ่ายภาพนับจากมุมซ้ายบน) และ width, height (ขนาดพื้นที่ที่ต้องการ) — ใช้แทน mask หรือ locator เดี่ยวเมื่อพื้นที่ที่ต้องการไม่มี element ที่เจาะจงได้ตรงๆ",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('ถ่ายภาพเฉพาะแถบ header บนสุดของ Dashboard', async ({ page }) => {
+  await page.goto('/dashboard');
+  await expect(page).toHaveScreenshot({
+    clip: { x: 0, y: 0, width: 1280, height: 120 },
+  });
+});`,
+    theory: `<strong>clip</strong> ถ่ายภาพเฉพาะพื้นที่สี่เหลี่ยมตามพิกัดที่กำหนด (x, y, width, height) นับจากมุมซ้ายบนของหน้า — ต่างจาก <code>mask</code> ที่ถ่ายทั้งหน้าแต่ปิดบังบางส่วน, ต่างจาก screenshot เฉพาะ element ที่ต้องมี locator ชี้ element เดี่ยวๆ ได้<br/><br/>
+    ใช้ clip เมื่อพื้นที่ที่ต้องการเทียบ<strong>ไม่มี element เดี่ยวที่เจาะจงได้ตรงๆ</strong> เช่น แถบพื้นหลัง gradient ที่รวมปุ่มหลายตัวไว้ด้วยกัน หรือต้องการเทียบเฉพาะ "มุมหนึ่งของหน้า" โดยไม่สนใจ DOM structure ว่าจริงๆ แล้วมีกี่ element ซ้อนกันอยู่ตรงนั้น<br/><br/>
+    ข้อควรระวัง: พิกัดเป็นค่าคงที่ (fixed pixel) ไม่ผูกกับ element ใดๆ — ถ้า layout เปลี่ยนตำแหน่ง (เช่น เพิ่ม banner แจ้งเตือนด้านบนทำให้ทุกอย่างเลื่อนลง) พื้นที่ที่ clip ไว้จะไม่ตรงกับส่วนที่ต้องการอีกต่อไป เหมาะกับ element ที่ตำแหน่ง/ขนาดค่อนข้างคงที่เท่านั้น`,
+    example: `// clip พื้นที่ footer ที่อยู่ด้านล่างสุดของหน้าจอ (สมมติหน้าจอสูง 900px, footer สูง 80px)
+await expect(page).toHaveScreenshot({
+  clip: { x: 0, y: 820, width: 1280, height: 80 },
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ถ่ายภาพเปรียบเทียบด้วย <code>toHaveScreenshot()</code><br/>
+    2. ตั้งค่า <code>clip: { x: 0, y: 0, width: 1280, height: 120 }</code>`
+  },
+  {
+    id: "array_path_naming",
+    meta: "บทที่ 6",
+    title: "จัดกลุ่ม Baseline เป็นโฟลเดอร์ด้วย Array Path Naming",
+    template: `// สถานการณ์: Track นี้มีหลายหน้าที่ต้องเทส visual (dashboard, watchlist, timeline)
+// ถ้าตั้งชื่อ baseline แบบ flat ('dashboard-header.png', 'watchlist-header.png', ...) จะสับสนเมื่อไฟล์เยอะขึ้น
+// ต้องการจัดกลุ่มไฟล์ baseline ของหน้า dashboard ไว้ในโฟลเดอร์ dashboard/ ชื่อไฟล์ header.png
+// 1. ถ่ายภาพเปรียบเทียบด้วย toHaveScreenshot(['dashboard', 'header.png'])
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการตั้งชื่อ Baseline แบบ Array Path...");
+      const src = stripComments(code);
+      const hasArrayName = /toHaveScreenshot\(\s*\[\s*['"]dashboard['"]\s*,\s*['"]header\.png['"]\s*\]\s*\)/.test(src);
+      if (!hasArrayName) {
+        throw new Error("ไม่พบการเรียก toHaveScreenshot(['dashboard', 'header.png'])\nต้องส่ง argument แรกเป็น array ของ string ไม่ใช่ string เดี่ยว");
+      }
+      log("✓ จัดกลุ่ม Baseline เป็นโฟลเดอร์ถูกต้อง");
+    },
+    hint: "toHaveScreenshot() รับ argument แรกเป็น string เดี่ยว (ชื่อไฟล์ตรงๆ) หรือ array ของ string ก็ได้ — ถ้าส่งเป็น array แต่ละตัวใน array คือหนึ่งระดับของ path โฟลเดอร์ ตัวสุดท้ายในนั้นคือชื่อไฟล์",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('ถ่ายภาพ header ของ dashboard จัดเก็บในโฟลเดอร์ dashboard/', async ({ page }) => {
+  await page.goto('/dashboard');
+  await expect(page).toHaveScreenshot(['dashboard', 'header.png']);
+});`,
+    theory: `บทเรียนก่อนหน้านี้ตั้งชื่อ baseline เป็น string เดี่ยว เช่น <code>toHaveScreenshot('mobile.png')</code> — ใช้ได้ดีตอนมีไม่กี่ไฟล์ แต่พอ track ขยายมีหลายหน้า (dashboard, watchlist, timeline) แต่ละหน้ามีหลาย breakpoint/state ไฟล์ baseline ทั้งหมดจะกองรวมกันในโฟลเดอร์เดียว หาไฟล์ที่ต้องการยากขึ้นเรื่อยๆ<br/><br/>
+    <code>toHaveScreenshot()</code> รับ argument แรกเป็น<strong>array ของ string</strong>ได้ด้วย — Playwright จะตีความแต่ละตัวใน array เป็นหนึ่งระดับของโฟลเดอร์ ตัวสุดท้ายเป็นชื่อไฟล์ เช่น <code>['dashboard', 'header.png']</code> จะเก็บไฟล์ไว้ที่ <code>__screenshots__/dashboard/header.png</code> แทนที่จะกองรวมเป็น <code>dashboard-header.png</code> ในโฟลเดอร์เดียวกับไฟล์อื่นๆ ทั้งหมด<br/><br/>
+    ประโยชน์จริง: เวลา diff ทีละหน้าใน PR review หรือลบ baseline เก่าทั้งหน้าเมื่อ redesign หน้านั้นใหม่ทำได้ง่ายกว่ามาก เพราะไฟล์ที่เกี่ยวข้องกันอยู่ในโฟลเดอร์เดียวกันจริงๆ`,
+    example: `// จัดกลุ่มลึกได้มากกว่า 2 ระดับ เช่น แยกตาม feature แล้วแยกตาม breakpoint อีกชั้น
+await expect(page).toHaveScreenshot(['watchlist', 'mobile', 'header.png']);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ถ่ายภาพเปรียบเทียบด้วย <code>toHaveScreenshot(['dashboard', 'header.png'])</code>`
+  },
+  {
+    id: "canvas_chart_animation",
+    meta: "ขั้นสูง 3",
+    title: "JS/Canvas Chart Animation: จุดที่ animations:'disabled' และ reducedMotion เอาไม่อยู่",
+    template: `// สถานการณ์: PortfolioValueChart.jsx จริงของ My-Investment-Port ใช้ react-chartjs-2 (วาดกราฟบน <canvas>)
+// พร้อมตั้งค่า animation: { duration: 900, easing: 'easeInOutQuart' } — เล่น animation วาดกราฟทุกครั้งที่ mount
+// toHaveScreenshot() ค่า default (animations: 'disabled') หยุดได้แค่ CSS animation/transition/Web Animations เท่านั้น
+// กราฟที่วาดผ่าน canvas ด้วย JS ไม่ใช่ CSS เลย จึง "เอาไม่อยู่" — ถ่ายภาพจะได้ frame กลางๆ ของ animation แบบสุ่มทุกครั้งที่รัน
+// ทางแก้ที่ทำได้จริงตอนนี้ (ไม่มี hook ให้รอ animation จบในโค้ดนี้): รอเวลาให้นานกว่า duration จริงของ animation (900ms) พร้อม buffer เผื่อเครื่องช้า
+// 1. รอ 1200ms (900ms ของ animation + buffer) ด้วย page.waitForTimeout() ก่อนถ่ายภาพ
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการรอ Canvas Chart Animation จบก่อนถ่ายภาพ...");
+      const src = stripComments(code);
+      const hasWait = /waitForTimeout\(\s*1200\s*\)/.test(src);
+      if (!hasWait) {
+        throw new Error("ไม่พบ page.waitForTimeout(1200)\nกราฟวาดผ่าน canvas ใช้เวลาจริง 900ms ตาม config ของ chart ต้องรอนานกว่านั้นพร้อม buffer");
+      }
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
+      if (!hasScreenshot) {
+        throw new Error("ไม่พบการเรียก toHaveScreenshot()");
+      }
+      log("✓ รอ Canvas Chart Animation จบก่อนถ่ายภาพถูกต้อง");
+    },
+    hint: "บทก่อนหน้าสอนว่า blind wait (waitForTimeout) ผิดเพราะมีสัญญาณจริงให้รอแทนได้ (document.fonts.ready) — แต่กราฟที่วาดด้วย canvas ผ่าน chart library ไม่มี Promise หรือ event มาตรฐานให้รอว่า 'วาดเสร็จแล้ว' เมื่อไม่มีสัญญาณจริงให้ใช้ ตัวเลขที่รอต้องอ้างอิงจาก duration จริงในโค้ด ไม่ใช่เดาตัวเลขลอยๆ",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('ถ่ายภาพกราฟหลัง canvas animation วาดเสร็จ', async ({ page }) => {
+  await page.goto('/portfolio-value');
+  await page.waitForTimeout(1200);
+  await expect(page).toHaveScreenshot();
+});`,
+    theory: `<strong>Real grounding:</strong> <code>PortfolioValueChart.jsx</code> ของ My-Investment-Port ใช้ <code>react-chartjs-2</code> วาดกราฟผ่าน <code>&lt;canvas&gt;</code> พร้อมตั้งค่าจริง:<br/><br/>
+    <code>animation: { duration: 900, easing: 'easeInOutQuart' }</code><br/><br/>
+    <code>toHaveScreenshot()</code> ค่า default มี <code>animations: 'disabled'</code> อยู่แล้ว (ไม่ต้องตั้งเอง) ซึ่งตามเอกสารของ Playwright หยุดเฉพาะ <strong>CSS animations, CSS transitions และ Web Animations</strong> เท่านั้น — กราฟที่วาดผ่าน canvas ด้วย JavaScript (ไม่ใช่ CSS เลย) จึง<strong>ไม่ถูกหยุด</strong>โดย option นี้ และ <code>reducedMotion: 'reduce'</code> (บทขั้นสูง 2) ก็เช่นกัน เพราะ chart library ต้อง implement เองว่าจะ respect prefers-reduced-motion หรือไม่ ซึ่ง config ที่เห็นในไฟล์จริงไม่มีการเช็คนี้เลย<br/><br/>
+    สรุปช่องว่าง: ทั้งสอง option ที่เรียนมาแล้ว "เอาไม่อยู่" กับ canvas animation — เมื่อไม่มี event/Promise มาตรฐานให้รอ (ต่างจาก <code>document.fonts.ready</code> ที่มีจริง) ทางแก้ที่เหลืออยู่คือ<strong>blind wait ที่มีเหตุผลรองรับ</strong>: รอเวลานานกว่า duration จริงที่ระบุในโค้ด (900ms) บวก buffer กันเครื่องช้า (ตัวอย่างนี้ใช้ 1200ms) — ไม่ใช่การเดาตัวเลขลอยๆ แบบบทเรียนก่อนที่สอนว่าผิด เพราะตัวเลขนี้ผูกกับค่าจริงในซอร์สโค้ด ถ้า duration เปลี่ยนในโค้ดจริง ค่าที่รอในเทสต้องอัปเดตตาม<br/><br/>
+    ทางแก้ที่ดีกว่าถ้าทำได้ (นอกเหนือขอบเขตของ component นี้): ให้ component เปิด prop/callback แจ้งเมื่อ animation จบ (เช่น Chart.js มี <code>onComplete</code> callback ใน options.animation) แล้วตั้ง <code>data-testid</code> หรือ attribute บอกสถานะ "พร้อมแล้ว" ให้เทสรอ element นั้นแทน blind wait — แต่ต้องแก้ component เพิ่ม ไม่ใช่แค่แก้ฝั่งเทส`,
+    example: `// ถ้า component เปิด callback onComplete ไว้แล้ว (สมมติเพิ่มในอนาคต) ควรรอสัญญาณจริงแทน blind wait เสมอ
+await page.waitForSelector('[data-chart-ready="true"]');
+await expect(page).toHaveScreenshot();`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. รอ <code>page.waitForTimeout(1200)</code> (900ms ของ animation จริง + buffer)<br/>
+    2. ถ่ายภาพเปรียบเทียบด้วย <code>toHaveScreenshot()</code>`
+  },
+  {
+    id: "mask_third_party_iframe",
+    meta: "ขั้นสูง 4",
+    title: "Mask iframe ของ Third-Party Widget ที่ควบคุมไม่ได้",
+    template: `// สถานการณ์: TradingViewWidgetFrame.jsx จริงของ My-Investment-Port ฝัง TradingView chart ผ่าน iframe
+// โดย title ของ iframe คือ "TradingView technical analysis for AAPL" (สำหรับ ticker AAPL)
+// เนื้อหาข้างใน iframe โหลดจาก script ภายนอก (s3.tradingview.com) เปลี่ยนตามข้อมูลตลาดจริงแบบ real-time ควบคุมไม่ได้จากฝั่งเราเลย
+// ถ่ายภาพหน้าที่มี widget นี้ตรงๆ จะ fail แทบทุกครั้งเหมือนปัญหาราคาหุ้นในบทที่ 1 แต่รุนแรงกว่า (ควบคุม/mock เนื้อหาข้างในไม่ได้แม้แต่น้อย)
+// 1. mask iframe ทั้งก้อนด้วย page.getByTitle('TradingView technical analysis for AAPL')
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการ mask iframe ของ Third-Party Widget...");
+      const src = stripComments(code);
+      const hasScreenshot = /toHaveScreenshot\(/.test(src);
+      if (!hasScreenshot) {
+        throw new Error("ไม่พบการเรียก toHaveScreenshot()");
+      }
+      const hasMaskOption = /mask:\s*\[/.test(src);
+      if (!hasMaskOption) {
+        throw new Error("ไม่พบ option mask: [...]");
+      }
+      const hasGetByTitle = /getByTitle\(\s*['"]TradingView technical analysis for AAPL['"]\s*\)/.test(src);
+      if (!hasGetByTitle) {
+        throw new Error("mask ต้องเจาะจงไปที่ iframe จริงด้วย page.getByTitle('TradingView technical analysis for AAPL') — title ต้องตรงกับที่ component ส่งมาเป๊ะ (รวม ticker)");
+      }
+      log("✓ Mask iframe ของ Third-Party Widget ที่ควบคุมไม่ได้ถูกต้อง");
+    },
+    hint: "iframe เข้าถึงด้วย accessible role ผ่าน title attribute — Playwright มี locator ที่หา element จาก attribute title โดยตรง (getByTitle) ใส่ locator นั้นเข้าไปใน array ของ mask option เหมือนบทที่ 1 ที่ mask element ปกติ",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('ถ่ายภาพหน้าที่มี TradingView widget โดย mask iframe ทั้งก้อน', async ({ page }) => {
+  await page.goto('/stock/AAPL');
+  await expect(page).toHaveScreenshot({
+    mask: [page.getByTitle('TradingView technical analysis for AAPL')],
+  });
+});`,
+    theory: `<strong>Real grounding:</strong> <code>TradingViewWidgetFrame.jsx</code> ของ My-Investment-Port ฝัง third-party widget ผ่าน:<br/><br/>
+    <code>&lt;iframe title={title} srcDoc={srcDoc} ... /&gt;</code><br/>
+    โดย <code>title</code> ที่ส่งมาจริงจาก <code>TradingViewTA.jsx</code> คือ <code>\`TradingView technical analysis for \${ticker}\`</code> และเนื้อหาข้างใน iframe โหลดผ่าน <code>&lt;script src="https://s3.tradingview.com/..."&gt;</code> — เป็น service ภายนอกที่เราไม่มีทางควบคุมได้เลยว่าจะ render อะไรตอนไหน<br/><br/>
+    บทที่ 1 สอน mask element ที่ "เรารู้ว่าเปลี่ยน" (ราคาหุ้นของเราเอง) แต่กรณีนี้รุนแรงกว่านั้นมาก: <strong>ทั้งก้อน iframe</strong> เป็นของ third party ทั้งหมด ไม่ใช่แค่ตัวเลขเดียว — ราคา, กราฟ, สี, ข้อความ ข้างในเปลี่ยนได้ตลอดเวลาโดยเราไม่รู้ล่วงหน้า วิธีที่ถูกต้องคือ<strong>ปิดบังทั้ง element iframe</strong> ไม่ใช่พยายามไล่ mask ทีละส่วนย่อยข้างในซึ่งเราไม่มีสิทธิ์เข้าถึง DOM ข้างในด้วยซ้ำ (cross-origin content บางกรณี)<br/><br/>
+    <code>page.getByTitle(...)</code> หา element จาก <code>title</code> attribute ที่ component ตั้งไว้จริง — ใช้แทน <code>getByTestId</code> ได้เมื่อ element ไม่มี <code>data-testid</code> แต่มี attribute อื่นที่ระบุตัวตนได้แน่นอนพอ`,
+    example: `// mask หลาย third-party widget พร้อมกันในหน้าเดียว (เช่น มีทั้ง TA widget และ News widget)
+await expect(page).toHaveScreenshot({
+  mask: [
+    page.getByTitle('TradingView technical analysis for AAPL'),
+    page.getByTitle('TradingView news for AAPL'),
+  ],
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ถ่ายภาพด้วย <code>toHaveScreenshot()</code><br/>
+    2. mask iframe ทั้งก้อนด้วย <code>page.getByTitle('TradingView technical analysis for AAPL')</code>`
+  },
+  {
+    id: "update_baseline_discipline",
+    meta: "ขั้นสูง 5",
+    title: "Update Baseline อย่างมีวินัย: --update-snapshots และการ Review Diff ก่อน Merge",
+    template: `// สถานการณ์: designer เพิ่งอนุมัติการเปลี่ยนสี background ของปุ่ม primary ทั้งเว็บ (ตั้งใจเปลี่ยนจริง ไม่ใช่บั๊ก)
+// ทุก baseline เก่าจะ diff เพราะสีเปลี่ยนไปตามที่ตั้งใจ ต้อง regenerate baseline ใหม่ทั้งหมด "อย่างมีวินัย" ไม่ใช่ลบไฟล์ baseline ทิ้งมั่วๆ
+// เก็บคำสั่ง CLI ที่ถูกต้องสำหรับ regenerate baseline ทั้งหมดไว้ในตัวแปร updateCommand
+// 1. ประกาศตัวแปร updateCommand เก็บคำสั่ง 'npx playwright test --update-snapshots'
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง Update Baseline...");
+      const src = stripComments(code);
+      const hasCommand = /updateCommand\s*=\s*['"]npx playwright test --update-snapshots['"]/.test(src);
+      if (!hasCommand) {
+        throw new Error("ไม่พบตัวแปร updateCommand ที่เก็บคำสั่ง 'npx playwright test --update-snapshots'\nตัวอย่าง: const updateCommand = 'npx playwright test --update-snapshots';");
+      }
+      log("✓ คำสั่ง Update Baseline ถูกต้อง");
+    },
+    hint: "Playwright มี flag บรรทัดคำสั่งเฉพาะสำหรับ regenerate baseline ทั้งหมดในคำสั่งเดียว รูปแบบคือ npx playwright test ตามด้วย flag ที่สื่อความหมายว่า 'อัปเดต snapshot'",
+    solution: `const updateCommand = 'npx playwright test --update-snapshots';`,
+    theory: `<strong>เมื่อไหร่ควร Update Baseline:</strong> diff ที่เกิดจากการเปลี่ยนแปลงที่<strong>ตั้งใจ</strong> (designer อนุมัติสี/layout ใหม่) ต้อง regenerate baseline ให้ตรงกับดีไซน์ใหม่ ต่างจาก diff ที่เกิดจากบั๊กจริงซึ่งต้องแก้โค้ด ไม่ใช่แก้ baseline<br/><br/>
+    คำสั่ง <code>npx playwright test --update-snapshots</code> รัน test ทั้งหมดแล้วเขียนทับไฟล์ baseline เดิมด้วยภาพที่ถ่ายได้ล่าสุดทันที — สะดวกแต่<strong>อันตรายถ้าใช้พร่ำเพรื่อ</strong>: ถ้ามีบั๊ก visual จริงซ้อนอยู่ด้วยพร้อมกับการเปลี่ยนแปลงที่ตั้งใจ คำสั่งนี้จะ "กลืน" บั๊กนั้นเข้าไปเป็น baseline ใหม่โดยไม่มีใครรู้ตัว<br/><br/>
+    <strong>วินัยที่ต้องมี:</strong> baseline ที่ regenerate ใหม่ต้องถูก<strong>commit เป็นไฟล์ image และ review ใน PR</strong> เหมือน code diff ทั่วไป — reviewer เห็นภาพ before/after จริงก่อน approve ไม่ใช่รัน <code>--update-snapshots</code> แล้ว commit ทันทีโดยไม่มีใครดูภาพเลย เพราะไฟล์ .png ไม่สามารถ code-review แบบอ่าน diff ข้อความได้ ต้อง<strong>ดูภาพจริง</strong>เท่านั้นถึงจะรู้ว่าเปลี่ยนถูกต้องตามที่ตั้งใจหรือไม่`,
+    example: `// update baseline เฉพาะไฟล์/เทสเดียว แทนทั้งหมด (ปลอดภัยกว่าเมื่อรู้ชัดว่าเปลี่ยนแค่จุดเดียว)
+const updateSingleCommand = 'npx playwright test dashboard.spec.ts --update-snapshots';`,
+    task: `จงเขียนโค้ดให้สมบูรณ์ โดย:<br/>
+    1. ประกาศตัวแปร <code>updateCommand</code> เก็บคำสั่ง <code>'npx playwright test --update-snapshots'</code>`
   }
 ];
 
