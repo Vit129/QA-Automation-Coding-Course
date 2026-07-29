@@ -599,6 +599,286 @@ console.log(tc1.id, tc2.id); // ตัวเลขต่างกันเสม
     1. ประกาศ <code>function createTestCaseResult()</code><br/>
     2. ทุกครั้งที่เรียก ต้อง return object ใหม่ (คนละ reference)<br/>
     3. object ต้องมี <code>id</code> ที่ไม่ซ้ำกันในแต่ละครั้ง และ <code>status: 'pending'</code>`
+  },
+  {
+    id: "pom_design_principles",
+    meta: "ขั้นสูง 3",
+    title: "POM Design: แยก Action Method ออกจาก Verify Method อย่างมีวินัย",
+    template: `// สถานการณ์จริง: HoldingsPage.ts ของ My-Investment-Port (tests/web-testing/pages/port/holdings/holdingsPage.ts)
+// แยกหน้าที่ของ method อย่างชัดเจน: method ที่ "กระทำ" (เช่น searchTicker) ไม่มี assertion อยู่ข้างในเลย
+// ส่วน method ที่ตั้งใจ "ตรวจผล" (ตั้งชื่อขึ้นต้นด้วย verify) เท่านั้นที่มี expect() — เพื่อให้อ่านชื่อ method รู้ทันทีว่ามันจะ assert หรือแค่กระทำ
+// เขียน class HoldingsPage ให้มี 2 method ตามนี้:
+// 1. async searchTicker(ticker) — เรียก this.searchInput.fill(ticker) เท่านั้น ห้ามมี expect()
+// 2. async verifyHoldingInTable(ticker) — เรียก this.getHoldingRow(ticker) แล้ว expect(...).toBeVisible()
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการแยก Action Method และ Verify Method ใน POM...");
+      const clean = stripComments(code);
+      const searchBlock = extractBalancedBlock(clean, /searchTicker\s*\(\s*ticker\s*\)\s*\{/, "{", "}");
+      if (!searchBlock) {
+        throw new Error("ไม่พบ method searchTicker(ticker) { ... } ที่ครบถ้วน");
+      }
+      if (!/this\.searchInput\.fill\(\s*ticker\s*\)/.test(searchBlock)) {
+        throw new Error("searchTicker(ticker) ต้องเรียก this.searchInput.fill(ticker)");
+      }
+      if (/expect\(/.test(searchBlock)) {
+        throw new Error("searchTicker(ticker) เป็น action method ต้อง 'กระทำ' อย่างเดียว ห้ามมี expect() ปนอยู่ข้างใน — ผิดหลักการแยก action ออกจาก verify");
+      }
+      const verifyBlock = extractBalancedBlock(clean, /verifyHoldingInTable\s*\(\s*ticker\s*\)\s*\{/, "{", "}");
+      if (!verifyBlock) {
+        throw new Error("ไม่พบ method verifyHoldingInTable(ticker) { ... } ที่ครบถ้วน");
+      }
+      if (!/expect\(\s*this\.getHoldingRow\(\s*ticker\s*\)\s*\)\s*\.\s*toBeVisible\(\)/.test(verifyBlock)) {
+        throw new Error("verifyHoldingInTable(ticker) ต้องมี expect(this.getHoldingRow(ticker)).toBeVisible()");
+      }
+      log("✓ แยก Action Method และ Verify Method ตามหลัก POM ถูกต้อง");
+    },
+    hint: "method ที่แค่ 'ทำ' อย่าง fill/click ไม่ควรตัดสินผ่าน/ไม่ผ่านเอง ปล่อยให้ test เป็นคนตัดสินผ่าน expect() แทน — ส่วน method ที่ตั้งชื่อสื่อว่า verify (หรือ getXxx สำหรับดึงค่า) เท่านั้นที่ควรมี expect() ซ่อนอยู่ข้างใน เพื่อให้อ่านชื่อ method แล้วรู้ทันทีว่าจะ assert หรือเปล่า",
+    solution: `class HoldingsPage {
+  constructor(page) {
+    this.page = page;
+    this.searchInput = page.getByPlaceholder('Search ticker');
+  }
+
+  getHoldingRow(ticker) {
+    return this.page.getByTestId('holding-row-' + ticker);
+  }
+
+  async searchTicker(ticker) {
+    await this.searchInput.fill(ticker);
+  }
+
+  async verifyHoldingInTable(ticker) {
+    await expect(this.getHoldingRow(ticker)).toBeVisible();
+  }
+}`,
+    theory: `<strong>Real grounding:</strong> <code>HoldingsPage.ts</code> ของ My-Investment-Port (<code>tests/web-testing/pages/port/holdings/holdingsPage.ts</code>) มี method <code>searchTicker(ticker)</code> ที่กรอกช่องค้นหาอย่างเดียว ไม่มี assertion ใดๆ ข้างใน และมี method <code>verifyHoldingInTable(ticker)</code>, <code>verifyDcaAmount(ticker, ...)</code> ที่ตั้งชื่อขึ้นต้นด้วย <code>verify</code> โดยเฉพาะ และมี <code>expect()</code> อยู่ข้างในเท่านั้น — เปิดไฟล์จริงแล้วจะเห็นรูปแบบนี้ทั้งไฟล์<br/><br/>
+    หลักการ <strong>POM Design</strong> ที่มักถูกเข้าใจผิดว่า "ห้ามมี expect() ใน Page Object เด็ดขาด" — ในทางปฏิบัติจริง (ตามไฟล์นี้) ไม่ได้เข้มงวดขนาดนั้น: <strong>action method</strong> (คลิก, กรอกฟอร์ม, navigate) ไม่ควรมี assertion เพราะมันคือ "การกระทำ" ไม่ใช่ "การตัดสิน" — แต่ method ที่<strong>ตั้งใจให้เป็นตัวตรวจผล</strong>และตั้งชื่อสื่อความหมายชัดเจน (ขึ้นต้นด้วย <code>verify</code>) การมี <code>expect()</code> ข้างในเป็นที่ยอมรับได้ เพราะชื่อ method บอกไว้ตรงๆ แล้วว่ามันจะ assert<br/><br/>
+    ปัญหาจริงที่หลักการนี้ป้องกัน: ถ้า <code>searchTicker()</code> แอบมี <code>expect()</code> ซ่อนอยู่ข้างใน คนอ่าน test ที่เห็นแค่ <code>await holdingsPage.searchTicker('AAPL')</code> จะไม่รู้เลยว่าบรรทัดนี้ "อาจ fail จากการ assert" ด้วย — ต้องเปิดไปดูข้างใน Page Object ถึงจะรู้ ทำให้ debug ยากขึ้นโดยไม่จำเป็น`,
+    example: `// ตัวอย่างใช้งานทั้งสอง method ร่วมกันในไฟล์ test จริง
+const holdingsPage = new HoldingsPage(page);
+await holdingsPage.searchTicker('AAPL');
+await holdingsPage.verifyHoldingInTable('AAPL');`,
+    task: `จงเขียน class ให้สมบูรณ์ โดย:<br/>
+    1. เขียน method <code>async searchTicker(ticker)</code> เรียก <code>this.searchInput.fill(ticker)</code> เท่านั้น ห้ามมี <code>expect()</code><br/>
+    2. เขียน method <code>async verifyHoldingInTable(ticker)</code> เรียก <code>expect(this.getHoldingRow(ticker)).toBeVisible()</code>`
+  },
+  {
+    id: "env_based_config",
+    meta: "ขั้นสูง 4",
+    title: "Environment-based Config: สลับ Base URL ตาม Environment พร้อม Safety Guard",
+    template: `// สถานการณ์จริง: playwright.config.ts ของ My-Investment-Port อ่านค่า BASE_URL จาก environment variable
+// เพื่อสลับรัน test ระหว่าง local dev, SIT, staging ได้โดยไม่ต้องแก้โค้ด แล้วมี safety guard กันรัน test พลาดเข้า production
+// 1. ประกาศ const baseURL = process.env.BASE_URL || 'http://localhost:5175'
+// 2. เขียน if (!baseURL.includes('localhost')) { throw new Error(...) } เป็น safety guard
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Environment-based Config และ Safety Guard...");
+      const clean = stripComments(code);
+      const hasBaseURL = /const\s+baseURL\s*=\s*process\.env\.BASE_URL\s*\|\|\s*['"]http:\/\/localhost:5175['"]/.test(clean);
+      if (!hasBaseURL) {
+        throw new Error("ไม่พบ const baseURL = process.env.BASE_URL || 'http://localhost:5175'");
+      }
+      const guardMatch = /if\s*\(\s*!\s*baseURL\.includes\(\s*['"]localhost['"]\s*\)\s*\)\s*\{([\s\S]*?)\}/.exec(clean);
+      if (!guardMatch) {
+        throw new Error("ไม่พบ if (!baseURL.includes('localhost')) { ... } เป็น safety guard");
+      }
+      if (!/throw\s+new\s+Error\(/.test(guardMatch[1])) {
+        throw new Error("ภายใน safety guard ต้อง throw new Error(...) เพื่อบล็อกการรัน test");
+      }
+      log("✓ ตั้งค่า Environment-based Config พร้อม Safety Guard ถูกต้อง");
+    },
+    hint: "ใช้ process.env.BASE_URL ดึงค่าจาก environment ตอนรัน ถ้าไม่ได้ตั้งไว้เลย fallback ด้วย || ไปที่ localhost — ส่วน guard คือ if ธรรมดาที่เช็คว่า baseURL 'ไม่ใช่' localhost แล้ว throw error ออกไปทันทีก่อนจะปล่อยให้ test รันต่อ",
+    solution: `const baseURL = process.env.BASE_URL || 'http://localhost:5175';
+
+if (!baseURL.includes('localhost')) {
+  throw new Error(\`🛑 BLOCKED: BASE_URL="\${baseURL}" is not a safe test environment. Tests can only run against localhost.\`);
+}`,
+    theory: `<strong>Real grounding:</strong> <code>playwright.config.ts</code> ของ My-Investment-Port (<code>tests/web-testing/playwright.config.ts</code>) อ่านค่า baseURL จาก <code>process.env.BASE_URL</code> พร้อม fallback เป็น <code>http://localhost:5175</code> เมื่อไม่ได้ตั้งค่าไว้ — วิธีนี้ทำให้สลับรัน test ข้าม environment (local dev / SIT / staging) ได้โดยแค่เปลี่ยนตัวแปร environment ตอนสั่งรัน ไม่ต้องแก้โค้ด config เลย เช่น <code>BASE_URL=https://sit.example.com npx playwright test</code><br/><br/>
+    ไฟล์จริงยังมี <strong>safety guard</strong> ต่อท้ายทันที: ตรวจสอบว่า baseURL หน้าตาเหมือน localhost, 127.0.0.1 หรือ SIT host ที่รู้จักหรือไม่ ถ้าไม่ใช่ (เช่นมีคนตั้ง BASE_URL เป็น URL ของ production โดยไม่ได้ตั้งใจ) จะ throw error หยุดการรันทันที <strong>ก่อน</strong>ที่ test จะเริ่มยิงคำสั่งใดๆ เข้าเว็บจริงเลยด้วยซ้ำ<br/><br/>
+    เหตุผลที่ guard นี้สำคัญ: automation test มักมีการกระทำที่ทำลายข้อมูลได้ (ลบ, แก้ไข, submit ฟอร์ม) — ถ้า environment variable ผิดพลาดแล้ว test ไปรันใส่ production จริงโดยไม่มี guard กันไว้ อาจสร้างความเสียหายที่แก้คืนไม่ได้ การเช็คแบบนี้เป็นด่านป้องกันสุดท้ายที่ทำได้ในระดับ config ก่อนจะไปถึงจุดที่สายเกินไป (บทเรียนนี้ทำให้ตัวตรวจง่ายกว่าไฟล์จริงเล็กน้อย — ไฟล์จริงใช้ regex ครอบคลุมทั้ง localhost, 127.0.0.1 และ SIT host พร้อมกัน หลักการเดียวกัน)`,
+    example: `// รันจริงโดยสลับ environment ผ่าน command line โดยไม่ต้องแก้โค้ด config เลย
+// BASE_URL=https://sit.example.com npx playwright test
+// BASE_URL=http://localhost:5175 npx playwright test`,
+    task: `จงเขียนสคริปต์ให้สมบูรณ์ โดย:<br/>
+    1. ประกาศ <code>const baseURL = process.env.BASE_URL || 'http://localhost:5175'</code><br/>
+    2. เขียน safety guard: ถ้า <code>baseURL</code> ไม่มีคำว่า <code>'localhost'</code> ให้ <code>throw new Error(...)</code>`
+  },
+  {
+    id: "fixture_composition",
+    meta: "ขั้นสูง 5",
+    title: "Fixture Composition: ให้ Fixture หนึ่งพึ่งพา Fixture อื่นที่สร้างไว้แล้ว",
+    template: `// สถานการณ์: ต่อยอดจาก fixture watchlistPage (บทที่ 1) — ตอนนี้หลาย test ต้องการหน้า watchlist ที่ goto ไว้แล้ว "และ" กรองหมวด Technology ไว้ล่วงหน้าด้วย
+// แทนที่จะ copy โค้ด goto + filter ไปเขียนซ้ำในทุก test หรือเขียน fixture ใหม่จาก page เปล่าๆ อีกรอบ
+// ให้สร้าง fixture ใหม่ที่ "พึ่งพา" fixture watchlistPage ที่มีอยู่แล้วโดยตรง
+// สเปค:
+// 1. สร้าง fixture ชื่อ filteredWatchlistPage โดยรับ parameter เป็น { watchlistPage } (ไม่ใช่ { page })
+// 2. ภายใน fixture ให้เรียก watchlistPage.getByTestId('sector-filter').selectOption('Technology')
+// 3. แล้ว await use(watchlistPage) ส่งต่อให้ test
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Fixture Composition (fixture ที่พึ่งพา fixture อื่น)...");
+      const clean = stripComments(code);
+      const hasExtend = /\.extend\(/.test(clean);
+      if (!hasExtend) {
+        throw new Error("ไม่พบการใช้ test.extend()");
+      }
+      const fixtureMatch = /filteredWatchlistPage\s*:\s*async\s*\(\s*\{[^)]*watchlistPage[^)]*\}\s*,\s*use\s*\)\s*=>\s*\{([\s\S]*?)\}/.exec(clean);
+      if (!fixtureMatch) {
+        throw new Error("ไม่พบ fixture ชื่อ filteredWatchlistPage ที่รับ { watchlistPage } เป็น parameter (ไม่ใช่ { page }) — fixture นี้ต้อง 'พึ่งพา' fixture watchlistPage ที่มีอยู่แล้ว ไม่ใช่เริ่มจาก page เปล่าๆ ใหม่");
+      }
+      const body = fixtureMatch[1];
+      if (!/watchlistPage\.getByTestId\(\s*['"]sector-filter['"]\s*\)\.selectOption\(\s*['"]Technology['"]\s*\)/.test(body)) {
+        throw new Error("fixture filteredWatchlistPage ต้องเรียก watchlistPage.getByTestId('sector-filter').selectOption('Technology')");
+      }
+      if (!/await\s+use\(\s*watchlistPage\s*\)/.test(body)) {
+        throw new Error("fixture filteredWatchlistPage ต้อง await use(watchlistPage) ส่งต่อ watchlistPage (ที่ filter แล้ว) ให้ test ใช้งาน ไม่ใช่ use(page) ตัวเปล่า");
+      }
+      log("✓ Fixture Composition ถูกต้อง: fixture ใหม่พึ่งพา fixture เดิมได้จริง");
+    },
+    hint: "fixture ใหม่ไม่จำเป็นต้องพึ่งพา built-in page เท่านั้น — สามารถรับ fixture ที่เราสร้างเองไว้ก่อนหน้า (เช่น watchlistPage) เป็น parameter แทนได้เลย Playwright จะจัดลำดับให้เองว่าต้อง setup fixture ที่ถูกพึ่งพาก่อน แล้วค่อย teardown ทีหลังสุด (setup ก่อน teardown หลัง เรียงตามลำดับการพึ่งพา)",
+    solution: `import { test as base } from '@playwright/test';
+
+export const test = base.extend({
+  watchlistPage: async ({ page }, use) => {
+    await page.goto('/watchlist');
+    await use(page);
+  },
+  filteredWatchlistPage: async ({ watchlistPage }, use) => {
+    await watchlistPage.getByTestId('sector-filter').selectOption('Technology');
+    await use(watchlistPage);
+  },
+});`,
+    theory: `บทที่ 1 สอนสร้าง fixture ที่พึ่งพา built-in <code>page</code> — แต่ fixture ที่เราสร้างเองก็สามารถ "พึ่งพา fixture อื่นที่เราสร้างไว้ก่อนหน้า" ได้เช่นกัน แค่ตั้งชื่อ fixture นั้นเป็น parameter แทน <code>page</code> ตรงๆ Playwright จะรู้เองจาก dependency graph ว่าต้อง setup ตัวที่ถูกพึ่งพาก่อนเสมอ (ตามเอกสารทางการ Playwright: fixture A ที่พึ่งพา fixture B, B ต้อง setup ก่อน A และ teardown หลัง A เสมอ ไม่ว่าจะพึ่งพากันกี่ชั้นก็ตาม)<br/><br/>
+    ประโยชน์เทียบกับเขียน fixture ใหม่จาก <code>page</code> เปล่าๆ ซ้ำ: ไม่ต้องเขียน <code>goto('/watchlist')</code> ซ้ำอีกรอบใน fixture ใหม่ — ต่อยอดจากสิ่งที่มีอยู่แล้วได้ตรงๆ เหมือนฟังก์ชันเรียกฟังก์ชัน ลด logic ที่ต้องดูแลซ้ำซ้อนเมื่อโปรเจกมี fixture หลายสิบตัวที่ทับซ้อนกันบางส่วน<br/><br/>
+    ข้อควรระวัง: อย่าพึ่งพาข้ามกันเป็นวงกลม (fixture A พึ่งพา B และ B พึ่งพา A) — Playwright จะตรวจจับและ error ทันทีตอน setup เพราะไม่รู้ว่าจะ setup ตัวไหนก่อน`,
+    example: `// ใช้ filteredWatchlistPage ในไฟล์ test จริง — ได้ทั้ง goto และ filter มาพร้อมแล้ว ไม่ต้องเขียนเอง
+import { test } from './fixtures';
+
+test('เห็นเฉพาะหุ้นกลุ่ม Technology', async ({ filteredWatchlistPage }) => {
+  await filteredWatchlistPage.getByTestId('watchlist-row').first().isVisible();
+});`,
+    task: `จงเขียนสคริปต์ให้สมบูรณ์ โดย:<br/>
+    1. สร้าง fixture ชื่อ <code>filteredWatchlistPage</code> ที่รับ <code>{ watchlistPage }</code> เป็น parameter<br/>
+    2. เรียก <code>watchlistPage.getByTestId('sector-filter').selectOption('Technology')</code><br/>
+    3. แล้ว <code>await use(watchlistPage)</code> ส่งต่อให้ test`
+  },
+  {
+    id: "test_step_reporting",
+    meta: "ขั้นสูง 6",
+    title: "test.step(): แบ่งรายงานผลเป็นขั้นตอนให้อ่านง่ายเมื่อ Test Fail",
+    template: `// สถานการณ์: test เพิ่ม Holding ใหม่มีหลายขั้นตอน (login, เพิ่ม holding) เขียนรวมกันเป็น test เดียวยาวๆ
+// เวลา fail รายงาน HTML/trace viewer บอกแค่ชื่อ test ทั้งก้อน ไม่รู้ว่า fail ตรงขั้นตอนไหนใน 2 ขั้นตอนนี้
+// ใช้ test.step() ห่อแต่ละขั้นตอน ให้รายงานแยกแสดงเป็นสัดส่วนชัดเจน รู้ทันทีว่า fail ที่ step ไหน
+// สเปค:
+// 1. ห่อขั้นตอนแรกด้วย await test.step('login', async () => { await page.goto('/login'); })
+// 2. ห่อขั้นตอนที่สองด้วย await test.step('add holding', async () => { await page.getByTestId('btn-add-holding').click(); })
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบการใช้ test.step()...");
+      const clean = stripComments(code);
+      const loginStep = /test\.step\(\s*['"]login['"]\s*,\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\}\s*\)/.exec(clean);
+      if (!loginStep) {
+        throw new Error("ไม่พบ test.step('login', async () => { ... })");
+      }
+      if (!/goto\(\s*['"]\/login['"]\s*\)/.test(loginStep[1])) {
+        throw new Error("step 'login' ต้องเรียก page.goto('/login') อยู่ภายใน");
+      }
+      const addStep = /test\.step\(\s*['"]add holding['"]\s*,\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\}\s*\)/.exec(clean);
+      if (!addStep) {
+        throw new Error("ไม่พบ test.step('add holding', async () => { ... })");
+      }
+      if (!/getByTestId\(\s*['"]btn-add-holding['"]\s*\)\.click\(\)/.test(addStep[1])) {
+        throw new Error("step 'add holding' ต้องเรียก page.getByTestId('btn-add-holding').click() อยู่ภายใน");
+      }
+      if (!/await\s+test\.step\(/.test(clean)) {
+        throw new Error("ต้องเรียก test.step() ด้วย await เสมอ (test.step คืน Promise)");
+      }
+      log("✓ ใช้ test.step() แยกขั้นตอนถูกต้อง");
+    },
+    hint: "test.step(ชื่อ, async () => { ... }) ห่อโค้ดแต่ละขั้นตอนไว้ข้างใน callback — ต้อง await เพราะมันคืน Promise เสมอ ไม่ว่า callback ข้างในจะทำอะไรก็ตาม ผลลัพธ์คือรายงานและ trace viewer จะแยกแสดงแต่ละ step เป็นก้อนของตัวเอง",
+    solution: `import { test } from '@playwright/test';
+
+test('เพิ่ม Holding ใหม่', async ({ page }) => {
+  await test.step('login', async () => {
+    await page.goto('/login');
+  });
+
+  await test.step('add holding', async () => {
+    await page.getByTestId('btn-add-holding').click();
+  });
+});`,
+    theory: `<strong>ยืนยันจากเอกสารทางการ Playwright:</strong> <code>test.step(title, body)</code> "Declares a test step that is shown in the report" — แต่ละ step ที่ห่อไว้จะปรากฏเป็นก้อนแยกกันชัดเจนทั้งใน HTML report และ trace viewer แทนที่จะเห็นแค่ log รวมของทั้ง test<br/><br/>
+    <code>test.step()</code> คืนค่าที่ callback ข้างในมัน return ออกมา (ตามเอกสาร: "The method returns the value returned by the step callback") จึงใช้เก็บผลลัพธ์จาก step หนึ่งไปใช้ต่อใน step ถัดไปได้ตรงๆ และรองรับการซ้อน step ข้างในอีก step หนึ่งได้ด้วย (nested step) เหมาะกับขั้นตอนย่อยของขั้นตอนใหญ่<br/><br/>
+    ประโยชน์จริงเมื่อ test ยาวและซับซ้อนขึ้น (เช่น login → เพิ่ม holding → ตรวจผลรวม 3 ขั้นตอนขึ้นไป): ถ้าไม่มี step แบ่งไว้ รายงานจะบอกแค่ "test นี้ fail" คนอ่านต้องไล่ดู log ทั้งหมดเองว่า fail ตรงไหน — มี step แบ่งไว้ จะเห็นทันทีว่า step ไหน pass ไปแล้ว step ไหนคือจุดที่ fail จริง (ตัวอย่างนี้ใช้ testid จริงจาก <code>HoldingsPage.ts</code> ของ My-Investment-Port คือ <code>btn-add-holding</code> แต่การห่อด้วย test.step() เองยังไม่ได้ใช้จริงใน test suite ของโปรเจกนั้นตอนนี้ — บทเรียนนี้สอน API ที่ยืนยันถูกต้องจากเอกสารทางการ ประยุกต์กับ testid จริงที่มีอยู่)`,
+    example: `// test.step() ซ้อนกันได้ (nested step) และ return ค่าออกมาใช้ต่อได้
+const total = await test.step('คำนวณยอดรวม', async () => {
+  await test.step('ขั้นตอนย่อย: ดึงราคาล่าสุด', async () => {
+    await page.waitForSelector('[data-testid="price-loaded"]');
+  });
+  return 100;
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
+    1. ห่อขั้นตอนแรกด้วย <code>await test.step('login', async () => { await page.goto('/login'); })</code><br/>
+    2. ห่อขั้นตอนที่สองด้วย <code>await test.step('add holding', async () => { await page.getByTestId('btn-add-holding').click(); })</code>`
+  },
+  {
+    id: "parallel_worker_isolation",
+    meta: "ขั้นสูง 7",
+    title: "Parallel Worker Isolation: กัน Resource ชนกันข้าม Worker ด้วย workerIndex",
+    template: `// สถานการณ์จริง: Playwright รัน test พร้อมกันหลาย worker process (คนละ process แยกกัน) เพื่อความเร็ว
+// ถ้าทุก worker ใช้ resource ภายนอกร่วมกัน (เช่น login user เดียวกันเข้า backend เดียวกัน) จะชนกัน:
+// worker หนึ่งอาจลบ/แก้ข้อมูลที่อีก worker กำลังใช้ทดสอบอยู่พอดี ทำให้ test flaky แบบสุ่มที่จับยากมาก
+// เอกสาร Playwright แนะนำผูก resource กับ testInfo.workerIndex (เลขที่ไม่ซ้ำกันในแต่ละ worker) เพื่อให้แต่ละ worker ได้ resource ของตัวเอง
+// สเปค:
+// 1. ประกาศ function ชื่อ makeWorkerTestUser รับ 1 พารามิเตอร์ (workerIndex)
+// 2. return string โดยต่อคำว่า 'user-' เข้ากับ workerIndex (เช่น workerIndex = 0 ต้องได้ 'user-0', workerIndex = 1 ต้องได้ 'user-1')
+// WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ makeWorkerTestUser() (รันจริงเพื่อตรวจว่าแต่ละ worker ได้ user ไม่ชนกัน)...");
+      let fn;
+      try {
+        fn = execLearnerCode(code, {}, 'typeof makeWorkerTestUser === "function" ? makeWorkerTestUser : undefined');
+      } catch (err) {
+        throw new Error(`โค้ดมี error ขณะรัน: ${err.message}`);
+      }
+      if (typeof fn !== "function") {
+        throw new Error("ไม่พบการประกาศ function makeWorkerTestUser(workerIndex)");
+      }
+      const results = [0, 1, 2].map((i) => fn(i));
+      results.forEach((r, idx) => {
+        if (r !== `user-${idx}`) {
+          throw new Error(`makeWorkerTestUser(${idx}) ควรได้ 'user-${idx}' แต่ได้ ${JSON.stringify(r)}`);
+        }
+      });
+      const uniqueVals = new Set(results);
+      if (uniqueVals.size !== results.length) {
+        throw new Error("แต่ละ workerIndex ต้องได้ user ที่ไม่ซ้ำกัน (มิฉะนั้น worker คนละตัวจะแย่งใช้ user เดียวกัน)");
+      }
+      log("✓ makeWorkerTestUser() ทำงานถูกต้องจริง: แต่ละ worker ได้ user ไม่ชนกัน");
+    },
+    hint: "ผูกค่า workerIndex เข้ากับ string ตรงๆ ไม่ต้องมี logic ซับซ้อนอะไรเลย — ความ 'ไม่ชนกัน' มาจากตัวเลข workerIndex เองที่ Playwright การันตีไว้แล้วว่าแต่ละ worker process จะได้ค่าไม่ซ้ำกัน หน้าที่ของฟังก์ชันนี้แค่เอาเลขนั้นไปแปะท้าย prefix",
+    solution: `function makeWorkerTestUser(workerIndex) {
+  return \`user-\${workerIndex}\`;
+}`,
+    theory: `<strong>ยืนยันจากเอกสารทางการ Playwright:</strong> แต่ละ worker process มี isolated browser context ของตัวเองอยู่แล้ว (cookies, storage, in-memory variable ในหน้าเว็บไม่ปนกันข้าม worker) แต่เอกสารเตือนไว้ตรงๆ ว่า "flakiness comes from state that lives outside a single test" — พูดง่ายๆ คือ resource ที่อยู่<strong>นอกเหนือ</strong>ขอบเขตของ browser (เช่น user account ใน backend, แถวข้อมูลใน database) ไม่ได้ isolate ให้อัตโนมัติ ต้องจัดการเอง<br/><br/>
+    Playwright ให้ค่า <code>testInfo.workerIndex</code> (เลขเริ่มจาก 1 ไม่ซ้ำกันในแต่ละ worker ที่ยังมีชีวิตอยู่) มาเพื่อการนี้โดยเฉพาะ — ตัวอย่างจากเอกสาร: สร้าง test user ชื่อ <code>user-</code> ต่อท้ายด้วยเลข workerIndex ให้แต่ละ worker ได้ user เป็นของตัวเอง ทุก test ที่รันโดย worker เดียวกันใช้ user ตัวเดิมซ้ำได้ (ไม่ต้องสร้างใหม่ทุก test) แต่ worker คนละตัวจะไม่มีวันชนกันเลย เพราะเลข workerIndex การันตีไม่ซ้ำกัน<br/><br/>
+    <strong>ความเชื่อมโยงกับความเป็นจริงของโปรเจกนี้:</strong> <code>playwright.config.ts</code> ของ My-Investment-Port ตั้งค่า <code>fullyParallel: false</code> และ <code>workers: 1</code> จริง (รันแบบ serial ทีละ test process เดียว) จึงยังไม่ได้ใช้เทคนิคนี้ตอนนี้ — แต่เป็นเทคนิคมาตรฐานที่เอกสารทางการแนะนำสำหรับวันที่โปรเจกไหนก็ตามขยายไปรัน parallel จริงจัง ไม่ใช่แค่ทฤษฎีลอยๆ`,
+    example: `// ใช้ผูกกับ fixture จริงในไฟล์ test (ยืนยัน pattern จากเอกสาร Playwright)
+const test = base.extend({
+  testUser: async ({}, use, testInfo) => {
+    const username = makeWorkerTestUser(testInfo.workerIndex);
+    await use(username);
+  },
+});`,
+    task: `จงเขียนฟังก์ชันให้สมบูรณ์ โดย:<br/>
+    1. ประกาศ <code>function makeWorkerTestUser(workerIndex)</code><br/>
+    2. return string รูปแบบ <code>user-0</code>, <code>user-1</code>, ... ตามค่า <code>workerIndex</code> ที่ส่งเข้ามา (ต่อคำว่า <code>user-</code> กับ workerIndex ตรงๆ)`
   }
 ];
 
