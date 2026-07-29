@@ -1087,7 +1087,7 @@
     </div>
 
     <footer>
-      <p>© 2026 Supavit Choenthanomwong · Built with Claude Code</p>
+      <p>© 2026 Supavit Choenthanomwong · Built with Claude Code <span id="footer-version"></span></p>
     </footer>
   </div>
 
@@ -1330,6 +1330,22 @@
     }
 
     checkForUpdates();
+
+    // Footer version tag - pulled from the latest GitHub Release at runtime, never
+    // hand-edited, so it can't go stale the way the old lesson-count tags did.
+    async function loadFooterVersion() {
+      try {
+        const res = await fetch('https://api.github.com/repos/Vit129/QA-Automation-Coding-Course/releases/latest', { cache: 'no-store' });
+        if (!res.ok) return;
+        const release = await res.json();
+        if (!release.tag_name) return;
+        const el = document.getElementById('footer-version');
+        if (el) el.innerHTML = `· <a href="${release.html_url}" target="_blank" rel="noopener">${release.tag_name}</a>`;
+      } catch (e) {
+        // Offline, blocked, or rate-limited - non-critical, fail silently.
+      }
+    }
+    loadFooterVersion();
   </script>
 
 </body>
