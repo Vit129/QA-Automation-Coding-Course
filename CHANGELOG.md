@@ -3,12 +3,10 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.8.1] - 2026-07-29
+## [0.8.2] - 2026-07-29
 
-### Added
-- Upgrade all 237 lesson theories across 12 tracks to 4-block standard format (🎯 Goal, ⚖️ Comparison/Table, 💡 Mental Model & Syntax, 🚨 Common Pitfall)
-- Add GitHub Star repository link button on landing page header
-- Add Certificate Preview page (`certificate_preview.html`) for per-track and grand course completion modal previews
+### Fixed
+- Replace generic 4-block theory filler with lesson-specific Mental Model code snippets and Pitfall content across 168 lessons (12 tracks) — v0.8.1's bulk upgrade left placeholder text and, in ~15 lessons, corrupted/truncated code blocks ([`a40f908`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/a40f908c903179c89b3452f3e9653aa094a811bb))
 
 ## [0.8.0] - 2026-07-29
 
