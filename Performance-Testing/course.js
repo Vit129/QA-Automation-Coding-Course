@@ -62,11 +62,35 @@ export default function () {
     'status is 200': (r) => r.status === 200,
   });
 }`,
-    theory: `<strong>k6</strong> คือเครื่องมือ Load/Performance Testing แบบ Code-first (เขียนสคริปต์ด้วย JavaScript) ใช้ยิง HTTP request จริงไปยัง Backend เพื่อวัดว่าระบบรับโหลดพร้อมกันได้ดีแค่ไหน ต่างจาก Playwright API Testing ที่ยิง 1 request ต่อ 1 test case, k6 จะรัน <code>default function</code> เดียวกันซ้ำๆ พร้อมกันหลาย "Virtual User (VU)" เพื่อจำลองผู้ใช้จริงจำนวนมาก<br/><br/>
-    องค์ประกอบพื้นฐาน:<br/>
-    1. <strong><code>http.get()</code></strong>: ยิง HTTP request จริง (เหมือน Playwright's <code>request.get()</code> แต่ออกแบบมาสำหรับยิงซ้ำเป็นพันๆ ครั้ง)<br/>
-    2. <strong><code>check()</code></strong>: ตรวจสอบผลลัพธ์แบบ "soft assertion" — ถ้าไม่ผ่าน จะบันทึกอัตราความล้มเหลวไว้ในรายงาน แต่<strong>ไม่หยุดสคริปต์</strong> (ต่างจาก Playwright's <code>expect()</code> ที่ throw error ทันที) เพราะ k6 ต้องรันต่อเนื่องนับพัน iteration แม้บาง iteration จะ fail<br/><br/>
-    เอนด์พอยต์ <code>/api/ai/health</code> คือตัวเดียวกับที่ใช้ในบท "GET Request พื้นฐาน" ของ track API Testing (Playwright) — Playwright ตรวจ "ถูกต้องไหม" (functional), k6 ตรวจ "รับโหลดพร้อมกันได้ไหม" (performance) คนละมุมมองแต่ endpoint จริงเดียวกัน`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิด Performance Testing ด้วย <strong>k6</strong> (Code-first JS) เพื่อจำลอง Virtual Users (VU) ยิง Request พร้อมกันจำนวนมาก<br/><br/>
+    ⚖️ <strong>เปรียบเทียบ Playwright API Testing vs k6 Performance Testing:</strong><br/>
+    <table class="theory-table" style="width:100%; border-collapse:collapse; margin:8px 0; font-size:0.9em;">
+      <tr style="background:#2d3748; color:#fff;">
+        <th style="padding:6px; border:1px solid #4a5568;">หัวข้อ</th>
+        <th style="padding:6px; border:1px solid #4a5568;">Playwright API Testing</th>
+        <th style="padding:6px; border:1px solid #4a5568;">k6 Performance Testing</th>
+      </tr>
+      <tr>
+        <td style="padding:6px; border:1px solid #4a5568;"><strong>เป้าหมายหลัก</strong></td>
+        <td style="padding:6px; border:1px solid #4a5568;">ตรวจความถูกต้องของข้อมูล (Functional)</td>
+        <td style="padding:6px; border:1px solid #4a5568;">ตรวจการรับโหลดและความเร็ว (Performance)</td>
+      </tr>
+      <tr>
+        <td style="padding:6px; border:1px solid #4a5568;"><strong>จำนวน Request</strong></td>
+        <td style="padding:6px; border:1px solid #4a5568;">1 Request ต่อ 1 Test Case</td>
+        <td style="padding:6px; border:1px solid #4a5568;">รันซ้ำนับพันครั้งขนานกัน (Virtual Users)</td>
+      </tr>
+      <tr>
+        <td style="padding:6px; border:1px solid #4a5568;"><strong>Assertion Style</strong></td>
+        <td style="padding:6px; border:1px solid #4a5568;"><code>expect()</code> — Hard assert (หยุดทันที)</td>
+        <td style="padding:6px; border:1px solid #4a5568;"><code>check()</code> — Soft assert (นับ %, ไม่หยุดรัน)</td>
+      </tr>
+    </table><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>const res = http.get(\`\${BASE_URL}/api/ai/health\`);</code><br/>
+    <code>check(res, { 'status is 200': (r) => r.status === 200 });</code><br/><br/>
+    $\text{Success Rate} = \frac{\text{Passed Checks}}{\text{Total Iterations}} \times 100\%$<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>check()</code> เป็นเพียง Soft Assertion จะบันทึกผลลงในสถิติรายงานแต่ไม่หยุดการรันสคริปต์`,
     example: `// ตัวอย่างยิง POST พร้อม body ใน k6
 import http from 'k6/http';
 const res = http.post('http://localhost:3001/api/ai/panel', JSON.stringify({ panel: 'risk' }), {
@@ -116,10 +140,13 @@ export const options = {
 export default function () {
   http.get(\`\${BASE_URL}/api/ai/health\`);
 }`,
-    theory: `<code>export const options</code> คือจุดกำหนด "รูปแบบโหลด" ที่ k6 จะจำลอง สองค่าพื้นฐานที่สุด:<br/><br/>
-    1. <strong><code>vus</code></strong> (Virtual Users): จำนวนผู้ใช้จำลองที่รัน <code>default function</code> พร้อมกันตลอดการทดสอบ — <code>vus: 10</code> คือมี "ผู้ใช้จำลอง" 10 คนยิง request วนซ้ำพร้อมกันตลอดเวลา<br/>
-    2. <strong><code>duration</code></strong>: ระยะเวลารวมของการทดสอบ (<code>'30s'</code>, <code>'2m'</code>, <code>'1h'</code>) — เมื่อครบเวลา k6 จะหยุดทุก VU ทันที ไม่สนใจว่า iteration ล่าสุดจะจบหรือยัง<br/><br/>
-    ต่างจาก Playwright ที่ 1 test = 1 ผู้ใช้ 1 ครั้ง, k6 ด้วย <code>vus: 10, duration: '30s'</code> จะยิง request จากผู้ใช้จำลอง 10 คนพร้อมกันวนซ้ำต่อเนื่องนาน 30 วินาที — จำนวน request ทั้งหมดขึ้นอยู่กับว่าแต่ละ iteration ใช้เวลาเท่าไหร่ ไม่ใช่ค่าคงที่ที่กำหนดตรงๆ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจการกำหนดรูปแบบโหลด (Load Profile) ผ่าน <code>export const options</code> ใน k6<br/><br/>
+    ⚖️ <strong>2 พารามิเตอร์พื้นฐานของการจำลองโหลด:</strong><br/>
+    • <strong><code>vus</code> (Virtual Users):</strong> จำนวนผู้ใช้จำลองที่รัน <code>default function</code> พร้อมกันตลอดการทดสอบ<br/>
+    • <strong><code>duration</code>:</strong> ระยะเวลารวมของการทดสอบ (เช่น <code>'30s'</code>, <code>'2m'</code>)<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>export const options = { vus: 10, duration: '30s' };</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> จำนวน Request รวมจะไม่ใช่ค่าคงที่ที่เขียนตายตัว แต่ขึ้นอยู่กับเวลา Response Time ของ Backend ยิ่ง Backend ตอบเร็ว จำนวน Request รวมจะยิ่งสูง`,
     example: `// ตัวอย่างกำหนดจำนวน iteration ตายตัวแทนการใช้ duration
 export const options = {
   vus: 5,
@@ -182,11 +209,10 @@ export const options = {
 export default function () {
   http.get(\`\${BASE_URL}/api/ai/health\`);
 }`,
-    theory: `<strong>Threshold</strong> คือเกณฑ์ที่ทำให้ k6 <strong>จบด้วย exit code ล้มเหลว</strong> (เอาไปเสียบ CI/CD ได้ทันที) ต่างจาก <code>check()</code> ที่แค่บันทึกอัตราผ่าน/ไม่ผ่านไว้ดูเฉยๆ ไม่กระทบผลลัพธ์รวมของการรัน<br/><br/>
-    Metric ที่ใช้บ่อยที่สุด:<br/>
-    1. <strong><code>http_req_duration</code></strong>: เวลาตอบสนองของทุก request ระบุแบบ percentile เช่น <code>p(95)&lt;500</code> หมายถึง "95% ของ request ทั้งหมดต้องตอบภายใน 500ms" (ไม่ใช้ค่าเฉลี่ยเพราะค่าผิดปกติไม่กี่ตัวจะถูกกลบไปหมด)<br/>
-    2. <strong><code>http_req_failed</code></strong>: อัตราของ request ที่ล้มเหลว (status >= 400 หรือ connection error) เช่น <code>rate&lt;0.01</code> หมายถึง "ต้องมี request ที่ fail น้อยกว่า 1%"<br/><br/>
-    ถ้า threshold ไหนไม่ผ่าน k6 จะจบด้วย exit code ที่ไม่ใช่ 0 — CI pipeline เอาไปเช็คแล้ว block การ deploy ได้ทันทีโดยไม่ต้องอ่านรายงานเอง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Threshold</strong> คือเกณฑ์ที่ทำให้ k6 <strong>จบด้วย exit code ล้มเหลว</strong> (เอาไปเสียบ CI/CD ได้ทันที) ต่างจาก <code>check()</code> ที่แค่บันทึกอัตราผ่าน/ไม่ผ่านไว้ดูเฉยๆ ไม่กระทบผลลัพธ์รวมของการรัน<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Metric ที่ใช้บ่อยที่สุด:<br/><br/>ถ้า threshold ไหนไม่ผ่าน k6 จะจบด้วย exit code ที่ไม่ใช่ 0 — CI pipeline เอาไปเช็คแล้ว block การ deploy ได้ทันทีโดยไม่ต้องอ่านรายงานเอง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>1. <strong><code>http_req_duration</code></strong>: เวลาตอบสนองของทุก request ระบุแบบ percentile เช่น <code>p(95)&lt;500</code> หมายถึง "95% ของ request ทั้งหมดต้องตอบภายใน 500ms" (ไม่ใช้ค่าเฉลี่ยเพราะค่าผิดปกติไม่กี่ตัวจะถูกกลบไปหมด)<br/><br/>2. <strong><code>http_req_failed</code></strong>: อัตราของ request ที่ล้มเหลว (status >= 400 หรือ connection error) เช่น <code>rate&lt;0.01</code> หมายถึง "ต้องมี request ที่ fail น้อยกว่า 1%"<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง threshold ที่เข้มงวดกว่าสำหรับ endpoint ที่ critical
 export const options = {
   thresholds: {
@@ -257,12 +283,15 @@ export const options = {
 export default function () {
   http.get(\`\${BASE_URL}/api/ai/health\`);
 }`,
-    theory: `ผู้ใช้จริงไม่ได้เปิดเว็บพร้อมกันทีเดียว 1,000 คนในเสี้ยววินาที — ปริมาณ traffic ค่อยๆ เพิ่มขึ้น (ช่วงเช้าคนเข้างาน) แล้วค่อยๆ ลดลง (ช่วงดึก) การทดสอบด้วย <code>vus</code> คงที่ตรงๆ จึงไม่สมจริงเท่า <strong><code>stages</code></strong> ซึ่งกำหนดโปรไฟล์โหลดที่เปลี่ยนแปลงตามเวลาได้<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Stages: จำลอง Load แบบค่อยๆ เพิ่ม-ลด (Ramping) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ผู้ใช้จริงไม่ได้เปิดเว็บพร้อมกันทีเดียว 1,000 คนในเสี้ยววินาที — ปริมาณ traffic ค่อยๆ เพิ่มขึ้น (ช่วงเช้าคนเข้างาน) แล้วค่อยๆ ลดลง (ช่วงดึก) การทดสอบด้วย <code>vus</code> คงที่ตรงๆ จึงไม่สมจริงเท่า <strong><code>stages</code></strong> ซึ่งกำหนดโปรไฟล์โหลดที่เปลี่ยนแปลงตามเวลาได้<br/><br/>
     แต่ละ stage คือ <code>{ duration, target }</code>: "ใช้เวลา <code>duration</code> ในการไล่จำนวน VU ปัจจุบันไปสู่ <code>target</code>" เรียงต่อกันเป็นลำดับ:<br/>
     1. <code>{ duration: '10s', target: 20 }</code> — ไล่ VU จาก 0 ขึ้นไป 20 ภายใน 10 วินาที (ramp-up)<br/>
     2. <code>{ duration: '30s', target: 20 }</code> — คงที่ 20 VU นาน 30 วินาที (plateau, ช่วงวัดผลจริง)<br/>
     3. <code>{ duration: '10s', target: 0 }</code> — ไล่ VU ลงกลับ 0 ภายใน 10 วินาที (ramp-down, ดูพฤติกรรมตอน traffic ลดฮวบ)<br/><br/>
-    <strong>ข้อควรระวัง</strong>: <code>options.vus</code>/<code>options.duration</code> กับ <code>options.stages</code> ใช้แทนกันไม่ได้ในสคริปต์เดียวกัน — ถ้ามี <code>stages</code> แล้ว k6 จะใช้ค่านั้นควบคุมจำนวน VU ตลอดการทดสอบแทน ไม่สนใจ <code>vus</code>/<code>duration</code> ที่ตั้งไว้`,
+    <strong>ข้อควรระวัง</strong>: <code>options.vus</code>/<code>options.duration</code> กับ <code>options.stages</code> ใช้แทนกันไม่ได้ในสคริปต์เดียวกัน — ถ้ามี <code>stages</code> แล้ว k6 จะใช้ค่านั้นควบคุมจำนวน VU ตลอดการทดสอบแทน ไม่สนใจ <code>vus</code>/<code>duration</code> ที่ตั้งไว้<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>แต่ละ stage คือ <code>{ duration, target }</code>: "ใช้เวลา <code>duration</code> ในการไล่จำนวน VU ปัจจุบันไปสู่ <code>target</code>" เรียงต่อกันเป็นลำดับ:<br/><br/>1. <code>{ duration: '10s', target: 20 }</code> — ไล่ VU จาก 0 ขึ้นไป 20 ภายใน 10 วินาที (ramp-up)<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ข้อควรระวัง</strong>: <code>options.vus</code>/<code>options.duration</code> กับ <code>options.stages</code> ใช้แทนกันไม่ได้ในสคริปต์เดียวกัน — ถ้ามี <code>stages</code> แล้ว k6 จะใช้ค่านั้นควบคุมจำนวน VU ตลอดการทดสอบแทน ไม่สนใจ <code>vus</code>/<code>duration</code> ที่ตั้งไว้`,
     example: `// ตัวอย่าง stress test: ไล่โหลดขึ้นเรื่อยๆ จนกว่าจะพัง (ไม่มี ramp-down)
 export const options = {
   stages: [
@@ -334,14 +363,10 @@ export default function () {
     'status is 200 or 429': (r) => r.status === 200 || r.status === 429,
   });
 }`,
-    theory: `เอนด์พอยต์ <code>/api/ai/health</code> ใช้ในบทเรียนนี้ ผูกอยู่กับ middleware <code>express-rate-limit</code> จริงตัวเดียวกับที่บท "Rate-Limit Testing" ของ track API Testing (Playwright) เคยพิสูจน์มาแล้วในระดับ functional test:<br/><br/>
-    <code>const limiter = rateLimit({<br/>
-    &nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/>
-    &nbsp;&nbsp;max: 100, // 100 request ต่อนาทีต่อ IP<br/>
-    });<br/>
-    app.use(limiter);</code><br/><br/>
-    ถ้าตั้ง <code>vus: 20</code> ยิงต่อเนื่อง 10 วินาที จำนวน request จะเกิน 100/นาทีอย่างรวดเร็วแน่นอน — ผลคือได้ <code>429</code> กลับมาเป็นสัดส่วนสูง <strong>นี่ไม่ใช่บั๊ก</strong> แต่คือ Rate Limiter ทำงานถูกต้องตามที่ Dev ออกแบบไว้<br/><br/>
-    บั๊กที่พบบ่อยที่สุดของ Performance Testing มือใหม่: เขียน <code>check()</code> เช็คเฉพาะ <code>status === 200</code> แล้วตกใจเมื่อเห็นอัตราความล้มเหลวพุ่งสูงตอนรัน load test พร้อมสรุปผิดว่า "server รับโหลดไม่ไหว" ทั้งที่จริงคือ Rate Limiter กำลังปกป้องระบบอยู่ การออกแบบ check()/threshold ที่ถูกต้องต้อง<strong>รู้ล่วงหน้าว่าระบบมี guard อะไรบ้าง</strong> แล้วนับ 429 เป็นผลลัพธ์ที่คาดหวังไว้ ไม่ใช่ความล้มเหลว — Functional test (Playwright) พิสูจน์แล้วว่า Limiter บล็อกถูกจุด, Performance test (k6) นี้พิสูจน์ต่อว่า Limiter ตัวเดียวกันยังทำงานถูกต้องแม้ภายใต้โหลดพร้อมกันจริง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Load Test ชนกับ Rate Limit จริง: ต้องคาดการณ์ 429 ไว้ล่วงหน้า และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/><br/>&nbsp;&nbsp;max: 100, // 100 request ต่อนาทีต่อ IP<br/><br/>});<br/><br/>app.use(limiter);</code><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>const limiter = rateLimit({<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าตั้ง <code>vus: 20</code> ยิงต่อเนื่อง 10 วินาที จำนวน request จะเกิน 100/นาทีอย่างรวดเร็วแน่นอน — ผลคือได้ <code>429</code> กลับมาเป็นสัดส่วนสูง <strong>นี่ไม่ใช่บั๊ก</strong> แต่คือ Rate Limiter ทำงานถูกต้องตามที่ Dev ออกแบบไว้<br/><br/><br/>บั๊กที่พบบ่อยที่สุดของ Performance Testing มือใหม่: เขียน <code>check()</code> เช็คเฉพาะ <code>status === 200</code> แล้วตกใจเมื่อเห็นอัตราความล้มเหลวพุ่งสูงตอนรัน load test พร้อมสรุปผิดว่า "server รับโหลดไม่ไหว" ทั้งที่จริงคือ Rate Limiter กำลังปกป้องระบบอยู่ การออกแบบ check()/threshold ที่ถูกต้องต้อง<strong>รู้ล่วงหน้าว่าระบบมี guard อะไรบ้าง</strong> แล้วนับ 429 เป็นผลลัพธ์ที่คาดหวังไว้ ไม่ใช่ความล้มเหลว — Functional test (Playwright) พิสูจน์แล้วว่า Limiter บล็อกถูกจุด, Performance test (k6) นี้พิสูจน์ต่อว่า Limiter ตัวเดียวกันยังทำงานถูกต้องแม้ภายใต้โหลดพร้อมกันจริง`,
     example: `// ตัวอย่างแยกนับอัตรา 429 ต่างหาก เพื่อยืนยันว่า Rate Limiter ทำงานจริง (ไม่ใช่แค่ยอมให้ผ่าน)
 import { Rate } from 'k6/metrics';
 const rateLimitHits = new Rate('rate_limit_triggered');
@@ -402,8 +427,11 @@ export default function () {
   // 1. หน่วงเวลา 1 วินาทีก่อนเริ่ม iteration ถัดไป (จำลองเวลาที่ผู้ใช้จริงใช้อ่าน/คิดก่อนกดต่อ)
   sleep(1);
 }`,
-    theory: `ถ้าไม่ใส่ <code>sleep()</code> เลย แต่ละ Virtual User จะวน <code>default function</code> ซ้ำเร็วที่สุดเท่าที่ทำได้แบบไม่หยุดพัก — ไม่สมจริงเลย เพราะผู้ใช้จริงไม่ได้กดรีเฟรชหน้าเว็บรัวๆ ไม่มีจังหวะหยุดคิด<br/><br/>
-    <code>sleep(&lt;วินาที&gt;)</code> หยุดพัก VU นั้นก่อนเริ่ม iteration ถัดไป จำลอง "think time" — เวลาที่ผู้ใช้จริงใช้อ่านข้อมูลบนหน้าจอหรือตัดสินใจก่อนกดต่อ ทำให้จำนวน request/วินาทีที่เกิดจริงใกล้เคียงพฤติกรรมผู้ใช้จริงมากขึ้น แทนที่จะยิงถี่เกินจริงจนอาจชน Rate Limiter เร็วกว่าที่ผู้ใช้จริงจะทำได้ (เทียบกับบท Rate Limit ก่อนหน้า)`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ sleep(): จำลอง Think Time ของผู้ใช้จริง และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ถ้าไม่ใส่ <code>sleep()</code> เลย แต่ละ Virtual User จะวน <code>default function</code> ซ้ำเร็วที่สุดเท่าที่ทำได้แบบไม่หยุดพัก — ไม่สมจริงเลย เพราะผู้ใช้จริงไม่ได้กดรีเฟรชหน้าเว็บรัวๆ ไม่มีจังหวะหยุดคิด<br/><br/>
+    <code>sleep(&lt;วินาที&gt;)</code> หยุดพัก VU นั้นก่อนเริ่ม iteration ถัดไป จำลอง "think time" — เวลาที่ผู้ใช้จริงใช้อ่านข้อมูลบนหน้าจอหรือตัดสินใจก่อนกดต่อ ทำให้จำนวน request/วินาทีที่เกิดจริงใกล้เคียงพฤติกรรมผู้ใช้จริงมากขึ้น แทนที่จะยิงถี่เกินจริงจนอาจชน Rate Limiter เร็วกว่าที่ผู้ใช้จริงจะทำได้ (เทียบกับบท Rate Limit ก่อนหน้า)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>sleep(&lt;วินาที&gt;)</code> หยุดพัก VU นั้นก่อนเริ่ม iteration ถัดไป จำลอง "think time" — เวลาที่ผู้ใช้จริงใช้อ่านข้อมูลบนหน้าจอหรือตัดสินใจก่อนกดต่อ ทำให้จำนวน request/วินาทีที่เกิดจริงใกล้เคียงพฤติกรรมผู้ใช้จริงมากขึ้น แทนที่จะยิงถี่เกินจริงจนอาจชน Rate Limiter เร็วกว่าที่ผู้ใช้จริงจะทำได้ (เทียบกับบท Rate Limit ก่อนหน้า)<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// think time แบบสุ่มช่วง 1-3 วินาที สมจริงกว่าค่าคงที่ตายตัว
 sleep(Math.random() * 2 + 1);`,
     task: `จงเขียนสคริปต์ k6 ให้สมบูรณ์ โดย:<br/>
@@ -469,13 +497,10 @@ export default function () {
     rateLimitCount.add(1);
   }
 }`,
-    theory: `k6 มี metric มาตรฐานให้อัตโนมัติอยู่แล้ว (<code>http_req_duration</code>, <code>http_req_failed</code> ที่ใช้ในบท Thresholds) แต่บางครั้งต้องการนับ "เหตุการณ์เฉพาะเจาะจง" ที่ metric มาตรฐานไม่แยกให้ — เช่นบท Rate Limit ก่อนหน้าที่ 429 ถือเป็นผลลัพธ์ที่คาดหวัง (ไม่ใช่ failure) การรู้ว่า "โดน Rate Limit กี่ครั้งกันแน่" แยกออกมาต่างหากจึงมีประโยชน์กว่าดูแค่ตัวเลข failed รวมๆ<br/><br/>
-    <strong>Custom Metrics</strong> ที่ใช้บ่อย:<br/>
-    • <strong>Counter</strong> — นับจำนวนสะสม (ใช้ในบทนี้: นับจำนวนครั้งที่เจอ 429)<br/>
-    • <strong>Trend</strong> — เก็บการกระจายตัวของค่าตัวเลข (เช่น เวลาที่ใช้เฉพาะขั้นตอน business logic หนึ่งๆ) คำนวณ min/max/avg/percentile ให้อัตโนมัติ<br/>
-    • <strong>Rate</strong> — สัดส่วน true/false (ตัวอย่างเคยเห็นในบท Rate Limit ก่อนหน้า)<br/>
-    • <strong>Gauge</strong> — เก็บแค่ค่าล่าสุด<br/><br/>
-    ค่าที่นับผ่าน Custom Metric จะไปโผล่ในสรุปผลตอนจบการทดสอบ (k6 summary) แยกต่างหากจาก metric มาตรฐาน ทำให้อ่านรายงานได้ตรงประเด็นกว่า`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Custom Metrics: นับเหตุการณ์เฉพาะที่ k6 ไม่ได้วัดให้อัตโนมัติ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Custom Metrics</strong> ที่ใช้บ่อย:<br/><br/>• <strong>Counter</strong> — นับจำนวนสะสม (ใช้ในบทนี้: นับจำนวนครั้งที่เจอ 429)<br/><br/>• <strong>Trend</strong> — เก็บการกระจายตัวของค่าตัวเลข (เช่น เวลาที่ใช้เฉพาะขั้นตอน business logic หนึ่งๆ) คำนวณ min/max/avg/percentile ให้อัตโนมัติ<br/><br/>• <strong>Gauge</strong> — เก็บแค่ค่าล่าสุด<br/><br/><br/>ค่าที่นับผ่าน Custom Metric จะไปโผล่ในสรุปผลตอนจบการทดสอบ (k6 summary) แยกต่างหากจาก metric มาตรฐาน ทำให้อ่านรายงานได้ตรงประเด็นกว่า<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> • <strong>Rate</strong> — สัดส่วน true/false (ตัวอย่างเคยเห็นในบท Rate Limit ก่อนหน้า)<br/>`,
     example: `// Trend ใช้วัดการกระจายตัวของเวลาที่ใช้เฉพาะขั้นตอนหนึ่ง
 import { Trend } from 'k6/metrics';
 const aiPanelDuration = new Trend('ai_panel_duration');
@@ -546,8 +571,10 @@ export default function () {
     http.get(\`\${BASE_URL}/api/ai/model\`);
   });
 }`,
-    theory: `บทเรียนก่อนหน้าทุกบทมี <strong>request เดียว</strong>ต่อ 1 iteration — แต่ user journey จริงมักมีหลายขั้นตอนต่อเนื่องกัน (เปิดหน้าเว็บ → โหลดข้อมูลหลายชุด → กดปุ่มทำ action) <code>group()</code> ห่อกลุ่ม request ที่เป็น "ขั้นตอนเดียวกันในทางธุรกิจ" เข้าด้วยกัน แล้วตั้งชื่อให้อ่านง่าย<br/><br/>
-    ประโยชน์หลัก: รายงานสรุปผลของ k6 (summary output) จะแยกแสดงผลตาม group แทนที่จะกองรวมทุก request เป็น list แบนราบเดียว ทำให้เห็นชัดว่า "ขั้นตอนไหนช้า" แทนที่จะต้องไล่เดารายชื่อ URL เอง — ยิ่งสคริปต์มีหลายสิบ request ต่อ iteration ยิ่งจำเป็นต้องจัดกลุ่มแบบนี้`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ group(): จัดกลุ่ม Multi-step Transaction ในรายงานผล และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ประโยชน์หลัก: รายงานสรุปผลของ k6 (summary output) จะแยกแสดงผลตาม group แทนที่จะกองรวมทุก request เป็น list แบนราบเดียว ทำให้เห็นชัดว่า "ขั้นตอนไหนช้า" แทนที่จะต้องไล่เดารายชื่อ URL เอง — ยิ่งสคริปต์มีหลายสิบ request ต่อ iteration ยิ่งจำเป็นต้องจัดกลุ่มแบบนี้<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// จัดหลาย group ในสคริปต์เดียว แยกแต่ละขั้นตอนของ user journey
 group('Health Check', () => {
   http.get(\`\${BASE_URL}/api/ai/health\`);
@@ -618,10 +645,13 @@ export const options = {
 export default function () {
   http.get(\`\${BASE_URL}/api/ai/health\`);
 }`,
-    theory: `<code>vus</code>/<code>duration</code> (บทที่ 1) และ <code>stages</code> (บทที่ 3) ที่เคยเขียนมาทั้งหมด แท้จริงแล้วคือ<strong>รูปแบบย่อ</strong>ของ <code>scenarios</code> — k6 แปลงมันเป็น scenario เดียวที่ไม่มีชื่อให้อัตโนมัติเบื้องหลัง <code>scenarios</code> คือรูปแบบเต็มที่เปิดให้ควบคุมได้ละเอียดกว่า:<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Scenarios & Executors: ควบคุมรูปแบบโหลดแบบ Explicit และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>vus</code>/<code>duration</code> (บทที่ 1) และ <code>stages</code> (บทที่ 3) ที่เคยเขียนมาทั้งหมด แท้จริงแล้วคือ<strong>รูปแบบย่อ</strong>ของ <code>scenarios</code> — k6 แปลงมันเป็น scenario เดียวที่ไม่มีชื่อให้อัตโนมัติเบื้องหลัง <code>scenarios</code> คือรูปแบบเต็มที่เปิดให้ควบคุมได้ละเอียดกว่า:<br/><br/>
     1. <strong>ตั้งชื่อ scenario ได้</strong> (เช่น <code>steady_load</code>) ทำให้อ่านรายงานง่ายขึ้นว่าผลลัพธ์มาจาก load pattern ไหน<br/>
     2. <strong>รันหลาย scenario พร้อมกันได้ในการทดสอบเดียว</strong> (เช่น โหลดคงที่พื้นหลัง + spike แทรกเข้ามาช่วงสั้นๆ พร้อมกัน) ซึ่งทำไม่ได้ถ้าใช้แค่ <code>vus</code>/<code>stages</code> เดี่ยวๆ<br/>
-    3. <strong>เลือก executor ได้เต็มรูปแบบ</strong> — <code>constant-vus</code> (VU คงที่ตลอด, ใช้ในบทนี้), <code>ramping-vus</code> (เท่ากับ stages), <code>constant-arrival-rate</code> (คุม "จำนวน request/วินาที" ตรงๆ แทนที่จะคุมผ่านจำนวน VU), <code>per-vu-iterations</code> (แต่ละ VU วนตามจำนวนรอบที่กำหนด ไม่ใช่ตามเวลา)`,
+    3. <strong>เลือก executor ได้เต็มรูปแบบ</strong> — <code>constant-vus</code> (VU คงที่ตลอด, ใช้ในบทนี้), <code>ramping-vus</code> (เท่ากับ stages), <code>constant-arrival-rate</code> (คุม "จำนวน request/วินาที" ตรงๆ แทนที่จะคุมผ่านจำนวน VU), <code>per-vu-iterations</code> (แต่ละ VU วนตามจำนวนรอบที่กำหนด ไม่ใช่ตามเวลา)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>1. <strong>ตั้งชื่อ scenario ได้</strong> (เช่น <code>steady_load</code>) ทำให้อ่านรายงานง่ายขึ้นว่าผลลัพธ์มาจาก load pattern ไหน<br/><br/>2. <strong>รันหลาย scenario พร้อมกันได้ในการทดสอบเดียว</strong> (เช่น โหลดคงที่พื้นหลัง + spike แทรกเข้ามาช่วงสั้นๆ พร้อมกัน) ซึ่งทำไม่ได้ถ้าใช้แค่ <code>vus</code>/<code>stages</code> เดี่ยวๆ<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// รัน 2 scenario พร้อมกัน: โหลดคงที่พื้นหลัง + spike แทรกเข้ามาช่วงสั้นๆ
 export const options = {
   scenarios: {
@@ -692,9 +722,12 @@ export default function (data) {
 export function teardown() {
   console.log('Load test เสร็จสมบูรณ์');
 }`,
-    theory: `<code>setup()</code> รันแค่<strong>ครั้งเดียว</strong>ก่อนที่ VU ตัวไหนจะเริ่ม iterate เลย — เหมาะสำหรับเช็ค health ก่อนยิงโหลดจริง, เตรียม/seed ข้อมูลทดสอบ, หรือเก็บ baseline state ไว้เทียบภายหลัง ค่าที่ <code>return</code> ออกมาจาก <code>setup()</code> จะถูกส่งเป็น argument <code>data</code> เข้าไปใน <code>default function</code> ทุกครั้งที่ทุก VU เรียก (ในเทมเพลตนี้ยังไม่ได้ใช้ <code>data</code> แต่รับไว้เป็น parameter แล้ว)<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ setup() / teardown(): เตรียมและเก็บกวาดก่อน-หลัง Load Test และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>setup()</code> รันแค่<strong>ครั้งเดียว</strong>ก่อนที่ VU ตัวไหนจะเริ่ม iterate เลย — เหมาะสำหรับเช็ค health ก่อนยิงโหลดจริง, เตรียม/seed ข้อมูลทดสอบ, หรือเก็บ baseline state ไว้เทียบภายหลัง ค่าที่ <code>return</code> ออกมาจาก <code>setup()</code> จะถูกส่งเป็น argument <code>data</code> เข้าไปใน <code>default function</code> ทุกครั้งที่ทุก VU เรียก (ในเทมเพลตนี้ยังไม่ได้ใช้ <code>data</code> แต่รับไว้เป็น parameter แล้ว)<br/><br/>
     <code>teardown()</code> รันแค่<strong>ครั้งเดียว</strong>หลังทุก VU จบการทดสอบทั้งหมดแล้ว — เหมาะสำหรับ log สรุปผล หรือ<strong>คืนค่าสถานะที่ระบบใช้ร่วมกันกลับเป็นค่าเริ่มต้น</strong><br/><br/>
-    เชื่อมโยงกับบท "State Leak / Race Condition" ของ track API Testing: เอนด์พอยต์ <code>/api/ai/model/switch</code> ของ My-Investment-Port เปลี่ยนโมเดล AI แบบ global mutable state (ไม่ผูกกับ user คนใดคนหนึ่ง) ถ้า load test สคริปต์หนึ่งสลับโมเดลไปมาระหว่างทดสอบ แล้วจบการทดสอบโดยไม่คืนค่ากลับ โมเดลที่ค้างอยู่จะกระทบการทดสอบ/การใช้งานจริงครั้งถัดไปทันที — <code>teardown()</code> คือจุดที่ถูกต้องสำหรับสั่ง reset ค่านั้นกลับเป็นค่า default ก่อนจบสคริปต์`,
+    เชื่อมโยงกับบท "State Leak / Race Condition" ของ track API Testing: เอนด์พอยต์ <code>/api/ai/model/switch</code> ของ My-Investment-Port เปลี่ยนโมเดล AI แบบ global mutable state (ไม่ผูกกับ user คนใดคนหนึ่ง) ถ้า load test สคริปต์หนึ่งสลับโมเดลไปมาระหว่างทดสอบ แล้วจบการทดสอบโดยไม่คืนค่ากลับ โมเดลที่ค้างอยู่จะกระทบการทดสอบ/การใช้งานจริงครั้งถัดไปทันที — <code>teardown()</code> คือจุดที่ถูกต้องสำหรับสั่ง reset ค่านั้นกลับเป็นค่า default ก่อนจบสคริปต์<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>teardown()</code> รันแค่<strong>ครั้งเดียว</strong>หลังทุก VU จบการทดสอบทั้งหมดแล้ว — เหมาะสำหรับ log สรุปผล หรือ<strong>คืนค่าสถานะที่ระบบใช้ร่วมกันกลับเป็นค่าเริ่มต้น</strong><br/><br/><br/>เชื่อมโยงกับบท "State Leak / Race Condition" ของ track API Testing: เอนด์พอยต์ <code>/api/ai/model/switch</code> ของ My-Investment-Port เปลี่ยนโมเดล AI แบบ global mutable state (ไม่ผูกกับ user คนใดคนหนึ่ง) ถ้า load test สคริปต์หนึ่งสลับโมเดลไปมาระหว่างทดสอบ แล้วจบการทดสอบโดยไม่คืนค่ากลับ โมเดลที่ค้างอยู่จะกระทบการทดสอบ/การใช้งานจริงครั้งถัดไปทันที — <code>teardown()</code> คือจุดที่ถูกต้องสำหรับสั่ง reset ค่านั้นกลับเป็นค่า default ก่อนจบสคริปต์<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง teardown() ที่ reset shared state กลับเป็นค่า default จริง
 export function teardown() {
   http.post(\`\${BASE_URL}/api/ai/model/switch\`, JSON.stringify({ model: 'default' }), {
@@ -783,8 +816,11 @@ export default function () {
     'status is 200 or 429': (r) => r.status === 200 || r.status === 429,
   });
 }`,
-    theory: `บทเรียนนี้รวมสองแนวคิดที่เคยแยกเรียนมาก่อนหน้าเข้าด้วยกันในสคริปต์เดียว: <code>stages</code> (บทที่ 3) ควบคุม "รูปแบบโหลด" ที่เปลี่ยนแปลงตามเวลา ส่วน <code>thresholds</code> (บทที่ 2) ควบคุม "เกณฑ์ผ่าน/ไม่ผ่าน" ของผลลัพธ์ — ในการทดสอบจริง แทบไม่มีทีมไหนตั้ง threshold แค่ตัวเดียวเวลาทำ ramping load test เพราะ p95 latency เพียงอย่างเดียวไม่บอกว่า request ที่เหลือ fail ไปกี่ % และในทางกลับกัน error rate เพียงอย่างเดียวก็ไม่บอกว่า request ที่ผ่านนั้นช้าแค่ไหน<br/><br/>
-    เกณฑ์ผ่านที่รัดกุมของการทดสอบ load แบบ ramping ต้องดูทั้งสองมุมพร้อมกัน: <code>http_req_duration</code> (ความเร็ว) และ <code>http_req_failed</code> (ความสำเร็จ) — ถ้าตั้ง threshold แค่ตัวเดียว k6 อาจรายงานผ่านทั้งที่ระบบมีปัญหาจริงในอีกมุมหนึ่งที่ threshold ไม่ได้ตรวจ ยิ่งช่วง ramp-up/ramp-down ที่โหลดเปลี่ยนแปลงตลอดเวลา ยิ่งมีโอกาสเจอปัญหาแค่มุมใดมุมหนึ่งสูงกว่าช่วง steady state ปกติ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ รวม Stages กับ Thresholds แบบ Compound: ต้องผ่านทั้ง Latency และ Error Rate พร้อมกัน และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทเรียนนี้รวมสองแนวคิดที่เคยแยกเรียนมาก่อนหน้าเข้าด้วยกันในสคริปต์เดียว: <code>stages</code> (บทที่ 3) ควบคุม "รูปแบบโหลด" ที่เปลี่ยนแปลงตามเวลา ส่วน <code>thresholds</code> (บทที่ 2) ควบคุม "เกณฑ์ผ่าน/ไม่ผ่าน" ของผลลัพธ์ — ในการทดสอบจริง แทบไม่มีทีมไหนตั้ง threshold แค่ตัวเดียวเวลาทำ ramping load test เพราะ p95 latency เพียงอย่างเดียวไม่บอกว่า request ที่เหลือ fail ไปกี่ % และในทางกลับกัน error rate เพียงอย่างเดียวก็ไม่บอกว่า request ที่ผ่านนั้นช้าแค่ไหน<br/><br/>
+    เกณฑ์ผ่านที่รัดกุมของการทดสอบ load แบบ ramping ต้องดูทั้งสองมุมพร้อมกัน: <code>http_req_duration</code> (ความเร็ว) และ <code>http_req_failed</code> (ความสำเร็จ) — ถ้าตั้ง threshold แค่ตัวเดียว k6 อาจรายงานผ่านทั้งที่ระบบมีปัญหาจริงในอีกมุมหนึ่งที่ threshold ไม่ได้ตรวจ ยิ่งช่วง ramp-up/ramp-down ที่โหลดเปลี่ยนแปลงตลอดเวลา ยิ่งมีโอกาสเจอปัญหาแค่มุมใดมุมหนึ่งสูงกว่าช่วง steady state ปกติ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>เกณฑ์ผ่านที่รัดกุมของการทดสอบ load แบบ ramping ต้องดูทั้งสองมุมพร้อมกัน: <code>http_req_duration</code> (ความเร็ว) และ <code>http_req_failed</code> (ความสำเร็จ) — ถ้าตั้ง threshold แค่ตัวเดียว k6 อาจรายงานผ่านทั้งที่ระบบมีปัญหาจริงในอีกมุมหนึ่งที่ threshold ไม่ได้ตรวจ ยิ่งช่วง ramp-up/ramp-down ที่โหลดเปลี่ยนแปลงตลอดเวลา ยิ่งมีโอกาสเจอปัญหาแค่มุมใดมุมหนึ่งสูงกว่าช่วง steady state ปกติ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง threshold ที่ผูกกับ tag เฉพาะ แทนที่จะเป็น global metric ตรงๆ
 export const options = {
   stages: [{ duration: '30s', target: 50 }],
@@ -891,8 +927,11 @@ export default function () {
     'body contains ok': (r) => r.body.includes('ok'),
   });
 }`,
-    theory: `การทดสอบจริงมักไม่ได้มีแค่โหลดคงที่รูปแบบเดียว — ระบบอาจต้องรับ traffic พื้นหลังปกติไปพร้อมๆ กับ spike สั้นๆ แทรกเข้ามา (เช่น แคมเปญการตลาดที่ยิง notification พร้อมกันช่วงสั้นๆ ระหว่างที่ traffic ปกติยังเดินอยู่) การจำลองสถานการณ์นี้ต้องใช้ <code>scenarios</code> หลายตัวพร้อมกัน โดยแต่ละตัวมี <code>executor</code> ต่างชนิดกันได้ (เช่น <code>constant-vus</code> คู่กับ <code>ramping-vus</code>) และ <code>startTime</code> กำหนดว่า scenario ไหนเริ่มช้ากว่ากันเท่าไหร่ ทำให้ทั้งสองรูปแบบโหลดวิ่งซ้อนทับกันในการทดสอบครั้งเดียว<br/><br/>
-    อีกด้านหนึ่ง <code>check()</code> ที่ตรวจแค่ status code อย่างเดียวบางครั้งไม่พอ — server อาจตอบ 200 กลับมาแต่เนื้อหาใน body ผิดพลาด (เช่น error message ที่ wrap มาเป็น 200 แทนที่จะเป็น error status จริง) การตรวจสอบที่รัดกุมกว่าจึงต้องดูทั้ง status code และเนื้อหาของ response พร้อมกันในเงื่อนไขเดียว — ถ้าเงื่อนไขใดเงื่อนไขหนึ่งไม่ผ่าน check() นั้นจะถูกนับเป็น fail ทันที ต่างจากการแยก check เป็นคนละรายการที่แต่ละอันจะถูกนับผ่าน/ไม่ผ่านแยกกันเอง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ หลาย Scenarios พร้อมกัน + Compound check(): ตรวจทั้ง Status และ Body พร้อมกัน และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การทดสอบจริงมักไม่ได้มีแค่โหลดคงที่รูปแบบเดียว — ระบบอาจต้องรับ traffic พื้นหลังปกติไปพร้อมๆ กับ spike สั้นๆ แทรกเข้ามา (เช่น แคมเปญการตลาดที่ยิง notification พร้อมกันช่วงสั้นๆ ระหว่างที่ traffic ปกติยังเดินอยู่) การจำลองสถานการณ์นี้ต้องใช้ <code>scenarios</code> หลายตัวพร้อมกัน โดยแต่ละตัวมี <code>executor</code> ต่างชนิดกันได้ (เช่น <code>constant-vus</code> คู่กับ <code>ramping-vus</code>) และ <code>startTime</code> กำหนดว่า scenario ไหนเริ่มช้ากว่ากันเท่าไหร่ ทำให้ทั้งสองรูปแบบโหลดวิ่งซ้อนทับกันในการทดสอบครั้งเดียว<br/><br/>
+    อีกด้านหนึ่ง <code>check()</code> ที่ตรวจแค่ status code อย่างเดียวบางครั้งไม่พอ — server อาจตอบ 200 กลับมาแต่เนื้อหาใน body ผิดพลาด (เช่น error message ที่ wrap มาเป็น 200 แทนที่จะเป็น error status จริง) การตรวจสอบที่รัดกุมกว่าจึงต้องดูทั้ง status code และเนื้อหาของ response พร้อมกันในเงื่อนไขเดียว — ถ้าเงื่อนไขใดเงื่อนไขหนึ่งไม่ผ่าน check() นั้นจะถูกนับเป็น fail ทันที ต่างจากการแยก check เป็นคนละรายการที่แต่ละอันจะถูกนับผ่าน/ไม่ผ่านแยกกันเอง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> อีกด้านหนึ่ง <code>check()</code> ที่ตรวจแค่ status code อย่างเดียวบางครั้งไม่พอ — server อาจตอบ 200 กลับมาแต่เนื้อหาใน body ผิดพลาด (เช่น error message ที่ wrap มาเป็น 200 แทนที่จะเป็น error status จริง) การตรวจสอบที่รัดกุมกว่าจึงต้องดูทั้ง status code และเนื้อหาของ response พร้อมกันในเงื่อนไขเดียว — ถ้าเงื่อนไขใดเงื่อนไขหนึ่งไม่ผ่าน check() นั้นจะถูกนับเป็น fail ทันที ต่างจากการแยก check เป็นคนละรายการที่แต่ละอันจะถูกนับผ่าน/ไม่ผ่านแยกกันเอง`,
     example: `// ตัวอย่าง compound check ที่ตรวจ header กับ response time พร้อมกัน
 check(res, {
   'has content-type json': (r) => r.headers['Content-Type'].includes('application/json'),

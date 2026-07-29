@@ -24,9 +24,13 @@ const LESSONS = [
     },
     hint: "YAML workflow ทุกไฟล์ต้องมี key ระดับบนสุดสำหรับตั้งชื่อ workflow ทั้งไฟล์ — คำนั้นแปลตรงตัวว่า 'ชื่อ' ในภาษาอังกฤษ ใส่ไว้เป็นบรรทัดแรกสุดตามด้วยค่าที่ task กำหนด",
     solution: `name: CI`,
-    theory: `<strong>CI/CD (Continuous Integration / Continuous Deployment)</strong> คือระบบที่รันงาน (build, test, deploy) <strong>อัตโนมัติ</strong>ทุกครั้งที่มีการเปลี่ยนแปลงโค้ด (push, เปิด pull request) แทนที่จะรอให้คนใดคนหนึ่งจำได้ว่าต้องรัน test เองก่อน merge<br/><br/>
-    เหตุผลที่ QA ต้องเข้าใจ CI/CD (ไม่ใช่แค่หน้าที่ DevOps): <strong>test automation ที่เขียนไว้ (Playwright, k6, ฯลฯ) มีค่าจริงก็ต่อเมื่อมันถูกรันสม่ำเสมอ</strong> — test suite ที่เขียนไว้สวยงามแต่ไม่มีใครรันเลยไม่ต่างจากไม่มี test เลย CI คือกลไกที่การันตีว่า test จะถูกรันทุกครั้งโดยไม่ต้องพึ่งความจำของคนใดคนหนึ่ง<br/><br/>
-    บทเรียนนี้อิงจากไฟล์ <code>.github/workflows/ci.yml</code> จริงของโปรเจก kouen-terminal (แม้จะเป็นโปรเจก Swift ไม่ใช่ Playwright แต่โครงสร้าง/แนวคิดของ CI/CD ที่ใช้เป็นสากล — บทเรียนนี้ปรับให้ตัวอย่างรัน <code>npx playwright test</code> แทน <code>swift test</code>)`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิด <strong>CI/CD (Continuous Integration / Continuous Deployment)</strong> เพื่อให้ Test Suite รันอัตโนมัติทุกครั้งที่มีการเปลี่ยนโค้ด<br/><br/>
+    ⚖️ <strong>ความสำคัญของ CI/CD ต่อ QA Automation:</strong><br/>
+    • ❌ <strong>ไม่มี CI/CD:</strong> Test Automation เขียนไว้อย่างดี แต่ไม่ค่อยถูกรัน หรือรันเฉพาะก่อน Deploy เท่านั้น<br/>
+    • <strong>มี CI/CD:</strong> บังคับรัน Test ทุกครั้งที่มี Push หรือ Pull Request บล็อก Bug ไม่ให้หลุดไปถึง Branch หลัก<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>name: CI</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ไวยากรณ์ในไฟล์ Configuration ของ GitHub Actions ใช้รูปแบบ <strong>YAML</strong> ซึ่งเคร่งครัดเรื่องการเว้นวรรค (Indentation) ห้ามใช้ Tab เคาะ space ให้เท่ากันเสมอ`,
     example: `# ตัวอย่างโครงสร้าง workflow ไฟล์เต็ม (ภาพรวมก่อนลงรายละเอียดทีละส่วนในบทถัดไป)
 name: CI
 on:
@@ -76,17 +80,16 @@ on:
     branches:
       - main
   pull_request:`,
-    theory: `<code>on:</code> กำหนดว่า workflow จะถูก<strong>trigger</strong> (เริ่มรัน) ตอนไหนบ้าง — เงื่อนไขที่ใช้บ่อยที่สุด:<br/><br/>
-    • <code>push: branches: [main]</code> — รันทุกครั้งที่มี commit ถูก push เข้า branch <code>main</code> โดยตรง<br/>
-    • <code>pull_request:</code> (ไม่ระบุ branches ก็ได้ = ทุก PR) — รันทุกครั้งที่เปิดหรืออัปเดต Pull Request ไปยัง branch ไหนก็ตาม — นี่คือจุดสำคัญที่สุดสำหรับ QA เพราะ <strong>test ต้องรันก่อน merge เข้า main เสมอ</strong> ไม่ใช่รันหลัง merge ไปแล้วถึงรู้ว่าพัง<br/><br/>
-    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> จริงกำหนดไว้:<br/><br/>
-    <code>on:<br/>
-    &nbsp;&nbsp;push:<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;branches:<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- main<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "claude/**"<br/>
-    &nbsp;&nbsp;pull_request:</code><br/><br/>
-    สังเกตว่านอกจาก <code>main</code> ยังมี <code>"claude/**"</code> (wildcard pattern) — รวม branch ที่ AI agent สร้างขึ้นด้วย เพื่อให้ CI ตรวจสอบงานที่ agent ทำโดยอัตโนมัติเช่นกัน ไม่ต้องรอจนกว่าจะเปิด PR ก่อน`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> กำหนดเงื่อนไขการรันอัตโนมัติ (Trigger Events) ในไฟล์ YAML ผ่านคีย์ <code>on:</code><br/><br/>
+    ⚖️ <strong>2 Event หลักที่พบบ่อยที่สุด:</strong><br/>
+    • <code>push: branches: [main]</code>: รันเมื่อมี Commit ถูก Push เข้า Branch หลักโดยตรง<br/>
+    • <code>pull_request:</code>: รันเมื่อมีคนสร้างหรืออัปเดต Pull Request (บล็อกก่อน Code Merge)<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>on:</code><br/>
+    <code>  push:</code><br/>
+    <code>    branches: [main]</code><br/>
+    <code>  pull_request:</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ควรตั้งค่ารัน Test บน Pull Request เสมอ เพื่อให้รู้ผลทดสอบ "ก่อน" ที่โค้ดจะถูกรวมเข้า Branch หลัก`,
     example: `# ตัวอย่าง trigger เพิ่มเติม: รันตาม schedule ทุกวันตอนเที่ยงคืน (nightly regression)
 on:
   schedule:
@@ -134,12 +137,10 @@ on:
 concurrency:
   group: ci-\${{ github.ref }}
   cancel-in-progress: true`,
-    theory: `ถ้า push commit ใหม่เข้า PR เดิมซ้ำๆ ติดกันเร็วๆ (แก้โค้ดแล้ว push อีกรอบทันทีก่อน CI รอบแรกรันเสร็จ) — โดย default GitHub Actions จะปล่อยให้ CI ของทุก commit รันจนจบ แม้ commit เก่าจะ<strong>ล้าสมัยไปแล้ว</strong>เพราะมีโค้ดใหม่กว่ามาแทนที่ ทำให้เสีย compute resource ไปฟรีๆ กับผลลัพธ์ที่ไม่มีใครสนใจอีกต่อไป<br/><br/>
-    <code>concurrency</code> แก้ปัญหานี้: <code>group</code> กำหนด "กลุ่ม" ของ run ที่ถือว่าเป็นงานเดียวกัน (ในที่นี้คือ <code>ci-\${{ github.ref }}</code> — ref เดียวกัน เช่น PR branch เดียวกัน) แล้ว <code>cancel-in-progress: true</code> สั่งให้<strong>ยกเลิก run เก่าที่ยังไม่จบ</strong>ทันทีเมื่อมี run ใหม่ในกลุ่มเดียวกันเริ่มขึ้น<br/><br/>
-    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> จริงมีตั้งค่านี้ไว้ตรงตัว:<br/><br/>
-    <code>concurrency:<br/>
-    &nbsp;&nbsp;group: ci-\${{ github.ref }}<br/>
-    &nbsp;&nbsp;cancel-in-progress: true</code>`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Concurrency: ยกเลิก Run เก่าที่ล้าสมัยแล้วอัตโนมัติ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;group: ci-\${{ github.ref }}<br/><br/>&nbsp;&nbsp;cancel-in-progress: true</code><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>concurrency</code> แก้ปัญหานี้: <code>group</code> กำหนด "กลุ่ม" ของ run ที่ถือว่าเป็นงานเดียวกัน (ในที่นี้คือ <code>ci-\${{ github.ref }}</code> — ref เดียวกัน เช่น PR branch เดียวกัน) แล้ว <code>cancel-in-progress: true</code> สั่งให้<strong>ยกเลิก run เก่าที่ยังไม่จบ</strong>ทันทีเมื่อมี run ใหม่ในกลุ่มเดียวกันเริ่มขึ้น<br/><br/><br/><strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> จริงมีตั้งค่านี้ไว้ตรงตัว:<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `# ตัวอย่างแยก group ตาม workflow name ด้วย ป้องกัน workflow อื่นชื่อกลุ่มชนกัน
 concurrency:
   group: \${{ github.workflow }}-\${{ github.ref }}
@@ -182,9 +183,12 @@ concurrency:
       node_modules
       ~/.cache/ms-playwright
     key: deps-\${{ hashFiles('package-lock.json') }}`,
-    theory: `การติดตั้ง <code>node_modules</code> และดาวน์โหลด browser binary ของ Playwright (Chromium/Firefox/WebKit ตัวเต็ม) ใช้เวลาหลายนาทีทุกครั้งที่ CI รัน — ถ้าไม่มี cache เลย ทุก run ต้องโหลดใหม่หมดแม้ dependency จะไม่เปลี่ยนเลยจาก run ก่อนหน้า<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Caching: อย่าโหลด Dependency ใหม่ทุกครั้งถ้าไม่จำเป็น และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การติดตั้ง <code>node_modules</code> และดาวน์โหลด browser binary ของ Playwright (Chromium/Firefox/WebKit ตัวเต็ม) ใช้เวลาหลายนาทีทุกครั้งที่ CI รัน — ถ้าไม่มี cache เลย ทุก run ต้องโหลดใหม่หมดแม้ dependency จะไม่เปลี่ยนเลยจาก run ก่อนหน้า<br/><br/>
     <code>actions/cache</code> เก็บโฟลเดอร์ที่ระบุไว้ (<code>path</code>) ไว้ข้าม run โดยผูกกับ <code>key</code> — ถ้า <code>key</code> ตรงกับที่เคยเก็บไว้ (เช็คจาก <code>hashFiles('package-lock.json')</code> คือ hash ของไฟล์ lock dependency) จะ<strong>restore cache แทนการโหลดใหม่</strong> ทำให้ CI เร็วขึ้นมาก แต่ถ้า <code>package-lock.json</code> เปลี่ยน (มี dependency ใหม่/อัปเดตเวอร์ชัน) hash จะเปลี่ยนตาม แล้ว cache เก่าจะไม่ match — บังคับให้ install ใหม่โดยอัตโนมัติ (ถูกต้อง เพราะ dependency ชุดใหม่ไม่ตรงกับของเก่า)<br/><br/>
-    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> ใช้แนวคิดเดียวกันนี้กับ SwiftPM build cache: <code>key: spm-v2-\${{ runner.os }}-\${{ env.XCODE_VERSION }}-\${{ hashFiles('Package.swift', 'Package.resolved') }}</code> — ผูก key กับทั้ง toolchain version และ hash ของไฟล์ dependency คู่กัน (ตัวอย่างนี้ปรับมาเป็น <code>package-lock.json</code> สำหรับ Node/npm)`,
+    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> ใช้แนวคิดเดียวกันนี้กับ SwiftPM build cache: <code>key: spm-v2-\${{ runner.os }}-\${{ env.XCODE_VERSION }}-\${{ hashFiles('Package.swift', 'Package.resolved') }}</code> — ผูก key กับทั้ง toolchain version และ hash ของไฟล์ dependency คู่กัน (ตัวอย่างนี้ปรับมาเป็น <code>package-lock.json</code> สำหรับ Node/npm)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>actions/cache</code> เก็บโฟลเดอร์ที่ระบุไว้ (<code>path</code>) ไว้ข้าม run โดยผูกกับ <code>key</code> — ถ้า <code>key</code> ตรงกับที่เคยเก็บไว้ (เช็คจาก <code>hashFiles('package-lock.json')</code> คือ hash ของไฟล์ lock dependency) จะ<strong>restore cache แทนการโหลดใหม่</strong> ทำให้ CI เร็วขึ้นมาก แต่ถ้า <code>package-lock.json</code> เปลี่ยน (มี dependency ใหม่/อัปเดตเวอร์ชัน) hash จะเปลี่ยนตาม แล้ว cache เก่าจะไม่ match — บังคับให้ install ใหม่โดยอัตโนมัติ (ถูกต้อง เพราะ dependency ชุดใหม่ไม่ตรงกับของเก่า)<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> ใช้แนวคิดเดียวกันนี้กับ SwiftPM build cache: <code>key: spm-v2-\${{ runner.os }}-\${{ env.XCODE_VERSION }}-\${{ hashFiles('Package.swift', 'Package.resolved') }}</code> — ผูก key กับทั้ง toolchain version และ hash ของไฟล์ dependency คู่กัน (ตัวอย่างนี้ปรับมาเป็น <code>package-lock.json</code> สำหรับ Node/npm)`,
     example: `# ตัวอย่าง self-heal cache ที่เสียหายบางส่วน (แนวคิดจาก kouen-terminal จริง)
 - name: Heal partial cache
   run: |
@@ -228,9 +232,12 @@ concurrency:
     steps:
       - uses: actions/checkout@v4
       - run: npx playwright test --project=\${{ matrix.browser }}`,
-    theory: `<strong>Matrix Strategy</strong> รัน job เดียวกันซ้ำหลายครั้งโดยเปลี่ยนแค่ตัวแปรบางตัว (เช่น browser, OS, เวอร์ชัน Node) แทนที่จะเขียน job แยกกัน 3 ก้อนที่เหมือนกันเป๊ะยกเว้น 1 บรรทัด — GitHub Actions จะรันทุก combination <strong>พร้อมกัน</strong> (ไม่ใช่ทีละอัน) ทำให้ผลลัพธ์ทั้ง 3 browser ออกมาเร็วเท่าๆ กับรันแค่ 1 browser<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Matrix Strategy</strong> รัน job เดียวกันซ้ำหลายครั้งโดยเปลี่ยนแค่ตัวแปรบางตัว (เช่น browser, OS, เวอร์ชัน Node) แทนที่จะเขียน job แยกกัน 3 ก้อนที่เหมือนกันเป๊ะยกเว้น 1 บรรทัด — GitHub Actions จะรันทุก combination <strong>พร้อมกัน</strong> (ไม่ใช่ทีละอัน) ทำให้ผลลัพธ์ทั้ง 3 browser ออกมาเร็วเท่าๆ กับรันแค่ 1 browser<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Matrix Strategy</strong> รัน job เดียวกันซ้ำหลายครั้งโดยเปลี่ยนแค่ตัวแปรบางตัว (เช่น browser, OS, เวอร์ชัน Node) แทนที่จะเขียน job แยกกัน 3 ก้อนที่เหมือนกันเป๊ะยกเว้น 1 บรรทัด — GitHub Actions จะรันทุก combination <strong>พร้อมกัน</strong> (ไม่ใช่ทีละอัน) ทำให้ผลลัพธ์ทั้ง 3 browser ออกมาเร็วเท่าๆ กับรันแค่ 1 browser<br/><br/>
     <code>\${{ matrix.browser }}</code> คือค่าที่เปลี่ยนไปในแต่ละรอบ (chromium, แล้ว firefox, แล้ว webkit) — ใช้แทนที่ในคำสั่งจริง (<code>--project=\${{ matrix.browser }}</code>) เพื่อสั่ง Playwright ให้รันเฉพาะ browser นั้นในแต่ละ job instance<br/><br/>
-    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> ไม่ได้ใช้ matrix syntax ตรงๆ แต่ใช้แนวคิดเดียวกัน (รันแยก 2 job คู่ขนาน: <code>build-test</code> บน <code>macos-26</code> และ <code>linux-build-test</code> บน <code>ubuntu-latest</code> container <code>swift:6.0</code>) — เป้าหมายเดียวกันคือ "พิสูจน์ว่าใช้งานได้จริงบนหลายสภาพแวดล้อม พร้อมกัน ไม่ใช่ทีละอัน" matrix syntax เป็นวิธีเขียนที่กระชับกว่าเมื่อ combination เยอะและมีแค่ตัวแปรเดียวที่ต่างกัน`,
+    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> ไม่ได้ใช้ matrix syntax ตรงๆ แต่ใช้แนวคิดเดียวกัน (รันแยก 2 job คู่ขนาน: <code>build-test</code> บน <code>macos-26</code> และ <code>linux-build-test</code> บน <code>ubuntu-latest</code> container <code>swift:6.0</code>) — เป้าหมายเดียวกันคือ "พิสูจน์ว่าใช้งานได้จริงบนหลายสภาพแวดล้อม พร้อมกัน ไม่ใช่ทีละอัน" matrix syntax เป็นวิธีเขียนที่กระชับกว่าเมื่อ combination เยอะและมีแค่ตัวแปรเดียวที่ต่างกัน<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>\${{ matrix.browser }}</code> คือค่าที่เปลี่ยนไปในแต่ละรอบ (chromium, แล้ว firefox, แล้ว webkit) — ใช้แทนที่ในคำสั่งจริง (<code>--project=\${{ matrix.browser }}</code>) เพื่อสั่ง Playwright ให้รันเฉพาะ browser นั้นในแต่ละ job instance<br/><br/><br/><strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> ไม่ได้ใช้ matrix syntax ตรงๆ แต่ใช้แนวคิดเดียวกัน (รันแยก 2 job คู่ขนาน: <code>build-test</code> บน <code>macos-26</code> และ <code>linux-build-test</code> บน <code>ubuntu-latest</code> container <code>swift:6.0</code>) — เป้าหมายเดียวกันคือ "พิสูจน์ว่าใช้งานได้จริงบนหลายสภาพแวดล้อม พร้อมกัน ไม่ใช่ทีละอัน" matrix syntax เป็นวิธีเขียนที่กระชับกว่าเมื่อ combination เยอะและมีแค่ตัวแปรเดียวที่ต่างกัน<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `# matrix หลายมิติพร้อมกัน (browser x OS) — รันทุก combination = 3 x 2 = 6 job
 strategy:
   matrix:
@@ -271,18 +278,10 @@ runs-on: \${{ matrix.os }}`,
     steps:
       - uses: actions/checkout@v4
       - run: npx eslint .`,
-    theory: `ไม่ใช่ทุก job ควรมีสิทธิ์ "บล็อกการ merge" เท่ากันหมด — job สำคัญ (test ที่พิสูจน์ business logic) ควรบล็อกจริงถ้า fail แต่ job แบบ<strong>ให้คำแนะนำ</strong> (lint, benchmark วัดความเร็วที่ผันผวนตาม runner) ไม่ควรบล็อก เพราะความผันผวนของมันไม่ได้แปลว่าโค้ดพังจริง<br/><br/>
-    <code>continue-on-error: true</code> สั่งให้ job นั้น<strong>รายงานผลแบบ fail ได้ตามจริง แต่ไม่ทำให้ workflow โดยรวม fail</strong> — คนยังเห็นว่า lint มีปัญหา (ไปแก้ทีหลังได้) แต่ไม่ถูกบล็อกจาก merge เพราะเรื่องรูปแบบโค้ดเพียงอย่างเดียว<br/><br/>
-    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> มี 2 job ที่ตั้งค่านี้ไว้ตรงๆ พร้อมคอมเมนต์อธิบายเหตุผล:<br/><br/>
-    <code>lint:<br/>
-    &nbsp;&nbsp;name: Format lint (advisory)<br/>
-    &nbsp;&nbsp;# Style only — never block a merge on formatting.<br/>
-    &nbsp;&nbsp;continue-on-error: true<br/><br/>
-    benchmarks:<br/>
-    &nbsp;&nbsp;name: Benchmarks (non-blocking)<br/>
-    &nbsp;&nbsp;# Perf baselines are informational here; never block a merge on runner variance.<br/>
-    &nbsp;&nbsp;continue-on-error: true</code><br/><br/>
-    สังเกตคอมเมนต์ทั้งสองจุด — ทั้งคู่อธิบายเหตุผลตรงๆ ว่าทำไมถึงไม่ควรบล็อก (formatting เป็นเรื่อง style, benchmark ผันผวนตาม runner ที่สุ่มได้)`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ continue-on-error: Job แบบ Advisory ที่ไม่ควรบล็อกการ Merge และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;name: Format lint (advisory)<br/><br/>&nbsp;&nbsp;# Style only — never block a merge on formatting.<br/><br/>&nbsp;&nbsp;continue-on-error: true<br/><br/><br/>benchmarks:<br/><br/>&nbsp;&nbsp;name: Benchmarks (non-blocking)<br/><br/>&nbsp;&nbsp;# Perf baselines are informational here; never block a merge on runner variance.<br/><br/>&nbsp;&nbsp;continue-on-error: true</code><br/><br/><br/>สังเกตคอมเมนต์ทั้งสองจุด — ทั้งคู่อธิบายเหตุผลตรงๆ ว่าทำไมถึงไม่ควรบล็อก (formatting เป็นเรื่อง style, benchmark ผันผวนตาม runner ที่สุ่มได้)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> มี 2 job ที่ตั้งค่านี้ไว้ตรงๆ พร้อมคอมเมนต์อธิบายเหตุผล:<br/><br/><br/><code>lint:<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>continue-on-error: true</code> สั่งให้ job นั้น<strong>รายงานผลแบบ fail ได้ตามจริง แต่ไม่ทำให้ workflow โดยรวม fail</strong> — คนยังเห็นว่า lint มีปัญหา (ไปแก้ทีหลังได้) แต่ไม่ถูกบล็อกจาก merge เพราะเรื่องรูปแบบโค้ดเพียงอย่างเดียว<br/><br/>`,
     example: `# job หลักที่ควรบล็อกจริง ไม่มี continue-on-error (ค่า default คือต้องผ่านถึง merge ได้)
 jobs:
   test:
@@ -333,9 +332,12 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report`,
-    theory: `ตั้งค่า Trigger, Caching, Matrix ให้ test รันอัตโนมัติได้ครบแล้ว (บทก่อนหน้า) — แต่ถ้า test fail ใน CI แล้วไม่มีใครเอาหลักฐาน (screenshot, trace, HTML report ที่ Playwright สร้างให้อัตโนมัติ) ออกมาดูได้ ก็เท่ากับรู้แค่ว่า "แดง" แต่ไม่รู้ว่าทำไม ต้อง clone มารันซ้ำบนเครื่องตัวเองอีกรอบเพื่อไล่ดู<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Artifact Upload: เอาหลักฐาน Test ที่ Fail ออกมาจาก CI ให้ได้ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ตั้งค่า Trigger, Caching, Matrix ให้ test รันอัตโนมัติได้ครบแล้ว (บทก่อนหน้า) — แต่ถ้า test fail ใน CI แล้วไม่มีใครเอาหลักฐาน (screenshot, trace, HTML report ที่ Playwright สร้างให้อัตโนมัติ) ออกมาดูได้ ก็เท่ากับรู้แค่ว่า "แดง" แต่ไม่รู้ว่าทำไม ต้อง clone มารันซ้ำบนเครื่องตัวเองอีกรอบเพื่อไล่ดู<br/><br/>
     <code>actions/upload-artifact</code> เก็บไฟล์จาก CI runner (ที่ปกติหายไปพร้อม runner หลังจบงาน) ไว้ให้ดาวน์โหลดผ่านหน้า GitHub Actions ได้ทีหลัง — จุดสำคัญที่สุดคือ <code>if: always()</code>: ค่า default ของทุก step คือ<strong>รันเฉพาะตอน step ก่อนหน้าผ่านเท่านั้น</strong> ถ้าไม่ใส่ <code>if: always()</code> แล้ว <code>npx playwright test</code> fail ก่อนหน้า step upload จะถูก<strong>ข้ามไปเลย</strong> — กลายเป็นว่ายิ่ง test fail (ตอนที่ต้องการหลักฐานมากที่สุด) กลับยิ่งไม่มีหลักฐานให้ดู<br/><br/>
-    <code>name</code> ตั้งชื่อ artifact ที่จะเห็นในหน้า GitHub Actions, <code>path</code> ระบุโฟลเดอร์ที่ Playwright เขียนรายงานไว้ (ค่า default คือ <code>playwright-report/</code>) — ดาวน์โหลดมาเปิดดู HTML report ได้เหมือนรันบนเครื่องตัวเองทุกประการ รวม screenshot/trace ของจุดที่ fail`,
+    <code>name</code> ตั้งชื่อ artifact ที่จะเห็นในหน้า GitHub Actions, <code>path</code> ระบุโฟลเดอร์ที่ Playwright เขียนรายงานไว้ (ค่า default คือ <code>playwright-report/</code>) — ดาวน์โหลดมาเปิดดู HTML report ได้เหมือนรันบนเครื่องตัวเองทุกประการ รวม screenshot/trace ของจุดที่ fail<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>actions/upload-artifact</code> เก็บไฟล์จาก CI runner (ที่ปกติหายไปพร้อม runner หลังจบงาน) ไว้ให้ดาวน์โหลดผ่านหน้า GitHub Actions ได้ทีหลัง — จุดสำคัญที่สุดคือ <code>if: always()</code>: ค่า default ของทุก step คือ<strong>รันเฉพาะตอน step ก่อนหน้าผ่านเท่านั้น</strong> ถ้าไม่ใส่ <code>if: always()</code> แล้ว <code>npx playwright test</code> fail ก่อนหน้า step upload จะถูก<strong>ข้ามไปเลย</strong> — กลายเป็นว่ายิ่ง test fail (ตอนที่ต้องการหลักฐานมากที่สุด) กลับยิ่งไม่มีหลักฐานให้ดู<br/><br/><br/><code>name</code> ตั้งชื่อ artifact ที่จะเห็นในหน้า GitHub Actions, <code>path</code> ระบุโฟลเดอร์ที่ Playwright เขียนรายงานไว้ (ค่า default คือ <code>playwright-report/</code>) — ดาวน์โหลดมาเปิดดู HTML report ได้เหมือนรันบนเครื่องตัวเองทุกประการ รวม screenshot/trace ของจุดที่ fail<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `# ตัวอย่างอัปโหลด trace แยกต่างหากด้วย (ละเอียดกว่า HTML report เฉยๆ)
 - uses: actions/upload-artifact@v4
   if: always()
@@ -423,9 +425,12 @@ jobs:
           name: playwright-report
           path: playwright-report
       - run: echo "Publishing report downloaded from build job"`,
-    theory: `จนถึงบทก่อนหน้า ทุก workflow มีแค่ 1 job — แต่ pipeline จริงมักมีหลาย job ที่ต้อง<strong>พึ่งพากัน</strong> เช่น job <code>build</code> รัน test แล้วสร้างรายงาน ก่อนที่ job <code>deploy</code> จะเอารายงานนั้นไป publish ต่อ<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Multi-Job Pipeline: ส่งไฟล์ข้าม Job ด้วย needs + Artifact Hand-off และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>จนถึงบทก่อนหน้า ทุก workflow มีแค่ 1 job — แต่ pipeline จริงมักมีหลาย job ที่ต้อง<strong>พึ่งพากัน</strong> เช่น job <code>build</code> รัน test แล้วสร้างรายงาน ก่อนที่ job <code>deploy</code> จะเอารายงานนั้นไป publish ต่อ<br/><br/>
     โดย default GitHub Actions รันทุก job ใน <code>jobs:</code> <strong>พร้อมกัน (ขนาน)</strong> — ถ้าไม่บอกไว้ชัดเจน <code>deploy</code> อาจเริ่มรันก่อน <code>build</code> จะอัปโหลดรายงานเสร็จด้วยซ้ำ <code>needs: build</code> สั่งให้ <code>deploy</code> รอ <code>build</code> ให้<strong>เสร็จสมบูรณ์ก่อน</strong>ถึงจะเริ่ม<br/><br/>
-    แต่แค่รอเฉยๆ ไม่พอ — แต่ละ job รันบน runner คนละเครื่องกัน ไฟล์ที่ <code>build</code> สร้างไว้ (เช่น <code>playwright-report/</code>) จะ<strong>ไม่มีอยู่จริง</strong>บนเครื่องของ <code>deploy</code> เลย ต้องส่งต่อผ่าน <code>actions/upload-artifact</code> (ฝั่ง build) คู่กับ <code>actions/download-artifact</code> (ฝั่ง deploy) โดย <code>name</code> ต้องตรงกันเป๊ะทั้งสองฝั่ง มิฉะนั้น <code>download-artifact</code> จะหา artifact ไม่เจอและ fail`,
+    แต่แค่รอเฉยๆ ไม่พอ — แต่ละ job รันบน runner คนละเครื่องกัน ไฟล์ที่ <code>build</code> สร้างไว้ (เช่น <code>playwright-report/</code>) จะ<strong>ไม่มีอยู่จริง</strong>บนเครื่องของ <code>deploy</code> เลย ต้องส่งต่อผ่าน <code>actions/upload-artifact</code> (ฝั่ง build) คู่กับ <code>actions/download-artifact</code> (ฝั่ง deploy) โดย <code>name</code> ต้องตรงกันเป๊ะทั้งสองฝั่ง มิฉะนั้น <code>download-artifact</code> จะหา artifact ไม่เจอและ fail<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>โดย default GitHub Actions รันทุก job ใน <code>jobs:</code> <strong>พร้อมกัน (ขนาน)</strong> — ถ้าไม่บอกไว้ชัดเจน <code>deploy</code> อาจเริ่มรันก่อน <code>build</code> จะอัปโหลดรายงานเสร็จด้วยซ้ำ <code>needs: build</code> สั่งให้ <code>deploy</code> รอ <code>build</code> ให้<strong>เสร็จสมบูรณ์ก่อน</strong>ถึงจะเริ่ม<br/><br/><br/>แต่แค่รอเฉยๆ ไม่พอ — แต่ละ job รันบน runner คนละเครื่องกัน ไฟล์ที่ <code>build</code> สร้างไว้ (เช่น <code>playwright-report/</code>) จะ<strong>ไม่มีอยู่จริง</strong>บนเครื่องของ <code>deploy</code> เลย ต้องส่งต่อผ่าน <code>actions/upload-artifact</code> (ฝั่ง build) คู่กับ <code>actions/download-artifact</code> (ฝั่ง deploy) โดย <code>name</code> ต้องตรงกันเป๊ะทั้งสองฝั่ง มิฉะนั้น <code>download-artifact</code> จะหา artifact ไม่เจอและ fail<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `# ตัวอย่าง job ที่สามรอทั้งสอง job ก่อนหน้า (needs รับ array ได้)
 notify:
   needs: [build, deploy]
@@ -498,9 +503,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: ./deploy.sh`,
-    theory: `บทนี้ไม่ได้ให้เขียนใหม่ตั้งแต่ต้น แต่ให้<strong>ไล่หาต้นเหตุ</strong>จากอาการที่เห็น: "deploy รันไปแล้วทั้งที่ test ยังไม่ผ่าน" — นี่คืออาการจริงที่ทีมมักเจอ ไม่ใช่แค่ syntax error ที่ YAML parser จะฟ้องเอง แต่เป็น<strong>บั๊กเชิงโครงสร้าง</strong>ที่ syntax ถูกต้องสมบูรณ์แบบ รันได้ไม่มี error เลย แต่ผลลัพธ์ที่ได้ผิดจากที่ตั้งใจ<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Debug Pipeline: ทำไม Deploy ถึงรันก่อน Test เสร็จ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทนี้ไม่ได้ให้เขียนใหม่ตั้งแต่ต้น แต่ให้<strong>ไล่หาต้นเหตุ</strong>จากอาการที่เห็น: "deploy รันไปแล้วทั้งที่ test ยังไม่ผ่าน" — นี่คืออาการจริงที่ทีมมักเจอ ไม่ใช่แค่ syntax error ที่ YAML parser จะฟ้องเอง แต่เป็น<strong>บั๊กเชิงโครงสร้าง</strong>ที่ syntax ถูกต้องสมบูรณ์แบบ รันได้ไม่มี error เลย แต่ผลลัพธ์ที่ได้ผิดจากที่ตั้งใจ<br/><br/>
     กับดักที่พบบ่อยที่สุดคือ<strong>เข้าใจผิดว่าลำดับ job ในไฟล์ = ลำดับการรันจริง</strong> — ไม่ใช่เลย GitHub Actions มองทุก job ใน <code>jobs:</code> เป็น<strong>อิสระต่อกันและรันพร้อมกันเสมอ</strong> เว้นแต่จะมี <code>needs:</code> ผูกไว้ชัดเจนว่า job ไหนต้องรอ job ไหน การสลับตำแหน่ง <code>deploy</code> กับ <code>e2e_test</code> ในไฟล์ (ไม่เพิ่ม <code>needs:</code>) จะไม่แก้อะไรเลยเพราะ engine ไม่ได้อ่านไฟล์แล้วรันตามลำดับบรรทัด<br/><br/>
-    ทางแก้ที่ตรงต้นเหตุมีทางเดียว: เพิ่ม <code>needs: e2e_test</code> ใน job <code>deploy</code> เพื่อประกาศ dependency จริงๆ ให้ scheduler ของ GitHub Actions รู้ว่าต้องรอ`,
+    ทางแก้ที่ตรงต้นเหตุมีทางเดียว: เพิ่ม <code>needs: e2e_test</code> ใน job <code>deploy</code> เพื่อประกาศ dependency จริงๆ ให้ scheduler ของ GitHub Actions รู้ว่าต้องรอ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ทางแก้ที่ตรงต้นเหตุมีทางเดียว: เพิ่ม <code>needs: e2e_test</code> ใน job <code>deploy</code> เพื่อประกาศ dependency จริงๆ ให้ scheduler ของ GitHub Actions รู้ว่าต้องรอ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> กับดักที่พบบ่อยที่สุดคือ<strong>เข้าใจผิดว่าลำดับ job ในไฟล์ = ลำดับการรันจริง</strong> — ไม่ใช่เลย GitHub Actions มองทุก job ใน <code>jobs:</code> เป็น<strong>อิสระต่อกันและรันพร้อมกันเสมอ</strong> เว้นแต่จะมี <code>needs:</code> ผูกไว้ชัดเจนว่า job ไหนต้องรอ job ไหน การสลับตำแหน่ง <code>deploy</code> กับ <code>e2e_test</code> ในไฟล์ (ไม่เพิ่ม <code>needs:</code>) จะไม่แก้อะไรเลยเพราะ engine ไม่ได้อ่านไฟล์แล้วรันตามลำดับบรรทัด<br/><br/>`,
     example: `# บั๊กแบบเดียวกันแต่มาจาก indentation ผิด (step หลุดออกจาก job โดยไม่ตั้งใจ)
 jobs:
   build:
@@ -546,14 +554,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm install -D @playwright/test@\${{ env.PLAYWRIGHT_VERSION }}
       - run: npx playwright test`,
-    theory: `<code>env:</code> ระดับบนสุด (workflow-level) ประกาศตัวแปรที่<strong>ทุก job และทุก step ในไฟล์เดียวกันเรียกใช้ได้หมด</strong> ผ่าน <code>\${{ env.ชื่อตัวแปร }}</code> — ต่างจากตัวแปรที่ประกาศไว้ใน <code>env:</code> ระดับ job (ใช้ได้แค่ job นั้น) หรือระดับ step (ใช้ได้แค่ step นั้น)<br/><br/>
-    ประโยชน์ที่สำคัญที่สุดสำหรับ QA: <strong>pin เวอร์ชันของ tool/dependency ไว้ที่จุดเดียว</strong> แทนที่จะกระจายเลขเวอร์ชันเดียวกันไปพิมพ์ซ้ำในหลาย step — ถ้าต้องอัปเดตเวอร์ชัน แก้ที่เดียวจบ ไม่ต้องไล่หาทุกจุดที่พิมพ์เลขเวอร์ชันไว้ (ซึ่งพลาดง่ายมากถ้าทำมือ)<br/><br/>
-    <strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> (บรรทัด 14-21) ใช้แนวคิดนี้จริง เพื่อ pin เวอร์ชัน Xcode พร้อมคอมเมนต์อธิบายเหตุผลไว้ตรงๆ:<br/><br/>
-    <code>env:<br/>
-    &nbsp;&nbsp;# Pin the toolchain to a known major so a \`latest-stable\` jump (e.g. to a new Xcode with<br/>
-    &nbsp;&nbsp;# source-breaking changes) can't turn a green main red without a deliberate bump here.<br/>
-    &nbsp;&nbsp;XCODE_VERSION: "26.5"</code><br/><br/>
-    คอมเมนต์นี้อธิบายตรงประเด็นที่สุด: ถ้าไม่ pin เวอร์ชันไว้ CI ที่เคย "เขียว" อาจกลายเป็น "แดง" ได้เอง<strong>โดยไม่มีใครเปลี่ยนโค้ดเลยสักบรรทัด</strong> เพียงเพราะ toolchain รุ่นใหม่กว่าที่ดึงมาอัตโนมัติมีพฤติกรรมเปลี่ยนไป — ตัวอย่างนี้ปรับจาก Xcode version มาเป็น Playwright version สำหรับบริบท Node/npm`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ env: กำหนดตัวแปรระดับ Workflow เพื่อ Pin เวอร์ชัน Dependency และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ประโยชน์ที่สำคัญที่สุดสำหรับ QA: <strong>pin เวอร์ชันของ tool/dependency ไว้ที่จุดเดียว</strong> แทนที่จะกระจายเลขเวอร์ชันเดียวกันไปพิมพ์ซ้ำในหลาย step — ถ้าต้องอัปเดตเวอร์ชัน แก้ที่เดียวจบ ไม่ต้องไล่หาทุกจุดที่พิมพ์เลขเวอร์ชันไว้ (ซึ่งพลาดง่ายมากถ้าทำมือ)<br/><br/><br/>&nbsp;&nbsp;# Pin the toolchain to a known major so a \`latest-stable\` jump (e.g. to a new Xcode with<br/><br/>&nbsp;&nbsp;# source-breaking changes) can't turn a green main red without a deliberate bump here.<br/><br/>&nbsp;&nbsp;XCODE_VERSION: "26.5"</code><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Real grounding:</strong> kouen-terminal's <code>ci.yml</code> (บรรทัด 14-21) ใช้แนวคิดนี้จริง เพื่อ pin เวอร์ชัน Xcode พร้อมคอมเมนต์อธิบายเหตุผลไว้ตรงๆ:<br/><br/><br/><code>env:<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> คอมเมนต์นี้อธิบายตรงประเด็นที่สุด: ถ้าไม่ pin เวอร์ชันไว้ CI ที่เคย "เขียว" อาจกลายเป็น "แดง" ได้เอง<strong>โดยไม่มีใครเปลี่ยนโค้ดเลยสักบรรทัด</strong> เพียงเพราะ toolchain รุ่นใหม่กว่าที่ดึงมาอัตโนมัติมีพฤติกรรมเปลี่ยนไป — ตัวอย่างนี้ปรับจาก Xcode version มาเป็น Playwright version สำหรับบริบท Node/npm`,
     example: `# ตัวอย่าง env: ระดับ job override ค่า workflow-level เฉพาะ job นั้น (เช่น job ทดสอบ Playwright เวอร์ชันถัดไปแยกต่างหาก)
 jobs:
   test-next:
@@ -601,10 +605,10 @@ on:
       - docs/**
       - README.md
   pull_request:`,
-    theory: `<code>paths-ignore</code> ระบุรายการไฟล์/โฟลเดอร์ที่ถ้ามีการเปลี่ยนแปลง <strong>เฉพาะ</strong>ไฟล์เหล่านั้น (ไม่มีไฟล์อื่นเปลี่ยนเลย) จะข้ามการรัน workflow ทั้งก้อนไปเลย — ตรงข้ามกับ <code>paths</code> ที่ระบุ "เฉพาะไฟล์เหล่านี้เท่านั้นถึงจะรัน" (allow-list) ใช้ <code>paths</code> หรือ <code>paths-ignore</code> อย่างใดอย่างหนึ่งเท่านั้นใน event เดียวกัน ใช้พร้อมกันไม่ได้<br/><br/>
-    ประโยชน์: แก้ README/เอกสารบ่อยแค่ไหนก็ไม่เสีย compute รัน test ที่ไม่มีทางเปลี่ยนผลเลย — feedback ของ push ที่แก้โค้ดจริงก็เร็วขึ้นด้วยเพราะไม่ต้องแย่ง runner กับ run ที่ไม่จำเป็น<br/><br/>
-    <strong>ข้อควรระวังสำคัญ</strong> (จากเอกสารทางการของ GitHub เรื่อง "Skipping workflow runs"): ถ้า workflow นี้ถูกตั้งเป็น <strong>required status check</strong> ใน branch protection แล้ว PR ที่แก้แค่เอกสาร (ซึ่ง workflow ถูกข้ามไปเพราะ paths-ignore) จะมี check ค้างสถานะ "Pending" ตลอดไป เพราะ GitHub ไม่รู้ว่า "ข้าม" กับ "ยังไม่รัน" ต่างกันยังไงสำหรับ required check — ทำให้ merge ไม่ได้ทั้งที่ไม่มีอะไรผิดเลย ทางแก้คือสร้าง workflow เสริมชื่อเดียวกับ check ที่ required ไว้ ให้รันแบบ no-op เมื่อ trigger ตรงเงื่อนไข paths-ignore แทน<br/><br/>
-    <em>หมายเหตุความถูกต้อง:</em> ยืนยันจากเอกสารทางการของ GitHub Actions (docs.github.com — Workflow syntax, Skipping workflow runs) ไม่ใช่จากไฟล์ ci.yml จริงของโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนใช้ paths-ignore จริง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ paths-ignore: ข้าม CI เมื่อแก้แค่ไฟล์เอกสาร และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ประโยชน์: แก้ README/เอกสารบ่อยแค่ไหนก็ไม่เสีย compute รัน test ที่ไม่มีทางเปลี่ยนผลเลย — feedback ของ push ที่แก้โค้ดจริงก็เร็วขึ้นด้วยเพราะไม่ต้องแย่ง runner กับ run ที่ไม่จำเป็น<br/><br/><br/><em>หมายเหตุความถูกต้อง:</em> ยืนยันจากเอกสารทางการของ GitHub Actions (docs.github.com — Workflow syntax, Skipping workflow runs) ไม่ใช่จากไฟล์ ci.yml จริงของโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนใช้ paths-ignore จริง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ข้อควรระวังสำคัญ</strong> (จากเอกสารทางการของ GitHub เรื่อง "Skipping workflow runs"): ถ้า workflow นี้ถูกตั้งเป็น <strong>required status check</strong> ใน branch protection แล้ว PR ที่แก้แค่เอกสาร (ซึ่ง workflow ถูกข้ามไปเพราะ paths-ignore) จะมี check ค้างสถานะ "Pending" ตลอดไป เพราะ GitHub ไม่รู้ว่า "ข้าม" กับ "ยังไม่รัน" ต่างกันยังไงสำหรับ required check — ทำให้ merge ไม่ได้ทั้งที่ไม่มีอะไรผิดเลย ทางแก้คือสร้าง workflow เสริมชื่อเดียวกับ check ที่ required ไว้ ให้รันแบบ no-op เมื่อ trigger ตรงเงื่อนไข paths-ignore แทน<br/><br/>`,
     example: `# ตัวอย่างตรงข้าม: paths: (allow-list) รัน CI เฉพาะเมื่อมีไฟล์ .ts หรือ .tsx เปลี่ยนเท่านั้น
 on:
   push:
@@ -659,10 +663,13 @@ on:
     steps:
       - uses: actions/checkout@v4
       - run: npx playwright test --project=\${{ matrix.browser }}`,
-    theory: `บทที่ 4 สอนให้รัน test ซ้ำ 3 browser พร้อมกันด้วย matrix — แต่ไม่ได้พูดถึงพฤติกรรมเมื่อ browser ใดตัวหนึ่ง fail เลย ความจริงคือ GitHub Actions มีค่า default ซ่อนอยู่ที่ไม่มีใครเห็นในไฟล์: <code>fail-fast: true</code><br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ fail-fast: false — อย่าให้ Browser ตัวเดียว Fail แล้วดับทุก Browser ที่เหลือ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทที่ 4 สอนให้รัน test ซ้ำ 3 browser พร้อมกันด้วย matrix — แต่ไม่ได้พูดถึงพฤติกรรมเมื่อ browser ใดตัวหนึ่ง fail เลย ความจริงคือ GitHub Actions มีค่า default ซ่อนอยู่ที่ไม่มีใครเห็นในไฟล์: <code>fail-fast: true</code><br/><br/>
     <strong>ตามเอกสารทางการของ GitHub:</strong> เมื่อ <code>fail-fast</code> เป็น <code>true</code> (default) — ถ้ามี job ใดใน matrix fail ขึ้นมา GitHub จะ<strong>ยกเลิก job อื่นที่ยังรันอยู่หรือรอคิวอยู่ในกลุ่มเดียวกันทันที</strong> ฟังดูสมเหตุสมผลตอนแรก (ประหยัด compute เมื่อรู้แล้วว่ามีอะไรพัง) แต่สำหรับ matrix ที่ทดสอบข้าม browser การยกเลิกนี้<strong>ทำลายจุดประสงค์เดิมของการรัน matrix ไปเลย</strong> — เหตุผลที่รันแยก 3 browser ตั้งแต่แรกคือต้องการรู้ผลของ<strong>ทุก</strong>ตัวพร้อมกัน ถ้า firefox fail แล้ว webkit ที่ยังไม่ทันรันเสร็จถูกยกเลิกไปด้วย ทีมจะไม่มีทางรู้เลยว่า webkit ผ่านหรือ fail จนกว่าจะแก้ firefox แล้วรันใหม่ทั้งหมดอีกรอบ<br/><br/>
     <code>fail-fast: false</code> วางไว้ระดับเดียวกับ <code>matrix:</code> ภายใต้ <code>strategy:</code> เดียวกัน — พลิกพฤติกรรม default ให้ทุก combination ใน matrix รันจนจบเสมอไม่ว่าตัวไหนจะ fail ก่อน ทำให้เห็นผลครบทั้ง 3 browser ในรอบเดียว (บอกได้ตรงๆ ว่า "fail เฉพาะ firefox" หรือ "fail หลาย browser พร้อมกัน" ซึ่งเป็นข้อมูลที่ต่างกันมากตอนวิเคราะห์ต้นเหตุ)<br/><br/>
-    <em>หมายเหตุความถูกต้อง:</em> พฤติกรรมนี้ยืนยันจากเอกสารทางการของ GitHub Actions (Workflow syntax for GitHub Actions — <code>jobs.&lt;job_id&gt;.strategy.fail-fast</code>) ไม่ใช่จากไฟล์จริงในโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนที่ใช้ matrix strategy จริงกับ Playwright ในลักษณะนี้`,
+    <em>หมายเหตุความถูกต้อง:</em> พฤติกรรมนี้ยืนยันจากเอกสารทางการของ GitHub Actions (Workflow syntax for GitHub Actions — <code>jobs.&lt;job_id&gt;.strategy.fail-fast</code>) ไม่ใช่จากไฟล์จริงในโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนที่ใช้ matrix strategy จริงกับ Playwright ในลักษณะนี้<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ตามเอกสารทางการของ GitHub:</strong> เมื่อ <code>fail-fast</code> เป็น <code>true</code> (default) — ถ้ามี job ใดใน matrix fail ขึ้นมา GitHub จะ<strong>ยกเลิก job อื่นที่ยังรันอยู่หรือรอคิวอยู่ในกลุ่มเดียวกันทันที</strong> ฟังดูสมเหตุสมผลตอนแรก (ประหยัด compute เมื่อรู้แล้วว่ามีอะไรพัง) แต่สำหรับ matrix ที่ทดสอบข้าม browser การยกเลิกนี้<strong>ทำลายจุดประสงค์เดิมของการรัน matrix ไปเลย</strong> — เหตุผลที่รันแยก 3 browser ตั้งแต่แรกคือต้องการรู้ผลของ<strong>ทุก</strong>ตัวพร้อมกัน ถ้า firefox fail แล้ว webkit ที่ยังไม่ทันรันเสร็จถูกยกเลิกไปด้วย ทีมจะไม่มีทางรู้เลยว่า webkit ผ่านหรือ fail จนกว่าจะแก้ firefox แล้วรันใหม่ทั้งหมดอีกรอบ<br/><br/><br/><code>fail-fast: false</code> วางไว้ระดับเดียวกับ <code>matrix:</code> ภายใต้ <code>strategy:</code> เดียวกัน — พลิกพฤติกรรม default ให้ทุก combination ใน matrix รันจนจบเสมอไม่ว่าตัวไหนจะ fail ก่อน ทำให้เห็นผลครบทั้ง 3 browser ในรอบเดียว (บอกได้ตรงๆ ว่า "fail เฉพาะ firefox" หรือ "fail หลาย browser พร้อมกัน" ซึ่งเป็นข้อมูลที่ต่างกันมากตอนวิเคราะห์ต้นเหตุ)<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `# ใช้คู่กับ max-parallel ได้ด้วย เพื่อจำกัดจำนวน browser ที่รันพร้อมกันสูงสุด (ประหยัด runner quota)
 strategy:
   fail-fast: false
@@ -739,10 +746,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: ./deploy.sh`,
-    theory: `ขั้นสูง 1-2 สอน <code>needs:</code> ซึ่งเป็นการรอ<strong>อีก job หนึ่งให้ทำงานเสร็จ</strong> — แต่บทนี้คือการรอ<strong>คนคนหนึ่งกดอนุมัติ</strong> ซึ่งเป็นกลไกคนละแบบกันเลย: <code>needs:</code> คือ dependency ระหว่าง job, <code>environment:</code> คือ gate ที่ต้องพึ่งการตัดสินใจของมนุษย์<br/><br/>
-    <code>environment: production</code> ผูก job นั้นเข้ากับ environment ชื่อ <code>production</code> ที่ตั้งค่าไว้ใน repo (Settings → Environments) — ถ้า environment นั้นมี <strong>protection rule</strong> (เช่น required reviewers, wait timer, จำกัดว่า deploy ได้จาก branch ไหนบ้าง) ตั้งไว้ job จะ<strong>ค้างรอ</strong>ที่สถานะ "Waiting" จนกว่าเงื่อนไขจะผ่านก่อนถึงจะรัน step ข้างในต่อ แม้ <code>needs: e2e_test</code> จะผ่านหมดแล้วก็ตาม<br/><br/>
-    จุดสำคัญที่สุดที่พลาดกันบ่อย: <strong>protection rule เอง (required reviewer คือใคร, ต้องรอกี่นาที ฯลฯ) ไม่ได้เขียนอยู่ใน YAML เลยสักตัว</strong> — ตั้งค่าอยู่ใน repo Settings เท่านั้น ฝั่ง YAML มีหน้าที่แค่ "อ้างอิงชื่อ environment ให้ตรง" เท่านั้น ถ้า Settings ยังไม่ได้สร้าง environment ชื่อ <code>production</code> หรือยังไม่ตั้ง protection rule ไว้ การเขียน <code>environment: production</code> เฉยๆ ก็ไม่มี gate อะไรเกิดขึ้นจริง<br/><br/>
-    <em>หมายเหตุความถูกต้อง:</em> ยืนยันจากเอกสารทางการของ GitHub Actions (Environments — protection rules ตั้งค่าใน repository Settings) ไม่ใช่จากไฟล์ ci.yml จริงของโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนที่ตั้งค่า deployment environment ผ่าน GitHub Actions จริง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ environment: ผูก Job Deploy เข้ากับ Protection Rule ก่อนขึ้น Production จริง และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><em>หมายเหตุความถูกต้อง:</em> ยืนยันจากเอกสารทางการของ GitHub Actions (Environments — protection rules ตั้งค่าใน repository Settings) ไม่ใช่จากไฟล์ ci.yml จริงของโปรเจกใดบนเครื่องนี้ เพราะยังไม่มีโปรเจกไหนที่ตั้งค่า deployment environment ผ่าน GitHub Actions จริง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>environment: production</code> ผูก job นั้นเข้ากับ environment ชื่อ <code>production</code> ที่ตั้งค่าไว้ใน repo (Settings → Environments) — ถ้า environment นั้นมี <strong>protection rule</strong> (เช่น required reviewers, wait timer, จำกัดว่า deploy ได้จาก branch ไหนบ้าง) ตั้งไว้ job จะ<strong>ค้างรอ</strong>ที่สถานะ "Waiting" จนกว่าเงื่อนไขจะผ่านก่อนถึงจะรัน step ข้างในต่อ แม้ <code>needs: e2e_test</code> จะผ่านหมดแล้วก็ตาม<br/><br/><br/>จุดสำคัญที่สุดที่พลาดกันบ่อย: <strong>protection rule เอง (required reviewer คือใคร, ต้องรอกี่นาที ฯลฯ) ไม่ได้เขียนอยู่ใน YAML เลยสักตัว</strong> — ตั้งค่าอยู่ใน repo Settings เท่านั้น ฝั่ง YAML มีหน้าที่แค่ "อ้างอิงชื่อ environment ให้ตรง" เท่านั้น ถ้า Settings ยังไม่ได้สร้าง environment ชื่อ <code>production</code> หรือยังไม่ตั้ง protection rule ไว้ การเขียน <code>environment: production</code> เฉยๆ ก็ไม่มี gate อะไรเกิดขึ้นจริง<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `# environment รองรับ object form ด้วย เพิ่ม url ที่จะโชว์เป็นลิงก์ "View deployment" บนหน้า PR
 deploy:
   needs: e2e_test

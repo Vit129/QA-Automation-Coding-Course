@@ -37,11 +37,10 @@ test('หน้าเว็บไม่มีการเปลี่ยนแ�
   await page.goto('/');
   await expect(page).toHaveScreenshot();
 });`,
-    theory: `<strong>Visual Regression Testing</strong> จับบั๊กประเภทที่ Functional Test (เช็คค่า/behavior) มองไม่เห็นเลย — เช่น CSS พังจน layout ทับกัน, สีเปลี่ยนผิดโดยไม่ตั้งใจ, font ไม่โหลด, รูปภาพหาย ทั้งที่ทุก assertion เชิงข้อมูล/behavior ยังผ่านหมด เพราะ DOM/data ถูกต้อง แค่ "หน้าตา" ผิดไป<br/><br/>
-    <code>toHaveScreenshot()</code> ของ Playwright ทำงาน 2 แบบ:<br/>
-    1. <strong>ครั้งแรกที่รัน</strong> — ไม่มี baseline ให้เทียบ จึงถ่ายภาพเก็บไว้เป็น baseline ทันที (ผ่านเสมอ)<br/>
-    2. <strong>ครั้งถัดไป</strong> — ถ่ายภาพใหม่แล้วเทียบ pixel-by-pixel กับ baseline ที่เก็บไว้ ถ้าต่างเกินค่าที่ยอมรับได้ (threshold) test จะ fail พร้อมสร้างไฟล์ diff image ให้ดูว่าต่างกันตรงไหน<br/><br/>
-    บทถัดไปจะครอบคลุมปัญหาจริงที่ต้องรู้ก่อนใช้งาน: การ mask เนื้อหาที่เปลี่ยนตลอดเวลา, การเทส responsive หลาย viewport, และการปรับ threshold ให้ไม่ false-positive จากเรื่องเล็กน้อยอย่าง anti-aliasing`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Visual Regression Testing</strong> จับบั๊กประเภทที่ Functional Test (เช็คค่า/behavior) มองไม่เห็นเลย — เช่น CSS พังจน layout ทับกัน, สีเปลี่ยนผิดโดยไม่ตั้งใจ, font ไม่โหลด, รูปภาพหาย ทั้งที่ทุก assertion เชิงข้อมูล/behavior ยังผ่านหมด เพราะ DOM/data ถูกต้อง แค่ "หน้าตา" ผิดไป<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>1. <strong>ครั้งแรกที่รัน</strong> — ไม่มี baseline ให้เทียบ จึงถ่ายภาพเก็บไว้เป็น baseline ทันที (ผ่านเสมอ)<br/><br/>2. <strong>ครั้งถัดไป</strong> — ถ่ายภาพใหม่แล้วเทียบ pixel-by-pixel กับ baseline ที่เก็บไว้ ถ้าต่างเกินค่าที่ยอมรับได้ (threshold) test จะ fail พร้อมสร้างไฟล์ diff image ให้ดูว่าต่างกันตรงไหน<br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>toHaveScreenshot()</code> ของ Playwright ทำงาน 2 แบบ:<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> บทถัดไปจะครอบคลุมปัญหาจริงที่ต้องรู้ก่อนใช้งาน: การ mask เนื้อหาที่เปลี่ยนตลอดเวลา, การเทส responsive หลาย viewport, และการปรับ threshold ให้ไม่ false-positive จากเรื่องเล็กน้อยอย่าง anti-aliasing`,
     example: `// ถ่ายภาพเฉพาะ element เดียว ไม่ใช่ทั้งหน้า (เจาะจงกว่า เร็วกว่า)
 await expect(page.getByTestId('watchlist-panel')).toHaveScreenshot();`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -82,11 +81,10 @@ test('ถ่ายภาพเปรียบเทียบโดย mask ร�
     mask: [page.getByTestId('watchlist-current-price')],
   });
 });`,
-    theory: `<strong>Real grounding:</strong> <code>QuickBuyWatchlist.jsx</code> ของ My-Investment-Port แสดง <code>currentPrice</code> จริงแบบ real-time:<br/><br/>
-    <code>const currentPrice = prices[item.ticker];<br/>
-    &lt;ResponsiveValue label={UI_STRINGS.AI_WATCH_COL_CURRENT} value={currentPrice ? \`\$\${formatMoney(currentPrice)}\` : '—'} align="right" /&gt;</code><br/><br/>
-    ถ้าถ่ายภาพหน้านี้เทียบ baseline ตรงๆ โดยไม่ mask ราคา — test จะ<strong>fail แทบทุกครั้ง</strong>เพราะราคาหุ้นจริงเปลี่ยนแทบทุกวินาที ทั้งที่ layout/สไตล์ไม่ได้พังอะไรเลย นี่คือ <strong>false positive</strong> ที่พบบ่อยที่สุดของ Visual Regression Testing<br/><br/>
-    <code>mask</code> option ของ <code>toHaveScreenshot()</code> รับ array ของ locator — Playwright จะ<strong>วาดกล่องสีทึบทับ</strong>บริเวณนั้นก่อนเทียบภาพ ทำให้เนื้อหาที่เปลี่ยนตลอดเวลา (ราคา, เวลา, ตัวนับ, ข้อมูลที่ randomize) ไม่ถูกนำมาเทียบเลย ในขณะที่ส่วนอื่นของหน้า (layout, สี, ตำแหน่ง) ยังถูกตรวจสอบตามปกติ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Real grounding:</strong> <code>QuickBuyWatchlist.jsx</code> ของ My-Investment-Port แสดง <code>currentPrice</code> จริงแบบ real-time:<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&lt;ResponsiveValue label={UI_STRINGS.AI_WATCH_COL_CURRENT} value={currentPrice ? \`\$\${formatMoney(currentPrice)}\` : '—'} align="right" /&gt;</code><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>const currentPrice = prices[item.ticker];<br/><br/><code>mask</code> option ของ <code>toHaveScreenshot()</code> รับ array ของ locator — Playwright จะ<strong>วาดกล่องสีทึบทับ</strong>บริเวณนั้นก่อนเทียบภาพ ทำให้เนื้อหาที่เปลี่ยนตลอดเวลา (ราคา, เวลา, ตัวนับ, ข้อมูลที่ randomize) ไม่ถูกนำมาเทียบเลย ในขณะที่ส่วนอื่นของหน้า (layout, สี, ตำแหน่ง) ยังถูกตรวจสอบตามปกติ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าถ่ายภาพหน้านี้เทียบ baseline ตรงๆ โดยไม่ mask ราคา — test จะ<strong>fail แทบทุกครั้ง</strong>เพราะราคาหุ้นจริงเปลี่ยนแทบทุกวินาที ทั้งที่ layout/สไตล์ไม่ได้พังอะไรเลย นี่คือ <strong>false positive</strong> ที่พบบ่อยที่สุดของ Visual Regression Testing<br/><br/>`,
     example: `// mask หลาย element พร้อมกัน (ราคา + เวลาล่าสุดที่อัปเดต)
 await expect(page).toHaveScreenshot({
   mask: [
@@ -128,9 +126,10 @@ test('หน้าเว็บแสดงผลถูกต้องบนจ�
   await page.setViewportSize({ width: 375, height: 667 });
   await expect(page).toHaveScreenshot('mobile.png');
 });`,
-    theory: `เว็บสมัยใหม่ต้องรองรับหลายขนาดจอ (Responsive Design) — CSS ที่ถูกต้องบน desktop อาจพังบนมือถือ (เมนูซ้อนทับ, ปุ่มล้นจอ, ข้อความอ่านไม่ได้) การทดสอบ Functional อย่างเดียวไม่จับปัญหาแบบนี้เลยเพราะ element ทุกตัวยังอยู่ใน DOM ครบ แค่ "หน้าตา" เพี้ยน<br/><br/>
-    <code>page.setViewportSize({ width, height })</code> จำลองขนาดหน้าจอต่างๆ ก่อนถ่ายภาพ — ตั้งชื่อไฟล์ screenshot ให้ต่างกันชัดเจน (<code>'mobile.png'</code>, <code>'tablet.png'</code>, <code>'desktop.png'</code>) เพื่อไม่ให้ baseline ของแต่ละขนาดทับกัน<br/><br/>
-    ขนาด viewport ที่นิยมทดสอบ: มือถือ (375×667, iPhone SE), แท็บเล็ต (768×1024, iPad), desktop (1920×1080) — ครอบคลุมกลุ่มผู้ใช้ส่วนใหญ่โดยไม่ต้องทดสอบทุกขนาดจอที่มีในโลกจริง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Responsive Visual Check: เทียบภาพหลาย Viewport และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ขนาด viewport ที่นิยมทดสอบ: มือถือ (375×667, iPhone SE), แท็บเล็ต (768×1024, iPad), desktop (1920×1080) — ครอบคลุมกลุ่มผู้ใช้ส่วนใหญ่โดยไม่ต้องทดสอบทุกขนาดจอที่มีในโลกจริง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>page.setViewportSize({ width, height })</code> จำลองขนาดหน้าจอต่างๆ ก่อนถ่ายภาพ — ตั้งชื่อไฟล์ screenshot ให้ต่างกันชัดเจน (<code>'mobile.png'</code>, <code>'tablet.png'</code>, <code>'desktop.png'</code>) เพื่อไม่ให้ baseline ของแต่ละขนาดทับกัน<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ทดสอบหลายขนาดจอในลูปเดียว ลดโค้ดซ้ำ
 const viewports = [
   { name: 'mobile', width: 375, height: 667 },
@@ -172,9 +171,12 @@ test('ถ่ายภาพทั้งหน้ารวมส่วนที�
   await page.goto('/timeline');
   await expect(page).toHaveScreenshot({ fullPage: true });
 });`,
-    theory: `ค่า default ของ <code>toHaveScreenshot()</code> ถ่ายภาพแค่<strong>ส่วนที่มองเห็นในจอ (viewport)</strong> เท่านั้น — ถ้าหน้าเว็บยาวเกินจอ (ต้องเลื่อนดู) เนื้อหาส่วนที่อยู่นอกจอจะไม่ถูกถ่ายภาพเลย ทำให้ Visual Regression พลาดบั๊กที่อยู่ใน section ที่มองไม่เห็นตอนแรก<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Full Page Screenshot: ถ่ายภาพทั้งหน้าที่ยาวเกินจอ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ค่า default ของ <code>toHaveScreenshot()</code> ถ่ายภาพแค่<strong>ส่วนที่มองเห็นในจอ (viewport)</strong> เท่านั้น — ถ้าหน้าเว็บยาวเกินจอ (ต้องเลื่อนดู) เนื้อหาส่วนที่อยู่นอกจอจะไม่ถูกถ่ายภาพเลย ทำให้ Visual Regression พลาดบั๊กที่อยู่ใน section ที่มองไม่เห็นตอนแรก<br/><br/>
     <code>fullPage: true</code> สั่งให้ Playwright เลื่อนหน้าจอไปเรื่อยๆ แล้วต่อภาพทุกส่วนเข้าด้วยกันเป็นภาพเดียวยาวเท่าความสูงจริงของหน้า — เหมาะกับหน้าที่มีเนื้อหายาว เช่น <code>InvestmentTimeline.jsx</code> ของ My-Investment-Port ที่แสดงประวัติการลงทุนเป็นรายการยาวตามช่วงเวลา<br/><br/>
-    ข้อควรระวัง: หน้าที่มีเนื้อหา<strong>โหลดเพิ่มตอนเลื่อน</strong> (infinite scroll / lazy load) อาจได้ผลลัพธ์ไม่คงที่ระหว่างการรันแต่ละครั้ง เพราะจำนวนแถวที่โหลดมาขึ้นกับจังหวะเวลาที่ถ่ายภาพพอดี — กรณีแบบนี้ควร screenshot เฉพาะ element ที่ต้องการแทนการใช้ <code>fullPage: true</code> ทั้งหน้า`,
+    ข้อควรระวัง: หน้าที่มีเนื้อหา<strong>โหลดเพิ่มตอนเลื่อน</strong> (infinite scroll / lazy load) อาจได้ผลลัพธ์ไม่คงที่ระหว่างการรันแต่ละครั้ง เพราะจำนวนแถวที่โหลดมาขึ้นกับจังหวะเวลาที่ถ่ายภาพพอดี — กรณีแบบนี้ควร screenshot เฉพาะ element ที่ต้องการแทนการใช้ <code>fullPage: true</code> ทั้งหน้า<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>fullPage: true</code> สั่งให้ Playwright เลื่อนหน้าจอไปเรื่อยๆ แล้วต่อภาพทุกส่วนเข้าด้วยกันเป็นภาพเดียวยาวเท่าความสูงจริงของหน้า — เหมาะกับหน้าที่มีเนื้อหายาว เช่น <code>InvestmentTimeline.jsx</code> ของ My-Investment-Port ที่แสดงประวัติการลงทุนเป็นรายการยาวตามช่วงเวลา<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ข้อควรระวัง: หน้าที่มีเนื้อหา<strong>โหลดเพิ่มตอนเลื่อน</strong> (infinite scroll / lazy load) อาจได้ผลลัพธ์ไม่คงที่ระหว่างการรันแต่ละครั้ง เพราะจำนวนแถวที่โหลดมาขึ้นกับจังหวะเวลาที่ถ่ายภาพพอดี — กรณีแบบนี้ควร screenshot เฉพาะ element ที่ต้องการแทนการใช้ <code>fullPage: true</code> ทั้งหน้า`,
     example: `// ถ่ายภาพเฉพาะ element เดียวที่ยาวเกินจอ (แทนทั้งหน้า)
 await expect(page.getByTestId('timeline-list')).toHaveScreenshot();`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -209,9 +211,12 @@ test('เทียบภาพโดยยอมรับความต่า�
   await page.goto('/');
   await expect(page).toHaveScreenshot({ maxDiffPixelRatio: 0.02 });
 });`,
-    theory: `ปัญหาจริงที่ทีมที่ใช้ Visual Regression Testing เจอบ่อยที่สุด: <strong>macOS กับ Linux render font ต่างกันเล็กน้อย</strong> (anti-aliasing, sub-pixel rendering ไม่เหมือนกัน) ถ้า baseline สร้างบน CI (มักรันบน Linux) แล้ว dev รัน test เดิมบนเครื่อง macOS ของตัวเอง — จะได้ diff เล็กๆ น้อยๆ ทุกครั้งทั้งที่ไม่มีอะไรพังจริง (false positive)<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Threshold Tuning: กันไม่ให้ False Positive จาก Font Rendering และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ปัญหาจริงที่ทีมที่ใช้ Visual Regression Testing เจอบ่อยที่สุด: <strong>macOS กับ Linux render font ต่างกันเล็กน้อย</strong> (anti-aliasing, sub-pixel rendering ไม่เหมือนกัน) ถ้า baseline สร้างบน CI (มักรันบน Linux) แล้ว dev รัน test เดิมบนเครื่อง macOS ของตัวเอง — จะได้ diff เล็กๆ น้อยๆ ทุกครั้งทั้งที่ไม่มีอะไรพังจริง (false positive)<br/><br/>
     <code>maxDiffPixelRatio</code> กำหนดสัดส่วนพิกเซลที่ต่างกันได้สูงสุด (0.02 = ยอมรับความต่างได้ถึง 2% ของพิกเซลทั้งหมด) ก่อนจะถือว่า test fail จริง — ตั้งค่าน้อยเกินไปจะ false-positive บ่อย (เจอ diff จาก font rendering ทั้งที่ไม่มีบั๊กจริง) ตั้งค่ามากเกินไปจะพลาดบั๊กจริงที่ทำให้ layout เปลี่ยนแปลงชัดเจน<br/><br/>
-    <strong>วิธีที่ถูกต้องที่สุด</strong> (ตามที่ track Playwright UI Testing เคยแนะนำไว้ในหัวข้อ Gotchas): <strong>generate baseline บน CI เสมอ ไม่ใช่บนเครื่อง local ของแต่ละคน</strong> — เพราะถ้าทุกคน (และ CI) รัน test เทียบกับ baseline ที่มาจากสภาพแวดล้อมเดียวกันเป๊ะ (Linux ของ CI) ปัญหา font-rendering-ต่างกันจะไม่เกิดขึ้นเลยตั้งแต่แรก การตั้ง <code>maxDiffPixelRatio</code> เป็นแค่ตาข่ายนิรภัยสำรอง ไม่ใช่ทางแก้หลัก`,
+    <strong>วิธีที่ถูกต้องที่สุด</strong> (ตามที่ track Playwright UI Testing เคยแนะนำไว้ในหัวข้อ Gotchas): <strong>generate baseline บน CI เสมอ ไม่ใช่บนเครื่อง local ของแต่ละคน</strong> — เพราะถ้าทุกคน (และ CI) รัน test เทียบกับ baseline ที่มาจากสภาพแวดล้อมเดียวกันเป๊ะ (Linux ของ CI) ปัญหา font-rendering-ต่างกันจะไม่เกิดขึ้นเลยตั้งแต่แรก การตั้ง <code>maxDiffPixelRatio</code> เป็นแค่ตาข่ายนิรภัยสำรอง ไม่ใช่ทางแก้หลัก<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>วิธีที่ถูกต้องที่สุด</strong> (ตามที่ track Playwright UI Testing เคยแนะนำไว้ในหัวข้อ Gotchas): <strong>generate baseline บน CI เสมอ ไม่ใช่บนเครื่อง local ของแต่ละคน</strong> — เพราะถ้าทุกคน (และ CI) รัน test เทียบกับ baseline ที่มาจากสภาพแวดล้อมเดียวกันเป๊ะ (Linux ของ CI) ปัญหา font-rendering-ต่างกันจะไม่เกิดขึ้นเลยตั้งแต่แรก การตั้ง <code>maxDiffPixelRatio</code> เป็นแค่ตาข่ายนิรภัยสำรอง ไม่ใช่ทางแก้หลัก<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>maxDiffPixelRatio</code> กำหนดสัดส่วนพิกเซลที่ต่างกันได้สูงสุด (0.02 = ยอมรับความต่างได้ถึง 2% ของพิกเซลทั้งหมด) ก่อนจะถือว่า test fail จริง — ตั้งค่าน้อยเกินไปจะ false-positive บ่อย (เจอ diff จาก font rendering ทั้งที่ไม่มีบั๊กจริง) ตั้งค่ามากเกินไปจะพลาดบั๊กจริงที่ทำให้ layout เปลี่ยนแปลงชัดเจน<br/><br/>`,
     example: `// ตัวอย่างตั้งค่าอีกแบบ: จำนวนพิกเซลตายตัวแทนสัดส่วน (เหมาะกับภาพขนาดคงที่)
 await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -265,9 +270,12 @@ test('ถ่ายภาพ Dashboard โดย mask ส่วนที่เป
     maxDiffPixelRatio: 0.02,
   });
 });`,
-    theory: `บทเรียนนี้รวมสองปัญหาที่เจอแยกกันในบทที่ 1 (masking) และบทที่ 4 (threshold) เข้าด้วยกัน เพราะในงานจริง Dashboard หนึ่งหน้ามักมี<strong>ปัญหาซ้อนกันหลายอย่างพร้อมกัน</strong> ไม่ได้เจอทีละปัญหาเรียงลำดับสวยงามแบบในบทเรียน<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ รวมร่าง: Mask หลาย Element พร้อม Threshold ในการถ่ายภาพเดียว และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทเรียนนี้รวมสองปัญหาที่เจอแยกกันในบทที่ 1 (masking) และบทที่ 4 (threshold) เข้าด้วยกัน เพราะในงานจริง Dashboard หนึ่งหน้ามักมี<strong>ปัญหาซ้อนกันหลายอย่างพร้อมกัน</strong> ไม่ได้เจอทีละปัญหาเรียงลำดับสวยงามแบบในบทเรียน<br/><br/>
     <code>toHaveScreenshot()</code> รับ options object เดียว ดังนั้น <code>mask</code> และ <code>maxDiffPixelRatio</code> จึงเป็นแค่สอง key ใน object เดียวกัน — ไม่ต้องเรียก <code>toHaveScreenshot()</code> สองครั้งหรือแยกเป็นสอง assertion<br/><br/>
-    ข้อควรระวัง: <code>mask</code> จัดการเฉพาะ "พื้นที่ที่รู้อยู่แล้วว่าเปลี่ยนตลอดเวลา" (ราคา, เวลา) ส่วน <code>maxDiffPixelRatio</code> จัดการ "ความต่างเล็กน้อยที่คาดเดาตำแหน่งไม่ได้" (font rendering, anti-aliasing) — สอง option นี้แก้ปัญหาคนละประเภท ใช้แทนกันไม่ได้ ต้องใช้ร่วมกันเมื่อหน้าเว็บมีทั้งสองปัญหาพร้อมกัน`,
+    ข้อควรระวัง: <code>mask</code> จัดการเฉพาะ "พื้นที่ที่รู้อยู่แล้วว่าเปลี่ยนตลอดเวลา" (ราคา, เวลา) ส่วน <code>maxDiffPixelRatio</code> จัดการ "ความต่างเล็กน้อยที่คาดเดาตำแหน่งไม่ได้" (font rendering, anti-aliasing) — สอง option นี้แก้ปัญหาคนละประเภท ใช้แทนกันไม่ได้ ต้องใช้ร่วมกันเมื่อหน้าเว็บมีทั้งสองปัญหาพร้อมกัน<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>toHaveScreenshot()</code> รับ options object เดียว ดังนั้น <code>mask</code> และ <code>maxDiffPixelRatio</code> จึงเป็นแค่สอง key ใน object เดียวกัน — ไม่ต้องเรียก <code>toHaveScreenshot()</code> สองครั้งหรือแยกเป็นสอง assertion<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ข้อควรระวัง: <code>mask</code> จัดการเฉพาะ "พื้นที่ที่รู้อยู่แล้วว่าเปลี่ยนตลอดเวลา" (ราคา, เวลา) ส่วน <code>maxDiffPixelRatio</code> จัดการ "ความต่างเล็กน้อยที่คาดเดาตำแหน่งไม่ได้" (font rendering, anti-aliasing) — สอง option นี้แก้ปัญหาคนละประเภท ใช้แทนกันไม่ได้ ต้องใช้ร่วมกันเมื่อหน้าเว็บมีทั้งสองปัญหาพร้อมกัน`,
     example: `// ตัวอย่าง: mask element เดียวแต่รวมกับ threshold (กรณีมีแค่ปัญหาเดียวของแต่ละฝั่ง)
 await expect(page).toHaveScreenshot({
   mask: [page.getByTestId('live-clock')],
@@ -331,9 +339,12 @@ test('ถ่ายภาพหน้า Dashboard อย่างเสถีย
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot();
 });`,
-    theory: `Flaky visual test (บางครั้งผ่าน บางครั้ง fail แบบสุ่ม โดยไม่มีอะไรเปลี่ยนจริง) ต่างจาก false positive ที่คงที่ (เช่น font-rendering ต่างเครื่องในบทที่ 4) ตรงที่<strong>ผลลัพธ์ไม่คงที่แม้รันซ้ำบนเครื่องเดียวกัน</strong> — สาเหตุหลักสองอย่างที่พบบ่อยที่สุดคือ font ที่โหลดผ่านเครือข่ายยังมาไม่ครบตอนถ่ายภาพ (บางครั้งมาทัน บางครั้งไม่ทัน) และ CSS animation/transition ที่กำลังเล่นอยู่พอดี (จับภาพได้คนละ frame ทุกครั้งที่รัน)<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Debug Flaky Test: Font โหลดไม่ทัน + CSS Animation กำลังเล่นอยู่ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>Flaky visual test (บางครั้งผ่าน บางครั้ง fail แบบสุ่ม โดยไม่มีอะไรเปลี่ยนจริง) ต่างจาก false positive ที่คงที่ (เช่น font-rendering ต่างเครื่องในบทที่ 4) ตรงที่<strong>ผลลัพธ์ไม่คงที่แม้รันซ้ำบนเครื่องเดียวกัน</strong> — สาเหตุหลักสองอย่างที่พบบ่อยที่สุดคือ font ที่โหลดผ่านเครือข่ายยังมาไม่ครบตอนถ่ายภาพ (บางครั้งมาทัน บางครั้งไม่ทัน) และ CSS animation/transition ที่กำลังเล่นอยู่พอดี (จับภาพได้คนละ frame ทุกครั้งที่รัน)<br/><br/>
     <strong>ทำไม <code>page.waitForTimeout()</code> ไม่ใช่ทางแก้ที่ถูกต้อง:</strong> เป็นการ "เดา" ตัวเลขเวลาคงที่ ซึ่งไม่รับประกันอะไรเลย — เครื่อง CI ที่ช้ากว่าปกติ (เช่น ตอน CI คิวงานหนัก) อาจยังโหลด font ไม่เสร็จแม้รอเกินเวลาที่เดาไว้ ในขณะที่เครื่องเร็วก็รอเสียเวลาโดยไม่จำเป็น<br/><br/>
-    <strong>ทางแก้ที่ถูกต้อง</strong> คือรอ "สัญญาณจริง" แทนการเดาเวลา: <code>document.fonts.ready</code> คือ Promise มาตรฐานของ browser ที่ resolve เมื่อฟอนต์ทั้งหมดโหลดเสร็จจริง (เรียกผ่าน <code>page.evaluate()</code>) ส่วนการปิด CSS animation ทำได้ผ่าน context option <code>reducedMotion: 'reduce'</code> ซึ่งบอก browser ให้ส่งสัญญาณ <code>prefers-reduced-motion: reduce</code> — เว็บที่เขียน CSS animation ให้เคารพ media query นี้ (แนวทางที่ดีอยู่แล้วเพื่อ accessibility) จะปิด/ข้าม animation ไปเอง ทำให้ทุกครั้งที่ถ่ายภาพ ได้ frame สุดท้ายที่นิ่งแล้วเสมอ`,
+    <strong>ทางแก้ที่ถูกต้อง</strong> คือรอ "สัญญาณจริง" แทนการเดาเวลา: <code>document.fonts.ready</code> คือ Promise มาตรฐานของ browser ที่ resolve เมื่อฟอนต์ทั้งหมดโหลดเสร็จจริง (เรียกผ่าน <code>page.evaluate()</code>) ส่วนการปิด CSS animation ทำได้ผ่าน context option <code>reducedMotion: 'reduce'</code> ซึ่งบอก browser ให้ส่งสัญญาณ <code>prefers-reduced-motion: reduce</code> — เว็บที่เขียน CSS animation ให้เคารพ media query นี้ (แนวทางที่ดีอยู่แล้วเพื่อ accessibility) จะปิด/ข้าม animation ไปเอง ทำให้ทุกครั้งที่ถ่ายภาพ ได้ frame สุดท้ายที่นิ่งแล้วเสมอ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ทำไม <code>page.waitForTimeout()</code> ไม่ใช่ทางแก้ที่ถูกต้อง:</strong> เป็นการ "เดา" ตัวเลขเวลาคงที่ ซึ่งไม่รับประกันอะไรเลย — เครื่อง CI ที่ช้ากว่าปกติ (เช่น ตอน CI คิวงานหนัก) อาจยังโหลด font ไม่เสร็จแม้รอเกินเวลาที่เดาไว้ ในขณะที่เครื่องเร็วก็รอเสียเวลาโดยไม่จำเป็น<br/><br/><br/><strong>ทางแก้ที่ถูกต้อง</strong> คือรอ "สัญญาณจริง" แทนการเดาเวลา: <code>document.fonts.ready</code> คือ Promise มาตรฐานของ browser ที่ resolve เมื่อฟอนต์ทั้งหมดโหลดเสร็จจริง (เรียกผ่าน <code>page.evaluate()</code>) ส่วนการปิด CSS animation ทำได้ผ่าน context option <code>reducedMotion: 'reduce'</code> ซึ่งบอก browser ให้ส่งสัญญาณ <code>prefers-reduced-motion: reduce</code> — เว็บที่เขียน CSS animation ให้เคารพ media query นี้ (แนวทางที่ดีอยู่แล้วเพื่อ accessibility) จะปิด/ข้าม animation ไปเอง ทำให้ทุกครั้งที่ถ่ายภาพ ได้ frame สุดท้ายที่นิ่งแล้วเสมอ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ทางเลือกอื่นสำหรับรอความเสถียร: รอ network idle แทนรอ font โดยตรง
 // (เหมาะกับกรณีที่ font โหลดมาพร้อมกับ resource อื่นๆ ผ่าน network เดียวกัน)
 test.use({ reducedMotion: 'reduce' });
@@ -383,9 +394,10 @@ test('ถ่ายภาพเฉพาะแถบ header บนสุดขอ
     clip: { x: 0, y: 0, width: 1280, height: 120 },
   });
 });`,
-    theory: `<strong>clip</strong> ถ่ายภาพเฉพาะพื้นที่สี่เหลี่ยมตามพิกัดที่กำหนด (x, y, width, height) นับจากมุมซ้ายบนของหน้า — ต่างจาก <code>mask</code> ที่ถ่ายทั้งหน้าแต่ปิดบังบางส่วน, ต่างจาก screenshot เฉพาะ element ที่ต้องมี locator ชี้ element เดี่ยวๆ ได้<br/><br/>
-    ใช้ clip เมื่อพื้นที่ที่ต้องการเทียบ<strong>ไม่มี element เดี่ยวที่เจาะจงได้ตรงๆ</strong> เช่น แถบพื้นหลัง gradient ที่รวมปุ่มหลายตัวไว้ด้วยกัน หรือต้องการเทียบเฉพาะ "มุมหนึ่งของหน้า" โดยไม่สนใจ DOM structure ว่าจริงๆ แล้วมีกี่ element ซ้อนกันอยู่ตรงนั้น<br/><br/>
-    ข้อควรระวัง: พิกัดเป็นค่าคงที่ (fixed pixel) ไม่ผูกกับ element ใดๆ — ถ้า layout เปลี่ยนตำแหน่ง (เช่น เพิ่ม banner แจ้งเตือนด้านบนทำให้ทุกอย่างเลื่อนลง) พื้นที่ที่ clip ไว้จะไม่ตรงกับส่วนที่ต้องการอีกต่อไป เหมาะกับ element ที่ตำแหน่ง/ขนาดค่อนข้างคงที่เท่านั้น`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>clip</strong> ถ่ายภาพเฉพาะพื้นที่สี่เหลี่ยมตามพิกัดที่กำหนด (x, y, width, height) นับจากมุมซ้ายบนของหน้า — ต่างจาก <code>mask</code> ที่ถ่ายทั้งหน้าแต่ปิดบังบางส่วน, ต่างจาก screenshot เฉพาะ element ที่ต้องมี locator ชี้ element เดี่ยวๆ ได้<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใช้ clip เมื่อพื้นที่ที่ต้องการเทียบ<strong>ไม่มี element เดี่ยวที่เจาะจงได้ตรงๆ</strong> เช่น แถบพื้นหลัง gradient ที่รวมปุ่มหลายตัวไว้ด้วยกัน หรือต้องการเทียบเฉพาะ "มุมหนึ่งของหน้า" โดยไม่สนใจ DOM structure ว่าจริงๆ แล้วมีกี่ element ซ้อนกันอยู่ตรงนั้น<br/><br/><br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ข้อควรระวัง: พิกัดเป็นค่าคงที่ (fixed pixel) ไม่ผูกกับ element ใดๆ — ถ้า layout เปลี่ยนตำแหน่ง (เช่น เพิ่ม banner แจ้งเตือนด้านบนทำให้ทุกอย่างเลื่อนลง) พื้นที่ที่ clip ไว้จะไม่ตรงกับส่วนที่ต้องการอีกต่อไป เหมาะกับ element ที่ตำแหน่ง/ขนาดค่อนข้างคงที่เท่านั้น`,
     example: `// clip พื้นที่ footer ที่อยู่ด้านล่างสุดของหน้าจอ (สมมติหน้าจอสูง 900px, footer สูง 80px)
 await expect(page).toHaveScreenshot({
   clip: { x: 0, y: 820, width: 1280, height: 80 },
@@ -420,9 +432,10 @@ test('ถ่ายภาพ header ของ dashboard จัดเก็บใ�
   await page.goto('/dashboard');
   await expect(page).toHaveScreenshot(['dashboard', 'header.png']);
 });`,
-    theory: `บทเรียนก่อนหน้านี้ตั้งชื่อ baseline เป็น string เดี่ยว เช่น <code>toHaveScreenshot('mobile.png')</code> — ใช้ได้ดีตอนมีไม่กี่ไฟล์ แต่พอ track ขยายมีหลายหน้า (dashboard, watchlist, timeline) แต่ละหน้ามีหลาย breakpoint/state ไฟล์ baseline ทั้งหมดจะกองรวมกันในโฟลเดอร์เดียว หาไฟล์ที่ต้องการยากขึ้นเรื่อยๆ<br/><br/>
-    <code>toHaveScreenshot()</code> รับ argument แรกเป็น<strong>array ของ string</strong>ได้ด้วย — Playwright จะตีความแต่ละตัวใน array เป็นหนึ่งระดับของโฟลเดอร์ ตัวสุดท้ายเป็นชื่อไฟล์ เช่น <code>['dashboard', 'header.png']</code> จะเก็บไฟล์ไว้ที่ <code>__screenshots__/dashboard/header.png</code> แทนที่จะกองรวมเป็น <code>dashboard-header.png</code> ในโฟลเดอร์เดียวกับไฟล์อื่นๆ ทั้งหมด<br/><br/>
-    ประโยชน์จริง: เวลา diff ทีละหน้าใน PR review หรือลบ baseline เก่าทั้งหน้าเมื่อ redesign หน้านั้นใหม่ทำได้ง่ายกว่ามาก เพราะไฟล์ที่เกี่ยวข้องกันอยู่ในโฟลเดอร์เดียวกันจริงๆ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ จัดกลุ่ม Baseline เป็นโฟลเดอร์ด้วย Array Path Naming และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ประโยชน์จริง: เวลา diff ทีละหน้าใน PR review หรือลบ baseline เก่าทั้งหน้าเมื่อ redesign หน้านั้นใหม่ทำได้ง่ายกว่ามาก เพราะไฟล์ที่เกี่ยวข้องกันอยู่ในโฟลเดอร์เดียวกันจริงๆ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>toHaveScreenshot()</code> รับ argument แรกเป็น<strong>array ของ string</strong>ได้ด้วย — Playwright จะตีความแต่ละตัวใน array เป็นหนึ่งระดับของโฟลเดอร์ ตัวสุดท้ายเป็นชื่อไฟล์ เช่น <code>['dashboard', 'header.png']</code> จะเก็บไฟล์ไว้ที่ <code>__screenshots__/dashboard/header.png</code> แทนที่จะกองรวมเป็น <code>dashboard-header.png</code> ในโฟลเดอร์เดียวกับไฟล์อื่นๆ ทั้งหมด<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// จัดกลุ่มลึกได้มากกว่า 2 ระดับ เช่น แยกตาม feature แล้วแยกตาม breakpoint อีกชั้น
 await expect(page).toHaveScreenshot(['watchlist', 'mobile', 'header.png']);`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -461,11 +474,14 @@ test('ถ่ายภาพกราฟหลัง canvas animation วาด�
   await page.waitForTimeout(1200);
   await expect(page).toHaveScreenshot();
 });`,
-    theory: `<strong>Real grounding:</strong> <code>PortfolioValueChart.jsx</code> ของ My-Investment-Port ใช้ <code>react-chartjs-2</code> วาดกราฟผ่าน <code>&lt;canvas&gt;</code> พร้อมตั้งค่าจริง:<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Real grounding:</strong> <code>PortfolioValueChart.jsx</code> ของ My-Investment-Port ใช้ <code>react-chartjs-2</code> วาดกราฟผ่าน <code>&lt;canvas&gt;</code> พร้อมตั้งค่าจริง:<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Real grounding:</strong> <code>PortfolioValueChart.jsx</code> ของ My-Investment-Port ใช้ <code>react-chartjs-2</code> วาดกราฟผ่าน <code>&lt;canvas&gt;</code> พร้อมตั้งค่าจริง:<br/><br/>
     <code>animation: { duration: 900, easing: 'easeInOutQuart' }</code><br/><br/>
     <code>toHaveScreenshot()</code> ค่า default มี <code>animations: 'disabled'</code> อยู่แล้ว (ไม่ต้องตั้งเอง) ซึ่งตามเอกสารของ Playwright หยุดเฉพาะ <strong>CSS animations, CSS transitions และ Web Animations</strong> เท่านั้น — กราฟที่วาดผ่าน canvas ด้วย JavaScript (ไม่ใช่ CSS เลย) จึง<strong>ไม่ถูกหยุด</strong>โดย option นี้ และ <code>reducedMotion: 'reduce'</code> (บทขั้นสูง 2) ก็เช่นกัน เพราะ chart library ต้อง implement เองว่าจะ respect prefers-reduced-motion หรือไม่ ซึ่ง config ที่เห็นในไฟล์จริงไม่มีการเช็คนี้เลย<br/><br/>
     สรุปช่องว่าง: ทั้งสอง option ที่เรียนมาแล้ว "เอาไม่อยู่" กับ canvas animation — เมื่อไม่มี event/Promise มาตรฐานให้รอ (ต่างจาก <code>document.fonts.ready</code> ที่มีจริง) ทางแก้ที่เหลืออยู่คือ<strong>blind wait ที่มีเหตุผลรองรับ</strong>: รอเวลานานกว่า duration จริงที่ระบุในโค้ด (900ms) บวก buffer กันเครื่องช้า (ตัวอย่างนี้ใช้ 1200ms) — ไม่ใช่การเดาตัวเลขลอยๆ แบบบทเรียนก่อนที่สอนว่าผิด เพราะตัวเลขนี้ผูกกับค่าจริงในซอร์สโค้ด ถ้า duration เปลี่ยนในโค้ดจริง ค่าที่รอในเทสต้องอัปเดตตาม<br/><br/>
-    ทางแก้ที่ดีกว่าถ้าทำได้ (นอกเหนือขอบเขตของ component นี้): ให้ component เปิด prop/callback แจ้งเมื่อ animation จบ (เช่น Chart.js มี <code>onComplete</code> callback ใน options.animation) แล้วตั้ง <code>data-testid</code> หรือ attribute บอกสถานะ "พร้อมแล้ว" ให้เทสรอ element นั้นแทน blind wait — แต่ต้องแก้ component เพิ่ม ไม่ใช่แค่แก้ฝั่งเทส`,
+    ทางแก้ที่ดีกว่าถ้าทำได้ (นอกเหนือขอบเขตของ component นี้): ให้ component เปิด prop/callback แจ้งเมื่อ animation จบ (เช่น Chart.js มี <code>onComplete</code> callback ใน options.animation) แล้วตั้ง <code>data-testid</code> หรือ attribute บอกสถานะ "พร้อมแล้ว" ให้เทสรอ element นั้นแทน blind wait — แต่ต้องแก้ component เพิ่ม ไม่ใช่แค่แก้ฝั่งเทส<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>animation: { duration: 900, easing: 'easeInOutQuart' }</code><br/><br/><br/><code>toHaveScreenshot()</code> ค่า default มี <code>animations: 'disabled'</code> อยู่แล้ว (ไม่ต้องตั้งเอง) ซึ่งตามเอกสารของ Playwright หยุดเฉพาะ <strong>CSS animations, CSS transitions และ Web Animations</strong> เท่านั้น — กราฟที่วาดผ่าน canvas ด้วย JavaScript (ไม่ใช่ CSS เลย) จึง<strong>ไม่ถูกหยุด</strong>โดย option นี้ และ <code>reducedMotion: 'reduce'</code> (บทขั้นสูง 2) ก็เช่นกัน เพราะ chart library ต้อง implement เองว่าจะ respect prefers-reduced-motion หรือไม่ ซึ่ง config ที่เห็นในไฟล์จริงไม่มีการเช็คนี้เลย<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> สรุปช่องว่าง: ทั้งสอง option ที่เรียนมาแล้ว "เอาไม่อยู่" กับ canvas animation — เมื่อไม่มี event/Promise มาตรฐานให้รอ (ต่างจาก <code>document.fonts.ready</code> ที่มีจริง) ทางแก้ที่เหลืออยู่คือ<strong>blind wait ที่มีเหตุผลรองรับ</strong>: รอเวลานานกว่า duration จริงที่ระบุในโค้ด (900ms) บวก buffer กันเครื่องช้า (ตัวอย่างนี้ใช้ 1200ms) — ไม่ใช่การเดาตัวเลขลอยๆ แบบบทเรียนก่อนที่สอนว่าผิด เพราะตัวเลขนี้ผูกกับค่าจริงในซอร์สโค้ด ถ้า duration เปลี่ยนในโค้ดจริง ค่าที่รอในเทสต้องอัปเดตตาม<br/><br/>`,
     example: `// ถ้า component เปิด callback onComplete ไว้แล้ว (สมมติเพิ่มในอนาคต) ควรรอสัญญาณจริงแทน blind wait เสมอ
 await page.waitForSelector('[data-chart-ready="true"]');
 await expect(page).toHaveScreenshot();`,
@@ -510,11 +526,10 @@ test('ถ่ายภาพหน้าที่มี TradingView widget โด
     mask: [page.getByTitle('TradingView technical analysis for AAPL')],
   });
 });`,
-    theory: `<strong>Real grounding:</strong> <code>TradingViewWidgetFrame.jsx</code> ของ My-Investment-Port ฝัง third-party widget ผ่าน:<br/><br/>
-    <code>&lt;iframe title={title} srcDoc={srcDoc} ... /&gt;</code><br/>
-    โดย <code>title</code> ที่ส่งมาจริงจาก <code>TradingViewTA.jsx</code> คือ <code>\`TradingView technical analysis for \${ticker}\`</code> และเนื้อหาข้างใน iframe โหลดผ่าน <code>&lt;script src="https://s3.tradingview.com/..."&gt;</code> — เป็น service ภายนอกที่เราไม่มีทางควบคุมได้เลยว่าจะ render อะไรตอนไหน<br/><br/>
-    บทที่ 1 สอน mask element ที่ "เรารู้ว่าเปลี่ยน" (ราคาหุ้นของเราเอง) แต่กรณีนี้รุนแรงกว่านั้นมาก: <strong>ทั้งก้อน iframe</strong> เป็นของ third party ทั้งหมด ไม่ใช่แค่ตัวเลขเดียว — ราคา, กราฟ, สี, ข้อความ ข้างในเปลี่ยนได้ตลอดเวลาโดยเราไม่รู้ล่วงหน้า วิธีที่ถูกต้องคือ<strong>ปิดบังทั้ง element iframe</strong> ไม่ใช่พยายามไล่ mask ทีละส่วนย่อยข้างในซึ่งเราไม่มีสิทธิ์เข้าถึง DOM ข้างในด้วยซ้ำ (cross-origin content บางกรณี)<br/><br/>
-    <code>page.getByTitle(...)</code> หา element จาก <code>title</code> attribute ที่ component ตั้งไว้จริง — ใช้แทน <code>getByTestId</code> ได้เมื่อ element ไม่มี <code>data-testid</code> แต่มี attribute อื่นที่ระบุตัวตนได้แน่นอนพอ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Real grounding:</strong> <code>TradingViewWidgetFrame.jsx</code> ของ My-Investment-Port ฝัง third-party widget ผ่าน:<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทที่ 1 สอน mask element ที่ "เรารู้ว่าเปลี่ยน" (ราคาหุ้นของเราเอง) แต่กรณีนี้รุนแรงกว่านั้นมาก: <strong>ทั้งก้อน iframe</strong> เป็นของ third party ทั้งหมด ไม่ใช่แค่ตัวเลขเดียว — ราคา, กราฟ, สี, ข้อความ ข้างในเปลี่ยนได้ตลอดเวลาโดยเราไม่รู้ล่วงหน้า วิธีที่ถูกต้องคือ<strong>ปิดบังทั้ง element iframe</strong> ไม่ใช่พยายามไล่ mask ทีละส่วนย่อยข้างในซึ่งเราไม่มีสิทธิ์เข้าถึง DOM ข้างในด้วยซ้ำ (cross-origin content บางกรณี)<br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>&lt;iframe title={title} srcDoc={srcDoc} ... /&gt;</code><br/><br/>โดย <code>title</code> ที่ส่งมาจริงจาก <code>TradingViewTA.jsx</code> คือ <code>\`TradingView technical analysis for \${ticker}\`</code> และเนื้อหาข้างใน iframe โหลดผ่าน <code>&lt;script src="https://s3.tradingview.com/..."&gt;</code> — เป็น service ภายนอกที่เราไม่มีทางควบคุมได้เลยว่าจะ render อะไรตอนไหน<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// mask หลาย third-party widget พร้อมกันในหน้าเดียว (เช่น มีทั้ง TA widget และ News widget)
 await expect(page).toHaveScreenshot({
   mask: [
@@ -547,9 +562,12 @@ await expect(page).toHaveScreenshot({
     },
     hint: "Playwright มี flag บรรทัดคำสั่งเฉพาะสำหรับ regenerate baseline ทั้งหมดในคำสั่งเดียว รูปแบบคือ npx playwright test ตามด้วย flag ที่สื่อความหมายว่า 'อัปเดต snapshot'",
     solution: `const updateCommand = 'npx playwright test --update-snapshots';`,
-    theory: `<strong>เมื่อไหร่ควร Update Baseline:</strong> diff ที่เกิดจากการเปลี่ยนแปลงที่<strong>ตั้งใจ</strong> (designer อนุมัติสี/layout ใหม่) ต้อง regenerate baseline ให้ตรงกับดีไซน์ใหม่ ต่างจาก diff ที่เกิดจากบั๊กจริงซึ่งต้องแก้โค้ด ไม่ใช่แก้ baseline<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>เมื่อไหร่ควร Update Baseline:</strong> diff ที่เกิดจากการเปลี่ยนแปลงที่<strong>ตั้งใจ</strong> (designer อนุมัติสี/layout ใหม่) ต้อง regenerate baseline ให้ตรงกับดีไซน์ใหม่ ต่างจาก diff ที่เกิดจากบั๊กจริงซึ่งต้องแก้โค้ด ไม่ใช่แก้ baseline<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>เมื่อไหร่ควร Update Baseline:</strong> diff ที่เกิดจากการเปลี่ยนแปลงที่<strong>ตั้งใจ</strong> (designer อนุมัติสี/layout ใหม่) ต้อง regenerate baseline ให้ตรงกับดีไซน์ใหม่ ต่างจาก diff ที่เกิดจากบั๊กจริงซึ่งต้องแก้โค้ด ไม่ใช่แก้ baseline<br/><br/>
     คำสั่ง <code>npx playwright test --update-snapshots</code> รัน test ทั้งหมดแล้วเขียนทับไฟล์ baseline เดิมด้วยภาพที่ถ่ายได้ล่าสุดทันที — สะดวกแต่<strong>อันตรายถ้าใช้พร่ำเพรื่อ</strong>: ถ้ามีบั๊ก visual จริงซ้อนอยู่ด้วยพร้อมกับการเปลี่ยนแปลงที่ตั้งใจ คำสั่งนี้จะ "กลืน" บั๊กนั้นเข้าไปเป็น baseline ใหม่โดยไม่มีใครรู้ตัว<br/><br/>
-    <strong>วินัยที่ต้องมี:</strong> baseline ที่ regenerate ใหม่ต้องถูก<strong>commit เป็นไฟล์ image และ review ใน PR</strong> เหมือน code diff ทั่วไป — reviewer เห็นภาพ before/after จริงก่อน approve ไม่ใช่รัน <code>--update-snapshots</code> แล้ว commit ทันทีโดยไม่มีใครดูภาพเลย เพราะไฟล์ .png ไม่สามารถ code-review แบบอ่าน diff ข้อความได้ ต้อง<strong>ดูภาพจริง</strong>เท่านั้นถึงจะรู้ว่าเปลี่ยนถูกต้องตามที่ตั้งใจหรือไม่`,
+    <strong>วินัยที่ต้องมี:</strong> baseline ที่ regenerate ใหม่ต้องถูก<strong>commit เป็นไฟล์ image และ review ใน PR</strong> เหมือน code diff ทั่วไป — reviewer เห็นภาพ before/after จริงก่อน approve ไม่ใช่รัน <code>--update-snapshots</code> แล้ว commit ทันทีโดยไม่มีใครดูภาพเลย เพราะไฟล์ .png ไม่สามารถ code-review แบบอ่าน diff ข้อความได้ ต้อง<strong>ดูภาพจริง</strong>เท่านั้นถึงจะรู้ว่าเปลี่ยนถูกต้องตามที่ตั้งใจหรือไม่<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>วินัยที่ต้องมี:</strong> baseline ที่ regenerate ใหม่ต้องถูก<strong>commit เป็นไฟล์ image และ review ใน PR</strong> เหมือน code diff ทั่วไป — reviewer เห็นภาพ before/after จริงก่อน approve ไม่ใช่รัน <code>--update-snapshots</code> แล้ว commit ทันทีโดยไม่มีใครดูภาพเลย เพราะไฟล์ .png ไม่สามารถ code-review แบบอ่าน diff ข้อความได้ ต้อง<strong>ดูภาพจริง</strong>เท่านั้นถึงจะรู้ว่าเปลี่ยนถูกต้องตามที่ตั้งใจหรือไม่<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> คำสั่ง <code>npx playwright test --update-snapshots</code> รัน test ทั้งหมดแล้วเขียนทับไฟล์ baseline เดิมด้วยภาพที่ถ่ายได้ล่าสุดทันที — สะดวกแต่<strong>อันตรายถ้าใช้พร่ำเพรื่อ</strong>: ถ้ามีบั๊ก visual จริงซ้อนอยู่ด้วยพร้อมกับการเปลี่ยนแปลงที่ตั้งใจ คำสั่งนี้จะ "กลืน" บั๊กนั้นเข้าไปเป็น baseline ใหม่โดยไม่มีใครรู้ตัว<br/><br/>`,
     example: `// update baseline เฉพาะไฟล์/เทสเดียว แทนทั้งหมด (ปลอดภัยกว่าเมื่อรู้ชัดว่าเปลี่ยนแค่จุดเดียว)
 const updateSingleCommand = 'npx playwright test dashboard.spec.ts --update-snapshots';`,
     task: `จงเขียนโค้ดให้สมบูรณ์ โดย:<br/>

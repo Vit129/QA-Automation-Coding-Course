@@ -3,6 +3,13 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.8.1] - 2026-07-29
+
+### Added
+- Upgrade all 237 lesson theories across 12 tracks to 4-block standard format (🎯 Goal, ⚖️ Comparison/Table, 💡 Mental Model & Syntax, 🚨 Common Pitfall)
+- Add GitHub Star repository link button on landing page header
+- Add Certificate Preview page (`certificate_preview.html`) for per-track and grand course completion modal previews
+
 ## [0.8.0] - 2026-07-29
 
 ### Added

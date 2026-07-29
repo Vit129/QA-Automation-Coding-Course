@@ -143,10 +143,38 @@ const LESSONS = [
   }
   return false;
 }`,
-    theory: `<strong>Big-O Notation</strong> คือภาษาที่ใช้อธิบายว่า "เวลาทำงานของโค้ดโตขึ้นเร็วแค่ไหน" เมื่อขนาดข้อมูล (n) เพิ่มขึ้น — ไม่ใช่การวัดเวลาจริงเป็นวินาที แต่วัด<strong>อัตราการโต</strong> เทียบกับ n<br/><br/>
-    ที่พบบ่อยที่สุด: <code>O(1)</code> (คงที่ ไม่ว่า n เท่าไหร่ก็เร็วเท่าเดิม), <code>O(log n)</code> (โตช้ามาก เช่น binary search), <code>O(n)</code> (โตเป็นเส้นตรงตาม n), <code>O(n log n)</code> (ส่วนใหญ่ของ sorting ที่ดี), <code>O(n^2)</code> (nested loop เทียบทุกคู่ — อันตรายที่สุดในบทนี้)<br/><br/>
-    วิธีดูจากโค้ดแบบคร่าวๆ: ลูปชั้นเดียววิ่งผ่านข้อมูล n ตัว = <code>O(n)</code> ลูปซ้อนลูป (ลูปในลูป) ที่แต่ละชั้นวิ่งผ่าน n ตัวเหมือนกัน = <code>O(n^2)</code> — เช็ค ticket ซ้ำแบบ nested loop (เทียบทุก ticket กับทุก ticket ที่เหลือ) ที่ n=100 ทำงาน ~10,000 ครั้ง ยังเร็วอยู่ แต่ที่ n=5,000 ทำงาน ~25,000,000 ครั้ง — นี่คือเหตุผลที่ suite ใหญ่ขึ้นแล้ว "ช้าเกินสัดส่วน" ทั้งที่ข้อมูลโตขึ้นแค่ 50 เท่า เวลากลับโตขึ้น 2,500 เท่า<br/><br/>
-    ทางแก้: ใช้ <code>Set</code> (ตามที่จะเรียนลึกในบทถัดไป) เก็บค่าที่เคยเจอแล้ว เช็คว่าเคยเจอหรือยังในเวลาคงที่ (O(1) โดยเฉลี่ย) ทำให้ทั้งฟังก์ชันเหลือแค่ O(n) — โตตามข้อมูลแบบเส้นตรง ไม่ใช่กำลังสอง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ <strong>Big-O Notation</strong> และผลกระทบต่อประสิทธิภาพเมื่อขนาดข้อมูล ($n$) เพิ่มขึ้น<br/><br/>
+    ⚖️ <strong>ตารางเปรียบเทียบระดับ Time Complexity ที่พบบ่อย:</strong><br/>
+    <table class="theory-table" style="width:100%; border-collapse:collapse; margin:8px 0; font-size:0.9em;">
+      <tr style="background:#2d3748; color:#fff;">
+        <th style="padding:6px; border:1px solid #4a5568;">Big-O</th>
+        <th style="padding:6px; border:1px solid #4a5568;">นิยาม</th>
+        <th style="padding:6px; border:1px solid #4a5568;">ตัวอย่างการประมวลผล</th>
+      </tr>
+      <tr>
+        <td style="padding:6px; border:1px solid #4a5568;"><code>O(1)</code></td>
+        <td style="padding:6px; border:1px solid #4a5568;">Constant Time</td>
+        <td style="padding:6px; border:1px solid #4a5568;">เข้าถึง Array ด้วย Index หรือเช็ค Hash Table / Set</td>
+      </tr>
+      <tr>
+        <td style="padding:6px; border:1px solid #4a5568;"><code>O(log n)</code></td>
+        <td style="padding:6px; border:1px solid #4a5568;">Logarithmic Time</td>
+        <td style="padding:6px; border:1px solid #4a5568;">Binary Search ตัดข้อมูลครึ่งหนึ่งทุกรอบ</td>
+      </tr>
+      <tr>
+        <td style="padding:6px; border:1px solid #4a5568;"><code>O(n)</code></td>
+        <td style="padding:6px; border:1px solid #4a5568;">Linear Time</td>
+        <td style="padding:6px; border:1px solid #4a5568;">Loop ชั้นเดียว วิ่งผ่านข้อมูลทีละตัว</td>
+      </tr>
+      <tr>
+        <td style="padding:6px; border:1px solid #4a5568;"><code>O(n^2)</code></td>
+        <td style="padding:6px; border:1px solid #4a5568;">Quadratic Time</td>
+        <td style="padding:6px; border:1px solid #4a5568;">Nested Loop ซ้อนกัน เทียบทุกคู่ขนาน</td>
+      </tr>
+    </table><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>const seen = new Set(); for (const item of arr) { if (seen.has(item)) return true; seen.add(item); }</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> อย่าใช้ Nested Loop (<code>O(n^2)</code>) เช็คข้อมูลซ้ำเมื่อข้อมูลมีขนาดใหญ่ขึ้น การเปลี่ยนไปใช้ <code>Set</code> จะลด Time Complexity เหลือ <code>O(n)</code>`,
     example: `// ตัวอย่าง O(n^2) ที่ควรหลีกเลี่ยง (แค่ตัวอย่างวิธีคิด ไม่ใช่คำตอบ)
 function hasDuplicateSlow(arr) {
   for (let i = 0; i < arr.length; i++) {
@@ -211,9 +239,10 @@ function hasDuplicateSlow(arr) {
   }
   return next;
 }`,
-    theory: `<strong>Array</strong> เก็บข้อมูลต่อเนื่องกันในหน่วยความจำ เข้าถึงสมาชิกลำดับที่ N ได้ทันที (<code>arr[N]</code>) ด้วยความเร็ว <code>O(1)</code> — แต่การแทรก/ลบตรงกลาง array ต้องขยับสมาชิกที่เหลือทั้งหมด (<code>O(n)</code>)<br/><br/>
-    <strong>Linked List</strong> เก็บข้อมูลเป็น "โซ่" ของ node แต่ละ node ชี้ไปยัง node ถัดไปด้วย <code>next</code> — เข้าถึงสมาชิกลำดับที่ N ต้อง<strong>ไล่ทีละ node</strong>จากตัวแรกเสมอ (<code>O(n)</code> ไม่มีทาง "กระโดด" ไปตรงๆ เหมือน array) แต่การแทรก/ลบที่จุดใดจุดหนึ่ง (ถ้ามี reference ของ node ข้างเคียงอยู่แล้ว) ทำได้เร็วมาก (<code>O(1)</code>) เพราะแค่เปลี่ยน <code>next</code> ของ node ข้างเคียง ไม่ต้องขยับอะไรทั้งแถว<br/><br/>
-    ในงาน QA: ถ้ารายการ test data ถูก<strong>อ่านตามลำดับ index บ่อยๆ</strong> (เช่น "ดึง test case ที่ 5") array เหมาะกว่า แต่ถ้ารายการถูก<strong>แทรก/ลบกลางทางบ่อยๆ</strong> (เช่น คิวงานที่ถูก insert/cancel กลางคันตลอดเวลา) Linked List จะเลี่ยงต้นทุนขยับข้อมูลทั้งแถวได้ — เข้าใจ tradeoff นี้ช่วยเลือกโครงสร้างข้อมูลให้ helper function ของ automation ทำงานเร็วขึ้นจริง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Array</strong> เก็บข้อมูลต่อเนื่องกันในหน่วยความจำ เข้าถึงสมาชิกลำดับที่ N ได้ทันที (<code>arr[N]</code>) ด้วยความเร็ว <code>O(1)</code> — แต่การแทรก/ลบตรงกลาง array ต้องขยับสมาชิกที่เหลือทั้งหมด (<code>O(n)</code>)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในงาน QA: ถ้ารายการ test data ถูก<strong>อ่านตามลำดับ index บ่อยๆ</strong> (เช่น "ดึง test case ที่ 5") array เหมาะกว่า แต่ถ้ารายการถูก<strong>แทรก/ลบกลางทางบ่อยๆ</strong> (เช่น คิวงานที่ถูก insert/cancel กลางคันตลอดเวลา) Linked List จะเลี่ยงต้นทุนขยับข้อมูลทั้งแถวได้ — เข้าใจ tradeoff นี้ช่วยเลือกโครงสร้างข้อมูลให้ helper function ของ automation ทำงานเร็วขึ้นจริง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>Linked List</strong> เก็บข้อมูลเป็น "โซ่" ของ node แต่ละ node ชี้ไปยัง node ถัดไปด้วย <code>next</code> — เข้าถึงสมาชิกลำดับที่ N ต้อง<strong>ไล่ทีละ node</strong>จากตัวแรกเสมอ (<code>O(n)</code> ไม่มีทาง "กระโดด" ไปตรงๆ เหมือน array) แต่การแทรก/ลบที่จุดใดจุดหนึ่ง (ถ้ามี reference ของ node ข้างเคียงอยู่แล้ว) ทำได้เร็วมาก (<code>O(1)</code>) เพราะแค่เปลี่ยน <code>next</code> ของ node ข้างเคียง ไม่ต้องขยับอะไรทั้งแถว<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่างไล่ Linked List ที่มีอยู่แล้วเพื่ออ่านค่าทั้งหมด (ไม่ใช่คำตอบของโจทย์นี้)
 function linkedListToArray(head) {
   const result = [];
@@ -280,9 +309,12 @@ function linkedListToArray(head) {
   }
   return result;
 }`,
-    theory: `<strong>Hash Table</strong> (ใน JavaScript คือ <code>Set</code> และ <code>Map</code>) เก็บข้อมูลด้วยการคำนวณ "hash" ของค่าเพื่อหาตำแหน่งเก็บ/ค้นหาโดยตรง ทำให้ <code>.has()</code>, <code>.add()</code>, <code>.get()</code> ทำงานเฉลี่ย <code>O(1)</code> (คงที่) ไม่ว่าข้อมูลจะมีกี่ตัวก็ตาม — ต่างจากการ scan array ด้วย <code>.includes()</code>/<code>.indexOf()</code> ที่ต้องไล่ดูทีละตัวจนกว่าจะเจอ (<code>O(n)</code> ต่อครั้ง)<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Hash Table</strong> (ใน JavaScript คือ <code>Set</code> และ <code>Map</code>) เก็บข้อมูลด้วยการคำนวณ "hash" ของค่าเพื่อหาตำแหน่งเก็บ/ค้นหาโดยตรง ทำให้ <code>.has()</code>, <code>.add()</code>, <code>.get()</code> ทำงานเฉลี่ย <code>O(1)</code> (คงที่) ไม่ว่าข้อมูลจะมีกี่ตัวก็ตาม — ต่างจากการ scan array ด้วย <code>.includes()</code>/<code>.indexOf()</code> ที่ต้องไล่ดูทีละตัวจนกว่าจะเจอ (<code>O(n)</code> ต่อครั้ง)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Hash Table</strong> (ใน JavaScript คือ <code>Set</code> และ <code>Map</code>) เก็บข้อมูลด้วยการคำนวณ "hash" ของค่าเพื่อหาตำแหน่งเก็บ/ค้นหาโดยตรง ทำให้ <code>.has()</code>, <code>.add()</code>, <code>.get()</code> ทำงานเฉลี่ย <code>O(1)</code> (คงที่) ไม่ว่าข้อมูลจะมีกี่ตัวก็ตาม — ต่างจากการ scan array ด้วย <code>.includes()</code>/<code>.indexOf()</code> ที่ต้องไล่ดูทีละตัวจนกว่าจะเจอ (<code>O(n)</code> ต่อครั้ง)<br/><br/>
     ปัญหาคลาสสิกที่เจอบ่อย: ลบค่าซ้ำออกจาก array ด้วยการวนลูปแล้วเช็ค <code>if (!result.includes(item)) result.push(item)</code> — ดูเหมือนใช้ได้ แต่ <code>.includes()</code> ต้อง scan <code>result</code> ทั้งหมดทุกครั้งที่เรียก และ <code>result</code> ก็โตขึ้นเรื่อยๆ ทำให้รวมแล้วทั้งฟังก์ชันกลายเป็น <code>O(n^2)</code> — ที่ n=3,000 (จากตัวอย่างในบทนี้) วิธีนี้ทำงานหลักสิบล้านครั้ง ในขณะที่ใช้ <code>Set</code> ทำงานแค่ราวๆ 3,000 ครั้ง<br/><br/>
-    ต่อยอดจากบท "Big-O Notation" — นี่คือตัวอย่างจริงของการใช้ Hash Table เปลี่ยนงานจาก O(n^2) ให้เหลือ O(n) ซึ่งเป็นเทคนิคที่ใช้บ่อยที่สุดอย่างหนึ่งในงานเขียน test data generator/cleanup ที่ต้องจัดการข้อมูลจำนวนมาก`,
+    ต่อยอดจากบท "Big-O Notation" — นี่คือตัวอย่างจริงของการใช้ Hash Table เปลี่ยนงานจาก O(n^2) ให้เหลือ O(n) ซึ่งเป็นเทคนิคที่ใช้บ่อยที่สุดอย่างหนึ่งในงานเขียน test data generator/cleanup ที่ต้องจัดการข้อมูลจำนวนมาก<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ปัญหาคลาสสิกที่เจอบ่อย: ลบค่าซ้ำออกจาก array ด้วยการวนลูปแล้วเช็ค <code>if (!result.includes(item)) result.push(item)</code> — ดูเหมือนใช้ได้ แต่ <code>.includes()</code> ต้อง scan <code>result</code> ทั้งหมดทุกครั้งที่เรียก และ <code>result</code> ก็โตขึ้นเรื่อยๆ ทำให้รวมแล้วทั้งฟังก์ชันกลายเป็น <code>O(n^2)</code> — ที่ n=3,000 (จากตัวอย่างในบทนี้) วิธีนี้ทำงานหลักสิบล้านครั้ง ในขณะที่ใช้ <code>Set</code> ทำงานแค่ราวๆ 3,000 ครั้ง<br/><br/><br/>ต่อยอดจากบท "Big-O Notation" — นี่คือตัวอย่างจริงของการใช้ Hash Table เปลี่ยนงานจาก O(n^2) ให้เหลือ O(n) ซึ่งเป็นเทคนิคที่ใช้บ่อยที่สุดอย่างหนึ่งในงานเขียน test data generator/cleanup ที่ต้องจัดการข้อมูลจำนวนมาก`,
     example: `// ตัวอย่างใช้ Set เช็คสมาชิกร่วมระหว่าง 2 รายการ (ไม่ใช่คำตอบของโจทย์นี้)
 function findCommonTickers(listA, listB) {
   const setA = new Set(listA);
@@ -338,9 +370,10 @@ function findCommonTickers(listA, listB) {
   }
   return stack.length === 0;
 }`,
-    theory: `<strong>Stack</strong> คือโครงสร้างข้อมูลแบบ <strong>LIFO</strong> (Last In, First Out — เข้าหลังสุด ออกก่อน) มีแค่ 2 การกระทำหลัก: <code>push</code> (ใส่ไว้บนสุด) และ <code>pop</code> (เอาตัวบนสุดออก) — เปรียบเหมือนกองจานซ้อนกัน หยิบจานที่วางบนสุดออกก่อนเสมอ<br/><br/>
-    การเช็ควงเล็บเปิด-ปิดให้ครบและถูกลำดับคือ<strong>ตัวอย่างคลาสสิกที่สุดของ Stack</strong>: เจอวงเล็บเปิดให้ push เก็บไว้ พอเจอวงเล็บปิดให้ pop ตัวบนสุดออกมาเทียบว่าเป็นคู่กันไหม (วงเล็บปิดต้องจับคู่กับวงเล็บเปิดตัว<strong>ล่าสุด</strong>ที่ยังไม่ได้ปิด ตรงกับหลัก LIFO เป๊ะ) — <code>"([)]"</code> จะ fail เพราะพอเจอ <code>)</code> ตัวบนสุดของ stack คือ <code>[</code> ไม่ใช่ <code>(</code>ที่ควรจะจับคู่<br/><br/>
-    ในงาน QA เทคนิค Stack ยังใช้ตรวจสอบ<strong>ลำดับการรัน test</strong>ได้ด้วย เช่น teardown ต้องทำย้อนกลับตามลำดับ setup ที่ทำไว้ (setup A → B → C ต้อง teardown C → B → A) ซึ่งเป็นพฤติกรรม LIFO แบบเดียวกัน`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Stack</strong> คือโครงสร้างข้อมูลแบบ <strong>LIFO</strong> (Last In, First Out — เข้าหลังสุด ออกก่อน) มีแค่ 2 การกระทำหลัก: <code>push</code> (ใส่ไว้บนสุด) และ <code>pop</code> (เอาตัวบนสุดออก) — เปรียบเหมือนกองจานซ้อนกัน หยิบจานที่วางบนสุดออกก่อนเสมอ<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในงาน QA เทคนิค Stack ยังใช้ตรวจสอบ<strong>ลำดับการรัน test</strong>ได้ด้วย เช่น teardown ต้องทำย้อนกลับตามลำดับ setup ที่ทำไว้ (setup A → B → C ต้อง teardown C → B → A) ซึ่งเป็นพฤติกรรม LIFO แบบเดียวกัน<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> การเช็ควงเล็บเปิด-ปิดให้ครบและถูกลำดับคือ<strong>ตัวอย่างคลาสสิกที่สุดของ Stack</strong>: เจอวงเล็บเปิดให้ push เก็บไว้ พอเจอวงเล็บปิดให้ pop ตัวบนสุดออกมาเทียบว่าเป็นคู่กันไหม (วงเล็บปิดต้องจับคู่กับวงเล็บเปิดตัว<strong>ล่าสุด</strong>ที่ยังไม่ได้ปิด ตรงกับหลัก LIFO เป๊ะ) — <code>"([)]"</code> จะ fail เพราะพอเจอ <code>)</code> ตัวบนสุดของ stack คือ <code>[</code> ไม่ใช่ <code>(</code>ที่ควรจะจับคู่<br/><br/>`,
     example: `// ตัวอย่าง Stack ใช้ reverse ลำดับ (ไม่ใช่คำตอบของโจทย์นี้)
 function reverseWithStack(items) {
   const stack = [...items];
@@ -400,9 +433,12 @@ function reverseWithStack(items) {
     solution: `function sortResultsByTimestamp(results) {
   return [...results].sort((a, b) => a.timestamp - b.timestamp);
 }`,
-    theory: `<strong>Sorting</strong> คือการเรียงลำดับข้อมูล — สิ่งที่มักถูกมองข้ามคือ <strong>Stability</strong>: sort ที่ "stable" คือ sort ที่รายการซึ่งมีค่าเปรียบเทียบ<strong>เท่ากันเป๊ะ</strong> จะคง<strong>ลำดับสัมพัทธ์เดิม</strong>ไว้เหมือนก่อน sort ไม่ใช่สลับกันไปมาแบบสุ่ม<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Sorting</strong> คือการเรียงลำดับข้อมูล — สิ่งที่มักถูกมองข้ามคือ <strong>Stability</strong>: sort ที่ "stable" คือ sort ที่รายการซึ่งมีค่าเปรียบเทียบ<strong>เท่ากันเป๊ะ</strong> จะคง<strong>ลำดับสัมพัทธ์เดิม</strong>ไว้เหมือนก่อน sort ไม่ใช่สลับกันไปมาแบบสุ่ม<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Sorting</strong> คือการเรียงลำดับข้อมูล — สิ่งที่มักถูกมองข้ามคือ <strong>Stability</strong>: sort ที่ "stable" คือ sort ที่รายการซึ่งมีค่าเปรียบเทียบ<strong>เท่ากันเป๊ะ</strong> จะคง<strong>ลำดับสัมพัทธ์เดิม</strong>ไว้เหมือนก่อน sort ไม่ใช่สลับกันไปมาแบบสุ่ม<br/><br/>
     ในตัวอย่างนี้ r2, r3, r5 ทั้งสามตัวมี <code>timestamp = 100</code> เท่ากันเป๊ะ (เกิดจาก test run พร้อมกันแบบ parallel) — ถ้า sort ไม่ stable ลำดับของทั้งสามตัวหลัง sort อาจไม่ตรงกับลำดับที่เกิดขึ้นจริง ทำให้ report ที่แสดงผล "ใครรันก่อนใคร" ผิดเพี้ยนไปจากความเป็นจริงทั้งที่ timestamp ถูกต้องทุกตัว<br/><br/>
-    ข่าวดี: <code>Array.prototype.sort()</code> ใน JavaScript ตั้งแต่ ES2019 (V8/Node/เบราว์เซอร์สมัยใหม่ทุกตัว) รับประกัน stable โดยอัตโนมัติ — ไม่ต้องเขียนโค้ดพิเศษเพิ่ม แค่เขียน comparator ให้ถูกต้อง (เทียบเฉพาะ field ที่ต้องการจริงๆ) sort ก็จะ stable ให้เอง แต่ถ้าเขียน sorting algorithm เอง (เช่น quicksort แบบ swap ตำแหน่งง่ายๆ) มักจะ<strong>ไม่</strong> stable โดยไม่รู้ตัว`,
+    ข่าวดี: <code>Array.prototype.sort()</code> ใน JavaScript ตั้งแต่ ES2019 (V8/Node/เบราว์เซอร์สมัยใหม่ทุกตัว) รับประกัน stable โดยอัตโนมัติ — ไม่ต้องเขียนโค้ดพิเศษเพิ่ม แค่เขียน comparator ให้ถูกต้อง (เทียบเฉพาะ field ที่ต้องการจริงๆ) sort ก็จะ stable ให้เอง แต่ถ้าเขียน sorting algorithm เอง (เช่น quicksort แบบ swap ตำแหน่งง่ายๆ) มักจะ<strong>ไม่</strong> stable โดยไม่รู้ตัว<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ข่าวดี: <code>Array.prototype.sort()</code> ใน JavaScript ตั้งแต่ ES2019 (V8/Node/เบราว์เซอร์สมัยใหม่ทุกตัว) รับประกัน stable โดยอัตโนมัติ — ไม่ต้องเขียนโค้ดพิเศษเพิ่ม แค่เขียน comparator ให้ถูกต้อง (เทียบเฉพาะ field ที่ต้องการจริงๆ) sort ก็จะ stable ให้เอง แต่ถ้าเขียน sorting algorithm เอง (เช่น quicksort แบบ swap ตำแหน่งง่ายๆ) มักจะ<strong>ไม่</strong> stable โดยไม่รู้ตัว<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ในตัวอย่างนี้ r2, r3, r5 ทั้งสามตัวมี <code>timestamp = 100</code> เท่ากันเป๊ะ (เกิดจาก test run พร้อมกันแบบ parallel) — ถ้า sort ไม่ stable ลำดับของทั้งสามตัวหลัง sort อาจไม่ตรงกับลำดับที่เกิดขึ้นจริง ทำให้ report ที่แสดงผล "ใครรันก่อนใคร" ผิดเพี้ยนไปจากความเป็นจริงทั้งที่ timestamp ถูกต้องทุกตัว<br/><br/>`,
     example: `// ตัวอย่าง sort ที่ไม่ใช่ stable-sensitive (เรียงแค่ field เดียว ไม่มีค่าเท่ากันชนกัน)
 function sortByCostDesc(items) {
   return [...items].sort((a, b) => b.cost - a.cost);
@@ -467,9 +503,10 @@ function sortByCostDesc(items) {
   }
   return -1;
 }`,
-    theory: `<strong>Linear Search</strong> ไล่ดูทีละตัวจากต้นจนจบ (<code>O(n)</code>) ใช้ได้กับข้อมูลไม่เรียงลำดับ — <strong>Binary Search</strong> ใช้ได้เฉพาะข้อมูลที่<strong>เรียงลำดับแล้ว</strong>เท่านั้น แต่แลกมาด้วยความเร็วระดับ <code>O(log n)</code>: แบ่งครึ่งช่วงค้นหาทุกรอบ เทียบค่าตรงกลางกับ target แล้วตัดครึ่งที่ไม่เกี่ยวทิ้งไปเลย<br/><br/>
-    ความต่างของความเร็วมหาศาลเมื่อข้อมูลใหญ่ขึ้น: fixture ขนาด 100,000 รายการ (ตามตัวอย่างในบทนี้) Linear Search อาจต้องเช็คถึง 100,000 ครั้งในกรณีแย่สุด ในขณะที่ Binary Search ใช้แค่ราวๆ <code>log2(100,000) ≈ 17</code> ครั้งเท่านั้น — นี่คือเหตุผลที่ต่อยอดจากบท "Big-O Notation": <code>O(log n)</code> โตช้ากว่า <code>O(n)</code> อย่างมหาศาลเมื่อ n ใหญ่ขึ้น<br/><br/>
-    ในงาน QA เทคนิคนี้มีประโยชน์ตอนต้อง<strong>ค้นหาค่าคาดหวัง (expected value) จาก fixture ขนาดใหญ่ที่เรียงลำดับไว้แล้ว</strong> — ถ้า fixture ไม่ได้เรียงลำดับไว้ก่อน ต้องแลกด้วยการ sort ก่อน (O(n log n) ตามบทที่แล้ว) ซึ่งคุ้มค่าถ้าต้องค้นหาซ้ำหลายครั้งบน fixture เดียวกัน`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Linear Search</strong> ไล่ดูทีละตัวจากต้นจนจบ (<code>O(n)</code>) ใช้ได้กับข้อมูลไม่เรียงลำดับ — <strong>Binary Search</strong> ใช้ได้เฉพาะข้อมูลที่<strong>เรียงลำดับแล้ว</strong>เท่านั้น แต่แลกมาด้วยความเร็วระดับ <code>O(log n)</code>: แบ่งครึ่งช่วงค้นหาทุกรอบ เทียบค่าตรงกลางกับ target แล้วตัดครึ่งที่ไม่เกี่ยวทิ้งไปเลย<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในงาน QA เทคนิคนี้มีประโยชน์ตอนต้อง<strong>ค้นหาค่าคาดหวัง (expected value) จาก fixture ขนาดใหญ่ที่เรียงลำดับไว้แล้ว</strong> — ถ้า fixture ไม่ได้เรียงลำดับไว้ก่อน ต้องแลกด้วยการ sort ก่อน (O(n log n) ตามบทที่แล้ว) ซึ่งคุ้มค่าถ้าต้องค้นหาซ้ำหลายครั้งบน fixture เดียวกัน<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ความต่างของความเร็วมหาศาลเมื่อข้อมูลใหญ่ขึ้น: fixture ขนาด 100,000 รายการ (ตามตัวอย่างในบทนี้) Linear Search อาจต้องเช็คถึง 100,000 ครั้งในกรณีแย่สุด ในขณะที่ Binary Search ใช้แค่ราวๆ <code>log2(100,000) ≈ 17</code> ครั้งเท่านั้น — นี่คือเหตุผลที่ต่อยอดจากบท "Big-O Notation": <code>O(log n)</code> โตช้ากว่า <code>O(n)</code> อย่างมหาศาลเมื่อ n ใหญ่ขึ้น<br/><br/>`,
     example: `// ตัวอย่าง Linear Search (ใช้ได้กับข้อมูลไม่เรียงลำดับ แต่ช้ากว่าถ้าข้อมูลใหญ่และเรียงแล้ว)
 function linearSearch(values, target) {
   for (let i = 0; i < values.length; i++) {
@@ -531,9 +568,10 @@ function linearSearch(values, target) {
   }
   return 0;
 }`,
-    theory: `<strong>Recursion</strong> (การเรียกตัวเอง) คือเทคนิคที่ฟังก์ชันเรียกตัวมันเองซ้ำๆ จนกว่าจะถึง <strong>base case</strong> (กรณีฐานที่หยุดเรียกตัวเองและคืนค่าตรงๆ) — ทุกฟังก์ชัน recursive ต้องมี base case ไม่งั้นจะเรียกตัวเองไม่รู้จบจน stack overflow<br/><br/>
-    ในบทนี้ base case คือ "node เป็นตัวเลขล้วนๆ แล้ว" (คืนค่าตรงๆ ไม่ต้องเรียกตัวเองต่อ) ส่วน recursive case คือ "node ยังเป็น array หรือ object อยู่" (ต้องไล่เข้าไปข้างในต่อ) — โครงสร้าง fixture ที่ซ้อนกันกี่ชั้นก็ตาม (array ใน object ใน array ใน object...) recursion จะไล่ลงไปเรื่อยๆ จนเจอ base case ในทุกกิ่งแล้วรวมผลกลับขึ้นมา<br/><br/>
-    ในงาน QA เทคนิคนี้ใช้บ่อยมากตอนต้อง<strong>เขียน test data generator หรือ diff-checker ของ nested JSON fixture</strong> ที่ไม่รู้ล่วงหน้าว่าจะซ้อนลึกกี่ชั้น — เขียนแบบ recursive ทำให้รองรับความลึกเท่าไหร่ก็ได้โดยไม่ต้องเขียนลูปซ้อนลูปตายตัวตามจำนวนชั้นที่คาดเดาไว้`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Recursion</strong> (การเรียกตัวเอง) คือเทคนิคที่ฟังก์ชันเรียกตัวมันเองซ้ำๆ จนกว่าจะถึง <strong>base case</strong> (กรณีฐานที่หยุดเรียกตัวเองและคืนค่าตรงๆ) — ทุกฟังก์ชัน recursive ต้องมี base case ไม่งั้นจะเรียกตัวเองไม่รู้จบจน stack overflow<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในบทนี้ base case คือ "node เป็นตัวเลขล้วนๆ แล้ว" (คืนค่าตรงๆ ไม่ต้องเรียกตัวเองต่อ) ส่วน recursive case คือ "node ยังเป็น array หรือ object อยู่" (ต้องไล่เข้าไปข้างในต่อ) — โครงสร้าง fixture ที่ซ้อนกันกี่ชั้นก็ตาม (array ใน object ใน array ใน object...) recursion จะไล่ลงไปเรื่อยๆ จนเจอ base case ในทุกกิ่งแล้วรวมผลกลับขึ้นมา<br/><br/><br/>ในงาน QA เทคนิคนี้ใช้บ่อยมากตอนต้อง<strong>เขียน test data generator หรือ diff-checker ของ nested JSON fixture</strong> ที่ไม่รู้ล่วงหน้าว่าจะซ้อนลึกกี่ชั้น — เขียนแบบ recursive ทำให้รองรับความลึกเท่าไหร่ก็ได้โดยไม่ต้องเขียนลูปซ้อนลูปตายตัวตามจำนวนชั้นที่คาดเดาไว้<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง recursion นับจำนวน key ทั้งหมดในโครงสร้างที่ซ้อนกัน (ไม่ใช่คำตอบของโจทย์นี้)
 function countAllKeys(node) {
   if (!node || typeof node !== 'object') return 0;
@@ -602,9 +640,10 @@ function countAllKeys(node) {
   if (node.children.length === 0) return 1;
   return node.children.reduce((sum, child) => sum + countLeafTestCases(child), 0);
 }`,
-    theory: `<strong>Tree</strong> คือโครงสร้างข้อมูลแบบลำดับชั้น: มี node ราก (root) และแต่ละ node มี "ลูก" (children) ได้หลายตัว — node ที่ไม่มีลูกเรียกว่า <strong>leaf</strong> (ใบไม้) node ที่มีลูกเรียกว่า <strong>internal node</strong><br/><br/>
-    <code>describe</code>/<code>test</code> block ของ framework ทดสอบสมัยใหม่ (Playwright, Jest, Mocha) มีโครงสร้างเป็น Tree โดยธรรมชาติ: <code>describe</code> คือ internal node (กลุ่ม ไม่ใช่ test จริง) ส่วน <code>test</code>/<code>it</code> คือ leaf (test case ที่รันได้จริง) — การนับว่า "suite นี้มีกี่ test case จริง" คือการนับ leaf ทั้งหมดของ tree ไม่ใช่นับ node ทั้งหมด (ซึ่งจะรวม describe ที่ไม่ใช่ test เข้าไปด้วยผิดๆ)<br/><br/>
-    เทคนิคไล่ tree แบบนี้เรียกว่า <strong>Tree Traversal</strong> ต่อยอดโดยตรงจากบท "Recursion" ก่อนหน้า — base case คือเจอ leaf (คืนค่า 1 ทันที) recursive case คือยังมีลูกอยู่ (ไล่เข้าไปนับในลูกแต่ละตัวแล้วรวมกัน) การเข้าใจโครงสร้างนี้ช่วยเขียนเครื่องมือวิเคราะห์ test suite (เช่น "มี test จริงกี่ตัว", "suite ไหนลึกเกินไป") ได้ตรงไปตรงมา`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Tree</strong> คือโครงสร้างข้อมูลแบบลำดับชั้น: มี node ราก (root) และแต่ละ node มี "ลูก" (children) ได้หลายตัว — node ที่ไม่มีลูกเรียกว่า <strong>leaf</strong> (ใบไม้) node ที่มีลูกเรียกว่า <strong>internal node</strong><br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เทคนิคไล่ tree แบบนี้เรียกว่า <strong>Tree Traversal</strong> ต่อยอดโดยตรงจากบท "Recursion" ก่อนหน้า — base case คือเจอ leaf (คืนค่า 1 ทันที) recursive case คือยังมีลูกอยู่ (ไล่เข้าไปนับในลูกแต่ละตัวแล้วรวมกัน) การเข้าใจโครงสร้างนี้ช่วยเขียนเครื่องมือวิเคราะห์ test suite (เช่น "มี test จริงกี่ตัว", "suite ไหนลึกเกินไป") ได้ตรงไปตรงมา<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>describe</code>/<code>test</code> block ของ framework ทดสอบสมัยใหม่ (Playwright, Jest, Mocha) มีโครงสร้างเป็น Tree โดยธรรมชาติ: <code>describe</code> คือ internal node (กลุ่ม ไม่ใช่ test จริง) ส่วน <code>test</code>/<code>it</code> คือ leaf (test case ที่รันได้จริง) — การนับว่า "suite นี้มีกี่ test case จริง" คือการนับ leaf ทั้งหมดของ tree ไม่ใช่นับ node ทั้งหมด (ซึ่งจะรวม describe ที่ไม่ใช่ test เข้าไปด้วยผิดๆ)<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง Tree Traversal หาความลึกสูงสุดของ suite (ไม่ใช่คำตอบของโจทย์นี้)
 function maxDepth(node) {
   if (node.children.length === 0) return 1;
@@ -678,9 +717,10 @@ function maxDepth(node) {
   }
   return false;
 }`,
-    theory: `<strong>Graph</strong> คือโครงสร้างข้อมูลของ "node" ที่เชื่อมกันด้วย "edge" แบบอิสระ (ต่างจาก Tree ที่มีลำดับชั้นชัดเจน โหนดหนึ่งเชื่อมกับโหนดไหนก็ได้ไม่จำกัด) — CI pipeline dependency คือ Graph แบบ <strong>directed</strong> (edge มีทิศทาง: "A รอ B" ไม่ได้แปลว่า "B รอ A")<br/><br/>
-    การหา <strong>circular dependency</strong> คือการหาว่ามี "cycle" ในกราฟหรือไม่ (ไล่ตามทิศทาง edge ไปเรื่อยๆ แล้ววนกลับมาเจอ node เดิมที่ยังไล่ไม่จบ) — เทคนิคมาตรฐานคือ <strong>DFS (Depth-First Search)</strong> ต่อยอดจากบท "Trees" (การไล่ tree ก็คือ DFS แบบหนึ่ง) แต่ต้องเพิ่มการ<strong>แยกสถานะ 2 แบบ</strong>: node ที่ "อยู่ในสายที่กำลังไล่อยู่ตอนนี้" (visiting) กับ node ที่ "ไล่จบสมบูรณ์ไปแล้วก่อนหน้านี้" (visited) — ถ้าไล่แล้วเจอ node ที่ยัง "visiting" อยู่ (ยังไม่จบสาย) แปลว่าวนกลับมาเจอตัวเองจริงๆ คือ cycle<br/><br/>
-    ในงาน QA/DevOps เทคนิคนี้ป้องกันปัญหา CI pipeline ที่ deadlock (รอกันไม่จบ) ก่อน deploy จริง เช็คได้ตั้งแต่ตอน parse ไฟล์ config ของ pipeline โดยไม่ต้องรอให้รันจริงแล้วค้างไม่จบ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Graph</strong> คือโครงสร้างข้อมูลของ "node" ที่เชื่อมกันด้วย "edge" แบบอิสระ (ต่างจาก Tree ที่มีลำดับชั้นชัดเจน โหนดหนึ่งเชื่อมกับโหนดไหนก็ได้ไม่จำกัด) — CI pipeline dependency คือ Graph แบบ <strong>directed</strong> (edge มีทิศทาง: "A รอ B" ไม่ได้แปลว่า "B รอ A")<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การหา <strong>circular dependency</strong> คือการหาว่ามี "cycle" ในกราฟหรือไม่ (ไล่ตามทิศทาง edge ไปเรื่อยๆ แล้ววนกลับมาเจอ node เดิมที่ยังไล่ไม่จบ) — เทคนิคมาตรฐานคือ <strong>DFS (Depth-First Search)</strong> ต่อยอดจากบท "Trees" (การไล่ tree ก็คือ DFS แบบหนึ่ง) แต่ต้องเพิ่มการ<strong>แยกสถานะ 2 แบบ</strong>: node ที่ "อยู่ในสายที่กำลังไล่อยู่ตอนนี้" (visiting) กับ node ที่ "ไล่จบสมบูรณ์ไปแล้วก่อนหน้านี้" (visited) — ถ้าไล่แล้วเจอ node ที่ยัง "visiting" อยู่ (ยังไม่จบสาย) แปลว่าวนกลับมาเจอตัวเองจริงๆ คือ cycle<br/><br/><br/>ในงาน QA/DevOps เทคนิคนี้ป้องกันปัญหา CI pipeline ที่ deadlock (รอกันไม่จบ) ก่อน deploy จริง เช็คได้ตั้งแต่ตอน parse ไฟล์ config ของ pipeline โดยไม่ต้องรอให้รันจริงแล้วค้างไม่จบ<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง DFS ธรรมดา (ไม่เช็ค cycle) หาว่า job ปลายทางไปถึงได้จาก job เริ่มต้นหรือไม่
 function canReach(graph, from, to, seen = new Set()) {
   if (from === to) return true;
@@ -745,9 +785,10 @@ function canReach(graph, from, to, seen = new Set()) {
   }
   return matched.size;
 }`,
-    theory: `บทนี้รวมทุกอย่างที่เรียนมาในเทรคนี้เข้าด้วยกัน: การจับคู่ข้อมูลระหว่าง 2 รายการ (เช่น "expected vs actual" ที่ QA เจอแทบทุกวัน) ถ้าเขียนแบบไร้เดียงสาด้วย nested loop (วนลูปนอกไล่ <code>expected</code> ทีละตัว วนลูปในไล่ <code>actual</code> ทีละตัวเทียบกัน) จะได้ความซับซ้อน <code>O(n*m)</code> — ที่ n=m=2,500 (ตามตัวอย่างในบทนี้) วิธีนี้ทำงานประมาณ 6.25 ล้านครั้ง<br/><br/>
-    ทางแก้ต่อยอดจากบท "Hash Table / Set": สร้าง <code>Set</code> จากฝั่งใดฝั่งหนึ่งก่อน (ใช้เวลา O(n) ครั้งเดียว) แล้ววนลูปอีกฝั่งแค่รอบเดียว เช็คแต่ละตัวกับ Set นั้น (O(1) ต่อครั้ง) รวมทั้งหมดกลายเป็น <code>O(n+m)</code> — ที่ n=m=2,500 เหลือแค่ราวๆ 5,000 ครั้ง เร็วกว่าวิธี nested loop กว่า 1,000 เท่า<br/><br/>
-    นี่คือรูปแบบการคิดที่ต้องฝึกให้เป็นสัญชาตญาณในงาน QA: ทุกครั้งที่เห็นตัวเองกำลังจะเขียน nested loop เทียบข้อมูล 2 ชุด ให้ถามตัวเองก่อนว่า "แปลงฝั่งใดฝั่งหนึ่งเป็น Set ก่อนได้ไหม" — เกือบทุกครั้งคำตอบคือได้ และเปลี่ยนจาก O(n*m) เป็น O(n+m) ได้ทันที`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Big-O ของ Nested Loop: จับ Bug ประสิทธิภาพจากการจับคู่ข้อมูล 2 ชุด และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>นี่คือรูปแบบการคิดที่ต้องฝึกให้เป็นสัญชาตญาณในงาน QA: ทุกครั้งที่เห็นตัวเองกำลังจะเขียน nested loop เทียบข้อมูล 2 ชุด ให้ถามตัวเองก่อนว่า "แปลงฝั่งใดฝั่งหนึ่งเป็น Set ก่อนได้ไหม" — เกือบทุกครั้งคำตอบคือได้ และเปลี่ยนจาก O(n*m) เป็น O(n+m) ได้ทันที<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ทางแก้ต่อยอดจากบท "Hash Table / Set": สร้าง <code>Set</code> จากฝั่งใดฝั่งหนึ่งก่อน (ใช้เวลา O(n) ครั้งเดียว) แล้ววนลูปอีกฝั่งแค่รอบเดียว เช็คแต่ละตัวกับ Set นั้น (O(1) ต่อครั้ง) รวมทั้งหมดกลายเป็น <code>O(n+m)</code> — ที่ n=m=2,500 เหลือแค่ราวๆ 5,000 ครั้ง เร็วกว่าวิธี nested loop กว่า 1,000 เท่า<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่างใช้เทคนิคเดียวกันหาค่าที่อยู่ฝั่งเดียว (expected เท่านั้น ไม่มีใน actual)
 function findMissingValues(expected, actual) {
   const actualSet = new Set(actual);
@@ -805,9 +846,12 @@ function findMissingValues(expected, actual) {
   cache[n] = result;
   return result;
 }`,
-    theory: `<strong>Dynamic Programming (DP)</strong> คือเทคนิคเพิ่มประสิทธิภาพของปัญหาที่ recursive function คำนวณค่าเดิมซ้ำหลายรอบ — <strong>Memoization</strong> คือรูปแบบพื้นฐานที่สุดของ DP: เก็บผลลัพธ์ที่เคยคำนวณแล้วไว้ใน cache แล้วเช็ค cache ก่อนคำนวณใหม่ทุกครั้ง<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Dynamic Programming (DP)</strong> คือเทคนิคเพิ่มประสิทธิภาพของปัญหาที่ recursive function คำนวณค่าเดิมซ้ำหลายรอบ — <strong>Memoization</strong> คือรูปแบบพื้นฐานที่สุดของ DP: เก็บผลลัพธ์ที่เคยคำนวณแล้วไว้ใน cache แล้วเช็ค cache ก่อนคำนวณใหม่ทุกครั้ง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Dynamic Programming (DP)</strong> คือเทคนิคเพิ่มประสิทธิภาพของปัญหาที่ recursive function คำนวณค่าเดิมซ้ำหลายรอบ — <strong>Memoization</strong> คือรูปแบบพื้นฐานที่สุดของ DP: เก็บผลลัพธ์ที่เคยคำนวณแล้วไว้ใน cache แล้วเช็ค cache ก่อนคำนวณใหม่ทุกครั้ง<br/><br/>
     <code>countPossibleTestPaths(n)</code> มีรูปแบบเดียวกับ Fibonacci: <code>f(n) = f(n-1) + f(n-2)</code> — ถ้าเขียนแบบ recursive ล้วนๆ ไม่มี cache การคำนวณ <code>f(42)</code> จะเรียก <code>f(41)</code> และ <code>f(40)</code> แต่ <code>f(41)</code> เองก็เรียก <code>f(40)</code> ซ้ำอีกที (คนละ call กัน) — ยิ่ง n ใหญ่ขึ้น จำนวนการเรียกซ้ำโตแบบ<strong>เอ็กซ์โพเนนเชียล</strong> (<code>O(2^n)</code>) ที่ n=42 คือเรียกฟังก์ชันรวมกันหลายร้อยล้านครั้ง ใช้เวลาหลักวินาทีเป็นต้นไป<br/><br/>
-    Memoization แก้ปัญหานี้ด้วยการสังเกตว่า <code>f(33)</code> มีค่าเดียวเสมอไม่ว่าจะถูกเรียกจากที่ไหน — คำนวณครั้งแรกแล้วเก็บไว้ ครั้งต่อไปที่ต้องใช้ค่าเดิมก็หยิบจาก cache แทนคำนวณใหม่ ทำให้ทั้งฟังก์ชันเหลือความซับซ้อนแค่ <code>O(n)</code> (คำนวณแต่ละค่าของ n แค่ครั้งเดียว) — ในงาน QA เทคนิคนี้ใช้ได้ทุกครั้งที่ helper function มีการคำนวณค่าเดิมซ้ำๆ จากอินพุตเดิม เช่น การประเมิน combination ของ test parameter ที่ซ้อนทับกัน — cache ผลลัพธ์ของแต่ละ combination ที่เคยประเมินแล้วไม่ให้ต้องคำนวณซ้ำ`,
+    Memoization แก้ปัญหานี้ด้วยการสังเกตว่า <code>f(33)</code> มีค่าเดียวเสมอไม่ว่าจะถูกเรียกจากที่ไหน — คำนวณครั้งแรกแล้วเก็บไว้ ครั้งต่อไปที่ต้องใช้ค่าเดิมก็หยิบจาก cache แทนคำนวณใหม่ ทำให้ทั้งฟังก์ชันเหลือความซับซ้อนแค่ <code>O(n)</code> (คำนวณแต่ละค่าของ n แค่ครั้งเดียว) — ในงาน QA เทคนิคนี้ใช้ได้ทุกครั้งที่ helper function มีการคำนวณค่าเดิมซ้ำๆ จากอินพุตเดิม เช่น การประเมิน combination ของ test parameter ที่ซ้อนทับกัน — cache ผลลัพธ์ของแต่ละ combination ที่เคยประเมินแล้วไม่ให้ต้องคำนวณซ้ำ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>countPossibleTestPaths(n)</code> มีรูปแบบเดียวกับ Fibonacci: <code>f(n) = f(n-1) + f(n-2)</code> — ถ้าเขียนแบบ recursive ล้วนๆ ไม่มี cache การคำนวณ <code>f(42)</code> จะเรียก <code>f(41)</code> และ <code>f(40)</code> แต่ <code>f(41)</code> เองก็เรียก <code>f(40)</code> ซ้ำอีกที (คนละ call กัน) — ยิ่ง n ใหญ่ขึ้น จำนวนการเรียกซ้ำโตแบบ<strong>เอ็กซ์โพเนนเชียล</strong> (<code>O(2^n)</code>) ที่ n=42 คือเรียกฟังก์ชันรวมกันหลายร้อยล้านครั้ง ใช้เวลาหลักวินาทีเป็นต้นไป<br/><br/><br/>Memoization แก้ปัญหานี้ด้วยการสังเกตว่า <code>f(33)</code> มีค่าเดียวเสมอไม่ว่าจะถูกเรียกจากที่ไหน — คำนวณครั้งแรกแล้วเก็บไว้ ครั้งต่อไปที่ต้องใช้ค่าเดิมก็หยิบจาก cache แทนคำนวณใหม่ ทำให้ทั้งฟังก์ชันเหลือความซับซ้อนแค่ <code>O(n)</code> (คำนวณแต่ละค่าของ n แค่ครั้งเดียว) — ในงาน QA เทคนิคนี้ใช้ได้ทุกครั้งที่ helper function มีการคำนวณค่าเดิมซ้ำๆ จากอินพุตเดิม เช่น การประเมิน combination ของ test parameter ที่ซ้อนทับกัน — cache ผลลัพธ์ของแต่ละ combination ที่เคยประเมินแล้วไม่ให้ต้องคำนวณซ้ำ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง memoization ด้วย Map แทน object literal (กันปัญหา key ชนกับ prototype property)
 function fibWithMap(n, cache = new Map()) {
   if (n <= 1) return n;
@@ -884,9 +928,10 @@ function fibWithMap(n, cache = new Map()) {
     return this.items.length === 0;
   }
 }`,
-    theory: `<strong>Queue</strong> คือโครงสร้างข้อมูลแบบ <strong>FIFO</strong> (First In, First Out — เข้าก่อน ออกก่อน) ตรงข้ามกับ <strong>Stack</strong> (บทที่แล้ว) ที่เป็น LIFO — เปรียบเหมือนคิวต่อแถวจริงๆ คนที่มาต่อคิวก่อนได้รับบริการก่อนเสมอ ไม่ว่าจะมีคนมาต่อแถวเพิ่มกี่คนก็ตาม<br/><br/>
-    ใน CI/CD Pipeline งานที่ถูก trigger (เช่น job ที่รอ runner ว่าง) มักจะประมวลผลแบบ FIFO เพื่อความยุติธรรม — job ที่ trigger ก่อนควรได้รันก่อน ไม่ใช่ให้ job ที่เพิ่ง trigger ล่าสุดแซงคิวไปรันก่อน (ซึ่งจะเกิดขึ้นถ้าใช้ Stack โดยไม่ตั้งใจ)<br/><br/>
-    <strong>ข้อสังเกตเรื่อง Big-O:</strong> โซลูชันในบทนี้ใช้ <code>Array.prototype.shift()</code> ซึ่งจริงๆ แล้วเป็น <code>O(n)</code> ต่อครั้ง (ต้องขยับสมาชิกที่เหลือทุกตัวมาชิดซ้าย 1 ตำแหน่ง — เชื่อมกับบท "Array vs Linked List" ก่อนหน้านี้) ถ้าต้องเรียก dequeue บ่อยมากกับคิวขนาดใหญ่ ควรพิจารณาใช้ Linked List หรือ index สองตัว (head/tail pointer) แทน เพื่อให้ dequeue เป็น <code>O(1)</code> จริง แต่สำหรับคิวขนาดทั่วไปในงาน QA เช่น mock job queue การใช้ array ธรรมดาแบบนี้เพียงพอแล้ว`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Queue</strong> คือโครงสร้างข้อมูลแบบ <strong>FIFO</strong> (First In, First Out — เข้าก่อน ออกก่อน) ตรงข้ามกับ <strong>Stack</strong> (บทที่แล้ว) ที่เป็น LIFO — เปรียบเหมือนคิวต่อแถวจริงๆ คนที่มาต่อคิวก่อนได้รับบริการก่อนเสมอ ไม่ว่าจะมีคนมาต่อแถวเพิ่มกี่คนก็ตาม<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ใน CI/CD Pipeline งานที่ถูก trigger (เช่น job ที่รอ runner ว่าง) มักจะประมวลผลแบบ FIFO เพื่อความยุติธรรม — job ที่ trigger ก่อนควรได้รันก่อน ไม่ใช่ให้ job ที่เพิ่ง trigger ล่าสุดแซงคิวไปรันก่อน (ซึ่งจะเกิดขึ้นถ้าใช้ Stack โดยไม่ตั้งใจ)<br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ข้อสังเกตเรื่อง Big-O:</strong> โซลูชันในบทนี้ใช้ <code>Array.prototype.shift()</code> ซึ่งจริงๆ แล้วเป็น <code>O(n)</code> ต่อครั้ง (ต้องขยับสมาชิกที่เหลือทุกตัวมาชิดซ้าย 1 ตำแหน่ง — เชื่อมกับบท "Array vs Linked List" ก่อนหน้านี้) ถ้าต้องเรียก dequeue บ่อยมากกับคิวขนาดใหญ่ ควรพิจารณาใช้ Linked List หรือ index สองตัว (head/tail pointer) แทน เพื่อให้ dequeue เป็น <code>O(1)</code> จริง แต่สำหรับคิวขนาดทั่วไปในงาน QA เช่น mock job queue การใช้ array ธรรมดาแบบนี้เพียงพอแล้ว<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง Queue ใช้จำลองคิวรอ retry ของ test ที่ fail (ไม่ใช่คำตอบของโจทย์นี้)
 class RetryQueue extends JobQueue {
   hasMore() {
@@ -961,9 +1006,10 @@ class RetryQueue extends JobQueue {
   }
   return -1;
 }`,
-    theory: `<strong>BFS (Breadth-First Search)</strong> ไล่กราฟทีละ "ชั้น" (level) จากจุดเริ่มต้น — เยือนเพื่อนบ้านโดยตรงทั้งหมดก่อน แล้วค่อยไปเพื่อนบ้านของเพื่อนบ้าน (ชั้นที่ 2) แล้วค่อยชั้นที่ 3 ไปเรื่อยๆ ต่างจาก <strong>DFS</strong> (บท "Graphs" ก่อนหน้า) ที่ลงลึกไปตามเส้นทางเดียวก่อนจนสุดทาง แล้วค่อยย้อนกลับมาลองเส้นทางอื่น<br/><br/>
-    คุณสมบัติสำคัญของ BFS: เพราะไล่ทีละชั้นเรียงจากใกล้ไปไกล <strong>node แรกที่เจอ end คือระยะทางสั้นที่สุดเสมอ</strong> (ในกราฟที่ไม่มีน้ำหนักบนเส้นเชื่อม) — DFS ไม่มีคุณสมบัตินี้ เพราะอาจดิ่งลงเส้นทางยาวก่อนโดยบังเอิญ แล้วเจอ end ที่นั่นทั้งที่มีทางลัดสั้นกว่าอยู่<br/><br/>
-    เครื่องมือที่ทำให้ BFS ไล่ "ทีละชั้น" ได้ถูกต้องคือ <strong>Queue</strong> (FIFO จากบทที่แล้ว) — ใส่ node ที่ยังไม่ได้เยือนเข้าคิวตามลำดับที่ค้นพบ แล้ว dequeue ออกมาตามลำดับเดียวกัน ทำให้ node ที่ใกล้กว่าเสมอถูกประมวลผลก่อน node ที่ไกลกว่า (ถ้าใช้ Stack แทน Queue ตรงนี้ จะกลายเป็น DFS ทันที) — ในงาน QA เทคนิคนี้ตอบคำถาม "ต้องผ่านกี่ job/service ถึงจะไปถึงเป้าหมาย" ซึ่งมีประโยชน์ตอนวิเคราะห์ CI dependency graph หรือ service call graph ที่ซับซ้อน`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>BFS (Breadth-First Search)</strong> ไล่กราฟทีละ "ชั้น" (level) จากจุดเริ่มต้น — เยือนเพื่อนบ้านโดยตรงทั้งหมดก่อน แล้วค่อยไปเพื่อนบ้านของเพื่อนบ้าน (ชั้นที่ 2) แล้วค่อยชั้นที่ 3 ไปเรื่อยๆ ต่างจาก <strong>DFS</strong> (บท "Graphs" ก่อนหน้า) ที่ลงลึกไปตามเส้นทางเดียวก่อนจนสุดทาง แล้วค่อยย้อนกลับมาลองเส้นทางอื่น<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>คุณสมบัติสำคัญของ BFS: เพราะไล่ทีละชั้นเรียงจากใกล้ไปไกล <strong>node แรกที่เจอ end คือระยะทางสั้นที่สุดเสมอ</strong> (ในกราฟที่ไม่มีน้ำหนักบนเส้นเชื่อม) — DFS ไม่มีคุณสมบัตินี้ เพราะอาจดิ่งลงเส้นทางยาวก่อนโดยบังเอิญ แล้วเจอ end ที่นั่นทั้งที่มีทางลัดสั้นกว่าอยู่<br/><br/><br/>เครื่องมือที่ทำให้ BFS ไล่ "ทีละชั้น" ได้ถูกต้องคือ <strong>Queue</strong> (FIFO จากบทที่แล้ว) — ใส่ node ที่ยังไม่ได้เยือนเข้าคิวตามลำดับที่ค้นพบ แล้ว dequeue ออกมาตามลำดับเดียวกัน ทำให้ node ที่ใกล้กว่าเสมอถูกประมวลผลก่อน node ที่ไกลกว่า (ถ้าใช้ Stack แทน Queue ตรงนี้ จะกลายเป็น DFS ทันที) — ในงาน QA เทคนิคนี้ตอบคำถาม "ต้องผ่านกี่ job/service ถึงจะไปถึงเป้าหมาย" ซึ่งมีประโยชน์ตอนวิเคราะห์ CI dependency graph หรือ service call graph ที่ซับซ้อน<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่าง BFS แบบเดียวกันแต่เก็บ "เส้นทาง" ทั้งเส้นแทนแค่ระยะทาง (ไม่ใช่คำตอบของโจทย์นี้)
 function shortestPathRoute(graph, start, end) {
   const visited = new Set([start]);
@@ -1080,10 +1126,10 @@ function shortestPathRoute(graph, start, end) {
     return this.heap.length === 0;
   }
 }`,
-    theory: `<strong>Priority Queue</strong> คือโครงสร้างที่คืนค่า "item ที่สำคัญที่สุด" ออกมาก่อนเสมอ (ในบทนี้คือ priority น้อยที่สุด = เร่งด่วนที่สุด) ไม่สนใจลำดับการเพิ่มเข้ามาเลย — ต่างจาก Queue (FIFO) และ Stack (LIFO) ที่สนใจแค่ "เข้ามาตอนไหน"<br/><br/>
-    เบื้องหลัง Priority Queue ที่มีประสิทธิภาพมักสร้างจาก <strong>Binary Heap</strong>: โครงสร้างต้นไม้ (ต่อยอดจากบท "Trees") ที่เก็บอยู่ใน array เดียว โดยรับประกันว่า node แม่ (parent) ต้องมี priority น้อยกว่าหรือเท่ากับ node ลูกเสมอ (Min-Heap Property) — ทำให้ item ที่ priority น้อยที่สุดอยู่ตำแหน่งบนสุด (index 0) เสมอ หยิบออกได้ทันที<br/><br/>
-    <code>insert</code> ใส่ค่าใหม่ต่อท้าย array แล้ว "ลอยขึ้น" (sift-up) สลับตำแหน่งกับ parent ไปเรื่อยๆ จนกว่า Min-Heap Property จะถูกต้อง — <code>extractMin</code> เอาตัวบนสุดออก เอาตัวท้าย array มาไว้บนสุดแทนชั่วคราว แล้ว "จมลง" (sift-down) สลับกับลูกที่น้อยกว่าไปเรื่อยๆ จนกว่าจะถูกต้องอีกครั้ง — ทั้งสองการกระทำนี้ใช้เวลาแค่ <code>O(log n)</code> เพราะความสูงของ Binary Heap คือ <code>log n</code> เสมอ (ต่อยอดจากบท "Big-O Notation")<br/><br/>
-    ในงาน QA เทคนิคนี้ใช้ตรงกับการเขียน test scheduler ที่ต้องรัน test เร่งด่วน (เช่น smoke test ก่อน deploy) ก่อน test ทั่วไปเสมอ ไม่ว่า test เหล่านั้นจะถูกเพิ่มเข้าคิวเมื่อไหร่ก็ตาม`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Priority Queue</strong> คือโครงสร้างที่คืนค่า "item ที่สำคัญที่สุด" ออกมาก่อนเสมอ (ในบทนี้คือ priority น้อยที่สุด = เร่งด่วนที่สุด) ไม่สนใจลำดับการเพิ่มเข้ามาเลย — ต่างจาก Queue (FIFO) และ Stack (LIFO) ที่สนใจแค่ "เข้ามาตอนไหน"<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เบื้องหลัง Priority Queue ที่มีประสิทธิภาพมักสร้างจาก <strong>Binary Heap</strong>: โครงสร้างต้นไม้ (ต่อยอดจากบท "Trees") ที่เก็บอยู่ใน array เดียว โดยรับประกันว่า node แม่ (parent) ต้องมี priority น้อยกว่าหรือเท่ากับ node ลูกเสมอ (Min-Heap Property) — ทำให้ item ที่ priority น้อยที่สุดอยู่ตำแหน่งบนสุด (index 0) เสมอ หยิบออกได้ทันที<br/><br/><br/>ในงาน QA เทคนิคนี้ใช้ตรงกับการเขียน test scheduler ที่ต้องรัน test เร่งด่วน (เช่น smoke test ก่อน deploy) ก่อน test ทั่วไปเสมอ ไม่ว่า test เหล่านั้นจะถูกเพิ่มเข้าคิวเมื่อไหร่ก็ตาม<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>insert</code> ใส่ค่าใหม่ต่อท้าย array แล้ว "ลอยขึ้น" (sift-up) สลับตำแหน่งกับ parent ไปเรื่อยๆ จนกว่า Min-Heap Property จะถูกต้อง — <code>extractMin</code> เอาตัวบนสุดออก เอาตัวท้าย array มาไว้บนสุดแทนชั่วคราว แล้ว "จมลง" (sift-down) สลับกับลูกที่น้อยกว่าไปเรื่อยๆ จนกว่าจะถูกต้องอีกครั้ง — ทั้งสองการกระทำนี้ใช้เวลาแค่ <code>O(log n)</code> เพราะความสูงของ Binary Heap คือ <code>log n</code> เสมอ (ต่อยอดจากบท "Big-O Notation")<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่างใช้ Priority Queue จำลอง scheduler จริง (ไม่ใช่คำตอบของโจทย์นี้)
 const scheduler = new MinPriorityQueue();
 scheduler.insert('smoke-test', 1);   // priority 1 = เร่งด่วนสุด
@@ -1171,9 +1217,12 @@ function merge(left, right) {
   }
   return result;
 }`,
-    theory: `<strong>Merge Sort</strong> คือ sorting algorithm แบบ <strong>Divide and Conquer</strong> (แบ่งปัญหาใหญ่เป็นปัญหาย่อยที่เหมือนกัน แก้ปัญหาย่อยแล้วรวมผลกลับ) ต่อยอดโดยตรงจากบท "Recursion": แบ่ง array เป็นสองครึ่งซ้ำๆ (recursive) จนเหลือ array ขนาด 0-1 ตัว (เรียงอยู่แล้วโดยปริยาย, base case) แล้วค่อย <strong>merge</strong> สอง array ที่เรียงแล้วกลับเข้าด้วยกันทีละคู่จากล่างขึ้นบน<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Merge Sort</strong> คือ sorting algorithm แบบ <strong>Divide and Conquer</strong> (แบ่งปัญหาใหญ่เป็นปัญหาย่อยที่เหมือนกัน แก้ปัญหาย่อยแล้วรวมผลกลับ) ต่อยอดโดยตรงจากบท "Recursion": แบ่ง array เป็นสองครึ่งซ้ำๆ (recursive) จนเหลือ array ขนาด 0-1 ตัว (เรียงอยู่แล้วโดยปริยาย, base case) แล้วค่อย <strong>merge</strong> สอง array ที่เรียงแล้วกลับเข้าด้วยกันทีละคู่จากล่างขึ้นบน<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Merge Sort</strong> คือ sorting algorithm แบบ <strong>Divide and Conquer</strong> (แบ่งปัญหาใหญ่เป็นปัญหาย่อยที่เหมือนกัน แก้ปัญหาย่อยแล้วรวมผลกลับ) ต่อยอดโดยตรงจากบท "Recursion": แบ่ง array เป็นสองครึ่งซ้ำๆ (recursive) จนเหลือ array ขนาด 0-1 ตัว (เรียงอยู่แล้วโดยปริยาย, base case) แล้วค่อย <strong>merge</strong> สอง array ที่เรียงแล้วกลับเข้าด้วยกันทีละคู่จากล่างขึ้นบน<br/><br/>
     ทำไมถึงเร็วสม่ำเสมอ <code>O(n log n)</code>: การแบ่งครึ่งซ้ำๆ ให้ความลึก <code>log n</code> ชั้น (เหมือนความสูงของ Binary Tree ที่สมดุล) แต่ละชั้นต้องทำงาน merge รวมทั้งหมด <code>O(n)</code> (เทียบและใส่ทุกตัวลง array ผลลัพธ์) รวมกันทุกชั้นจึงเป็น <code>O(n log n)</code> — เร็วกว่า sorting algorithm พื้นฐาน (bubble sort, insertion sort) ที่เป็น <code>O(n^2)</code> อย่างมากเมื่อข้อมูลใหญ่ขึ้น (เชื่อมกับบท "Big-O Notation")<br/><br/>
-    ข้อดีอีกอย่างของ Merge Sort ที่เขียนตามบทนี้: เป็น <strong>stable sort</strong> โดยธรรมชาติ (ตอน merge ถ้าค่าเท่ากัน เลือกฝั่งซ้ายก่อนเสมอ <code>left[i] <= right[j]</code>) ตรงกับหลักการ Stability ที่เรียนไปในบท "Sorting และ Stability" — ในงาน QA การเข้าใจกลไกจริงของ sort ช่วยให้ review/debug helper function ที่เขียน sort เองในโปรเจก (ไม่ได้พึ่ง built-in) ได้อย่างมั่นใจ`,
+    ข้อดีอีกอย่างของ Merge Sort ที่เขียนตามบทนี้: เป็น <strong>stable sort</strong> โดยธรรมชาติ (ตอน merge ถ้าค่าเท่ากัน เลือกฝั่งซ้ายก่อนเสมอ <code>left[i] <= right[j]</code>) ตรงกับหลักการ Stability ที่เรียนไปในบท "Sorting และ Stability" — ในงาน QA การเข้าใจกลไกจริงของ sort ช่วยให้ review/debug helper function ที่เขียน sort เองในโปรเจก (ไม่ได้พึ่ง built-in) ได้อย่างมั่นใจ<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ทำไมถึงเร็วสม่ำเสมอ <code>O(n log n)</code>: การแบ่งครึ่งซ้ำๆ ให้ความลึก <code>log n</code> ชั้น (เหมือนความสูงของ Binary Tree ที่สมดุล) แต่ละชั้นต้องทำงาน merge รวมทั้งหมด <code>O(n)</code> (เทียบและใส่ทุกตัวลง array ผลลัพธ์) รวมกันทุกชั้นจึงเป็น <code>O(n log n)</code> — เร็วกว่า sorting algorithm พื้นฐาน (bubble sort, insertion sort) ที่เป็น <code>O(n^2)</code> อย่างมากเมื่อข้อมูลใหญ่ขึ้น (เชื่อมกับบท "Big-O Notation")<br/><br/><br/>ข้อดีอีกอย่างของ Merge Sort ที่เขียนตามบทนี้: เป็น <strong>stable sort</strong> โดยธรรมชาติ (ตอน merge ถ้าค่าเท่ากัน เลือกฝั่งซ้ายก่อนเสมอ <code>left[i] <= right[j]</code>) ตรงกับหลักการ Stability ที่เรียนไปในบท "Sorting และ Stability" — ในงาน QA การเข้าใจกลไกจริงของ sort ช่วยให้ review/debug helper function ที่เขียน sort เองในโปรเจก (ไม่ได้พึ่ง built-in) ได้อย่างมั่นใจ`,
     example: `// ตัวอย่าง merge สอง array ที่เรียงแล้วเข้าด้วยกัน (ส่วนหนึ่งของ Merge Sort)
 function mergeExample(left, right) {
   const result = [];
@@ -1239,10 +1288,10 @@ function mergeExample(left, right) {
 
   return dp[n][m];
 }`,
-    theory: `<strong>2D Dynamic Programming</strong> ต่อยอดจากบท "Memoization" (1D DP — เก็บผลลัพธ์ตามค่า n เดียว) แต่ปัญหาบางแบบต้องการ 2 มิติ (เก็บผลลัพธ์ตามคู่ตัวแปร i, j) — <strong>Longest Common Subsequence (LCS)</strong> คือตัวอย่างคลาสสิกที่สุดของ 2D DP: หาลำดับร่วมที่ยาวที่สุดระหว่าง 2 string โดย<strong>ไม่จำเป็นต้องติดกัน</strong> (ต่างจาก "substring" ที่ต้องติดกันเป๊ะ)<br/><br/>
-    ตาราง <code>dp[i][j]</code> แทน "คำตอบของปัญหาย่อย" (LCS ของ a ช่วง i ตัวแรก กับ b ช่วง j ตัวแรก) — กฎการเติมตาราง: ถ้าตัวอักษรตัวปัจจุบันของทั้งสองฝั่งตรงกัน (<code>a[i-1] === b[j-1]</code>) แปลว่าตัวอักษรนี้เป็นส่วนหนึ่งของ LCS ได้แน่นอน ต่อยอดจากคำตอบของปัญหาย่อยที่เล็กกว่า (<code>dp[i-1][j-1] + 1</code>) ถ้าไม่ตรงกัน ต้อง "ลอง" ตัดตัวอักษรฝั่งใดฝั่งหนึ่งออกแล้วดูว่าทางไหนให้ผลลัพธ์ดีกว่า (<code>Math.max(dp[i-1][j], dp[i][j-1])</code>)<br/><br/>
-    ทำไมต้องเป็น DP (ไม่ใช่ recursive ล้วนๆ): ถ้าเขียน recursive ตรงๆ ตามนิยาม จะคำนวณปัญหาย่อยเดิมซ้ำหลายครั้ง (เหมือนปัญหาของบท Memoization) แต่ตอนนี้ปัญหาย่อยระบุด้วยคู่ (i, j) ไม่ใช่ค่าเดียว จึงต้องเก็บ cache เป็นตาราง 2 มิติแทนที่จะเป็นค่าเดียวต่อ n — ทำให้ทั้งอัลกอริทึมมีความซับซ้อนแค่ <code>O(n*m)</code> (เติมตารางทีละช่อง) แทนที่จะเป็น exponential แบบ recursive ล้วนๆ<br/><br/>
-    ในงาน QA เทคนิคนี้ใช้ตรงกับการเขียนเครื่องมือ diff ระหว่าง expected/actual log หรือ test output สองชุดที่อาจมีบรรทัดเพิ่ม/หายไปบ้าง แต่ยังมี "แก่นร่วม" ที่ตรงกันเรียงลำดับเดิม`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>2D Dynamic Programming</strong> ต่อยอดจากบท "Memoization" (1D DP — เก็บผลลัพธ์ตามค่า n เดียว) แต่ปัญหาบางแบบต้องการ 2 มิติ (เก็บผลลัพธ์ตามคู่ตัวแปร i, j) — <strong>Longest Common Subsequence (LCS)</strong> คือตัวอย่างคลาสสิกที่สุดของ 2D DP: หาลำดับร่วมที่ยาวที่สุดระหว่าง 2 string โดย<strong>ไม่จำเป็นต้องติดกัน</strong> (ต่างจาก "substring" ที่ต้องติดกันเป๊ะ)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในงาน QA เทคนิคนี้ใช้ตรงกับการเขียนเครื่องมือ diff ระหว่าง expected/actual log หรือ test output สองชุดที่อาจมีบรรทัดเพิ่ม/หายไปบ้าง แต่ยังมี "แก่นร่วม" ที่ตรงกันเรียงลำดับเดิม<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ตาราง <code>dp[i][j]</code> แทน "คำตอบของปัญหาย่อย" (LCS ของ a ช่วง i ตัวแรก กับ b ช่วง j ตัวแรก) — กฎการเติมตาราง: ถ้าตัวอักษรตัวปัจจุบันของทั้งสองฝั่งตรงกัน (<code>a[i-1] === b[j-1]</code>) แปลว่าตัวอักษรนี้เป็นส่วนหนึ่งของ LCS ได้แน่นอน ต่อยอดจากคำตอบของปัญหาย่อยที่เล็กกว่า (<code>dp[i-1][j-1] + 1</code>) ถ้าไม่ตรงกัน ต้อง "ลอง" ตัดตัวอักษรฝั่งใดฝั่งหนึ่งออกแล้วดูว่าทางไหนให้ผลลัพธ์ดีกว่า (<code>Math.max(dp[i-1][j], dp[i][j-1])</code>)<br/><br/><br/>ทำไมต้องเป็น DP (ไม่ใช่ recursive ล้วนๆ): ถ้าเขียน recursive ตรงๆ ตามนิยาม จะคำนวณปัญหาย่อยเดิมซ้ำหลายครั้ง (เหมือนปัญหาของบท Memoization) แต่ตอนนี้ปัญหาย่อยระบุด้วยคู่ (i, j) ไม่ใช่ค่าเดียว จึงต้องเก็บ cache เป็นตาราง 2 มิติแทนที่จะเป็นค่าเดียวต่อ n — ทำให้ทั้งอัลกอริทึมมีความซับซ้อนแค่ <code>O(n*m)</code> (เติมตารางทีละช่อง) แทนที่จะเป็น exponential แบบ recursive ล้วนๆ<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่างต่อยอด: หา string ของ LCS จริง ไม่ใช่แค่ความยาว (ไม่ใช่คำตอบของโจทย์นี้)
 function longestCommonSubsequenceString(a, b) {
   const n = a.length, m = b.length;
@@ -1360,9 +1409,12 @@ function longestCommonSubsequenceString(a, b) {
     return false;
   }
 }`,
-    theory: `<strong>Binary Search Tree (BST)</strong> คือ Tree (บทก่อนหน้า) ที่มีกฎเพิ่มเติม: ทุก node ค่าใน subtree ฝั่งซ้ายต้อง<strong>น้อยกว่า</strong> node นั้น และทุกค่าใน subtree ฝั่งขวาต้อง<strong>มากกว่า</strong> — กฎนี้ใช้ซ้ำในทุกระดับของต้นไม้ (recursive property) ทำให้การค้นหาทำงานเหมือน <strong>Binary Search</strong> (บทก่อนหน้า) แต่บนโครงสร้างต้นไม้แทนที่จะเป็น array ที่เรียงไว้แล้ว<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Binary Search Tree (BST)</strong> คือ Tree (บทก่อนหน้า) ที่มีกฎเพิ่มเติม: ทุก node ค่าใน subtree ฝั่งซ้ายต้อง<strong>น้อยกว่า</strong> node นั้น และทุกค่าใน subtree ฝั่งขวาต้อง<strong>มากกว่า</strong> — กฎนี้ใช้ซ้ำในทุกระดับของต้นไม้ (recursive property) ทำให้การค้นหาทำงานเหมือน <strong>Binary Search</strong> (บทก่อนหน้า) แต่บนโครงสร้างต้นไม้แทนที่จะเป็น array ที่เรียงไว้แล้ว<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Binary Search Tree (BST)</strong> คือ Tree (บทก่อนหน้า) ที่มีกฎเพิ่มเติม: ทุก node ค่าใน subtree ฝั่งซ้ายต้อง<strong>น้อยกว่า</strong> node นั้น และทุกค่าใน subtree ฝั่งขวาต้อง<strong>มากกว่า</strong> — กฎนี้ใช้ซ้ำในทุกระดับของต้นไม้ (recursive property) ทำให้การค้นหาทำงานเหมือน <strong>Binary Search</strong> (บทก่อนหน้า) แต่บนโครงสร้างต้นไม้แทนที่จะเป็น array ที่เรียงไว้แล้ว<br/><br/>
     ข้อดีเหนือ sorted array: BST <strong>insert ค่าใหม่ได้เร็ว</strong> (<code>O(log n)</code> โดยเฉลี่ย ถ้าต้นไม้สมดุลพอสมควร) โดยไม่ต้องขยับข้อมูลทั้งแถวเหมือน sorted array (ซึ่ง insert เป็น <code>O(n)</code>) — แลกมาด้วยการค้นหาที่ยังคงเร็วระดับ <code>O(log n)</code> เหมือน Binary Search เดิม เพราะทุกขั้นตอนตัดครึ่งพื้นที่ค้นหาทิ้งไปได้เหมือนกัน (ไปซ้ายหรือไปขวาแค่ทางเดียว)<br/><br/>
-    ข้อควรระวัง: ถ้า insert ค่าตามลำดับที่<strong>เรียงอยู่แล้ว</strong> (เช่น 1,2,3,4,5 ตามลำดับ) BST จะกลายเป็นเส้นตรงเอียงไปทางเดียว (ไม่สมดุลเลย) ทำให้ค้นหากลายเป็น <code>O(n)</code> แทนที่จะเป็น <code>O(log n)</code> — โครงสร้างขั้นสูงกว่าอย่าง AVL Tree หรือ Red-Black Tree แก้ปัญหานี้ด้วยการ "จัดสมดุลต้นไม้ใหม่" อัตโนมัติทุกครั้งที่ insert (นอกเหนือขอบเขตของบทนี้) ในงาน QA เทคนิคพื้นฐานนี้เพียงพอสำหรับเก็บ test data ที่เพิ่มเข้ามาเรื่อยๆ แต่ต้องค้นหาได้เร็วอยู่เสมอ`,
+    ข้อควรระวัง: ถ้า insert ค่าตามลำดับที่<strong>เรียงอยู่แล้ว</strong> (เช่น 1,2,3,4,5 ตามลำดับ) BST จะกลายเป็นเส้นตรงเอียงไปทางเดียว (ไม่สมดุลเลย) ทำให้ค้นหากลายเป็น <code>O(n)</code> แทนที่จะเป็น <code>O(log n)</code> — โครงสร้างขั้นสูงกว่าอย่าง AVL Tree หรือ Red-Black Tree แก้ปัญหานี้ด้วยการ "จัดสมดุลต้นไม้ใหม่" อัตโนมัติทุกครั้งที่ insert (นอกเหนือขอบเขตของบทนี้) ในงาน QA เทคนิคพื้นฐานนี้เพียงพอสำหรับเก็บ test data ที่เพิ่มเข้ามาเรื่อยๆ แต่ต้องค้นหาได้เร็วอยู่เสมอ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ข้อดีเหนือ sorted array: BST <strong>insert ค่าใหม่ได้เร็ว</strong> (<code>O(log n)</code> โดยเฉลี่ย ถ้าต้นไม้สมดุลพอสมควร) โดยไม่ต้องขยับข้อมูลทั้งแถวเหมือน sorted array (ซึ่ง insert เป็น <code>O(n)</code>) — แลกมาด้วยการค้นหาที่ยังคงเร็วระดับ <code>O(log n)</code> เหมือน Binary Search เดิม เพราะทุกขั้นตอนตัดครึ่งพื้นที่ค้นหาทิ้งไปได้เหมือนกัน (ไปซ้ายหรือไปขวาแค่ทางเดียว)<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ข้อควรระวัง: ถ้า insert ค่าตามลำดับที่<strong>เรียงอยู่แล้ว</strong> (เช่น 1,2,3,4,5 ตามลำดับ) BST จะกลายเป็นเส้นตรงเอียงไปทางเดียว (ไม่สมดุลเลย) ทำให้ค้นหากลายเป็น <code>O(n)</code> แทนที่จะเป็น <code>O(log n)</code> — โครงสร้างขั้นสูงกว่าอย่าง AVL Tree หรือ Red-Black Tree แก้ปัญหานี้ด้วยการ "จัดสมดุลต้นไม้ใหม่" อัตโนมัติทุกครั้งที่ insert (นอกเหนือขอบเขตของบทนี้) ในงาน QA เทคนิคพื้นฐานนี้เพียงพอสำหรับเก็บ test data ที่เพิ่มเข้ามาเรื่อยๆ แต่ต้องค้นหาได้เร็วอยู่เสมอ`,
     example: `// ตัวอย่างไล่ BST แบบ in-order traversal เพื่อดึงค่าทั้งหมดออกมาแบบเรียงลำดับ (ไม่ใช่คำตอบของโจทย์นี้)
 function inOrderTraversal(node, result = []) {
   if (node === null) return result;
@@ -1449,9 +1501,10 @@ function inOrderTraversal(node, result = []) {
   }
   return order;
 }`,
-    theory: `<strong>Topological Sort</strong> จัดลำดับ node ของ Directed Acyclic Graph (DAG — กราฟมีทิศทาง ไม่มี cycle ต่อยอดจากบท "Graphs" ที่เรียนตรวจ cycle ไปแล้ว) ให้ node ต้นทางของทุก edge มาก่อน node ปลายทางเสมอ — ในบทนี้คือ dependency ของ job ต้องรันเสร็จก่อน job ที่ขึ้นกับมันเสมอ<br/><br/>
-    เทคนิคที่ใช้คือ <strong>Kahn's Algorithm</strong> ซึ่งเป็น BFS แบบหนึ่ง (ต่อยอดจากบท Queue/BFS โดยตรง): นับ "in-degree" (จำนวน dependency ที่ยังไม่เสร็จ) ของแต่ละ job เริ่มจาก job ที่ in-degree เป็น 0 (พร้อมรันได้ทันที) ใส่ในคิว ประมวลผลทีละตัวแล้ว "ปลดล็อก" job อื่นที่รอตัวนี้อยู่ (ลด in-degree ของพวกเขาลง) เมื่อ job ไหน in-degree เหลือ 0 ก็เข้าคิวต่อ<br/><br/>
-    <strong>ข้อสำคัญ:</strong> ถ้ามี job หลายตัวที่ไม่ขึ้นกับกันเลย (independent) ลำดับที่ถูกต้องมีได้<strong>มากกว่าหนึ่งแบบ</strong> — การตรวจสอบจึงต้องเช็ค "กฎ" (dependency ต้องมาก่อนเสมอ) ไม่ใช่เช็คว่าตรงกับคำตอบเดียวที่ตายตัว ในงาน QA เทคนิคนี้ตอบคำถาม "ต้องรัน job/migration/setup step ไหนก่อนไหนถึงจะไม่พัง" ได้ตรงไปตรงมา`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Topological Sort</strong> จัดลำดับ node ของ Directed Acyclic Graph (DAG — กราฟมีทิศทาง ไม่มี cycle ต่อยอดจากบท "Graphs" ที่เรียนตรวจ cycle ไปแล้ว) ให้ node ต้นทางของทุก edge มาก่อน node ปลายทางเสมอ — ในบทนี้คือ dependency ของ job ต้องรันเสร็จก่อน job ที่ขึ้นกับมันเสมอ<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เทคนิคที่ใช้คือ <strong>Kahn's Algorithm</strong> ซึ่งเป็น BFS แบบหนึ่ง (ต่อยอดจากบท Queue/BFS โดยตรง): นับ "in-degree" (จำนวน dependency ที่ยังไม่เสร็จ) ของแต่ละ job เริ่มจาก job ที่ in-degree เป็น 0 (พร้อมรันได้ทันที) ใส่ในคิว ประมวลผลทีละตัวแล้ว "ปลดล็อก" job อื่นที่รอตัวนี้อยู่ (ลด in-degree ของพวกเขาลง) เมื่อ job ไหน in-degree เหลือ 0 ก็เข้าคิวต่อ<br/><br/><br/><strong>ข้อสำคัญ:</strong> ถ้ามี job หลายตัวที่ไม่ขึ้นกับกันเลย (independent) ลำดับที่ถูกต้องมีได้<strong>มากกว่าหนึ่งแบบ</strong> — การตรวจสอบจึงต้องเช็ค "กฎ" (dependency ต้องมาก่อนเสมอ) ไม่ใช่เช็คว่าตรงกับคำตอบเดียวที่ตายตัว ในงาน QA เทคนิคนี้ตอบคำถาม "ต้องรัน job/migration/setup step ไหนก่อนไหนถึงจะไม่พัง" ได้ตรงไปตรงมา<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่างตรวจว่ากราฟมี cycle ก่อนเรียก topologicalSort จริง (ใช้เทคนิคจากบท Graphs ก่อนหน้า)
 function canBeOrdered(graph) {
   return !hasCyclicDependency(graph); // hasCyclicDependency มาจากบท Graphs
@@ -1528,9 +1581,10 @@ function canBeOrdered(graph) {
 
   return dist[end] !== undefined ? dist[end] : Infinity;
 }`,
-    theory: `<strong>Dijkstra's Algorithm</strong> ต่อยอดจากบท BFS แต่รองรับเส้นเชื่อมที่มี <strong>weight</strong> (น้ำหนัก/ต้นทุน) ไม่เท่ากัน — BFS การันตีระยะทาง "จำนวนขั้น" สั้นสุดเพราะทุกเส้นเชื่อมมีต้นทุนเท่ากันหมด (นับเป็น 1 เสมอ) แต่พอแต่ละเส้นเชื่อมมีต้นทุนต่างกัน การไล่ทีละขั้นแบบ BFS ไม่การันตีเส้นทางที่ต้นทุนรวมต่ำสุดอีกต่อไป (เส้นทางที่ "ขั้นน้อยกว่า" อาจต้นทุนรวมสูงกว่าเส้นทางที่ "ขั้นเยอะกว่าแต่ราคาถูกกว่า" ก็ได้)<br/><br/>
-    หลักการของ Dijkstra: เก็บ "ต้นทุนสะสมที่ดีที่สุดเท่าที่รู้ตอนนี้" ของทุก node (เริ่มต้น Infinity หมด ยกเว้น start=0) แล้ววนเลือก node ที่ยังไม่ประมวลผลและมีต้นทุนสะสมน้อยที่สุดมาประมวลผลก่อนเสมอ (concept เดียวกับ Priority Queue จากบทก่อนหน้า — ในเวอร์ชันเต็มที่มีประสิทธิภาพจริงจะใช้ Min-Heap เลือก node นี้แทนการวน scan ทุกครั้งแบบในบทนี้) — ทุกครั้งที่ประมวลผล node ให้เช็คว่า "ผ่าน node นี้ไปหาเพื่อนบ้าน" ถูกกว่าที่เคยรู้มาก่อนหรือไม่ (เรียกว่า relaxation) ถ้าถูกกว่าก็อัปเดต<br/><br/>
-    ในตัวอย่างนี้ A ไป B ทางตรง (weight 4) แพงกว่าอ้อมผ่าน C (1+1=2) — Dijkstra จับความจริงข้อนี้ได้ถูกต้อง ต่างจาก BFS ที่จะบอกว่า A→B ทางตรง "ใกล้กว่า" เพราะนับแค่จำนวนขั้น (1 ขั้น) โดยไม่สนต้นทุนจริง ในงาน QA เทคนิคนี้ใช้ตอบคำถามจริงเช่น "เส้นทาง deploy ไหนใช้เวลารวมน้อยที่สุด" ที่แต่ละขั้นมีเวลาไม่เท่ากัน`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Dijkstra's Algorithm</strong> ต่อยอดจากบท BFS แต่รองรับเส้นเชื่อมที่มี <strong>weight</strong> (น้ำหนัก/ต้นทุน) ไม่เท่ากัน — BFS การันตีระยะทาง "จำนวนขั้น" สั้นสุดเพราะทุกเส้นเชื่อมมีต้นทุนเท่ากันหมด (นับเป็น 1 เสมอ) แต่พอแต่ละเส้นเชื่อมมีต้นทุนต่างกัน การไล่ทีละขั้นแบบ BFS ไม่การันตีเส้นทางที่ต้นทุนรวมต่ำสุดอีกต่อไป (เส้นทางที่ "ขั้นน้อยกว่า" อาจต้นทุนรวมสูงกว่าเส้นทางที่ "ขั้นเยอะกว่าแต่ราคาถูกกว่า" ก็ได้)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>หลักการของ Dijkstra: เก็บ "ต้นทุนสะสมที่ดีที่สุดเท่าที่รู้ตอนนี้" ของทุก node (เริ่มต้น Infinity หมด ยกเว้น start=0) แล้ววนเลือก node ที่ยังไม่ประมวลผลและมีต้นทุนสะสมน้อยที่สุดมาประมวลผลก่อนเสมอ (concept เดียวกับ Priority Queue จากบทก่อนหน้า — ในเวอร์ชันเต็มที่มีประสิทธิภาพจริงจะใช้ Min-Heap เลือก node นี้แทนการวน scan ทุกครั้งแบบในบทนี้) — ทุกครั้งที่ประมวลผล node ให้เช็คว่า "ผ่าน node นี้ไปหาเพื่อนบ้าน" ถูกกว่าที่เคยรู้มาก่อนหรือไม่ (เรียกว่า relaxation) ถ้าถูกกว่าก็อัปเดต<br/><br/><br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ในตัวอย่างนี้ A ไป B ทางตรง (weight 4) แพงกว่าอ้อมผ่าน C (1+1=2) — Dijkstra จับความจริงข้อนี้ได้ถูกต้อง ต่างจาก BFS ที่จะบอกว่า A→B ทางตรง "ใกล้กว่า" เพราะนับแค่จำนวนขั้น (1 ขั้น) โดยไม่สนต้นทุนจริง ในงาน QA เทคนิคนี้ใช้ตอบคำถามจริงเช่น "เส้นทาง deploy ไหนใช้เวลารวมน้อยที่สุด" ที่แต่ละขั้นมีเวลาไม่เท่ากัน`,
     example: `// ตัวอย่างสร้าง graph แบบ weighted จากเวลารันจริงของแต่ละ job (ไม่ใช่คำตอบของโจทย์นี้)
 const pipelineGraph = {
   lint: [{ to: 'build', weight: 30 }],
@@ -1608,9 +1662,10 @@ const pipelineGraph = {
 
   return totalCost;
 }`,
-    theory: `<strong>Minimum Spanning Tree (MST)</strong> คือชุดเส้นเชื่อมที่น้อยที่สุด (จำนวน node - 1 เส้นเสมอ) ที่ทำให้ node ทุกตัวเชื่อมถึงกันได้ทางใดทางหนึ่ง โดยมีต้นทุนรวมต่ำที่สุด — ต่างจาก Dijkstra (บทก่อนหน้า) ที่หาเส้นทางสั้นสุด<strong>ระหว่าง 2 จุด</strong> MST หาการเชื่อม<strong>ทุกจุดเข้าด้วยกัน</strong>ในคราวเดียว<br/><br/>
-    <strong>Kruskal's Algorithm</strong> แก้ปัญหานี้ด้วยแนวคิด greedy: เรียง edge ทั้งหมดจากถูกไปแพง แล้วหยิบทีละเส้นตามลำดับ — เพิ่มเส้นนั้นก็ต่อเมื่อมันเชื่อม 2 กลุ่มที่<strong>ยังไม่เชื่อมกัน</strong> (ถ้าเชื่อมกันอยู่แล้ว การเพิ่มเส้นนี้จะสร้าง cycle โดยไม่จำเป็น สิ้นเปลืองต้นทุนเปล่าๆ) เครื่องมือที่เช็คว่า "2 node นี้อยู่กลุ่มเดียวกันหรือยัง" ได้เร็วคือ <strong>Union-Find (Disjoint Set)</strong>: แต่ละ node จำ "ตัวแทนกลุ่ม" ของตัวเองไว้ ถ้าสอง node มีตัวแทนกลุ่มเดียวกันแปลว่าอยู่กลุ่มเดียวกันแล้ว<br/><br/>
-    ในตัวอย่างนี้ edge ที่ถูกที่สุดสามเส้น (AB=1, BC=2, CD=3) เชื่อมทุก node ได้พอดีโดยไม่เกิด cycle เลย — edge ที่เหลือ (AC=4, BD=5) ถูกข้ามเพราะปลายทั้งสองฝั่งอยู่กลุ่มเดียวกันไปแล้วตอนที่พิจารณาถึง ในงาน QA เทคนิคนี้ใช้ตอบคำถาม "เชื่อมต่อ server/environment ทั้งหมดเข้าด้วยกันด้วยต้นทุน network link รวมต่ำสุดได้อย่างไร"`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Minimum Spanning Tree (MST)</strong> คือชุดเส้นเชื่อมที่น้อยที่สุด (จำนวน node - 1 เส้นเสมอ) ที่ทำให้ node ทุกตัวเชื่อมถึงกันได้ทางใดทางหนึ่ง โดยมีต้นทุนรวมต่ำที่สุด — ต่างจาก Dijkstra (บทก่อนหน้า) ที่หาเส้นทางสั้นสุด<strong>ระหว่าง 2 จุด</strong> MST หาการเชื่อม<strong>ทุกจุดเข้าด้วยกัน</strong>ในคราวเดียว<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Kruskal's Algorithm</strong> แก้ปัญหานี้ด้วยแนวคิด greedy: เรียง edge ทั้งหมดจากถูกไปแพง แล้วหยิบทีละเส้นตามลำดับ — เพิ่มเส้นนั้นก็ต่อเมื่อมันเชื่อม 2 กลุ่มที่<strong>ยังไม่เชื่อมกัน</strong> (ถ้าเชื่อมกันอยู่แล้ว การเพิ่มเส้นนี้จะสร้าง cycle โดยไม่จำเป็น สิ้นเปลืองต้นทุนเปล่าๆ) เครื่องมือที่เช็คว่า "2 node นี้อยู่กลุ่มเดียวกันหรือยัง" ได้เร็วคือ <strong>Union-Find (Disjoint Set)</strong>: แต่ละ node จำ "ตัวแทนกลุ่ม" ของตัวเองไว้ ถ้าสอง node มีตัวแทนกลุ่มเดียวกันแปลว่าอยู่กลุ่มเดียวกันแล้ว<br/><br/><br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ในตัวอย่างนี้ edge ที่ถูกที่สุดสามเส้น (AB=1, BC=2, CD=3) เชื่อมทุก node ได้พอดีโดยไม่เกิด cycle เลย — edge ที่เหลือ (AC=4, BD=5) ถูกข้ามเพราะปลายทั้งสองฝั่งอยู่กลุ่มเดียวกันไปแล้วตอนที่พิจารณาถึง ในงาน QA เทคนิคนี้ใช้ตอบคำถาม "เชื่อมต่อ server/environment ทั้งหมดเข้าด้วยกันด้วยต้นทุน network link รวมต่ำสุดได้อย่างไร"`,
     example: `// ตัวอย่าง Union-Find ธรรมดา เช็คว่า 2 node อยู่กลุ่มเดียวกันหรือยัง (ไม่ใช่คำตอบของโจทย์นี้)
 function areConnected(parent, a, b) {
   function find(x) { while (parent[x] !== x) x = parent[x]; return x; }
@@ -1677,9 +1732,12 @@ function areConnected(parent, a, b) {
 
   return [...quickSort(less), pivot, ...quickSort(greaterOrEqual)];
 }`,
-    theory: `<strong>Quick Sort</strong> คือ Divide and Conquer อีกรูปแบบหนึ่ง ต่างจาก Merge Sort (บทก่อนหน้า) ตรงที่ "แบ่ง" ก่อนแล้วค่อย "เรียงแต่ละฝั่ง" (Merge Sort เรียงแต่ละฝั่งก่อนแล้วค่อย merge ทีหลัง) — เลือก <strong>pivot</strong> ตัวหนึ่งจากข้อมูล แล้วแบ่งที่เหลือเป็น 2 กลุ่ม: น้อยกว่า pivot กับมากกว่าหรือเท่ากับ pivot (เรียกขั้นตอนนี้ว่า <strong>partition</strong>) แล้วเรียก quickSort ซ้ำกับแต่ละกลุ่ม<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Quick Sort</strong> คือ Divide and Conquer อีกรูปแบบหนึ่ง ต่างจาก Merge Sort (บทก่อนหน้า) ตรงที่ "แบ่ง" ก่อนแล้วค่อย "เรียงแต่ละฝั่ง" (Merge Sort เรียงแต่ละฝั่งก่อนแล้วค่อย merge ทีหลัง) — เลือก <strong>pivot</strong> ตัวหนึ่งจากข้อมูล แล้วแบ่งที่เหลือเป็น 2 กลุ่ม: น้อยกว่า pivot กับมากกว่าหรือเท่ากับ pivot (เรียกขั้นตอนนี้ว่า <strong>partition</strong>) แล้วเรียก quickSort ซ้ำกับแต่ละกลุ่ม<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Quick Sort</strong> คือ Divide and Conquer อีกรูปแบบหนึ่ง ต่างจาก Merge Sort (บทก่อนหน้า) ตรงที่ "แบ่ง" ก่อนแล้วค่อย "เรียงแต่ละฝั่ง" (Merge Sort เรียงแต่ละฝั่งก่อนแล้วค่อย merge ทีหลัง) — เลือก <strong>pivot</strong> ตัวหนึ่งจากข้อมูล แล้วแบ่งที่เหลือเป็น 2 กลุ่ม: น้อยกว่า pivot กับมากกว่าหรือเท่ากับ pivot (เรียกขั้นตอนนี้ว่า <strong>partition</strong>) แล้วเรียก quickSort ซ้ำกับแต่ละกลุ่ม<br/><br/>
     Quick Sort โดยเฉลี่ยเร็วเท่า Merge Sort (<code>O(n log n)</code>) แต่มี<strong>worst case เป็น <code>O(n^2)</code></strong> ถ้าเลือก pivot แย่ซ้ำๆ — กรณีคลาสสิกที่สุด: ถ้าเลือก pivot เป็นตัวสุดท้ายเสมอ แล้วข้อมูลเรียงอยู่แล้ว (หรือเรียงย้อนกลับ) แต่ละรอบ partition จะได้กลุ่ม "น้อยกว่า" ที่มีสมาชิกเกือบทั้งหมด กับกลุ่ม "มากกว่า" ที่ว่างเปล่า ทำให้ไม่ได้แบ่งครึ่งจริงๆ เหมือนที่ Merge Sort ทำได้เสมอ<br/><br/>
-    ในบทนี้เลือก pivot เป็น<strong>ตัวกลาง</strong>ของ array แทนตัวสุดท้าย ซึ่งช่วยลดโอกาสเจอ worst case กับข้อมูลที่เรียงอยู่แล้วได้บ้าง (แต่ไม่ได้การันตี 100% — เทคนิคขั้นสูงกว่าอย่าง "median-of-three" หรือสุ่ม pivot ช่วยลดความเสี่ยงนี้ได้อีก) ในงาน QA การเข้าใจ tradeoff นี้ช่วยตอบคำถาม "ทำไม custom sort บางอันช้าลงมากเป็นพิเศษกับข้อมูลบางแบบ" ได้`,
+    ในบทนี้เลือก pivot เป็น<strong>ตัวกลาง</strong>ของ array แทนตัวสุดท้าย ซึ่งช่วยลดโอกาสเจอ worst case กับข้อมูลที่เรียงอยู่แล้วได้บ้าง (แต่ไม่ได้การันตี 100% — เทคนิคขั้นสูงกว่าอย่าง "median-of-three" หรือสุ่ม pivot ช่วยลดความเสี่ยงนี้ได้อีก) ในงาน QA การเข้าใจ tradeoff นี้ช่วยตอบคำถาม "ทำไม custom sort บางอันช้าลงมากเป็นพิเศษกับข้อมูลบางแบบ" ได้<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>Quick Sort โดยเฉลี่ยเร็วเท่า Merge Sort (<code>O(n log n)</code>) แต่มี<strong>worst case เป็น <code>O(n^2)</code></strong> ถ้าเลือก pivot แย่ซ้ำๆ — กรณีคลาสสิกที่สุด: ถ้าเลือก pivot เป็นตัวสุดท้ายเสมอ แล้วข้อมูลเรียงอยู่แล้ว (หรือเรียงย้อนกลับ) แต่ละรอบ partition จะได้กลุ่ม "น้อยกว่า" ที่มีสมาชิกเกือบทั้งหมด กับกลุ่ม "มากกว่า" ที่ว่างเปล่า ทำให้ไม่ได้แบ่งครึ่งจริงๆ เหมือนที่ Merge Sort ทำได้เสมอ<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ในบทนี้เลือก pivot เป็น<strong>ตัวกลาง</strong>ของ array แทนตัวสุดท้าย ซึ่งช่วยลดโอกาสเจอ worst case กับข้อมูลที่เรียงอยู่แล้วได้บ้าง (แต่ไม่ได้การันตี 100% — เทคนิคขั้นสูงกว่าอย่าง "median-of-three" หรือสุ่ม pivot ช่วยลดความเสี่ยงนี้ได้อีก) ในงาน QA การเข้าใจ tradeoff นี้ช่วยตอบคำถาม "ทำไม custom sort บางอันช้าลงมากเป็นพิเศษกับข้อมูลบางแบบ" ได้`,
     example: `// ตัวอย่าง partition แยกกลุ่มรอบ pivot (ส่วนหนึ่งของ Quick Sort)
 function partitionExample(arr, pivot) {
   return {
@@ -1776,9 +1834,10 @@ function partitionExample(arr, pivot) {
   }
   return result;
 }`,
-    theory: `<strong>Heap Sort</strong> นำ Binary Heap (บทก่อนหน้า) มาใช้เรียงข้อมูลทั้ง array โดยตรง — หลักการเรียบง่ายมาก: ใส่สมาชิกทั้งหมดเข้า Min-Heap แล้วดึงค่าน้อยที่สุดออกทีละตัว (<code>extractMin</code>) ไปเรื่อยๆ จนกว่า heap จะว่างเปล่า ลำดับที่ดึงออกมาได้คือข้อมูลที่เรียงจากน้อยไปมากพอดี เพราะ Min-Heap รับประกันว่าตัวบนสุดคือค่าน้อยที่สุดเสมอ<br/><br/>
-    ความซับซ้อน: <code>insert</code> และ <code>extractMin</code> แต่ละครั้งใช้เวลา <code>O(log n)</code> (บทก่อนหน้า) ทำซ้ำ n ครั้งทั้ง insert และ extract รวมเป็น <code>O(n log n)</code> — เร็วเท่า Merge Sort และ Quick Sort โดยเฉลี่ย แต่ต่างจาก Quick Sort ตรงที่ Heap Sort <strong>ไม่มี worst case ที่แย่กว่า</strong> (การันตี <code>O(n log n)</code> เสมอ ไม่ว่าข้อมูลจะเรียงมาแบบไหน) จุดเด่นอีกอย่างคือ Heap Sort ตัวจริง <strong>sort in-place ได้</strong> (build heap ทับ array เดิม, ใช้ auxiliary space แค่ O(1)) ต่างจาก Merge Sort ที่ต้องใช้ array เสริม — ข้อเสียคือไม่ stable และ cache locality แย่กว่า Quick Sort/Merge Sort (โจทย์นี้ implement แบบใช้ heap array + result array แยกกันเพื่อความง่ายในการสอน ไม่ใช่คุณสมบัติจริงของ Heap Sort)<br/><br/>
-    เปรียบเทียบ 3 sorting algorithm ที่เรียนมา: <strong>Merge Sort</strong> (stable, O(n log n) เสมอ, ใช้ memory เพิ่มสำหรับ merge), <strong>Quick Sort</strong> (เร็วเฉลี่ย O(n log n) แต่ worst case O(n^2), in-place), <strong>Heap Sort</strong> (O(n log n) เสมอเหมือน Merge Sort, in-place เหมือน Quick Sort แต่ไม่ stable) — ในงาน QA การเลือกใช้ sort ให้เหมาะกับสถานการณ์ (ต้องการ stable ไหม, กลัว worst case ไหม, memory จำกัดแค่ไหน) คือทักษะที่ต่อยอดจากทั้ง 3 บทนี้รวมกัน`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Heap Sort</strong> นำ Binary Heap (บทก่อนหน้า) มาใช้เรียงข้อมูลทั้ง array โดยตรง — หลักการเรียบง่ายมาก: ใส่สมาชิกทั้งหมดเข้า Min-Heap แล้วดึงค่าน้อยที่สุดออกทีละตัว (<code>extractMin</code>) ไปเรื่อยๆ จนกว่า heap จะว่างเปล่า ลำดับที่ดึงออกมาได้คือข้อมูลที่เรียงจากน้อยไปมากพอดี เพราะ Min-Heap รับประกันว่าตัวบนสุดคือค่าน้อยที่สุดเสมอ<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>เปรียบเทียบ 3 sorting algorithm ที่เรียนมา: <strong>Merge Sort</strong> (stable, O(n log n) เสมอ, ใช้ memory เพิ่มสำหรับ merge), <strong>Quick Sort</strong> (เร็วเฉลี่ย O(n log n) แต่ worst case O(n^2), in-place), <strong>Heap Sort</strong> (O(n log n) เสมอเหมือน Merge Sort, in-place เหมือน Quick Sort แต่ไม่ stable) — ในงาน QA การเลือกใช้ sort ให้เหมาะกับสถานการณ์ (ต้องการ stable ไหม, กลัว worst case ไหม, memory จำกัดแค่ไหน) คือทักษะที่ต่อยอดจากทั้ง 3 บทนี้รวมกัน<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ความซับซ้อน: <code>insert</code> และ <code>extractMin</code> แต่ละครั้งใช้เวลา <code>O(log n)</code> (บทก่อนหน้า) ทำซ้ำ n ครั้งทั้ง insert และ extract รวมเป็น <code>O(n log n)</code> — เร็วเท่า Merge Sort และ Quick Sort โดยเฉลี่ย แต่ต่างจาก Quick Sort ตรงที่ Heap Sort <strong>ไม่มี worst case ที่แย่กว่า</strong> (การันตี <code>O(n log n)</code> เสมอ ไม่ว่าข้อมูลจะเรียงมาแบบไหน) จุดเด่นอีกอย่างคือ Heap Sort ตัวจริง <strong>sort in-place ได้</strong> (build heap ทับ array เดิม, ใช้ auxiliary space แค่ O(1)) ต่างจาก Merge Sort ที่ต้องใช้ array เสริม — ข้อเสียคือไม่ stable และ cache locality แย่กว่า Quick Sort/Merge Sort (โจทย์นี้ implement แบบใช้ heap array + result array แยกกันเพื่อความง่ายในการสอน ไม่ใช่คุณสมบัติจริงของ Heap Sort)<br/><br/>`,
     example: `// ตัวอย่างใช้ MinPriorityQueue จากบทก่อนหน้าทำ Heap Sort แบบสั้น (ไม่ใช่คำตอบของโจทย์นี้ แต่แนวคิดเดียวกัน)
 function heapSortViaPQ(arr, MinPriorityQueue) {
   const pq = new MinPriorityQueue();

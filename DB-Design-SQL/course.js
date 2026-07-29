@@ -66,13 +66,14 @@ const LESSONS = [
     },
     hint: "เลือกเฉพาะคอลัมน์ ticker และ shares จากตาราง holdings แล้วกรองเฉพาะแถวที่คอลัมน์ broker ตรงกับชื่อ Broker ที่โจทย์กำหนด — นึกถึงคำสั่งที่ใช้เทียบค่าคอลัมน์ string ให้เท่ากับข้อความหนึ่งๆ",
     solution: `SELECT ticker, shares FROM holdings WHERE broker = 'Webull';`,
-    theory: `<strong>SQL (Structured Query Language)</strong> คือภาษามาตรฐานสำหรับดึง/แก้ไขข้อมูลในฐานข้อมูลเชิงสัมพันธ์ (Relational Database) — ทักษะที่ QA ใช้แทบทุกวันเวลาต้องยืนยันว่าข้อมูลที่ถูกต้องจริงในฐานข้อมูล ไม่ใช่แค่ "ดูเหมือนถูกต้อง" บนหน้าจอ UI<br/><br/>
-    บทเรียนนี้จำลองตาราง <code>holdings</code> ขึ้นจากโครงสร้างข้อมูลจริงในโปรเจก My-Investment-Port (คอลัมน์ <code>ticker</code>, <code>broker</code>, <code>shares</code>, <code>avgCost</code>, <code>sector</code> ทั้งหมดคือ field จริงที่ใช้ใน <code>HoldingsPage.jsx</code>) — ของจริงเก็บอยู่ใน Google Sheet ไม่ใช่ SQL DB แต่โครงสร้างข้อมูลเหมือนกันเป๊ะ<br/><br/>
-    <strong>คำสั่งพื้นฐาน:</strong><br/>
-    1. <code>SELECT column1, column2</code> — เลือกเฉพาะคอลัมน์ที่ต้องการ (ไม่ต้องดึงทุกคอลัมน์ด้วย <code>*</code> ถ้าไม่จำเป็น)<br/>
-    2. <code>FROM table_name</code> — ระบุตารางต้นทาง<br/>
-    3. <code>WHERE condition</code> — กรองเฉพาะแถวที่ตรงเงื่อนไข<br/><br/>
-    <strong>หมายเหตุด้านเทคนิค:</strong> Sandbox นี้รันคำสั่ง SQL ของคุณ<strong>จริง</strong>ผ่าน <a href="https://alasql.org" target="_blank" style="color:inherit;">AlaSQL</a> (SQL engine แบบ JavaScript ล้วนที่รันในเบราว์เซอร์) ไม่ใช่การเช็ค regex บนข้อความเหมือน track อื่น — เขียน SQL ถูกวิธีไหนก็ได้ ขอแค่ได้ผลลัพธ์ถูกต้อง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจการใช้ SQL (Structured Query Language) พื้นฐานในการดึงข้อมูลด้วย <code>SELECT ... FROM ... WHERE</code><br/><br/>
+    ⚖️ <strong>3 โครงสร้างหลักของ SELECT Statement:</strong><br/>
+    • <strong>SELECT column1, column2:</strong> ระบุคอลัมน์ที่ต้องการดึง (หลีกเลี่ยง <code>*</code> หากไม่จำเป็น)<br/>
+    • <strong>FROM table_name:</strong> ระบุตารางเป้าหมาย (เช่น <code>holdings</code>)<br/>
+    • <strong>WHERE condition:</strong> เงื่อนไขกรองข้อมูลเฉพาะแถวที่ต้องการ<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>SELECT ticker, shares FROM holdings WHERE broker = 'Webull';</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เปรียบเทียบข้อความ (String) ใน SQL ต้องครอบด้วย Single Quote (<code>'Webull'</code>) เสมอ`,
     example: `-- ตัวอย่างดึงข้อมูลเฉพาะคอลัมน์ที่ต้องการจาก sector หนึ่งๆ
 SELECT ticker, broker FROM holdings WHERE sector = 'Technology';`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -101,9 +102,13 @@ SELECT ticker, broker FROM holdings WHERE sector = 'Technology';`,
     },
     hint: "คำนวณมูลค่ารวมของแต่ละ Holding จาก shares คูณ avgCost ก่อน แล้วกรองเฉพาะที่เกินเกณฑ์ที่โจทย์กำหนด จากนั้นเรียงผลลัพธ์ด้วยนิพจน์คำนวณเดียวกัน — อย่าลืมว่าค่า default ของการเรียงคือน้อยไปมาก ต้องระบุทิศทางตรงข้ามเองถ้าต้องการมากไปน้อย",
     solution: `SELECT ticker, shares, avgCost FROM holdings WHERE shares * avgCost > 5000 ORDER BY shares * avgCost DESC;`,
-    theory: `เงื่อนไขใน <code>WHERE</code> ไม่จำเป็นต้องเทียบกับ column ตรงๆ เท่านั้น — ใช้นิพจน์คำนวณได้เลย เช่น <code>shares * avgCost > 5000</code> (มูลค่ารวมของแต่ละ Holding) กรองก่อนแล้วค่อยเรียงด้วย <code>ORDER BY</code><br/><br/>
-    <strong>ORDER BY</strong> ค่า default คือ <code>ASC</code> (น้อยไปมาก) ต้องระบุ <code>DESC</code> เองถ้าต้องการมากไปน้อย และเรียงตามนิพจน์คำนวณได้เหมือนกับที่ใช้ใน WHERE (ไม่จำเป็นต้องมี column นี้ปรากฏใน SELECT ก็เรียงได้)<br/><br/>
-    ในงาน QA จริง เทคนิคนี้ใช้บ่อยมากตอนตรวจสอบ "รายการ Top N" (เช่น หุ้นที่ถือมูลค่าสูงสุด 5 อันดับ) ว่า Backend/Report คำนวณและเรียงลำดับถูกต้องตรงกับที่ควรจะเป็นหรือไม่`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> กรองข้อมูลด้วยการคำนวณและจัดเรียงลำดับผลลัพธ์ด้วย <code>WHERE</code> + <code>ORDER BY</code><br/><br/>
+    ⚖️ <strong>ความแตกต่างระหว่างทิศทางการเรียงลำดับ (Sorting Order):</strong><br/>
+    • <strong>ASC (Ascending):</strong> เรียงจากน้อยไปมาก (ค่า Default)<br/>
+    • <strong>DESC (Descending):</strong> เรียงจากมากไปน้อย<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>SELECT ticker, shares, avgCost FROM holdings WHERE shares * avgCost > 5000 ORDER BY shares * avgCost DESC;</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เงื่อนไขใน <code>WHERE</code> และ <code>ORDER BY</code> สามารถใช้นิพจน์คณิตศาสตร์ (เช่น <code>shares * avgCost</code>) ได้โดยตรง ไม่จำเป็นต้องสร้างคอลัมน์ใหม่`,
     example: `-- ตัวอย่างเรียงจากน้อยไปมาก (ค่า default ไม่ต้องระบุ ASC ก็ได้)
 SELECT ticker, avgCost FROM holdings ORDER BY avgCost;`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -150,9 +155,12 @@ SELECT ticker, avgCost FROM holdings ORDER BY avgCost;`,
     hint: "ต้องสร้างตารางใหม่ก่อนด้วยคำสั่งที่กำหนดชื่อคอลัมน์และ type รวมถึงระบุว่าคอลัมน์ไหนเป็นกุญแจหลักที่ห้ามซ้ำ จากนั้นค่อยเพิ่มแถวข้อมูลด้วยอีกคำสั่งหนึ่งแยกต่างหาก",
     solution: `CREATE TABLE watchlist (ticker STRING PRIMARY KEY, note STRING);
 INSERT INTO watchlist VALUES ('TSLA', 'รอราคาย่อ');`,
-    theory: `<strong>Database Design</strong> คือการตัดสินใจว่าข้อมูลควรแบ่งเป็นกี่ตาราง แต่ละตารางมีคอลัมน์อะไรบ้าง และอะไรคือ "กุญแจ" ที่ทำให้แต่ละแถวไม่ซ้ำกัน<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Database Design</strong> คือการตัดสินใจว่าข้อมูลควรแบ่งเป็นกี่ตาราง แต่ละตารางมีคอลัมน์อะไรบ้าง และอะไรคือ "กุญแจ" ที่ทำให้แต่ละแถวไม่ซ้ำกัน<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Database Design</strong> คือการตัดสินใจว่าข้อมูลควรแบ่งเป็นกี่ตาราง แต่ละตารางมีคอลัมน์อะไรบ้าง และอะไรคือ "กุญแจ" ที่ทำให้แต่ละแถวไม่ซ้ำกัน<br/><br/>
     <strong>PRIMARY KEY</strong> คือคอลัมน์ (หรือกลุ่มคอลัมน์) ที่รับประกันว่าไม่มีค่าซ้ำในตาราง — ในตัวอย่างนี้ <code>ticker</code> เป็น PRIMARY KEY ของ <code>watchlist</code> เพราะเราต้องการห้ามไม่ให้ตั๋วเดียวกันถูกเพิ่มซ้ำสองครั้งโดยไม่ตั้งใจ<br/><br/>
-    ทำไมต้องแยกเป็นตารางต่างหากแทนที่จะยัดทุกอย่างลงตารางเดียว: ในบทถัดไป (JOIN) เราจะเห็นตาราง <code>holdings</code> กับ <code>brokers</code> ที่แยกจากกัน — เหตุผลคือถ้าเก็บชื่อเต็มของ Broker ซ้ำในทุกแถวของ <code>holdings</code> (เช่น "Webull Financial" ซ้ำ 5 ครั้ง) แล้ว Broker เปลี่ยนชื่อ ต้องไปแก้ทุกแถว เสี่ยงพลาดตกหล่น การแยกเป็นตาราง <code>brokers</code> ต่างหากทำให้แก้ที่เดียวจบ (หลักการนี้เรียกว่า <strong>Normalization</strong>)`,
+    ทำไมต้องแยกเป็นตารางต่างหากแทนที่จะยัดทุกอย่างลงตารางเดียว: ในบทถัดไป (JOIN) เราจะเห็นตาราง <code>holdings</code> กับ <code>brokers</code> ที่แยกจากกัน — เหตุผลคือถ้าเก็บชื่อเต็มของ Broker ซ้ำในทุกแถวของ <code>holdings</code> (เช่น "Webull Financial" ซ้ำ 5 ครั้ง) แล้ว Broker เปลี่ยนชื่อ ต้องไปแก้ทุกแถว เสี่ยงพลาดตกหล่น การแยกเป็นตาราง <code>brokers</code> ต่างหากทำให้แก้ที่เดียวจบ (หลักการนี้เรียกว่า <strong>Normalization</strong>)<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>PRIMARY KEY</strong> คือคอลัมน์ (หรือกลุ่มคอลัมน์) ที่รับประกันว่าไม่มีค่าซ้ำในตาราง — ในตัวอย่างนี้ <code>ticker</code> เป็น PRIMARY KEY ของ <code>watchlist</code> เพราะเราต้องการห้ามไม่ให้ตั๋วเดียวกันถูกเพิ่มซ้ำสองครั้งโดยไม่ตั้งใจ<br/><br/><br/>ทำไมต้องแยกเป็นตารางต่างหากแทนที่จะยัดทุกอย่างลงตารางเดียว: ในบทถัดไป (JOIN) เราจะเห็นตาราง <code>holdings</code> กับ <code>brokers</code> ที่แยกจากกัน — เหตุผลคือถ้าเก็บชื่อเต็มของ Broker ซ้ำในทุกแถวของ <code>holdings</code> (เช่น "Webull Financial" ซ้ำ 5 ครั้ง) แล้ว Broker เปลี่ยนชื่อ ต้องไปแก้ทุกแถว เสี่ยงพลาดตกหล่น การแยกเป็นตาราง <code>brokers</code> ต่างหากทำให้แก้ที่เดียวจบ (หลักการนี้เรียกว่า <strong>Normalization</strong>)`,
     example: `-- ตัวอย่างตารางที่มี PRIMARY KEY แบบผสมหลายคอลัมน์ (composite key)
 CREATE TABLE holdings_v2 (ticker STRING, broker STRING, shares NUMBER, PRIMARY KEY (ticker, broker));
 -- ป้องกันไม่ให้ ticker เดียวกัน + broker เดียวกัน ถูกเพิ่มซ้ำ (แต่ ticker เดียวกันคนละ broker เพิ่มได้)`,
@@ -201,9 +209,10 @@ CREATE TABLE holdings_v2 (ticker STRING, broker STRING, shares NUMBER, PRIMARY K
     hint: "สร้างตารางใหม่ที่มีคอลัมน์อ้างอิงกลับไปยังตาราง brokers ที่มีอยู่แล้ว โดยระบุ constraint ที่บังคับว่าค่าในคอลัมน์นั้นต้องมีอยู่จริงในตารางปลายทาง (ดูคอลัมน์ไหนของ brokers ที่เป็น PRIMARY KEY) แล้วค่อยเพิ่มแถวด้วยค่าที่อ้างอิงถูกต้องจริง",
     solution: `CREATE TABLE orders (id NUMBER, ticker STRING, broker STRING, FOREIGN KEY (broker) REFERENCES brokers(name));
 INSERT INTO orders VALUES (1, 'AMZN', 'Webull');`,
-    theory: `<strong>FOREIGN KEY</strong> คือคอลัมน์ที่บังคับว่าค่าที่ใส่เข้าไปต้อง<strong>มีอยู่จริง</strong>ในตารางอื่นที่อ้างอิงถึง (referenced table) — ต่อยอดจากบท JOIN ก่อนหน้าที่เรา JOIN <code>holdings.broker = brokers.name</code> โดยไม่มีอะไรบังคับเลยว่าค่า <code>broker</code> ต้องมีจริงใน <code>brokers</code> บทนี้ทำให้มันเป็นกฎบังคับจริงระดับฐานข้อมูล ไม่ใช่แค่ความหวังว่าข้อมูลจะสอดคล้องกันเอง<br/><br/>
-    <code>FOREIGN KEY (broker) REFERENCES brokers(name)</code> แปลว่า: ทุกค่าที่ใส่ในคอลัมน์ <code>orders.broker</code> ต้องตรงกับค่าใดค่าหนึ่งในคอลัมน์ <code>brokers.name</code> เท่านั้น — ถ้าลองใส่ชื่อ Broker ที่ไม่มีจริง ฐานข้อมูลจะ<strong>ปฏิเสธการ INSERT ทันที</strong> (พิสูจน์แล้วในบทนี้: sandbox รัน AlaSQL จริง ไม่ใช่ mock)<br/><br/>
-    ในงาน QA เทคนิคนี้ช่วยตอบคำถาม "ข้อมูลมีสิทธิ์เพี้ยนจนอ้างอิงของที่ไม่มีจริงได้มั้ย" — ถ้า schema มี FOREIGN KEY ถูกต้อง คำตอบคือ "ไม่มีทาง" เพราะ DB บังคับเอง ไม่ต้องพึ่งให้ทุกจุดของโค้ด Backend เขียน validation ซ้ำเอง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>FOREIGN KEY</strong> คือคอลัมน์ที่บังคับว่าค่าที่ใส่เข้าไปต้อง<strong>มีอยู่จริง</strong>ในตารางอื่นที่อ้างอิงถึง (referenced table) — ต่อยอดจากบท JOIN ก่อนหน้าที่เรา JOIN <code>holdings.broker = brokers.name</code> โดยไม่มีอะไรบังคับเลยว่าค่า <code>broker</code> ต้องมีจริงใน <code>brokers</code> บทนี้ทำให้มันเป็นกฎบังคับจริงระดับฐานข้อมูล ไม่ใช่แค่ความหวังว่าข้อมูลจะสอดคล้องกันเอง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในงาน QA เทคนิคนี้ช่วยตอบคำถาม "ข้อมูลมีสิทธิ์เพี้ยนจนอ้างอิงของที่ไม่มีจริงได้มั้ย" — ถ้า schema มี FOREIGN KEY ถูกต้อง คำตอบคือ "ไม่มีทาง" เพราะ DB บังคับเอง ไม่ต้องพึ่งให้ทุกจุดของโค้ด Backend เขียน validation ซ้ำเอง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>FOREIGN KEY (broker) REFERENCES brokers(name)</code> แปลว่า: ทุกค่าที่ใส่ในคอลัมน์ <code>orders.broker</code> ต้องตรงกับค่าใดค่าหนึ่งในคอลัมน์ <code>brokers.name</code> เท่านั้น — ถ้าลองใส่ชื่อ Broker ที่ไม่มีจริง ฐานข้อมูลจะ<strong>ปฏิเสธการ INSERT ทันที</strong> (พิสูจน์แล้วในบทนี้: sandbox รัน AlaSQL จริง ไม่ใช่ mock)<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ถ้าลองใส่ broker ปลอมเข้าไปตรงๆ จะได้ error ทันที (ลองรันดูได้)
 INSERT INTO orders VALUES (99, 'FAKE', 'ThisBrokerDoesNotExist');
 -- Error: Foreign key "ThisBrokerDoesNotExist" not found in table "brokers"`,
@@ -238,9 +247,12 @@ INSERT INTO orders VALUES (99, 'FAKE', 'ThisBrokerDoesNotExist');
     },
     hint: "ใช้ Aggregate Function สองตัวในคำสั่งเดียวกัน: ตัวหนึ่งนับจำนวนแถวทั้งหมด อีกตัวนับจำนวนค่าที่ไม่ซ้ำกันในคอลัมน์ broker — อย่าลืมตั้งชื่อคอลัมน์ผลลัพธ์ทั้งสองด้วย AS ตามที่โจทย์กำหนด",
     solution: `SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;`,
-    theory: `<strong>Normalization</strong> คือหลักการออกแบบฐานข้อมูลเพื่อลดข้อมูลซ้ำซ้อน โดยแยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางต่างหาก แล้วใช้ FOREIGN KEY เชื่อมกลับมา<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Normalization</strong> คือหลักการออกแบบฐานข้อมูลเพื่อลดข้อมูลซ้ำซ้อน โดยแยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางต่างหาก แล้วใช้ FOREIGN KEY เชื่อมกลับมา<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Normalization</strong> คือหลักการออกแบบฐานข้อมูลเพื่อลดข้อมูลซ้ำซ้อน โดยแยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางต่างหาก แล้วใช้ FOREIGN KEY เชื่อมกลับมา<br/><br/>
     ผลลัพธ์ของ query นี้พิสูจน์ปัญหาให้เห็นเป็นตัวเลขจริง: <code>holdings</code> มี 9 แถว (รวมข้อมูลที่ระบบเพิ่มเข้ามาตอนตรวจคำตอบ) แต่มี Broker ที่ไม่ซ้ำกันแค่ 3 ราย (Webull, Dime, Fidelity) — ถ้าเราเก็บ <code>displayName</code> ("Webull Financial") และ <code>country</code> ("US") ซ้ำไว้ในทุกแถวของ <code>holdings</code> โดยตรงแทนที่จะแยกตาราง <code>brokers</code> ต่างหาก ข้อมูลชุดเดียวกันนี้จะถูกเก็บซ้ำถึง 5 ครั้ง (Webull), 3 ครั้ง (Dime) และ 1 ครั้ง (Fidelity) โดยไม่จำเป็น<br/><br/>
-    ปัญหาจริงที่ตามมาถ้าไม่ Normalize: ถ้า Webull เปลี่ยนชื่อเป็น "Webull Corp" ต้อง <code>UPDATE</code> ทั้ง 5 แถวให้ตรงกัน — พลาดแม้แถวเดียวจะทำให้ข้อมูล<strong>ไม่สอดคล้องกันเอง</strong> (inconsistent) ทันที การแยกเป็นตาราง <code>brokers</code> (ตามที่ทำไว้ในบท "Database Design: PRIMARY KEY") ทำให้แก้ที่เดียวจบ แล้วใช้ JOIN (บทก่อนหน้า) ดึงข้อมูลกลับมาต่อกันตอนต้องใช้จริง`,
+    ปัญหาจริงที่ตามมาถ้าไม่ Normalize: ถ้า Webull เปลี่ยนชื่อเป็น "Webull Corp" ต้อง <code>UPDATE</code> ทั้ง 5 แถวให้ตรงกัน — พลาดแม้แถวเดียวจะทำให้ข้อมูล<strong>ไม่สอดคล้องกันเอง</strong> (inconsistent) ทันที การแยกเป็นตาราง <code>brokers</code> (ตามที่ทำไว้ในบท "Database Design: PRIMARY KEY") ทำให้แก้ที่เดียวจบ แล้วใช้ JOIN (บทก่อนหน้า) ดึงข้อมูลกลับมาต่อกันตอนต้องใช้จริง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ผลลัพธ์ของ query นี้พิสูจน์ปัญหาให้เห็นเป็นตัวเลขจริง: <code>holdings</code> มี 9 แถว (รวมข้อมูลที่ระบบเพิ่มเข้ามาตอนตรวจคำตอบ) แต่มี Broker ที่ไม่ซ้ำกันแค่ 3 ราย (Webull, Dime, Fidelity) — ถ้าเราเก็บ <code>displayName</code> ("Webull Financial") และ <code>country</code> ("US") ซ้ำไว้ในทุกแถวของ <code>holdings</code> โดยตรงแทนที่จะแยกตาราง <code>brokers</code> ต่างหาก ข้อมูลชุดเดียวกันนี้จะถูกเก็บซ้ำถึง 5 ครั้ง (Webull), 3 ครั้ง (Dime) และ 1 ครั้ง (Fidelity) โดยไม่จำเป็น<br/><br/><br/>ปัญหาจริงที่ตามมาถ้าไม่ Normalize: ถ้า Webull เปลี่ยนชื่อเป็น "Webull Corp" ต้อง <code>UPDATE</code> ทั้ง 5 แถวให้ตรงกัน — พลาดแม้แถวเดียวจะทำให้ข้อมูล<strong>ไม่สอดคล้องกันเอง</strong> (inconsistent) ทันที การแยกเป็นตาราง <code>brokers</code> (ตามที่ทำไว้ในบท "Database Design: PRIMARY KEY") ทำให้แก้ที่เดียวจบ แล้วใช้ JOIN (บทก่อนหน้า) ดึงข้อมูลกลับมาต่อกันตอนต้องใช้จริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่างเช็คความซ้ำซ้อนแบบเดียวกันกับคอลัมน์อื่น
 SELECT COUNT(*) AS totalRows, COUNT(DISTINCT sector) AS distinctSectors FROM holdings;`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -271,9 +283,12 @@ SELECT COUNT(*) AS totalRows, COUNT(DISTINCT sector) AS distinctSectors FROM hol
     },
     hint: "เชื่อมสองตารางเข้าด้วยกันด้วยเงื่อนไขที่คอลัมน์ broker ของ holdings ตรงกับคอลัมน์ที่เป็น PRIMARY KEY ของ brokers แล้วกรองเฉพาะแถวที่ ticker ตรงกับที่โจทย์ต้องการ — ใช้ alias ย่อชื่อตารางให้เขียนสั้นลง",
     solution: `SELECT h.ticker, h.broker, b.displayName FROM holdings h JOIN brokers b ON h.broker = b.name WHERE h.ticker = 'AMZN';`,
-    theory: `<strong>JOIN</strong> คือการรวมแถวจาก 2 ตารางเข้าด้วยกันโดยอาศัยคอลัมน์ที่เชื่อมโยงกัน (Foreign Key) — ต่อยอดจากบทก่อนหน้าที่แยก <code>holdings</code> กับ <code>brokers</code> ออกจากกันตามหลัก Normalization ตอนนี้เราต้องการ "เอาข้อมูลทั้งสองฝั่งมาต่อกัน" เพื่อแสดงผล<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>JOIN</strong> คือการรวมแถวจาก 2 ตารางเข้าด้วยกันโดยอาศัยคอลัมน์ที่เชื่อมโยงกัน (Foreign Key) — ต่อยอดจากบทก่อนหน้าที่แยก <code>holdings</code> กับ <code>brokers</code> ออกจากกันตามหลัก Normalization ตอนนี้เราต้องการ "เอาข้อมูลทั้งสองฝั่งมาต่อกัน" เพื่อแสดงผล<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>JOIN</strong> คือการรวมแถวจาก 2 ตารางเข้าด้วยกันโดยอาศัยคอลัมน์ที่เชื่อมโยงกัน (Foreign Key) — ต่อยอดจากบทก่อนหน้าที่แยก <code>holdings</code> กับ <code>brokers</code> ออกจากกันตามหลัก Normalization ตอนนี้เราต้องการ "เอาข้อมูลทั้งสองฝั่งมาต่อกัน" เพื่อแสดงผล<br/><br/>
     รูปแบบ: <code>FROM table1 alias1 JOIN table2 alias2 ON alias1.col = alias2.col</code> — ใช้ <code>alias</code> (เช่น <code>h</code>, <code>b</code>) เพื่อย่อชื่อตารางยาวๆ และแก้ปัญหาตอนสองตารางมีคอลัมน์ชื่อซ้ำกัน (เช่นถ้าทั้งคู่มีคอลัมน์ <code>name</code> ต้องระบุว่าเอา <code>h.name</code> หรือ <code>b.name</code>)<br/><br/>
-    <code>ON h.broker = b.name</code> คือเงื่อนไขการจับคู่: แถว holdings ที่มี <code>broker = 'Webull'</code> จะจับคู่กับแถว brokers ที่มี <code>name = 'Webull'</code> — ถ้าไม่มีแถวไหนใน brokers ตรงกับค่านั้นเลย (Foreign Key ที่ไม่มีจริง) แถวนั้นจะหายไปจากผลลัพธ์ (INNER JOIN ค่า default) ซึ่งเป็นบั๊กที่พบบ่อยเวลาข้อมูลอ้างอิงไม่ตรงกัน`,
+    <code>ON h.broker = b.name</code> คือเงื่อนไขการจับคู่: แถว holdings ที่มี <code>broker = 'Webull'</code> จะจับคู่กับแถว brokers ที่มี <code>name = 'Webull'</code> — ถ้าไม่มีแถวไหนใน brokers ตรงกับค่านั้นเลย (Foreign Key ที่ไม่มีจริง) แถวนั้นจะหายไปจากผลลัพธ์ (INNER JOIN ค่า default) ซึ่งเป็นบั๊กที่พบบ่อยเวลาข้อมูลอ้างอิงไม่ตรงกัน<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>รูปแบบ: <code>FROM table1 alias1 JOIN table2 alias2 ON alias1.col = alias2.col</code> — ใช้ <code>alias</code> (เช่น <code>h</code>, <code>b</code>) เพื่อย่อชื่อตารางยาวๆ และแก้ปัญหาตอนสองตารางมีคอลัมน์ชื่อซ้ำกัน (เช่นถ้าทั้งคู่มีคอลัมน์ <code>name</code> ต้องระบุว่าเอา <code>h.name</code> หรือ <code>b.name</code>)<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>ON h.broker = b.name</code> คือเงื่อนไขการจับคู่: แถว holdings ที่มี <code>broker = 'Webull'</code> จะจับคู่กับแถว brokers ที่มี <code>name = 'Webull'</code> — ถ้าไม่มีแถวไหนใน brokers ตรงกับค่านั้นเลย (Foreign Key ที่ไม่มีจริง) แถวนั้นจะหายไปจากผลลัพธ์ (INNER JOIN ค่า default) ซึ่งเป็นบั๊กที่พบบ่อยเวลาข้อมูลอ้างอิงไม่ตรงกัน`,
     example: `-- ตัวอย่าง JOIN แล้วกรองด้วยคอลัมน์จากตารางที่ join มา
 SELECT h.ticker, b.country FROM holdings h JOIN brokers b ON h.broker = b.name WHERE b.country = 'US';`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -316,10 +331,10 @@ SELECT h.ticker, b.country FROM holdings h JOIN brokers b ON h.broker = b.name W
     solution: `CREATE TABLE price_alerts (ticker STRING PRIMARY KEY, note STRING, notified BOOLEAN);
 INSERT INTO price_alerts (ticker, note, notified) VALUES ('TSLA', 'รอราคาย่อ', FALSE);
 UPDATE price_alerts SET notified = TRUE WHERE ticker = 'TSLA';`,
-    theory: `การออกแบบตารางไม่ใช่แค่ "มี column อะไรบ้าง" แต่ต้องเลือก <strong>Data Type</strong> ให้ตรงกับความหมายจริงของข้อมูลด้วย — คอลัมน์ที่มีค่าได้แค่ 2 แบบ (ใช่/ไม่ใช่, เปิด/ปิด, จริง/เท็จ) ควรเป็น <strong>BOOLEAN</strong> ไม่ใช่ STRING ("yes"/"no") หรือ NUMBER (1/0) เพราะ:<br/><br/>
-    1. <strong>ชัดเจนกว่า:</strong> อ่าน schema แล้วรู้ทันทีว่าคอลัมน์นี้มีค่าได้แค่ true/false ไม่ต้องเดาว่า string ไหน "ถือว่าใช่"<br/>
-    2. <strong>ป้องกันค่าผิดรูปแบบ:</strong> STRING เปิดช่องให้พิมพ์ "Yes", "yes", "Y", "true" ปนกันได้ในแต่ละแถว ทำให้ query <code>WHERE notified = 'yes'</code> พลาดแถวที่พิมพ์ "Yes" ไป — BOOLEAN ไม่มีปัญหานี้เพราะมีแค่ true/false เท่านั้นจริงๆ<br/><br/>
-    หมายเหตุ: คอลัมน์ <code>notified</code> ในบทนี้เป็นตัวอย่างสมมติต่อยอดจากตาราง <code>price_alerts</code> (บทที่ 2) เพื่อสอนหลักการเลือก data type — ไม่ได้มีอยู่จริงในโค้ดของ My-Investment-Port`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ เลือก Data Type ให้ถูกงาน: BOOLEAN สำหรับค่าใช่/ไม่ใช่ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>1. <strong>ชัดเจนกว่า:</strong> อ่าน schema แล้วรู้ทันทีว่าคอลัมน์นี้มีค่าได้แค่ true/false ไม่ต้องเดาว่า string ไหน "ถือว่าใช่"<br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>2. <strong>ป้องกันค่าผิดรูปแบบ:</strong> STRING เปิดช่องให้พิมพ์ "Yes", "yes", "Y", "true" ปนกันได้ในแต่ละแถว ทำให้ query <code>WHERE notified = 'yes'</code> พลาดแถวที่พิมพ์ "Yes" ไป — BOOLEAN ไม่มีปัญหานี้เพราะมีแค่ true/false เท่านั้นจริงๆ<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> หมายเหตุ: คอลัมน์ <code>notified</code> ในบทนี้เป็นตัวอย่างสมมติต่อยอดจากตาราง <code>price_alerts</code> (บทที่ 2) เพื่อสอนหลักการเลือก data type — ไม่ได้มีอยู่จริงในโค้ดของ My-Investment-Port`,
     example: `-- ตัวอย่าง query กรองด้วย BOOLEAN ตรงๆ ไม่ต้องเทียบ string
 SELECT ticker FROM price_alerts WHERE notified = FALSE;`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -352,9 +367,12 @@ SELECT ticker FROM price_alerts WHERE notified = FALSE;`,
     },
     hint: "ใช้ JOIN แบบที่เก็บทุกแถวจากตารางฝั่งซ้าย (holdings) ไว้เสมอ แม้จะจับคู่กับฝั่งขวา (brokers) ไม่ได้ก็ตาม แถวที่จับคู่ไม่ได้จะมีคอลัมน์ฝั่งขวาเป็นค่าว่าง จากนั้นกรองหาแถวที่คอลัมน์ของฝั่งขวานั้นเป็นค่าว่างด้วยตัวดำเนินการเปรียบเทียบที่ใช้กับค่าว่างโดยเฉพาะ",
     solution: `SELECT h.ticker FROM holdings h LEFT JOIN brokers b ON h.broker = b.name WHERE b.name IS NULL;`,
-    theory: `บท JOIN ก่อนหน้าเคยบอกไว้ว่า: ถ้าไม่มีแถวไหนใน <code>brokers</code> ตรงกับค่า <code>broker</code> เลย แถวนั้นจะ<strong>หายไปจากผลลัพธ์เงียบๆ</strong> เพราะ <code>JOIN</code> เฉยๆ คือ <strong>INNER JOIN</strong> (ค่า default) — บทนี้ทำให้ปัญหานั้น "มองเห็นได้" แทนที่จะถูกซ่อนไว้<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ LEFT JOIN vs INNER JOIN: หา Foreign Key ที่อ้างอิงของไม่มีจริง และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บท JOIN ก่อนหน้าเคยบอกไว้ว่า: ถ้าไม่มีแถวไหนใน <code>brokers</code> ตรงกับค่า <code>broker</code> เลย แถวนั้นจะ<strong>หายไปจากผลลัพธ์เงียบๆ</strong> เพราะ <code>JOIN</code> เฉยๆ คือ <strong>INNER JOIN</strong> (ค่า default) — บทนี้ทำให้ปัญหานั้น "มองเห็นได้" แทนที่จะถูกซ่อนไว้<br/><br/>
     <strong>LEFT JOIN</strong> เก็บ<strong>ทุกแถว</strong>จากตารางฝั่งซ้าย (<code>holdings</code>) ไว้เสมอ ไม่ว่าจะจับคู่กับฝั่งขวา (<code>brokers</code>) ได้หรือไม่ก็ตาม — ถ้าจับคู่ไม่ได้ คอลัมน์จากฝั่งขวาทั้งหมดจะเป็น <code>NULL</code><br/><br/>
-    เทคนิคมาตรฐาน: <code>LEFT JOIN ... WHERE &lt;ฝั่งขวา&gt;.&lt;key&gt; IS NULL</code> คือวิธีหา "ข้อมูลกำพร้า" (orphaned data) — แถวที่อ้างอิง Foreign Key ไปยังของที่ไม่มีอยู่จริง ในงาน QA เทคนิคนี้ใช้ตรวจสอบ Data Integrity จริงเวลาสงสัยว่าระบบมีข้อมูลอ้างอิงพังหลุดรอดออกมาบ้างหรือไม่ (เช่น หลัง migration หรือหลัง bug ที่ปล่อยให้ข้าม FOREIGN KEY constraint ไปได้)`,
+    เทคนิคมาตรฐาน: <code>LEFT JOIN ... WHERE &lt;ฝั่งขวา&gt;.&lt;key&gt; IS NULL</code> คือวิธีหา "ข้อมูลกำพร้า" (orphaned data) — แถวที่อ้างอิง Foreign Key ไปยังของที่ไม่มีอยู่จริง ในงาน QA เทคนิคนี้ใช้ตรวจสอบ Data Integrity จริงเวลาสงสัยว่าระบบมีข้อมูลอ้างอิงพังหลุดรอดออกมาบ้างหรือไม่ (เช่น หลัง migration หรือหลัง bug ที่ปล่อยให้ข้าม FOREIGN KEY constraint ไปได้)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>LEFT JOIN</strong> เก็บ<strong>ทุกแถว</strong>จากตารางฝั่งซ้าย (<code>holdings</code>) ไว้เสมอ ไม่ว่าจะจับคู่กับฝั่งขวา (<code>brokers</code>) ได้หรือไม่ก็ตาม — ถ้าจับคู่ไม่ได้ คอลัมน์จากฝั่งขวาทั้งหมดจะเป็น <code>NULL</code><br/><br/><br/>เทคนิคมาตรฐาน: <code>LEFT JOIN ... WHERE &lt;ฝั่งขวา&gt;.&lt;key&gt; IS NULL</code> คือวิธีหา "ข้อมูลกำพร้า" (orphaned data) — แถวที่อ้างอิง Foreign Key ไปยังของที่ไม่มีอยู่จริง ในงาน QA เทคนิคนี้ใช้ตรวจสอบ Data Integrity จริงเวลาสงสัยว่าระบบมีข้อมูลอ้างอิงพังหลุดรอดออกมาบ้างหรือไม่ (เช่น หลัง migration หรือหลัง bug ที่ปล่อยให้ข้าม FOREIGN KEY constraint ไปได้)<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- INNER JOIN แบบเดิมจะไม่เจอ ORPHAN เลย (หายไปเงียบๆ) — ลองเทียบกันดู
 SELECT h.ticker FROM holdings h JOIN brokers b ON h.broker = b.name;
 -- ไม่มี ORPHAN ในผลลัพธ์ ทั้งที่ ORPHAN มีอยู่จริงในตาราง holdings`,
@@ -389,9 +407,12 @@ SELECT h.ticker FROM holdings h JOIN brokers b ON h.broker = b.name;
     },
     hint: "ต้องคำนวณนิพจน์ shares คูณ avgCost ก่อน แล้วรวมค่านั้นด้วย Aggregate Function ตัวหนึ่ง จากนั้นจับกลุ่มผลลัพธ์ตามคอลัมน์ broker — อย่าลืมตั้งชื่อคอลัมน์ผลลัพธ์ด้วย AS ตามที่โจทย์กำหนด",
     solution: `SELECT broker, SUM(shares * avgCost) AS totalValue FROM holdings GROUP BY broker;`,
-    theory: `<strong>GROUP BY</strong> จับกลุ่มแถวที่มีค่าคอลัมน์เดียวกัน (เช่น <code>broker</code>) แล้วให้ <strong>Aggregate Function</strong> (<code>SUM</code>, <code>COUNT</code>, <code>AVG</code>, <code>MAX</code>, <code>MIN</code>) คำนวณสรุปทีละกลุ่ม<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>GROUP BY</strong> จับกลุ่มแถวที่มีค่าคอลัมน์เดียวกัน (เช่น <code>broker</code>) แล้วให้ <strong>Aggregate Function</strong> (<code>SUM</code>, <code>COUNT</code>, <code>AVG</code>, <code>MAX</code>, <code>MIN</code>) คำนวณสรุปทีละกลุ่ม<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>GROUP BY</strong> จับกลุ่มแถวที่มีค่าคอลัมน์เดียวกัน (เช่น <code>broker</code>) แล้วให้ <strong>Aggregate Function</strong> (<code>SUM</code>, <code>COUNT</code>, <code>AVG</code>, <code>MAX</code>, <code>MIN</code>) คำนวณสรุปทีละกลุ่ม<br/><br/>
     ข้อควรระวังสำคัญ: ทุกคอลัมน์ใน <code>SELECT</code> ที่ไม่ใช่ Aggregate Function ต้องอยู่ใน <code>GROUP BY</code> ด้วย (เช่น <code>SELECT broker, SUM(...)</code> ต้องมี <code>GROUP BY broker</code>) ไม่งั้นฐานข้อมูลจะไม่รู้ว่าจะเอาค่า <code>broker</code> ตัวไหนมาแสดงในแต่ละกลุ่ม<br/><br/>
-    ในงาน QA การทดสอบ Report/Dashboard ที่สรุปยอดรวม (เช่น มูลค่าพอร์ตรวมต่อ Broker, จำนวนรายการต่อสถานะ) มักต้องเขียน SQL แบบนี้เพื่อ "คำนวณเลขที่ถูกต้องแบบอิสระ" มาเทียบกับตัวเลขที่ระบบแสดงผล ถ้าไม่ตรงกันคือเจอบั๊กในโค้ดคำนวณจริง`,
+    ในงาน QA การทดสอบ Report/Dashboard ที่สรุปยอดรวม (เช่น มูลค่าพอร์ตรวมต่อ Broker, จำนวนรายการต่อสถานะ) มักต้องเขียน SQL แบบนี้เพื่อ "คำนวณเลขที่ถูกต้องแบบอิสระ" มาเทียบกับตัวเลขที่ระบบแสดงผล ถ้าไม่ตรงกันคือเจอบั๊กในโค้ดคำนวณจริง<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>ทำความเข้าใจลำดับการทำงานและโครงสร้างการทดสอบก่อนลงมือเขียนโค้ดจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ข้อควรระวังสำคัญ: ทุกคอลัมน์ใน <code>SELECT</code> ที่ไม่ใช่ Aggregate Function ต้องอยู่ใน <code>GROUP BY</code> ด้วย (เช่น <code>SELECT broker, SUM(...)</code> ต้องมี <code>GROUP BY broker</code>) ไม่งั้นฐานข้อมูลจะไม่รู้ว่าจะเอาค่า <code>broker</code> ตัวไหนมาแสดงในแต่ละกลุ่ม<br/><br/><br/>ในงาน QA การทดสอบ Report/Dashboard ที่สรุปยอดรวม (เช่น มูลค่าพอร์ตรวมต่อ Broker, จำนวนรายการต่อสถานะ) มักต้องเขียน SQL แบบนี้เพื่อ "คำนวณเลขที่ถูกต้องแบบอิสระ" มาเทียบกับตัวเลขที่ระบบแสดงผล ถ้าไม่ตรงกันคือเจอบั๊กในโค้ดคำนวณจริง`,
     example: `-- ตัวอย่างนับจำนวน Holdings และหาค่าเฉลี่ยต้นทุนต่อ sector
 SELECT sector, COUNT(*) AS numHoldings, AVG(avgCost) AS avgPrice FROM holdings GROUP BY sector;`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -428,13 +449,10 @@ SELECT sector, COUNT(*) AS numHoldings, AVG(avgCost) AS avgPrice FROM holdings G
     hint: "ต้องมี 2 คำสั่งคั่นด้วย ; คำสั่งแรกลบแถวที่ตรงกับเงื่อนไขทั้งสองคอลัมน์ที่โจทย์กำหนด คำสั่งที่สองนับจำนวนแถวที่เหลือของ ticker เดิมเพื่อพิสูจน์ว่าลบสำเร็จจริง",
     solution: `DELETE FROM holdings WHERE ticker = 'QQQI' AND broker = 'Webull';
 SELECT COUNT(*) AS cnt FROM holdings WHERE ticker = 'QQQI';`,
-    theory: `ในโค้ดจริงของ <code>HoldingsPage.jsx</code> ฟังก์ชัน <code>confirmDelete()</code> ทำงานเป็น 2 ขั้นตอนแยกกัน:<br/><br/>
-    <code>// Optimistic update: remove immediately from UI<br/>
-    addOptimisticHolding({ type: 'delete', ticker: pendingDelete, broker: ... });<br/><br/>
-    // Real update: persist deletion<br/>
-    onUpdate(getLatestHoldings().filter(h => !(h.ticker === pendingDelete && ...)));</code><br/><br/>
-    สังเกตคำว่า "Optimistic update" — UI จะเอาแถวออกจากหน้าจอ<strong>ทันที</strong>โดยไม่รอผลจริงจาก Backend/storage เลย ถ้าขั้นตอน "Real update: persist deletion" ล้มเหลวเงียบๆ (เช่น network error, permission error) <strong>ผู้ใช้จะเห็นว่าแถวหายไปแล้ว ทั้งที่ข้อมูลจริงยังอยู่</strong> — นี่คือเหตุผลว่าทำไม Playwright test ที่เช็คแค่ "UI ไม่แสดงแถวนี้แล้ว" ถึงไม่พอ<br/><br/>
-    <strong>Data Integrity Check</strong> คือการยืนยันที่ชั้นข้อมูลจริง (Database) แยกต่างหากจากการเช็ค UI — ยิ่งเป็น action ที่ทำลายข้อมูล (DELETE) ยิ่งควรเช็คสองชั้น: (1) UI อัปเดตถูกต้อง (Playwright) และ (2) ข้อมูลหายไปจริงจาก storage (SQL/API เช็คตรงๆ)`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Data Integrity Check: ยืนยันว่าลบข้อมูลจริงหลัง Action และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>addOptimisticHolding({ type: 'delete', ticker: pendingDelete, broker: ... });<br/><br/><br/>// Real update: persist deletion<br/><br/>onUpdate(getLatestHoldings().filter(h => !(h.ticker === pendingDelete && ...)));</code><br/><br/><br/>สังเกตคำว่า "Optimistic update" — UI จะเอาแถวออกจากหน้าจอ<strong>ทันที</strong>โดยไม่รอผลจริงจาก Backend/storage เลย ถ้าขั้นตอน "Real update: persist deletion" ล้มเหลวเงียบๆ (เช่น network error, permission error) <strong>ผู้ใช้จะเห็นว่าแถวหายไปแล้ว ทั้งที่ข้อมูลจริงยังอยู่</strong> — นี่คือเหตุผลว่าทำไม Playwright test ที่เช็คแค่ "UI ไม่แสดงแถวนี้แล้ว" ถึงไม่พอ<br/><br/><br/><strong>Data Integrity Check</strong> คือการยืนยันที่ชั้นข้อมูลจริง (Database) แยกต่างหากจากการเช็ค UI — ยิ่งเป็น action ที่ทำลายข้อมูล (DELETE) ยิ่งควรเช็คสองชั้น: (1) UI อัปเดตถูกต้อง (Playwright) และ (2) ข้อมูลหายไปจริงจาก storage (SQL/API เช็คตรงๆ)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>// Optimistic update: remove immediately from UI<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่างยืนยันว่า UPDATE เปลี่ยนค่าจริง ไม่ใช่แค่ไม่ error
 UPDATE holdings SET shares = 999 WHERE ticker = 'GOOGL';
 SELECT shares FROM holdings WHERE ticker = 'GOOGL';
@@ -466,11 +484,10 @@ SELECT shares FROM holdings WHERE ticker = 'GOOGL';
     },
     hint: "ค่าที่ยังไม่ถูกกำหนดใน SQL ไม่ใช่ string ว่างหรือเลข 0 — การเทียบด้วยเครื่องหมาย = ตามปกติจะไม่มีวันเจอแถวที่ยังไม่มีค่าเลย ต้องใช้ตัวดำเนินการเปรียบเทียบพิเศษที่ออกแบบมาสำหรับตรวจสอบว่าคอลัมน์ 'ไม่มีค่า' โดยเฉพาะแทน",
     solution: `SELECT ticker FROM holdings WHERE sector IS NULL;`,
-    theory: `<strong>NULL</strong> ไม่ใช่ค่า "ว่างเปล่า" หรือ "ศูนย์" — มันแปลว่า "ไม่รู้ค่า/ไม่มีค่า" ในทางตรรกะของ SQL การเปรียบเทียบใดๆ กับ NULL ด้วย <code>=</code> จะได้ผลลัพธ์เป็น "ไม่รู้" (ไม่ใช่ true หรือ false) เสมอ — แปลว่า <code>WHERE sector = NULL</code> จะ<strong>ไม่มีวันคืนแถวไหนเลย แม้แถวนั้นจะมี sector เป็น NULL จริงๆ ก็ตาม</strong><br/><br/>
-    ต้องใช้ตัวดำเนินการพิเศษแทน:<br/>
-    1. <code>WHERE column IS NULL</code> — หาแถวที่ไม่มีค่า<br/>
-    2. <code>WHERE column IS NOT NULL</code> — หาแถวที่มีค่าแล้ว<br/><br/>
-    บั๊กนี้พบบ่อยมากในโค้ดที่เขียนโดยคนไม่คุ้น SQL (เอา logic แบบภาษาโปรแกรมทั่วไปมาใช้ เช่น JavaScript <code>x === null</code>) แล้วงงว่าทำไม query ที่ "ดูถูกต้อง" ถึงไม่คืนผลลัพธ์ที่ควรจะมี — เจอบ่อยตอนเขียน Test Data verification ที่ต้องเช็คว่า field ไหนยังไม่ได้กรอกข้อมูล (เช่น ผู้ใช้ยังไม่จัดหมวดหมู่ sector ให้ Holding ตัวใหม่)`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>NULL</strong> ไม่ใช่ค่า "ว่างเปล่า" หรือ "ศูนย์" — มันแปลว่า "ไม่รู้ค่า/ไม่มีค่า" ในทางตรรกะของ SQL การเปรียบเทียบใดๆ กับ NULL ด้วย <code>=</code> จะได้ผลลัพธ์เป็น "ไม่รู้" (ไม่ใช่ true หรือ false) เสมอ — แปลว่า <code>WHERE sector = NULL</code> จะ<strong>ไม่มีวันคืนแถวไหนเลย แม้แถวนั้นจะมี sector เป็น NULL จริงๆ ก็ตาม</strong><br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ต้องใช้ตัวดำเนินการพิเศษแทน:<br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>1. <code>WHERE column IS NULL</code> — หาแถวที่ไม่มีค่า<br/><br/>2. <code>WHERE column IS NOT NULL</code> — หาแถวที่มีค่าแล้ว<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> บั๊กนี้พบบ่อยมากในโค้ดที่เขียนโดยคนไม่คุ้น SQL (เอา logic แบบภาษาโปรแกรมทั่วไปมาใช้ เช่น JavaScript <code>x === null</code>) แล้วงงว่าทำไม query ที่ "ดูถูกต้อง" ถึงไม่คืนผลลัพธ์ที่ควรจะมี — เจอบ่อยตอนเขียน Test Data verification ที่ต้องเช็คว่า field ไหนยังไม่ได้กรอกข้อมูล (เช่น ผู้ใช้ยังไม่จัดหมวดหมู่ sector ให้ Holding ตัวใหม่)`,
     example: `-- ตัวอย่างรวม IS NULL กับเงื่อนไขอื่น
 SELECT ticker FROM holdings WHERE sector IS NULL AND broker = 'Webull';`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -526,12 +543,10 @@ FROM test_cases c JOIN test_suites s ON c.suiteId = s.id
 WHERE c.status = 'FAIL'
 GROUP BY s.name
 HAVING COUNT(*) > 1;`,
-    theory: `บทเรียนนี้รวม 3 เทคนิคที่เรียนมาแล้วเข้าด้วยกันในคำถามเดียว (JOIN + WHERE + GROUP BY) และเพิ่มเทคนิคใหม่: <strong>HAVING</strong><br/><br/>
-    ความแตกต่างสำคัญระหว่าง <code>WHERE</code> กับ <code>HAVING</code>:<br/>
-    1. <code>WHERE</code> กรอง<strong>แถวดิบ</strong>ก่อนที่จะ <code>GROUP BY</code> — ใช้กรองแถวที่ <code>status = 'FAIL'</code> ก่อนนับ<br/>
-    2. <code>HAVING</code> กรอง<strong>ผลลัพธ์หลังคำนวณ Aggregate Function แล้ว</strong> — ใช้กรอง suite ที่มี <code>COUNT(*) > 1</code> หลังจากนับจำนวน FAIL ต่อ suite เสร็จแล้ว<br/><br/>
-    ทำไมต้องแยกกัน: <code>WHERE</code> ทำงานก่อน <code>GROUP BY</code> เกิดขึ้น จึงยังไม่มีค่า <code>COUNT(*)</code> ให้เทียบ (เขียน <code>WHERE COUNT(*) > 1</code> จะ error) ต้องรอให้จับกลุ่มและคำนวณเสร็จก่อน แล้วค่อยกรองด้วย <code>HAVING</code> ทีหลัง<br/><br/>
-    ในงาน QA เทคนิคนี้ตอบคำถามเชิงรายงานที่ซับซ้อนขึ้น เช่น "Test Suite ไหนที่มีอัตราความล้มเหลวสูงเกินเกณฑ์ที่ทีมต้องรีบตรวจสอบ" — คำถามที่ต้องรวมข้อมูลจากหลายตาราง กรองก่อนนับ นับแล้วจับกลุ่ม แล้วกรองอีกรอบหลังนับ ครบทุกขั้นตอนในคำสั่งเดียว`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Reporting ขั้นสูง: หา Test Suite ที่มี Test Case FAIL เกินเกณฑ์ (JOIN + GROUP BY + HAVING) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ในงาน QA เทคนิคนี้ตอบคำถามเชิงรายงานที่ซับซ้อนขึ้น เช่น "Test Suite ไหนที่มีอัตราความล้มเหลวสูงเกินเกณฑ์ที่ทีมต้องรีบตรวจสอบ" — คำถามที่ต้องรวมข้อมูลจากหลายตาราง กรองก่อนนับ นับแล้วจับกลุ่ม แล้วกรองอีกรอบหลังนับ ครบทุกขั้นตอนในคำสั่งเดียว<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ความแตกต่างสำคัญระหว่าง <code>WHERE</code> กับ <code>HAVING</code>:<br/><br/>1. <code>WHERE</code> กรอง<strong>แถวดิบ</strong>ก่อนที่จะ <code>GROUP BY</code> — ใช้กรองแถวที่ <code>status = 'FAIL'</code> ก่อนนับ<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่าง HAVING แบบนับทุกสถานะรวมกัน (ไม่กรอง WHERE ก่อน) หา suite ที่มี test case รวมมากกว่า 2 รายการ
 SELECT s.name, COUNT(*) AS totalCases FROM test_cases c JOIN test_suites s ON c.suiteId = s.id GROUP BY s.name HAVING COUNT(*) > 2;`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -628,13 +643,16 @@ CREATE TABLE test_runs (id NUMBER PRIMARY KEY, testerEmail STRING, suiteId NUMBE
 INSERT INTO testers VALUES ('jane@test.com', 'Jane');
 INSERT INTO suites VALUES (1, 'Login');
 INSERT INTO test_runs VALUES (1, 'jane@test.com', 1, 'PASS');`,
-    theory: `บทเรียนนี้เป็นบทสรุปของหลักการที่เรียนมาทั้งหมด: <strong>Normalization</strong> (บทที่ 4) + <strong>PRIMARY KEY</strong> (Database Design) + <strong>FOREIGN KEY</strong> (บทที่ 3) รวมกันเป็นงานออกแบบ Schema จริง<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ ออกแบบ Schema แบบ Normalized: จากตารางเดียวที่ข้อมูลซ้ำซ้อน สู่ 3 ตารางที่เชื่อมด้วย Foreign Key และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทเรียนนี้เป็นบทสรุปของหลักการที่เรียนมาทั้งหมด: <strong>Normalization</strong> (บทที่ 4) + <strong>PRIMARY KEY</strong> (Database Design) + <strong>FOREIGN KEY</strong> (บทที่ 3) รวมกันเป็นงานออกแบบ Schema จริง<br/><br/>
     ตาราง <code>test_runs_flat</code> แบบเดิมมีปัญหาที่เรียกว่า <strong>repeating groups</strong> — ข้อมูลของ tester คนเดียวกัน (<code>testerName</code>, <code>testerEmail</code>) ถูกพิมพ์ซ้ำทุกครั้งที่เขารัน test อีกครั้ง เช่นเดียวกับข้อมูล suite (<code>suiteName</code>) ที่ซ้ำทุกครั้งที่มี test case ในนั้น<br/><br/>
     วิธีแก้: แยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางอ้างอิงต่างหาก แล้วให้ตารางบันทึกเหตุการณ์ (<code>test_runs</code>) เก็บแค่ตัวอ้างอิง (Foreign Key) กลับไปยังตารางเหล่านั้น:<br/>
     1. <code>testers</code> — ข้อมูล tester แต่ละคนถูกเก็บครั้งเดียว ระบุตัวด้วย <code>email</code> (PRIMARY KEY)<br/>
     2. <code>suites</code> — ข้อมูล suite แต่ละชุดถูกเก็บครั้งเดียว ระบุตัวด้วย <code>id</code> (PRIMARY KEY)<br/>
     3. <code>test_runs</code> — 1 แถวต่อ 1 การรัน test จริง อ้างอิงกลับไปยังทั้งสองตารางด้วย Foreign Key สองจุด<br/><br/>
-    ถ้า Jane เปลี่ยนอีเมล ตอนนี้แก้แค่แถวเดียวในตาราง <code>testers</code> ก็จบ — ไม่ต้องไล่หาทุกแถวใน <code>test_runs</code> ที่เคยพิมพ์อีเมลเธอซ้ำไว้เหมือนตอนที่ยังไม่ได้ Normalize`,
+    ถ้า Jane เปลี่ยนอีเมล ตอนนี้แก้แค่แถวเดียวในตาราง <code>testers</code> ก็จบ — ไม่ต้องไล่หาทุกแถวใน <code>test_runs</code> ที่เคยพิมพ์อีเมลเธอซ้ำไว้เหมือนตอนที่ยังไม่ได้ Normalize<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ตาราง <code>test_runs_flat</code> แบบเดิมมีปัญหาที่เรียกว่า <strong>repeating groups</strong> — ข้อมูลของ tester คนเดียวกัน (<code>testerName</code>, <code>testerEmail</code>) ถูกพิมพ์ซ้ำทุกครั้งที่เขารัน test อีกครั้ง เช่นเดียวกับข้อมูล suite (<code>suiteName</code>) ที่ซ้ำทุกครั้งที่มี test case ในนั้น<br/><br/><br/>วิธีแก้: แยกข้อมูลที่ "ซ้ำกันได้" ออกเป็นตารางอ้างอิงต่างหาก แล้วให้ตารางบันทึกเหตุการณ์ (<code>test_runs</code>) เก็บแค่ตัวอ้างอิง (Foreign Key) กลับไปยังตารางเหล่านั้น:<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่างออกแบบคล้ายกันสำหรับข้อมูล environment ที่ test ใช้รัน (แยก environment ออกจาก run log)
 CREATE TABLE environments (id NUMBER PRIMARY KEY, name STRING, osVersion STRING);
 CREATE TABLE test_run_logs (id NUMBER PRIMARY KEY, envId NUMBER, result STRING, FOREIGN KEY (envId) REFERENCES environments(id));`,
@@ -690,9 +708,12 @@ CREATE TABLE test_run_logs (id NUMBER PRIMARY KEY, envId NUMBER, result STRING, 
     },
     hint: "GROUP BY คอลัมน์ที่เป็นฝั่งซ้ายของ FD (testerEmail) แล้วนับจำนวนค่าที่ไม่ซ้ำกันของฝั่งขวาด้วย COUNT(DISTINCT testerName) — ถ้า FD เป็นจริง ทุกกลุ่มต้องมีค่าฝั่งขวาแค่ 1 ค่าเท่านั้น ใช้ HAVING กรองเฉพาะกลุ่มที่ผิดปกติ (มากกว่า 1 ค่า) ออกมา ถ้า query คืนค่าว่างเปล่าแปลว่าไม่มีการละเมิดเลยสักกลุ่ม",
     solution: `SELECT testerEmail, COUNT(DISTINCT testerName) AS nameCount FROM test_runs_flat GROUP BY testerEmail HAVING COUNT(DISTINCT testerName) > 1;`,
-    theory: `<strong>Functional Dependency (FD)</strong> คือความสัมพันธ์พื้นฐานที่สุดที่ Normal Form ทุกระดับ (1NF, 2NF, 3NF, BCNF) ถูกนิยามด้วย — เขียนแทนด้วย <code>A → B</code> อ่านว่า "A กำหนดค่า B" แปลว่า: ถ้ารู้ค่า A แล้ว ต้องรู้ค่า B ได้แน่นอนเพียงค่าเดียวเสมอ ไม่มีทางที่ A เดียวกันจะมี B ต่างกันได้<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Functional Dependency (FD)</strong> คือความสัมพันธ์พื้นฐานที่สุดที่ Normal Form ทุกระดับ (1NF, 2NF, 3NF, BCNF) ถูกนิยามด้วย — เขียนแทนด้วย <code>A → B</code> อ่านว่า "A กำหนดค่า B" แปลว่า: ถ้ารู้ค่า A แล้ว ต้องรู้ค่า B ได้แน่นอนเพียงค่าเดียวเสมอ ไม่มีทางที่ A เดียวกันจะมี B ต่างกันได้<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Functional Dependency (FD)</strong> คือความสัมพันธ์พื้นฐานที่สุดที่ Normal Form ทุกระดับ (1NF, 2NF, 3NF, BCNF) ถูกนิยามด้วย — เขียนแทนด้วย <code>A → B</code> อ่านว่า "A กำหนดค่า B" แปลว่า: ถ้ารู้ค่า A แล้ว ต้องรู้ค่า B ได้แน่นอนเพียงค่าเดียวเสมอ ไม่มีทางที่ A เดียวกันจะมี B ต่างกันได้<br/><br/>
     ในตัวอย่างนี้: <code>testerEmail → testerName</code> แปลว่า "อีเมล tester คนหนึ่งต้องผูกกับชื่อเดียวเสมอ" — ถ้า <code>jane@test.com</code> ปรากฏพร้อมชื่อ "Jane" ในบางแถว แต่ปรากฏพร้อมชื่อ "J. Doe" ในอีกแถว นั่นคือ FD ถูกละเมิด (ข้อมูลไม่สอดคล้องกันเอง)<br/><br/>
-    เทคนิคพิสูจน์ FD ด้วย SQL คือ <code>GROUP BY</code> ฝั่งซ้าย (determinant) แล้วนับ <code>COUNT(DISTINCT ...)</code> ฝั่งขวา — ถ้าทุกกลุ่มมีค่าเดียว FD เป็นจริง ถ้ามีกลุ่มไหนมากกว่า 1 ค่า FD ถูกละเมิดที่กลุ่มนั้น เทคนิคเดียวกันนี้จะถูกใช้ซ้ำในทุกบทถัดไป (1NF-BCNF) เพื่อตรวจว่าคอลัมน์หนึ่งๆ ขึ้นอยู่กับคีย์ "ทั้งหมด" "โดยตรง" หรือ "ผ่านคอลัมน์อื่น" หรือไม่`,
+    เทคนิคพิสูจน์ FD ด้วย SQL คือ <code>GROUP BY</code> ฝั่งซ้าย (determinant) แล้วนับ <code>COUNT(DISTINCT ...)</code> ฝั่งขวา — ถ้าทุกกลุ่มมีค่าเดียว FD เป็นจริง ถ้ามีกลุ่มไหนมากกว่า 1 ค่า FD ถูกละเมิดที่กลุ่มนั้น เทคนิคเดียวกันนี้จะถูกใช้ซ้ำในทุกบทถัดไป (1NF-BCNF) เพื่อตรวจว่าคอลัมน์หนึ่งๆ ขึ้นอยู่กับคีย์ "ทั้งหมด" "โดยตรง" หรือ "ผ่านคอลัมน์อื่น" หรือไม่<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>เทคนิคพิสูจน์ FD ด้วย SQL คือ <code>GROUP BY</code> ฝั่งซ้าย (determinant) แล้วนับ <code>COUNT(DISTINCT ...)</code> ฝั่งขวา — ถ้าทุกกลุ่มมีค่าเดียว FD เป็นจริง ถ้ามีกลุ่มไหนมากกว่า 1 ค่า FD ถูกละเมิดที่กลุ่มนั้น เทคนิคเดียวกันนี้จะถูกใช้ซ้ำในทุกบทถัดไป (1NF-BCNF) เพื่อตรวจว่าคอลัมน์หนึ่งๆ ขึ้นอยู่กับคีย์ "ทั้งหมด" "โดยตรง" หรือ "ผ่านคอลัมน์อื่น" หรือไม่<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ในตัวอย่างนี้: <code>testerEmail → testerName</code> แปลว่า "อีเมล tester คนหนึ่งต้องผูกกับชื่อเดียวเสมอ" — ถ้า <code>jane@test.com</code> ปรากฏพร้อมชื่อ "Jane" ในบางแถว แต่ปรากฏพร้อมชื่อ "J. Doe" ในอีกแถว นั่นคือ FD ถูกละเมิด (ข้อมูลไม่สอดคล้องกันเอง)<br/><br/>`,
     example: `-- ตัวอย่างใช้เทคนิคเดียวกันตรวจ FD อื่น (ไม่ใช่คำตอบของโจทย์นี้ แค่ตัวอย่างวิธีคิด)
 SELECT suiteName, COUNT(DISTINCT status) AS statusCount FROM test_runs_flat GROUP BY suiteName;`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -746,9 +767,10 @@ INSERT INTO contact_numbers (ticker, phone) VALUES
   ('AMZN', '02-111-1111'),
   ('AMZN', '02-222-2222'),
   ('GOOGL', '02-333-3333');`,
-    theory: `<strong>1NF (First Normal Form)</strong> คือกฎแรกสุดของ Normal Form: ทุกคอลัมน์ต้องเก็บค่าที่ <strong>atomic</strong> (แบ่งย่อยไม่ได้อีก) ห้ามมีหลายค่ารวมกันในช่องเดียว (เรียกว่า <strong>repeating group</strong>)<br/><br/>
-    ตาราง <code>contacts_bad</code> เก็บ <code>phone_numbers</code> เป็น <code>"02-111-1111,02-222-2222"</code> — ดูเหมือนสะดวกตอน INSERT แต่พังทันทีตอน query จริง: <code>WHERE phone_numbers = '02-111-1111'</code> จะหาไม่เจอเพราะค่าจริงในช่องคือ string ที่มี comma ต่อท้าย ไม่ใช่ค่าที่ตรงกันเป๊ะ และ <code>COUNT(DISTINCT phone_numbers)</code> ก็นับจำนวนเบอร์จริงไม่ได้เลย เพราะระบบมองว่าทั้ง string คือ "ค่าเดียว"<br/><br/>
-    วิธีแก้ตามหลัก 1NF: แยกแต่ละเบอร์ออกเป็นคนละแถว (เหมือนที่ทำในบทนี้) — ตอนนี้ค้นหา/นับ/กรองเบอร์โทรแต่ละเบอร์ได้ตรงไปตรงมาด้วย SQL ปกติ นี่คือกฎข้อแรกที่ต่อยอดจากบท "Normalization" (บทที่ 4) และเป็นจุดเริ่มต้นของบันได 2NF, 3NF, BCNF ที่จะเรียนต่อจากนี้`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>1NF (First Normal Form)</strong> คือกฎแรกสุดของ Normal Form: ทุกคอลัมน์ต้องเก็บค่าที่ <strong>atomic</strong> (แบ่งย่อยไม่ได้อีก) ห้ามมีหลายค่ารวมกันในช่องเดียว (เรียกว่า <strong>repeating group</strong>)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>วิธีแก้ตามหลัก 1NF: แยกแต่ละเบอร์ออกเป็นคนละแถว (เหมือนที่ทำในบทนี้) — ตอนนี้ค้นหา/นับ/กรองเบอร์โทรแต่ละเบอร์ได้ตรงไปตรงมาด้วย SQL ปกติ นี่คือกฎข้อแรกที่ต่อยอดจากบท "Normalization" (บทที่ 4) และเป็นจุดเริ่มต้นของบันได 2NF, 3NF, BCNF ที่จะเรียนต่อจากนี้<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ตาราง <code>contacts_bad</code> เก็บ <code>phone_numbers</code> เป็น <code>"02-111-1111,02-222-2222"</code> — ดูเหมือนสะดวกตอน INSERT แต่พังทันทีตอน query จริง: <code>WHERE phone_numbers = '02-111-1111'</code> จะหาไม่เจอเพราะค่าจริงในช่องคือ string ที่มี comma ต่อท้าย ไม่ใช่ค่าที่ตรงกันเป๊ะ และ <code>COUNT(DISTINCT phone_numbers)</code> ก็นับจำนวนเบอร์จริงไม่ได้เลย เพราะระบบมองว่าทั้ง string คือ "ค่าเดียว"<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่างละเมิด 1NF แบบเดียวกันกับ tags (สมมติ ห้ามเขียนแบบนี้จริง)
 -- ticker='AMZN', tags='ecommerce,cloud,logistics'  <- ไม่ atomic เหมือนกัน ต้องแยกเป็นตาราง tags ต่างหาก`,
     task: `จงเขียน SQL ให้สมบูรณ์ โดย:<br/>
@@ -815,9 +837,12 @@ INSERT INTO contact_numbers (ticker, phone) VALUES
 CREATE TABLE order_items (orderId NUMBER, ticker STRING, quantity NUMBER, PRIMARY KEY (orderId, ticker), FOREIGN KEY (ticker) REFERENCES tickers_catalog(ticker));
 INSERT INTO tickers_catalog VALUES ('AMZN', 'Amazon.com Inc');
 INSERT INTO order_items VALUES (1, 'AMZN', 50);`,
-    theory: `<strong>2NF (Second Normal Form)</strong> ต่อยอดจาก 1NF (บทก่อนหน้า — ทุกค่าต้อง atomic แล้ว) และเพิ่มกฎใหม่ที่ใช้ได้เฉพาะกับตารางที่มี <strong>Composite Primary Key</strong> (คีย์ผสมหลายคอลัมน์) เท่านั้น: ทุกคอลัมน์ที่ไม่ใช่คีย์ ต้องขึ้นอยู่กับคีย์ <strong>ทั้งชุด</strong> ไม่ใช่แค่บางส่วน<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>2NF (Second Normal Form)</strong> ต่อยอดจาก 1NF (บทก่อนหน้า — ทุกค่าต้อง atomic แล้ว) และเพิ่มกฎใหม่ที่ใช้ได้เฉพาะกับตารางที่มี <strong>Composite Primary Key</strong> (คีย์ผสมหลายคอลัมน์) เท่านั้น: ทุกคอลัมน์ที่ไม่ใช่คีย์ ต้องขึ้นอยู่กับคีย์ <strong>ทั้งชุด</strong> ไม่ใช่แค่บางส่วน<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>2NF (Second Normal Form)</strong> ต่อยอดจาก 1NF (บทก่อนหน้า — ทุกค่าต้อง atomic แล้ว) และเพิ่มกฎใหม่ที่ใช้ได้เฉพาะกับตารางที่มี <strong>Composite Primary Key</strong> (คีย์ผสมหลายคอลัมน์) เท่านั้น: ทุกคอลัมน์ที่ไม่ใช่คีย์ ต้องขึ้นอยู่กับคีย์ <strong>ทั้งชุด</strong> ไม่ใช่แค่บางส่วน<br/><br/>
     ในตาราง <code>order_items_bad</code> คีย์คือ <code>(orderId, ticker)</code> ทั้งคู่ แต่ <code>productName</code> ใช้ FD notation (จากบทก่อนหน้า) เขียนได้ว่า <code>ticker → productName</code> — สังเกตว่าฝั่งซ้ายมีแค่ <code>ticker</code> ตัวเดียว ไม่ใช่คีย์เต็ม <code>(orderId, ticker)</code> นี่คือ <strong>Partial Dependency</strong> (ขึ้นกับคีย์แค่บางส่วน) ซึ่งทำให้ชื่อ "Amazon.com Inc" ถูกเก็บซ้ำทุกครั้งที่มี order ใหม่ของ AMZN<br/><br/>
-    วิธีแก้: แยกคอลัมน์ที่ Partial-Dependent (<code>productName</code>) ไปไว้ในตารางที่มีแค่ <code>ticker</code> เป็นคีย์ (<code>tickers_catalog</code>) แล้ว <code>order_items</code> ที่เหลือจะมีแต่คอลัมน์ที่ขึ้นกับคีย์ผสมทั้งคู่จริงๆ (<code>quantity</code> ต้องรู้ทั้ง orderId และ ticker ถึงจะระบุได้ว่าสั่งกี่หุ้น)`,
+    วิธีแก้: แยกคอลัมน์ที่ Partial-Dependent (<code>productName</code>) ไปไว้ในตารางที่มีแค่ <code>ticker</code> เป็นคีย์ (<code>tickers_catalog</code>) แล้ว <code>order_items</code> ที่เหลือจะมีแต่คอลัมน์ที่ขึ้นกับคีย์ผสมทั้งคู่จริงๆ (<code>quantity</code> ต้องรู้ทั้ง orderId และ ticker ถึงจะระบุได้ว่าสั่งกี่หุ้น)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ในตาราง <code>order_items_bad</code> คีย์คือ <code>(orderId, ticker)</code> ทั้งคู่ แต่ <code>productName</code> ใช้ FD notation (จากบทก่อนหน้า) เขียนได้ว่า <code>ticker → productName</code> — สังเกตว่าฝั่งซ้ายมีแค่ <code>ticker</code> ตัวเดียว ไม่ใช่คีย์เต็ม <code>(orderId, ticker)</code> นี่คือ <strong>Partial Dependency</strong> (ขึ้นกับคีย์แค่บางส่วน) ซึ่งทำให้ชื่อ "Amazon.com Inc" ถูกเก็บซ้ำทุกครั้งที่มี order ใหม่ของ AMZN<br/><br/><br/>วิธีแก้: แยกคอลัมน์ที่ Partial-Dependent (<code>productName</code>) ไปไว้ในตารางที่มีแค่ <code>ticker</code> เป็นคีย์ (<code>tickers_catalog</code>) แล้ว <code>order_items</code> ที่เหลือจะมีแต่คอลัมน์ที่ขึ้นกับคีย์ผสมทั้งคู่จริงๆ (<code>quantity</code> ต้องรู้ทั้ง orderId และ ticker ถึงจะระบุได้ว่าสั่งกี่หุ้น)<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่าง Partial Dependency แบบเดียวกันในบริบทอื่น (ไม่ใช่คำตอบของโจทย์นี้)
 -- ตาราง enrollments (studentId, courseId, studentName, grade) ที่ PK คือ (studentId, courseId)
 -- studentName ขึ้นกับ studentId อย่างเดียว (Partial Dependency เหมือนกัน) ต้องแยกไปตาราง students ต่างหาก`,
@@ -886,9 +911,10 @@ INSERT INTO order_items VALUES (1, 'AMZN', 50);`,
 CREATE TABLE holdings_normalized (ticker STRING PRIMARY KEY, broker STRING, FOREIGN KEY (broker) REFERENCES brokers_lookup(broker));
 INSERT INTO brokers_lookup VALUES ('Webull', 'US');
 INSERT INTO holdings_normalized VALUES ('AMZN', 'Webull');`,
-    theory: `<strong>3NF (Third Normal Form)</strong> ต่อยอดจาก 2NF (บทก่อนหน้า) แต่ใช้ได้กับตารางทุกแบบ ไม่ว่าคีย์จะเป็นคอลัมน์เดียวหรือคีย์ผสม — กฎคือ: ห้ามมีคอลัมน์ที่ไม่ใช่คีย์ขึ้นอยู่กับคอลัมน์ที่ไม่ใช่คีย์อีกตัวหนึ่ง (ต้องขึ้นกับคีย์โดยตรงเท่านั้น)<br/><br/>
-    ในตาราง <code>holdings_flat</code> คีย์คือ <code>ticker</code> เขียนเป็น FD chain ได้ว่า <code>ticker → broker → country</code> — <code>country</code> ไม่ได้ขึ้นกับ <code>ticker</code> ตรงๆ แต่ขึ้นกับ <code>broker</code> (ซึ่งเองก็ไม่ใช่คีย์) นี่คือ <strong>Transitive Dependency</strong> (ขึ้นทอดสอง) ทำให้ "US" ถูกเก็บซ้ำทุกครั้งที่ Webull มี ticker ใหม่<br/><br/>
-    ข้อแตกต่างกับ 2NF (บทก่อนหน้า): 2NF พูดถึงปัญหาที่เกิด<strong>เฉพาะกับคีย์ผสม</strong> (คอลัมน์ขึ้นกับแค่บางส่วนของคีย์) ส่วน 3NF พูดถึงปัญหาที่เกิดได้แม้คีย์จะเป็นคอลัมน์เดียว (คอลัมน์ขึ้นกับคอลัมน์ที่ไม่ใช่คีย์อีกตัวหนึ่ง แทนที่จะขึ้นกับคีย์ตรงๆ) — วิธีแก้เหมือนกัน: แยกส่วนที่ transitive ออกไปเป็นตารางของตัวเอง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>3NF (Third Normal Form)</strong> ต่อยอดจาก 2NF (บทก่อนหน้า) แต่ใช้ได้กับตารางทุกแบบ ไม่ว่าคีย์จะเป็นคอลัมน์เดียวหรือคีย์ผสม — กฎคือ: ห้ามมีคอลัมน์ที่ไม่ใช่คีย์ขึ้นอยู่กับคอลัมน์ที่ไม่ใช่คีย์อีกตัวหนึ่ง (ต้องขึ้นกับคีย์โดยตรงเท่านั้น)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>ข้อแตกต่างกับ 2NF (บทก่อนหน้า): 2NF พูดถึงปัญหาที่เกิด<strong>เฉพาะกับคีย์ผสม</strong> (คอลัมน์ขึ้นกับแค่บางส่วนของคีย์) ส่วน 3NF พูดถึงปัญหาที่เกิดได้แม้คีย์จะเป็นคอลัมน์เดียว (คอลัมน์ขึ้นกับคอลัมน์ที่ไม่ใช่คีย์อีกตัวหนึ่ง แทนที่จะขึ้นกับคีย์ตรงๆ) — วิธีแก้เหมือนกัน: แยกส่วนที่ transitive ออกไปเป็นตารางของตัวเอง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ในตาราง <code>holdings_flat</code> คีย์คือ <code>ticker</code> เขียนเป็น FD chain ได้ว่า <code>ticker → broker → country</code> — <code>country</code> ไม่ได้ขึ้นกับ <code>ticker</code> ตรงๆ แต่ขึ้นกับ <code>broker</code> (ซึ่งเองก็ไม่ใช่คีย์) นี่คือ <strong>Transitive Dependency</strong> (ขึ้นทอดสอง) ทำให้ "US" ถูกเก็บซ้ำทุกครั้งที่ Webull มี ticker ใหม่<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่าง Transitive Dependency แบบเดียวกันในบริบทอื่น (ไม่ใช่คำตอบของโจทย์นี้)
 -- ตาราง employees (empId, deptId, deptManager) ที่ PK คือ empId
 -- deptManager ขึ้นกับ deptId (ไม่ใช่ empId โดยตรง) ต้องแยกไปตาราง departments ต่างหาก`,
@@ -963,11 +989,10 @@ INSERT INTO holdings_normalized VALUES ('AMZN', 'Webull');`,
 CREATE TABLE test_case_reviews (testCase STRING, reviewer STRING, PRIMARY KEY (testCase, reviewer), FOREIGN KEY (reviewer) REFERENCES reviewers(reviewer));
 INSERT INTO reviewers VALUES ('Nueng', 'QA-Web');
 INSERT INTO test_case_reviews VALUES ('TC-001', 'Nueng');`,
-    theory: `<strong>BCNF (Boyce-Codd Normal Form)</strong> คือกฎที่เข้มกว่า 3NF (บทก่อนหน้า) เล็กน้อยแต่จับ edge case ที่ 3NF จับไม่ได้ — กฎคือ: ทุก Functional Dependency ในตาราง <code>A → B</code> ฝั่งซ้าย (<code>A</code>) ต้องเป็น <strong>candidate key</strong> ของตารางนั้นเสมอ ไม่มีข้อยกเว้น (candidate key คือคอลัมน์หรือกลุ่มคอลัมน์ที่ระบุแถวได้ไม่ซ้ำ ตารางหนึ่งมีได้มากกว่าหนึ่งชุด แม้จะเลือกแค่ชุดเดียวเป็น PRIMARY KEY ก็ตาม)<br/><br/>
-    ตาราง <code>test_case_reviews</code> ในโจทย์นี้มี candidate key <strong>สองชุด</strong>: <code>(testCase, reviewer)</code> และ <code>(testCase, team)</code> (เพราะแต่ละทีมมอบหมาย reviewer แค่คนเดียวต่อ test case หนึ่งๆ — รู้ testCase กับ team แล้วก็รู้ reviewer ได้แน่นอน) — เมื่อ candidate key สองชุดนี้รวมกันครอบคลุมทั้ง testCase, reviewer, team แล้ว<strong>ทุกคอลัมน์กลายเป็น prime attribute หมด</strong> (อยู่ใน candidate key บางชุด) นี่คือเหตุผลที่ตารางนี้<strong>ผ่าน 3NF จริง</strong>: กฎ 3NF ห้าม transitive dependency ที่ปลายทางเป็น<strong>non-prime attribute</strong>เท่านั้น แต่ <code>team</code> (ปลายทางของ <code>reviewer → team</code>) เป็น prime attribute (อยู่ใน candidate key <code>(testCase, team)</code>) จึงไม่นับว่าละเมิด 3NF<br/><br/>
-    แต่ BCNF<strong>ไม่มีข้อยกเว้นนี้</strong> — กฎ BCNF สนใจแค่ว่าฝั่งซ้าย (<code>reviewer</code>) เป็น candidate key หรือไม่ ไม่สนว่าฝั่งขวาจะ prime หรือไม่ก็ตาม <code>reviewer</code> เพียงตัวเดียว<strong>ไม่ใช่ candidate key</strong> ของตารางนี้ (ต้องคู่กับ <code>testCase</code> หรือ <code>team</code> ถึงจะระบุแถวได้ไม่ซ้ำ) — ฝั่งซ้ายที่ไม่ใช่ candidate key แบบนี้คือสิ่งที่ 3NF อนุโลมให้ผ่านได้ (เพราะปลายทางเป็น prime) แต่ BCNF ไม่อนุโลมเลย<br/><br/>
-    ผลคือ "QA-Web" ยังถูกเก็บซ้ำทุกครั้งที่ Nueng รีวิว test case ใหม่ ทั้งที่ผ่าน 3NF แล้ว — วิธีแก้เหมือนเดิมทุกบทที่ผ่านมา: แยกคอลัมน์ที่ผูกกับ non-candidate-key determinant (<code>team</code> ที่ผูกกับ <code>reviewer</code>) ออกไปเป็นตารางของตัวเอง<br/><br/>
-    <strong>สรุปบันได Normal Form ทั้งหมด:</strong> Functional Dependency (นิยามพื้นฐาน) → 1NF (ค่าต้อง atomic) → 2NF (ห้าม partial dependency บนคีย์ผสม) → 3NF (ห้าม transitive dependency ที่ปลายทางเป็น non-prime attribute) → BCNF (ทุก determinant ต้องเป็น candidate key ไม่มีข้อยกเว้น) — แต่ละระดับเข้มกว่าระดับก่อนหน้า และในงาน QA จริง 1NF-3NF คือสิ่งที่เจอบ่อยที่สุดตอน review schema ส่วน BCNF เป็น edge case ที่ต้องมี candidate key ซ้อนทับกันมากกว่าหนึ่งชุดถึงจะเกิดขึ้น เจอน้อยกว่ามากแต่สำคัญตอนต้องยืนยันว่า schema "ถูกต้องตามทฤษฎีเป๊ะ" จริงๆ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>BCNF (Boyce-Codd Normal Form)</strong> คือกฎที่เข้มกว่า 3NF (บทก่อนหน้า) เล็กน้อยแต่จับ edge case ที่ 3NF จับไม่ได้ — กฎคือ: ทุก Functional Dependency ในตาราง <code>A → B</code> ฝั่งซ้าย (<code>A</code>) ต้องเป็น <strong>candidate key</strong> ของตารางนั้นเสมอ ไม่มีข้อยกเว้น (candidate key คือคอลัมน์หรือกลุ่มคอลัมน์ที่ระบุแถวได้ไม่ซ้ำ ตารางหนึ่งมีได้มากกว่าหนึ่งชุด แม้จะเลือกแค่ชุดเดียวเป็น PRIMARY KEY ก็ตาม)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>สรุปบันได Normal Form ทั้งหมด:</strong> Functional Dependency (นิยามพื้นฐาน) → 1NF (ค่าต้อง atomic) → 2NF (ห้าม partial dependency บนคีย์ผสม) → 3NF (ห้าม transitive dependency ที่ปลายทางเป็น non-prime attribute) → BCNF (ทุก determinant ต้องเป็น candidate key ไม่มีข้อยกเว้น) — แต่ละระดับเข้มกว่าระดับก่อนหน้า และในงาน QA จริง 1NF-3NF คือสิ่งที่เจอบ่อยที่สุดตอน review schema ส่วน BCNF เป็น edge case ที่ต้องมี candidate key ซ้อนทับกันมากกว่าหนึ่งชุดถึงจะเกิดขึ้น เจอน้อยกว่ามากแต่สำคัญตอนต้องยืนยันว่า schema "ถูกต้องตามทฤษฎีเป๊ะ" จริงๆ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>ตาราง <code>test_case_reviews</code> ในโจทย์นี้มี candidate key <strong>สองชุด</strong>: <code>(testCase, reviewer)</code> และ <code>(testCase, team)</code> (เพราะแต่ละทีมมอบหมาย reviewer แค่คนเดียวต่อ test case หนึ่งๆ — รู้ testCase กับ team แล้วก็รู้ reviewer ได้แน่นอน) — เมื่อ candidate key สองชุดนี้รวมกันครอบคลุมทั้ง testCase, reviewer, team แล้ว<strong>ทุกคอลัมน์กลายเป็น prime attribute หมด</strong> (อยู่ใน candidate key บางชุด) นี่คือเหตุผลที่ตารางนี้<strong>ผ่าน 3NF จริง</strong>: กฎ 3NF ห้าม transitive dependency ที่ปลายทางเป็น<strong>non-prime attribute</strong>เท่านั้น แต่ <code>team</code> (ปลายทางของ <code>reviewer → team</code>) เป็น prime attribute (อยู่ใน candidate key <code>(testCase, team)</code>) จึงไม่นับว่าละเมิด 3NF<br/><br/><br/>แต่ BCNF<strong>ไม่มีข้อยกเว้นนี้</strong> — กฎ BCNF สนใจแค่ว่าฝั่งซ้าย (<code>reviewer</code>) เป็น candidate key หรือไม่ ไม่สนว่าฝั่งขวาจะ prime หรือไม่ก็ตาม <code>reviewer</code> เพียงตัวเดียว<strong>ไม่ใช่ candidate key</strong> ของตารางนี้ (ต้องคู่กับ <code>testCase</code> หรือ <code>team</code> ถึงจะระบุแถวได้ไม่ซ้ำ) — ฝั่งซ้ายที่ไม่ใช่ candidate key แบบนี้คือสิ่งที่ 3NF อนุโลมให้ผ่านได้ (เพราะปลายทางเป็น prime) แต่ BCNF ไม่อนุโลมเลย<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `-- ตัวอย่าง BCNF violation แบบเดียวกันในบริบทอื่น (ไม่ใช่คำตอบของโจทย์นี้)
 -- ตาราง course_bookings (student, course, instructor) มี candidate key 2 ชุด: (student, course) และ (student, instructor)
 -- เพราะแต่ละ instructor สอนได้แค่ 1 course เท่านั้น (instructor → course) และนักเรียนแต่ละคนเรียนกับ instructor คนหนึ่งได้แค่ 1 course

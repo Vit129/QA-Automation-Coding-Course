@@ -51,18 +51,14 @@ test('ปฏิเสธ request ที่ไม่มี API Key', async ({ req
   const response = await request.post('/api/ai/recommend', { data: {} });
   expect(response.status()).toBe(401);
 });`,
-    theory: `<strong>Security Testing สำหรับ QA</strong> ไม่ใช่การเจาะระบบ (pentest) แต่คือการ<strong>ยืนยันว่ากลไกป้องกันที่ Dev เขียนไว้ทำงานจริง</strong> — เหมือนงาน Functional Testing ทั่วไป แค่มุมมองพลิกจาก "ทำสิ่งที่ถูกต้องแล้วได้ผลถูกต้องมั้ย" เป็น "ทำสิ่งที่ไม่ควรทำได้ แล้วระบบบล็อกมั้ย"<br/><br/>
-    บทเรียนนี้อิงจาก middleware จริงใน <code>server/index.js</code> ของ My-Investment-Port:<br/><br/>
-    <code>const validateApiKey = (req, res, next) => {<br/>
-    &nbsp;&nbsp;const apiKey = req.headers['x-api-key'];<br/>
-    &nbsp;&nbsp;const expectedKey = process.env.API_KEY || 'dev-key-insecure';<br/>
-    &nbsp;&nbsp;if (!apiKey || apiKey !== expectedKey) {<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });<br/>
-    &nbsp;&nbsp;}<br/>
-    &nbsp;&nbsp;next();<br/>
-    };</code><br/><br/>
-    <strong>หมายเหตุความแม่นยำ:</strong> middleware นี้ไม่ได้ผูกกับทุก endpoint ของ AI Hub — ตรวจสอบโค้ดจริงแล้วมีแค่ 4 endpoint ที่ผูกไว้: <code>/api/ai/portfolio-snapshot</code>, <code>/api/ai/recommend</code> (ใช้ในบทนี้), <code>/api/ai/price-history</code>, และ <code>/api/ai/model/switch</code> — endpoint อื่นอย่าง <code>/api/ai/panel</code> ไม่มี middleware นี้เลย (จะใช้ในบท Sensitive Data Exposure ถัดไปด้วยเหตุผลอื่น)<br/><br/>
-    การเขียนโค้ดนี้ไม่ได้แปลว่ามันทำงานถูกต้องเสมอไป — QA ต้องพิสูจน์ด้วยการยิง request จริงที่<strong>ตั้งใจทำผิดกติกา</strong> (ไม่ใส่ key) แล้วดูว่าระบบบล็อกจริงตามที่ออกแบบไว้หรือไม่ นี่คือหัวใจของ Security Testing ระดับ QA — บทถัดๆ ไปจะครอบคลุม Injection, XSS, Sensitive Data Exposure และ Security Headers`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจบทบาท Security Testing สำหรับ QA (ยืนยันว่าระบบบล็อกการเข้าถึงโดยไม่มีสิทธิ์จริง)<br/><br/>
+    ⚖️ <strong>เปรียบเทียบมุมมอง Security Testing:</strong><br/>
+    • <strong>Pentester (เจาะระบบ):</strong> พยายามหาช่องโหว่ใหม่และหาวิธีบายพาสระบบป้องกัน<br/>
+    • <strong>QA Engineer (ยืนยันระบบ):</strong> ยืนยันว่า Security Control ที่ Dev เขียนไว้ (เช่น API Key Check) ทำงานถูกต้อง ไม่ให้ใครบายพาสได้ง่ายๆ<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>const response = await request.post('/api/ai/recommend', { data: {} });</code><br/>
+    <code>expect(response.status()).toBe(401);</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> อย่าทดสอบแค่ Happy Path (ยิงด้วย Key ที่ถูกต้อง) ต้องเขียน Negative Test ยิงโดยไม่ใส่ Key หรือใส่ Key ผิด เพื่อยืนยันว่าระบบปฏิเสธด้วย <code>401 Unauthorized</code> จริง`,
     example: `// ตัวอย่างยิงด้วย API Key ผิด (ไม่ใช่แค่ไม่มี key เลย)
 const response = await request.post('/api/ai/recommend', {
   data: {},
@@ -110,13 +106,14 @@ test('error message ยังปลอดภัยแม้ยิง input แ�
   const body = await response.json();
   expect(body.error).toBe('Failed to calculate levels');
 });`,
-    theory: `<strong>Injection Testing</strong> ในมุมมอง QA ไม่ใช่การพยายามเจาะระบบจริง (นั่นคือหน้าที่ pentester) แต่คือการ<strong>ยิง input ที่ผิดปกติ/เป็นอันตราย</strong>แล้วยืนยันว่าระบบ<strong>จัดการมันอย่างมีสติ</strong><br/><br/>
-    <strong>ความจริงที่ตรงไปตรงมา (แก้จากเวอร์ชันก่อนหน้าของบทนี้):</strong> ตรวจสอบโค้ดจริงของ <code>/api/ta/levels</code> แล้วพบว่า endpoint นี้ยิงต่อไปที่ Yahoo Finance API จริง (<code>axios.get</code>) — ticker ที่ผิดปกติ (รวมถึง injection-like string) ทำให้เกิด error ภายใน แล้ว handler จะ<strong>ตอบกลับ 500 จริง</strong> เสมอ (ไม่ใช่ "ไม่มีวัน 500" ตามที่บทเรียนเวอร์ชันก่อนอ้างผิดไป):<br/><br/>
-    <code>} catch (error) {<br/>
-    &nbsp;&nbsp;console.error(\`[TA] Error for \${ticker}:\`, error.message);<br/>
-    &nbsp;&nbsp;res.status(500).json({ error: 'Failed to calculate levels' });<br/>
-    }</code><br/><br/>
-    สิ่งที่ QA ต้องพิสูจน์จึงไม่ใช่ "ห้ามมี 500" แต่คือ <strong>"500 ที่เกิดขึ้นต้องเป็น 500 ที่ควบคุมไว้แล้ว"</strong> — <code>error.message</code> จริง (ที่อาจมีรายละเอียดจาก Yahoo API หรือ axios) ถูก <code>console.error</code> ไว้ฝั่ง server เท่านั้น ไม่เคยส่งกลับมาให้ client เห็นเลย ผู้ใช้เห็นแค่ข้อความทั่วไปที่ปลอดภัย <code>'Failed to calculate levels'</code> เสมอ — นี่คือ pattern เดียวกับที่บท Sensitive Data Exposure จะพูดถึงต่อไป`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจการทำ Injection Awareness Testing เพื่อยืนยันว่าเมื่อเกิด Error จาก Input แปลกปลอม ระบบจะไม่หลุด Stack Trace หรือ Sensitive Data ออกมา<br/><br/>
+    ⚖️ <strong>เปรียบเทียบระดับความปลอดภัยของ Error Message:</strong><br/>
+    • ❌ <strong>Unsafe Error:</strong> หลุด Raw Stack Trace, SQL Syntax, หรือ Internal Library (เช่น <code>TypeError at Object.func...</code>)<br/>
+    • <strong>Safe Error:</strong> ส่งเฉพาะ Generic Error Message (เช่น <code>'Failed to calculate levels'</code>)<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>const response = await request.get("/api/ta/levels?ticker=AAPL'; DROP TABLE users;--");</code><br/>
+    <code>expect(body.error).toBe('Failed to calculate levels');</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> การได้ 500 Internal Server Error อาจเกิดขึ้นได้เมื่อเจอ Input แปลก แต่ข้อความใน Response Body ต้องถูกชำระล้าง (Sanitized) ไม่ส่ง Raw Details ออกมาฝั่ง Client`,
     example: `// ตัวอย่างยิง input แปลกแบบอื่น (script tag) แล้วเช็คแบบเดียวกัน
 const response2 = await request.get('/api/ta/levels?ticker=<script>alert(1)</script>');
 const body2 = await response2.json();
@@ -162,9 +159,12 @@ test('ป้องกัน XSS: ข้อความที่พิมพ์�
   const xssRan = await page.evaluate(() => window.__xss);
   expect(xssRan).toBeFalsy();
 });`,
-    theory: `<strong>XSS (Cross-Site Scripting)</strong> คือช่องโหว่ที่ข้อความซึ่งควรเป็นแค่ "ข้อมูล" (เช่นชื่อ, note, comment) ถูก<strong>ตีความและรันเป็นโค้ดจริง</strong>เมื่อแสดงผลบนหน้าเว็บ — ถ้าผู้ใช้พิมพ์ <code>&lt;script&gt;...&lt;/script&gt;</code> แล้วระบบเอาไปแสดงผลตรงๆ โดยไม่ escape ตัวอักษรพิเศษ สคริปต์นั้นจะถูกรันจริงในเบราว์เซอร์ของผู้ใช้คนอื่นที่มาดูข้อมูลเดียวกัน<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>XSS (Cross-Site Scripting)</strong> คือช่องโหว่ที่ข้อความซึ่งควรเป็นแค่ "ข้อมูล" (เช่นชื่อ, note, comment) ถูก<strong>ตีความและรันเป็นโค้ดจริง</strong>เมื่อแสดงผลบนหน้าเว็บ — ถ้าผู้ใช้พิมพ์ <code>&lt;script&gt;...&lt;/script&gt;</code> แล้วระบบเอาไปแสดงผลตรงๆ โดยไม่ escape ตัวอักษรพิเศษ สคริปต์นั้นจะถูกรันจริงในเบราว์เซอร์ของผู้ใช้คนอื่นที่มาดูข้อมูลเดียวกัน<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>XSS (Cross-Site Scripting)</strong> คือช่องโหว่ที่ข้อความซึ่งควรเป็นแค่ "ข้อมูล" (เช่นชื่อ, note, comment) ถูก<strong>ตีความและรันเป็นโค้ดจริง</strong>เมื่อแสดงผลบนหน้าเว็บ — ถ้าผู้ใช้พิมพ์ <code>&lt;script&gt;...&lt;/script&gt;</code> แล้วระบบเอาไปแสดงผลตรงๆ โดยไม่ escape ตัวอักษรพิเศษ สคริปต์นั้นจะถูกรันจริงในเบราว์เซอร์ของผู้ใช้คนอื่นที่มาดูข้อมูลเดียวกัน<br/><br/>
     React (ที่ My-Investment-Port ใช้) <strong>ป้องกัน XSS ให้อัตโนมัติ</strong>ในกรณีส่วนใหญ่ — การ render <code>{note}</code> ธรรมดาจะ escape HTML tag ให้เองเสมอ ยกเว้นกรณีที่ dev จงใจใช้ <code>dangerouslySetInnerHTML</code> (ชื่อ prop บอกตรงๆ ว่าอันตราย) ซึ่งข้าม auto-escape ไปโดยสิ้นเชิง<br/><br/>
-    วิธีทดสอบ: กรอกข้อความที่มี <code>&lt;script&gt;</code> tag ตั้งค่าตัวแปร global แปลกๆ (เช่น <code>window.__xss = true</code>) ที่ปกติไม่มีในหน้าเว็บ แล้วเช็คด้วย <code>page.evaluate()</code> ว่าตัวแปรนั้นถูกตั้งค่าจริงหรือไม่ — ถ้า<strong>ไม่ถูกตั้งค่า</strong> แปลว่าสคริปต์ไม่ถูกรัน (ป้องกันสำเร็จ) หมายเหตุ: <code>watchlist-note-input</code>/<code>watchlist-save-btn</code>/<code>/watchlist</code> ในเทมเพลตนี้เป็นตัวอย่างสมมติ (My-Investment-Port ไม่มีหน้า Watchlist จริงแบบนี้) ใช้สอนเทคนิคการทดสอบ ไม่ได้อิงโค้ดจริง`,
+    วิธีทดสอบ: กรอกข้อความที่มี <code>&lt;script&gt;</code> tag ตั้งค่าตัวแปร global แปลกๆ (เช่น <code>window.__xss = true</code>) ที่ปกติไม่มีในหน้าเว็บ แล้วเช็คด้วย <code>page.evaluate()</code> ว่าตัวแปรนั้นถูกตั้งค่าจริงหรือไม่ — ถ้า<strong>ไม่ถูกตั้งค่า</strong> แปลว่าสคริปต์ไม่ถูกรัน (ป้องกันสำเร็จ) หมายเหตุ: <code>watchlist-note-input</code>/<code>watchlist-save-btn</code>/<code>/watchlist</code> ในเทมเพลตนี้เป็นตัวอย่างสมมติ (My-Investment-Port ไม่มีหน้า Watchlist จริงแบบนี้) ใช้สอนเทคนิคการทดสอบ ไม่ได้อิงโค้ดจริง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>React (ที่ My-Investment-Port ใช้) <strong>ป้องกัน XSS ให้อัตโนมัติ</strong>ในกรณีส่วนใหญ่ — การ render <code>{note}</code> ธรรมดาจะ escape HTML tag ให้เองเสมอ ยกเว้นกรณีที่ dev จงใจใช้ <code>dangerouslySetInnerHTML</code> (ชื่อ prop บอกตรงๆ ว่าอันตราย) ซึ่งข้าม auto-escape ไปโดยสิ้นเชิง<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> วิธีทดสอบ: กรอกข้อความที่มี <code>&lt;script&gt;</code> tag ตั้งค่าตัวแปร global แปลกๆ (เช่น <code>window.__xss = true</code>) ที่ปกติไม่มีในหน้าเว็บ แล้วเช็คด้วย <code>page.evaluate()</code> ว่าตัวแปรนั้นถูกตั้งค่าจริงหรือไม่ — ถ้า<strong>ไม่ถูกตั้งค่า</strong> แปลว่าสคริปต์ไม่ถูกรัน (ป้องกันสำเร็จ) หมายเหตุ: <code>watchlist-note-input</code>/<code>watchlist-save-btn</code>/<code>/watchlist</code> ในเทมเพลตนี้เป็นตัวอย่างสมมติ (My-Investment-Port ไม่มีหน้า Watchlist จริงแบบนี้) ใช้สอนเทคนิคการทดสอบ ไม่ได้อิงโค้ดจริง`,
     example: `// ตัวอย่างเช็ค DOM ว่า tag ไม่ถูกแปลงเป็น element จริง (อีกวิธียืนยัน)
 const scriptTagCount = await page.locator('script:has-text("window.__xss")').count();
 expect(scriptTagCount).toBe(0);`,
@@ -211,12 +211,10 @@ test('ปฏิเสธ API Key ปลอม พร้อม error message ท�
   const body = await response.json();
   expect(body.error).toContain('Unauthorized');
 });`,
-    theory: `บทนำเคยทดสอบแค่ "ไม่ใส่ Key เลย" — บทนี้ต่อยอดให้ครอบคลุมมากขึ้น: ทดสอบ<strong>ใส่ Key ที่ผิด</strong>ด้วย (ไม่ใช่แค่ไม่มี) เพราะเป็นกรณีที่พบบ่อยกว่าในการโจมตีจริง (ผู้โจมตีมักลองเดา/สุ่ม key มากกว่าไม่ใส่อะไรเลย) middleware จริงต้องครอบคลุมทั้งสองเงื่อนไข:<br/><br/>
-    <code>if (!apiKey || apiKey !== expectedKey) {<br/>
-    &nbsp;&nbsp;return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });<br/>
-    }</code><br/><br/>
-    สังเกตเงื่อนไข <code>!apiKey || apiKey !== expectedKey</code> — OR สองเงื่อนไข ครอบคลุมทั้ง "ไม่มี key" และ "มี key แต่ผิด" การทดสอบที่ครอบคลุมจริงต้องพิสูจน์<strong>ทั้งสองฝั่งของเงื่อนไข</strong> ไม่ใช่แค่ฝั่งเดียว — บั๊กจริงที่พบบ่อย: Dev เขียนเช็คแค่ <code>!apiKey</code> (ลืม <code>!==</code>) ทำให้ key ผิดอะไรก็ผ่านได้หมด ถ้า QA ทดสอบแค่ "ไม่ใส่ key" จะไม่มีทางเจอบั๊กแบบนี้เลย<br/><br/>
-    การตรวจสอบ error message (<code>'Unauthorized'</code>) เพิ่มเติมจาก status code อย่างเดียว ช่วยยืนยันว่าระบบปฏิเสธด้วยเหตุผลที่ถูกต้องจริง ไม่ใช่ 401 ที่มาจากสาเหตุอื่นโดยบังเอิญ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Auth Bypass: ลองสวมรอยด้วย Key ปลอม ไม่ใช่แค่ไม่มี Key และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });<br/><br/>}</code><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><code>if (!apiKey || apiKey !== expectedKey) {<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> สังเกตเงื่อนไข <code>!apiKey || apiKey !== expectedKey</code> — OR สองเงื่อนไข ครอบคลุมทั้ง "ไม่มี key" และ "มี key แต่ผิด" การทดสอบที่ครอบคลุมจริงต้องพิสูจน์<strong>ทั้งสองฝั่งของเงื่อนไข</strong> ไม่ใช่แค่ฝั่งเดียว — บั๊กจริงที่พบบ่อย: Dev เขียนเช็คแค่ <code>!apiKey</code> (ลืม <code>!==</code>) ทำให้ key ผิดอะไรก็ผ่านได้หมด ถ้า QA ทดสอบแค่ "ไม่ใส่ key" จะไม่มีทางเจอบั๊กแบบนี้เลย<br/><br/><br/>การตรวจสอบ error message (<code>'Unauthorized'</code>) เพิ่มเติมจาก status code อย่างเดียว ช่วยยืนยันว่าระบบปฏิเสธด้วยเหตุผลที่ถูกต้องจริง ไม่ใช่ 401 ที่มาจากสาเหตุอื่นโดยบังเอิญ`,
     example: `// ตัวอย่างทดสอบ Key ที่ถูกต้องควรผ่านได้ปกติ (positive case คู่กัน)
 const response2 = await request.post('/api/ai/recommend', {
   data: { snapshot: {} },
@@ -261,11 +259,10 @@ test('error response ไม่หลุดรายละเอียดภา�
 
   expect(body.error).not.toMatch(/at Object|ENOENT|ECONNREFUSED/);
 });`,
-    theory: `<strong>Sensitive Data Exposure</strong> ไม่ได้หมายถึงแค่รหัสผ่าน/token หลุดเท่านั้น — <strong>stack trace, path ของไฟล์บนเครื่อง server, ชื่อ library ภายใน, error ระดับระบบปฏิบัติการ</strong> (เช่น <code>ENOENT</code> = file not found, <code>ECONNREFUSED</code> = connection refused) ล้วนเป็นข้อมูลที่ไม่ควรหลุดออกไปให้ผู้ใช้ทั่วไปเห็น เพราะช่วยให้ผู้โจมตี "เห็นภาพ" โครงสร้างภายในของระบบเพื่อวางแผนโจมตีต่อ<br/><br/>
-    <strong>สิ่งที่พบจริงในโค้ด <code>server/index.js</code> ของ My-Investment-Port (อ่านโค้ดจริงตอนเตรียมบทเรียนนี้):</strong> เอนด์พอยต์ <code>/api/calendar/alerts</code> เขียนถูกต้อง — เช็ค <code>NODE_ENV</code> ก่อนตัดสินใจว่าจะส่ง <code>error.message</code> จริงหรือข้อความทั่วไป:<br/><br/>
-    <code>const isDev = process.env.NODE_ENV === 'development';<br/>
-    res.status(500).json({ error: isDev ? error.message : 'Failed to fetch calendar alerts' });</code><br/><br/>
-    แต่เอนด์พอยต์ <code>/api/ai/panel</code> ที่อยู่ถัดไปในไฟล์เดียวกัน<strong>ไม่ได้ gate แบบเดียวกัน</strong> — ส่ง <code>error.message</code> ดิบๆ กลับไปเสมอไม่ว่า environment ไหน: <code>res.status(500).json({ error: error.message || 'AI panel analysis failed' })</code> นี่คือความไม่สอดคล้องกันจริงที่มีอยู่ในโค้ดปัจจุบัน — เป็นตัวอย่างจริงว่าทำไม QA ต้องทดสอบทุกเอนด์พอยต์แยกกัน ไม่ใช่เห็นเอนด์พอยต์หนึ่งทำถูกแล้วสรุปว่าที่เหลือทำถูกเหมือนกันหมด`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Sensitive Data Exposure</strong> ไม่ได้หมายถึงแค่รหัสผ่าน/token หลุดเท่านั้น — <strong>stack trace, path ของไฟล์บนเครื่อง server, ชื่อ library ภายใน, error ระดับระบบปฏิบัติการ</strong> (เช่น <code>ENOENT</code> = file not found, <code>ECONNREFUSED</code> = connection refused) ล้วนเป็นข้อมูลที่ไม่ควรหลุดออกไปให้ผู้ใช้ทั่วไปเห็น เพราะช่วยให้ผู้โจมตี "เห็นภาพ" โครงสร้างภายในของระบบเพื่อวางแผนโจมตีต่อ<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>res.status(500).json({ error: isDev ? error.message : 'Failed to fetch calendar alerts' });</code><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>สิ่งที่พบจริงในโค้ด <code>server/index.js</code> ของ My-Investment-Port (อ่านโค้ดจริงตอนเตรียมบทเรียนนี้):</strong> เอนด์พอยต์ <code>/api/calendar/alerts</code> เขียนถูกต้อง — เช็ค <code>NODE_ENV</code> ก่อนตัดสินใจว่าจะส่ง <code>error.message</code> จริงหรือข้อความทั่วไป:<br/><br/><br/><code>const isDev = process.env.NODE_ENV === 'development';<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> แต่เอนด์พอยต์ <code>/api/ai/panel</code> ที่อยู่ถัดไปในไฟล์เดียวกัน<strong>ไม่ได้ gate แบบเดียวกัน</strong> — ส่ง <code>error.message</code> ดิบๆ กลับไปเสมอไม่ว่า environment ไหน: <code>res.status(500).json({ error: error.message || 'AI panel analysis failed' })</code> นี่คือความไม่สอดคล้องกันจริงที่มีอยู่ในโค้ดปัจจุบัน — เป็นตัวอย่างจริงว่าทำไม QA ต้องทดสอบทุกเอนด์พอยต์แยกกัน ไม่ใช่เห็นเอนด์พอยต์หนึ่งทำถูกแล้วสรุปว่าที่เหลือทำถูกเหมือนกันหมด`,
     example: `// ตัวอย่างเช็คว่า response ไม่มี field ที่ไม่ควรหลุด (เช่น internal userId, dbConnectionString)
 const forbiddenFields = ['dbConnectionString', 'internalUserId', 'apiSecret'];
 for (const field of forbiddenFields) {
@@ -310,13 +307,16 @@ test('ตรวจสอบ Security Header x-content-type-options', async ({ re
 
   expect(headers['x-content-type-options']).toBe('nosniff');
 });`,
-    theory: `<strong>Security Headers</strong> คือ HTTP response header พิเศษที่บอกเบราว์เซอร์ให้เปิดใช้กลไกป้องกันเพิ่มเติม เช่น:<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Security Headers</strong> คือ HTTP response header พิเศษที่บอกเบราว์เซอร์ให้เปิดใช้กลไกป้องกันเพิ่มเติม เช่น:<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Security Headers</strong> คือ HTTP response header พิเศษที่บอกเบราว์เซอร์ให้เปิดใช้กลไกป้องกันเพิ่มเติม เช่น:<br/><br/>
     • <code>X-Content-Type-Options: nosniff</code> — ห้ามเบราว์เซอร์เดา MIME type เอง (ป้องกันไฟล์ที่แอบอ้างเป็นชนิดอื่น)<br/>
     • <code>X-Frame-Options: DENY</code> — ห้ามเว็บถูกฝังใน <code>&lt;iframe&gt;</code> ของเว็บอื่น (ป้องกัน Clickjacking)<br/>
     • <code>Content-Security-Policy</code> — จำกัดว่าสคริปต์/ทรัพยากรใดโหลดได้จากที่ไหนบ้าง (ป้องกัน XSS อีกชั้น)<br/><br/>
     <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ด <code>server/index.js</code> ของ My-Investment-Port จริงแล้ว<strong>ไม่พบ</strong> middleware อย่าง <code>helmet</code> หรือการตั้งค่า header เหล่านี้เลย — โปรเจกนี้มี CORS whitelist + API Key + Rate Limiter (ที่เจอในบทก่อนหน้า) แต่ยังไม่มี security header ชั้นนี้<br/><br/>
     <strong>ทำไมบทนี้ถึงบังคับให้เขียน assertion จริง ทั้งที่รู้อยู่แล้วว่ามันจะ fail:</strong> เวอร์ชันก่อนหน้าของบทเรียนนี้สอนให้แค่ <code>console.log</code> ค่า header ออกมาดูโดยไม่ assert อะไรเลย — นั่นคือ test ที่ "เขียนแล้วผ่านเสมอ" ไม่ว่าระบบจะปลอดภัยหรือไม่ ซึ่งเป็นนิสัยที่อันตรายมากสำหรับ QA เพราะทำให้ทีมเข้าใจผิดว่า "มี test ครอบคลุมแล้ว" ทั้งที่ test นั้นไม่เคยตรวจสอบอะไรจริงสักครั้ง<br/><br/>
-    แนวทางที่ถูกต้องคือ<strong>ยืนยันสถานะที่ควรจะเป็น</strong> (header ต้องมีค่า <code>nosniff</code>) แล้วปล่อยให้ test รันแล้ว<strong>แดง (fail)</strong> ถ้าความจริงยังไม่ตรงตามที่ควรจะเป็น — test ที่ fail แบบมีเหตุผลชัดเจนคือหลักฐานที่มีประโยชน์กว่า test ที่ผ่านเสมอโดยไม่ตรวจสอบอะไร เพราะมันสื่อสารช่องว่างด้าน security กลับไปให้ทีม Dev เห็นเป็นรูปธรรม (เช่น แนะนำให้ติดตั้ง <code>helmet</code> npm package) แทนที่จะซ่อนปัญหาไว้เบื้องหลัง test สีเขียวปลอมๆ`,
+    แนวทางที่ถูกต้องคือ<strong>ยืนยันสถานะที่ควรจะเป็น</strong> (header ต้องมีค่า <code>nosniff</code>) แล้วปล่อยให้ test รันแล้ว<strong>แดง (fail)</strong> ถ้าความจริงยังไม่ตรงตามที่ควรจะเป็น — test ที่ fail แบบมีเหตุผลชัดเจนคือหลักฐานที่มีประโยชน์กว่า test ที่ผ่านเสมอโดยไม่ตรวจสอบอะไร เพราะมันสื่อสารช่องว่างด้าน security กลับไปให้ทีม Dev เห็นเป็นรูปธรรม (เช่น แนะนำให้ติดตั้ง <code>helmet</code> npm package) แทนที่จะซ่อนปัญหาไว้เบื้องหลัง test สีเขียวปลอมๆ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>X-Content-Type-Options: nosniff</code> — ห้ามเบราว์เซอร์เดา MIME type เอง (ป้องกันไฟล์ที่แอบอ้างเป็นชนิดอื่น)<br/><br/>• <code>X-Frame-Options: DENY</code> — ห้ามเว็บถูกฝังใน <code>&lt;iframe&gt;</code> ของเว็บอื่น (ป้องกัน Clickjacking)<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ด <code>server/index.js</code> ของ My-Investment-Port จริงแล้ว<strong>ไม่พบ</strong> middleware อย่าง <code>helmet</code> หรือการตั้งค่า header เหล่านี้เลย — โปรเจกนี้มี CORS whitelist + API Key + Rate Limiter (ที่เจอในบทก่อนหน้า) แต่ยังไม่มี security header ชั้นนี้<br/><br/>`,
     example: `// อีกตัวอย่าง: assert header ป้องกัน Clickjacking ด้วยแนวคิดเดียวกัน
 expect(headers['x-frame-options']).toBe('DENY');`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -369,9 +369,12 @@ test('error response ไม่หลุด stack trace ที่มี path แ�
 
   expect(body.error).not.toMatch(/at .*\\(.*:\\d+:\\d+\\)/);
 });`,
-    theory: `บทที่ 4 (Sensitive Data Exposure) สอนให้เช็คคำเฉพาะที่บ่งบอกรายละเอียดภายใน เช่น <code>ENOENT</code>, <code>ECONNREFUSED</code>, <code>at Object</code> — วิธีนั้นใช้ได้ดีเมื่อรู้ล่วงหน้าว่าคำเหล่านั้นจะปรากฏ แต่ stack trace จริงมีรูปแบบที่หลากหลายกว่านั้นมาก (ชื่อฟังก์ชัน, ชื่อไฟล์, เลขบรรทัดที่เปลี่ยนไปเรื่อยๆ)<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ ขั้นสูง 1: Stack Trace ต้องไม่หลุดออกมาใน Error Response และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทที่ 4 (Sensitive Data Exposure) สอนให้เช็คคำเฉพาะที่บ่งบอกรายละเอียดภายใน เช่น <code>ENOENT</code>, <code>ECONNREFUSED</code>, <code>at Object</code> — วิธีนั้นใช้ได้ดีเมื่อรู้ล่วงหน้าว่าคำเหล่านั้นจะปรากฏ แต่ stack trace จริงมีรูปแบบที่หลากหลายกว่านั้นมาก (ชื่อฟังก์ชัน, ชื่อไฟล์, เลขบรรทัดที่เปลี่ยนไปเรื่อยๆ)<br/><br/>
     สิ่งที่<strong>คงที่เสมอ</strong>ในทุก stack trace ของ Node.js/V8 คือรูปแบบโครงสร้าง: <code>at &lt;function or &lt;anonymous&gt;&gt; (&lt;absolute path&gt;:&lt;line&gt;:&lt;column&gt;)</code> — path ตามด้วยเลขบรรทัดและเลขคอลัมน์ คั่นด้วย colon เสมอ นี่คือ "ลายเซ็น" ของ stack trace ที่ QA ระดับสูงควรจับด้วย pattern มากกว่าคำใดคำหนึ่ง เพราะครอบคลุมทุกกรณีของ error ภายในที่หลุดออกมาโดยไม่ต้องรู้ล่วงหน้าว่า error message จะเขียนว่าอะไร<br/><br/>
-    <em>หมายเหตุ: <code>/api/reports/generate</code> เป็น endpoint สมมติสำหรับฝึกเทคนิคนี้ ไม่ใช่ endpoint จริงใน My-Investment-Port</em>`,
+    <em>หมายเหตุ: <code>/api/reports/generate</code> เป็น endpoint สมมติสำหรับฝึกเทคนิคนี้ ไม่ใช่ endpoint จริงใน My-Investment-Port</em><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>สิ่งที่<strong>คงที่เสมอ</strong>ในทุก stack trace ของ Node.js/V8 คือรูปแบบโครงสร้าง: <code>at &lt;function or &lt;anonymous&gt;&gt; (&lt;absolute path&gt;:&lt;line&gt;:&lt;column&gt;)</code> — path ตามด้วยเลขบรรทัดและเลขคอลัมน์ คั่นด้วย colon เสมอ นี่คือ "ลายเซ็น" ของ stack trace ที่ QA ระดับสูงควรจับด้วย pattern มากกว่าคำใดคำหนึ่ง เพราะครอบคลุมทุกกรณีของ error ภายในที่หลุดออกมาโดยไม่ต้องรู้ล่วงหน้าว่า error message จะเขียนว่าอะไร<br/><br/><br/><em>หมายเหตุ: <code>/api/reports/generate</code> เป็น endpoint สมมติสำหรับฝึกเทคนิคนี้ ไม่ใช่ endpoint จริงใน My-Investment-Port</em><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// อีกวิธีตรวจสอบแบบใกล้เคียงกัน: เช็คว่า response body ทั้งก้อนไม่มี field ชื่อ stack เปิดเผยตรงๆ เลย
 expect(body).not.toHaveProperty('stack');`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -421,8 +424,11 @@ test('endpoint ที่ต้องมี API Key ทั้งหมดปฏ�
     expect(response.status()).toBe(401);
   }
 });`,
-    theory: `บทนำและบทที่ 3 พิสูจน์แล้วว่า <code>/api/ai/recommend</code> ปฏิเสธ request ที่ไม่มี/มี API Key ผิดจริง — แต่นั่นพิสูจน์แค่ endpoint เดียว การสรุปว่า "middleware ทำงานถูกต้อง" จาก endpoint เดียวเป็นการสรุปที่เร็วเกินไป เพราะ middleware ใน Express ต้องถูก<strong>ผูก (attach) แยกทีละ route</strong> — การลืมผูก middleware กับ route ใหม่ที่เพิ่มเข้ามาทีหลังเป็นบั๊กที่พบได้จริงบ่อยมาก และจะไม่ถูกจับได้เลยถ้า QA ทดสอบซ้ำแค่ endpoint เดิมที่รู้อยู่แล้วว่าทำงานถูก<br/><br/>
-    <strong>ความครอบคลุม (coverage) คือหัวใจของบทนี้:</strong> ต้องยืนยันว่า<strong>ทุก</strong>endpoint ที่ควรมี auth (ตามที่ยืนยันจากโค้ดจริงไว้ในบทนำ) ปฏิเสธ request ที่ไม่มี key จริง ไม่ใช่แค่ตัวใดตัวหนึ่ง — ในทางกลับกัน ก็ต้องรู้ด้วยว่า <code>/api/ai/panel</code> (บทที่ 4) ไม่ได้อยู่ในกลุ่มนี้ เพราะไม่มี middleware ผูกไว้จริง การรู้ว่า "endpoint ไหนควรป้องกันและไหนไม่ควร" สำคัญพอๆ กับการทดสอบว่ามันป้องกันจริง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ ขั้นสูง 2: Auth Middleware ต้องถูกบังคับใช้ครบทุก Endpoint ที่ควรป้องกัน และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>บทนำและบทที่ 3 พิสูจน์แล้วว่า <code>/api/ai/recommend</code> ปฏิเสธ request ที่ไม่มี/มี API Key ผิดจริง — แต่นั่นพิสูจน์แค่ endpoint เดียว การสรุปว่า "middleware ทำงานถูกต้อง" จาก endpoint เดียวเป็นการสรุปที่เร็วเกินไป เพราะ middleware ใน Express ต้องถูก<strong>ผูก (attach) แยกทีละ route</strong> — การลืมผูก middleware กับ route ใหม่ที่เพิ่มเข้ามาทีหลังเป็นบั๊กที่พบได้จริงบ่อยมาก และจะไม่ถูกจับได้เลยถ้า QA ทดสอบซ้ำแค่ endpoint เดิมที่รู้อยู่แล้วว่าทำงานถูก<br/><br/>
+    <strong>ความครอบคลุม (coverage) คือหัวใจของบทนี้:</strong> ต้องยืนยันว่า<strong>ทุก</strong>endpoint ที่ควรมี auth (ตามที่ยืนยันจากโค้ดจริงไว้ในบทนำ) ปฏิเสธ request ที่ไม่มี key จริง ไม่ใช่แค่ตัวใดตัวหนึ่ง — ในทางกลับกัน ก็ต้องรู้ด้วยว่า <code>/api/ai/panel</code> (บทที่ 4) ไม่ได้อยู่ในกลุ่มนี้ เพราะไม่มี middleware ผูกไว้จริง การรู้ว่า "endpoint ไหนควรป้องกันและไหนไม่ควร" สำคัญพอๆ กับการทดสอบว่ามันป้องกันจริง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ความครอบคลุม (coverage) คือหัวใจของบทนี้:</strong> ต้องยืนยันว่า<strong>ทุก</strong>endpoint ที่ควรมี auth (ตามที่ยืนยันจากโค้ดจริงไว้ในบทนำ) ปฏิเสธ request ที่ไม่มี key จริง ไม่ใช่แค่ตัวใดตัวหนึ่ง — ในทางกลับกัน ก็ต้องรู้ด้วยว่า <code>/api/ai/panel</code> (บทที่ 4) ไม่ได้อยู่ในกลุ่มนี้ เพราะไม่มี middleware ผูกไว้จริง การรู้ว่า "endpoint ไหนควรป้องกันและไหนไม่ควร" สำคัญพอๆ กับการทดสอบว่ามันป้องกันจริง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่างเช็คด้านตรงข้าม: ยืนยันว่า endpoint ที่ไม่ได้ผูก middleware จริง (เช่น /api/ai/panel)
 // ไม่ตอบ 401 แม้ไม่มี API Key เลย (เพื่อยืนยันความเข้าใจที่ถูกต้องเกี่ยวกับขอบเขตของ middleware)
 const panelResponse = await request.get('/api/ai/panel');
@@ -479,15 +485,10 @@ test('CORS ไม่ควร reflect origin แปลกปลอมกลั�
 
   expect(headers['access-control-allow-origin']).not.toBe(evilOrigin);
 });`,
-    theory: `<strong>CORS (Cross-Origin Resource Sharing)</strong> คือกลไกที่เบราว์เซอร์ใช้ตัดสินใจว่าเว็บไซต์หนึ่ง (origin หนึ่ง) จะเรียก API ของอีก origin หนึ่งได้หรือไม่ — server ตอบกลับด้วย header <code>Access-Control-Allow-Origin</code> เพื่อ "อนุญาต" origin ที่ระบุไว้เท่านั้น<br/><br/>
-    <strong>สิ่งที่พบจริงในโค้ด (ตรวจสอบทั้งสองไฟล์แล้ว):</strong> <code>server/index.js</code> (dev server ที่รันบนเครื่อง) ตั้งค่า CORS แบบ whitelist origin เดียวจาก env: <code>origin: corsOrigin</code> (default <code>http://localhost:5173</code>) — แต่ <code>functions/index.js</code> (Cloud Functions ที่ deploy ใช้งานจริงบน production) เขียนต่างออกไปโดยสิ้นเชิง:<br/><br/>
-    <code>const corsOptions = {<br/>
-    &nbsp;&nbsp;origin: true, // reflect request origin (allows all)<br/>
-    &nbsp;&nbsp;credentials: true,<br/>
-    &nbsp;&nbsp;...<br/>
-    };</code><br/><br/>
-    <code>origin: true</code> ใน cors middleware แปลว่า "สะท้อนค่า Origin header ที่ client ส่งมากลับไปเป็น <code>Access-Control-Allow-Origin</code> ตรงๆ เสมอ" — เท่ากับอนุญาตทุก origin จริงๆ ตามที่ comment ในโค้ดบอกไว้ตรงๆ เมื่อรวมกับ <code>credentials: true</code> (อนุญาตส่ง cookie/credential ข้าม origin ได้) นี่คือ pattern ที่ OWASP เตือนไว้ชัดเจนว่าเสี่ยง เพราะ <code>Origin</code> เป็น header ที่ client ปลอมค่าได้เองอย่างอิสระ ไม่ควรถูกใช้เป็นกลไกยืนยันตัวตนหรือสิทธิ์การเข้าถึง<br/><br/>
-    <strong>ความเป็นธรรมของ pattern นี้:</strong> สำหรับ Cloud Functions ที่ frontend ถูก deploy อยู่ origin เดียวชัดเจน การใช้ <code>origin: true</code> อาจเป็น tradeoff ที่ตั้งใจ (ลดความยุ่งยากเรื่อง env config ข้าม environment) แต่ก็ยังเป็นความเสี่ยงที่ QA ควรยืนยันด้วย assertion จริง ไม่ใช่แค่รู้ว่ามันมีอยู่`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>CORS (Cross-Origin Resource Sharing)</strong> คือกลไกที่เบราว์เซอร์ใช้ตัดสินใจว่าเว็บไซต์หนึ่ง (origin หนึ่ง) จะเรียก API ของอีก origin หนึ่งได้หรือไม่ — server ตอบกลับด้วย header <code>Access-Control-Allow-Origin</code> เพื่อ "อนุญาต" origin ที่ระบุไว้เท่านั้น<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;origin: true, // reflect request origin (allows all)<br/><br/>&nbsp;&nbsp;credentials: true,<br/><br/>&nbsp;&nbsp;...<br/><br/>};</code><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>สิ่งที่พบจริงในโค้ด (ตรวจสอบทั้งสองไฟล์แล้ว):</strong> <code>server/index.js</code> (dev server ที่รันบนเครื่อง) ตั้งค่า CORS แบบ whitelist origin เดียวจาก env: <code>origin: corsOrigin</code> (default <code>http://localhost:5173</code>) — แต่ <code>functions/index.js</code> (Cloud Functions ที่ deploy ใช้งานจริงบน production) เขียนต่างออกไปโดยสิ้นเชิง:<br/><br/><br/><code>const corsOptions = {<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>origin: true</code> ใน cors middleware แปลว่า "สะท้อนค่า Origin header ที่ client ส่งมากลับไปเป็น <code>Access-Control-Allow-Origin</code> ตรงๆ เสมอ" — เท่ากับอนุญาตทุก origin จริงๆ ตามที่ comment ในโค้ดบอกไว้ตรงๆ เมื่อรวมกับ <code>credentials: true</code> (อนุญาตส่ง cookie/credential ข้าม origin ได้) นี่คือ pattern ที่ OWASP เตือนไว้ชัดเจนว่าเสี่ยง เพราะ <code>Origin</code> เป็น header ที่ client ปลอมค่าได้เองอย่างอิสระ ไม่ควรถูกใช้เป็นกลไกยืนยันตัวตนหรือสิทธิ์การเข้าถึง<br/><br/><br/><strong>ความเป็นธรรมของ pattern นี้:</strong> สำหรับ Cloud Functions ที่ frontend ถูก deploy อยู่ origin เดียวชัดเจน การใช้ <code>origin: true</code> อาจเป็น tradeoff ที่ตั้งใจ (ลดความยุ่งยากเรื่อง env config ข้าม environment) แต่ก็ยังเป็นความเสี่ยงที่ QA ควรยืนยันด้วย assertion จริง ไม่ใช่แค่รู้ว่ามันมีอยู่`,
     example: `// อีกวิธีตรวจสอบแบบใกล้เคียงกัน: ยิง preflight OPTIONS request แล้วดูว่า header เดียวกันตอบกลับมาอย่างไร
 const preflight = await request.fetch('/api/ai/panel', {
   method: 'OPTIONS',
@@ -551,17 +552,10 @@ test('rate limiter บล็อก request หลังเกิน quota ที
   const body = await lastResponse.json();
   expect(body.error).toBe('Too many requests, please try again later');
 });`,
-    theory: `<strong>Rate Limiting</strong> จำกัดจำนวน request ต่อช่วงเวลาต่อ IP เพื่อป้องกัน brute-force (เดา API Key/รหัสผ่านซ้ำๆ) และลดผลกระทบของ DoS แบบง่ายๆ — เป็นกลไกป้องกันคนละชั้นกับ auth (auth เช็คว่า "คุณคือใคร" ส่วน rate limit เช็คว่า "คุณยิงถี่เกินไปหรือเปล่า" ไม่ว่าคุณจะเป็นใคร)<br/><br/>
-    <strong>ค่าที่ตั้งไว้จริงใน <code>server/index.js</code> บรรทัด 40-50:</strong><br/><br/>
-    <code>const limiter = rateLimit({<br/>
-    &nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/>
-    &nbsp;&nbsp;max: 100, // 100 requests ต่อนาทีต่อ IP<br/>
-    &nbsp;&nbsp;message: { error: 'Too many requests, please try again later' },<br/>
-    &nbsp;&nbsp;standardHeaders: false,<br/>
-    &nbsp;&nbsp;skip: (req) => process.env.NODE_ENV === 'development'<br/>
-    });</code><br/><br/>
-    <strong>รายละเอียดที่ QA ต้องรู้ (ยืนยันจาก README ของ express-rate-limit และ source ของ package จริงที่ติดตั้งไว้ v8.4.1):</strong> เมื่อ <code>standardHeaders: true</code> ระบบจะส่ง header ตระกูล <code>RateLimit-*</code> กลับมาด้วย (บอกโควต้าที่เหลือ) — แต่โค้ดนี้ตั้ง <code>standardHeaders: false</code> ตรงๆ แปลว่า<strong>ไม่มี</strong> header เหล่านี้ส่งกลับมาเลย QA จึงต้องอาศัย <strong>status code (ยืนยันแล้วว่า default คือ 429) และข้อความใน body</strong> เป็นหลักฐานแทนการอ่าน header<br/><br/>
-    <strong>กับดักสำคัญ:</strong> <code>skip: (req) => process.env.NODE_ENV === 'development'</code> ทำให้ limiter ถูกข้ามไปเงียบๆ ทุกครั้งถ้า environment ที่รัน server (หรือ test) ตั้ง <code>NODE_ENV=development</code> — เป็นสาเหตุคลาสสิกที่ test rate-limiting "ผ่านตลอด" ทั้งที่ไม่เคยตรวจสอบอะไรจริง เพราะ 429 ไม่มีวันเกิดขึ้นในสภาพแวดล้อมนั้น`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Rate Limiting</strong> จำกัดจำนวน request ต่อช่วงเวลาต่อ IP เพื่อป้องกัน brute-force (เดา API Key/รหัสผ่านซ้ำๆ) และลดผลกระทบของ DoS แบบง่ายๆ — เป็นกลไกป้องกันคนละชั้นกับ auth (auth เช็คว่า "คุณคือใคร" ส่วน rate limit เช็คว่า "คุณยิงถี่เกินไปหรือเปล่า" ไม่ว่าคุณจะเป็นใคร)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>&nbsp;&nbsp;windowMs: 1 * 60 * 1000, // 1 นาที<br/><br/>&nbsp;&nbsp;max: 100, // 100 requests ต่อนาทีต่อ IP<br/><br/>&nbsp;&nbsp;message: { error: 'Too many requests, please try again later' },<br/><br/>&nbsp;&nbsp;standardHeaders: false,<br/><br/>&nbsp;&nbsp;skip: (req) => process.env.NODE_ENV === 'development'<br/><br/>});</code><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ค่าที่ตั้งไว้จริงใน <code>server/index.js</code> บรรทัด 40-50:</strong><br/><br/><br/><code>const limiter = rateLimit({<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// ตัวอย่างเสริม: ยืนยันด้านตรงข้ามด้วยว่า request ที่ยังไม่เกินโควต้าต้องผ่านได้ปกติ (positive case คู่กัน)
 const okResponse = await request.get('/api/ai/health');
 expect(okResponse.status()).not.toBe(429);`,
@@ -618,12 +612,10 @@ test('session cookie ต้องมี HttpOnly และ Secure flag', async (
   expect(sessionCookie.httpOnly).toBe(true);
   expect(sessionCookie.secure).toBe(true);
 });`,
-    theory: `<strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ดจริงของ My-Investment-Port แล้ว (ทั้ง <code>server/index.js</code> และ <code>functions/index.js</code>) ไม่มีการเซ็ต cookie เลยสักบรรทัด — ระบบใช้ API Key ผ่าน header แทนทั้งหมด จึงไม่มี session cookie ให้ทดสอบจริงในโปรเจกต์นี้ บทนี้เป็นเทคนิคทั่วไปสำหรับระบบที่ใช้ session cookie (พบได้ทั่วไปในเว็บแอปจริงจำนวนมาก) ไม่ได้อิงโค้ดจริงจากโปรเจกต์นี้<br/><br/>
-    <strong>Cookie attribute แต่ละตัว (ยืนยันจาก MDN):</strong><br/><br/>
-    • <code>HttpOnly</code> — ห้าม JavaScript ฝั่ง client อ่านค่า cookie ผ่าน <code>document.cookie</code> (cookie ยังถูกส่งไปกับ request อัตโนมัติตามปกติ) ป้องกันไม่ให้ XSS ที่หลุดรอดมาได้ขโมย session cookie ไปใช้ต่อ<br/>
-    • <code>Secure</code> — cookie จะถูกส่งเฉพาะผ่าน HTTPS เท่านั้น ป้องกันการดักฟังผ่าน connection ที่ไม่เข้ารหัส (MITM)<br/>
-    • <code>SameSite</code> — ควบคุมว่า cookie จะถูกส่งไปกับ cross-site request หรือไม่ ช่วยลดความเสี่ยง CSRF โดยมี 3 ค่า: <code>Strict</code> (ส่งเฉพาะ same-site เท่านั้น), <code>Lax</code> (ส่งกับ same-site และ top-level navigation แบบ GET จาก cross-site), <code>None</code> (ส่งได้ทั้ง cross-site และ same-site แต่<strong>ต้องคู่กับ <code>Secure</code> เสมอ</strong>)<br/><br/>
-    Playwright's <code>page.context().cookies()</code> คืนค่า cookie object ที่มี field <code>httpOnly</code>, <code>secure</code>, <code>sameSite</code> ('Strict'|'Lax'|'None') เป็นชื่อ field ตรงตัวพร้อมใช้ assert ได้เลย ไม่ต้อง parse ค่า Set-Cookie header เอง`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ดจริงของ My-Investment-Port แล้ว (ทั้ง <code>server/index.js</code> และ <code>functions/index.js</code>) ไม่มีการเซ็ต cookie เลยสักบรรทัด — ระบบใช้ API Key ผ่าน header แทนทั้งหมด จึงไม่มี session cookie ให้ทดสอบจริงในโปรเจกต์นี้ บทนี้เป็นเทคนิคทั่วไปสำหรับระบบที่ใช้ session cookie (พบได้ทั่วไปในเว็บแอปจริงจำนวนมาก) ไม่ได้อิงโค้ดจริงจากโปรเจกต์นี้<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Cookie attribute แต่ละตัว (ยืนยันจาก MDN):</strong><br/><br/><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>• <code>HttpOnly</code> — ห้าม JavaScript ฝั่ง client อ่านค่า cookie ผ่าน <code>document.cookie</code> (cookie ยังถูกส่งไปกับ request อัตโนมัติตามปกติ) ป้องกันไม่ให้ XSS ที่หลุดรอดมาได้ขโมย session cookie ไปใช้ต่อ<br/><br/>• <code>Secure</code> — cookie จะถูกส่งเฉพาะผ่าน HTTPS เท่านั้น ป้องกันการดักฟังผ่าน connection ที่ไม่เข้ารหัส (MITM)<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> • <code>SameSite</code> — ควบคุมว่า cookie จะถูกส่งไปกับ cross-site request หรือไม่ ช่วยลดความเสี่ยง CSRF โดยมี 3 ค่า: <code>Strict</code> (ส่งเฉพาะ same-site เท่านั้น), <code>Lax</code> (ส่งกับ same-site และ top-level navigation แบบ GET จาก cross-site), <code>None</code> (ส่งได้ทั้ง cross-site และ same-site แต่<strong>ต้องคู่กับ <code>Secure</code> เสมอ</strong>)<br/><br/>`,
     example: `// ตัวอย่างเช็ค SameSite เพิ่มเติม (ป้องกัน CSRF)
 expect(['Strict', 'Lax']).toContain(sessionCookie.sameSite);`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดย:<br/>
@@ -673,9 +665,12 @@ test('ห้ามเห็นพอร์ตของผู้ใช้คน�
 
   expect(response.status()).toBe(403);
 });`,
-    theory: `<strong>IDOR (Insecure Direct Object Reference)</strong> เกิดขึ้นเมื่อระบบใช้ ID ที่ client ส่งมา (เช่น <code>portfolioId</code> ใน URL) ไปดึงข้อมูลตรงๆ โดย<strong>ไม่ตรวจสอบว่าผู้ยิง request คนนี้เป็นเจ้าของ resource นั้นจริงหรือไม่</strong> — จัดอยู่ในหมวด <strong>A01:2021 Broken Access Control</strong> ตาม OWASP Top 10 (ยืนยันแล้วจาก owasp.org)<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>IDOR (Insecure Direct Object Reference)</strong> เกิดขึ้นเมื่อระบบใช้ ID ที่ client ส่งมา (เช่น <code>portfolioId</code> ใน URL) ไปดึงข้อมูลตรงๆ โดย<strong>ไม่ตรวจสอบว่าผู้ยิง request คนนี้เป็นเจ้าของ resource นั้นจริงหรือไม่</strong> — จัดอยู่ในหมวด <strong>A01:2021 Broken Access Control</strong> ตาม OWASP Top 10 (ยืนยันแล้วจาก owasp.org)<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>IDOR (Insecure Direct Object Reference)</strong> เกิดขึ้นเมื่อระบบใช้ ID ที่ client ส่งมา (เช่น <code>portfolioId</code> ใน URL) ไปดึงข้อมูลตรงๆ โดย<strong>ไม่ตรวจสอบว่าผู้ยิง request คนนี้เป็นเจ้าของ resource นั้นจริงหรือไม่</strong> — จัดอยู่ในหมวด <strong>A01:2021 Broken Access Control</strong> ตาม OWASP Top 10 (ยืนยันแล้วจาก owasp.org)<br/><br/>
     <strong>จุดที่ต่างจากบทก่อนหน้า:</strong> บทนำและบทที่ 3 ทดสอบ <em>authentication</em> — "คุณมี API Key ที่ถูกต้องไหม" บทนี้ทดสอบ <em>authorization</em> คนละชั้น — "ต่อให้ Key คุณถูกต้องจริง คุณควรเห็น<strong>ข้อมูลชิ้นนี้โดยเฉพาะ</strong>ไหม" ระบบที่เช็ค auth ถูกต้องสมบูรณ์ (เหมือน <code>validateApiKey</code> ที่ยืนยันแล้วในบทก่อนๆ) ก็ยังมี IDOR ได้ ถ้า handler ดึงข้อมูลด้วย ID จาก URL ตรงๆ โดยไม่เช็คว่า <code>portfolio.ownerId === req.user.id</code> ก่อนส่งข้อมูลกลับ<br/><br/>
-    <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ดจริงของ My-Investment-Port แล้วเป็นแอป single-user (ไม่มี multi-tenant, ไม่มี endpoint แบบ <code>/api/portfolio/:id</code> ที่แยกข้อมูลตามเจ้าของจริง) จึงไม่มี IDOR ให้ทดสอบตรงๆ ในโปรเจกต์นี้ บทนี้จึงเป็นสถานการณ์สมมติที่ขยายจาก domain พอร์ตโฟลิโอของโปรเจกต์ เพื่อฝึกเทคนิคการทดสอบ IDOR ซึ่งเป็นช่องโหว่ที่พบบ่อยมากในระบบ multi-tenant จริง (เช่น SaaS ที่มีหลายผู้ใช้)`,
+    <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ดจริงของ My-Investment-Port แล้วเป็นแอป single-user (ไม่มี multi-tenant, ไม่มี endpoint แบบ <code>/api/portfolio/:id</code> ที่แยกข้อมูลตามเจ้าของจริง) จึงไม่มี IDOR ให้ทดสอบตรงๆ ในโปรเจกต์นี้ บทนี้จึงเป็นสถานการณ์สมมติที่ขยายจาก domain พอร์ตโฟลิโอของโปรเจกต์ เพื่อฝึกเทคนิคการทดสอบ IDOR ซึ่งเป็นช่องโหว่ที่พบบ่อยมากในระบบ multi-tenant จริง (เช่น SaaS ที่มีหลายผู้ใช้)<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>จุดที่ต่างจากบทก่อนหน้า:</strong> บทนำและบทที่ 3 ทดสอบ <em>authentication</em> — "คุณมี API Key ที่ถูกต้องไหม" บทนี้ทดสอบ <em>authorization</em> คนละชั้น — "ต่อให้ Key คุณถูกต้องจริง คุณควรเห็น<strong>ข้อมูลชิ้นนี้โดยเฉพาะ</strong>ไหม" ระบบที่เช็ค auth ถูกต้องสมบูรณ์ (เหมือน <code>validateApiKey</code> ที่ยืนยันแล้วในบทก่อนๆ) ก็ยังมี IDOR ได้ ถ้า handler ดึงข้อมูลด้วย ID จาก URL ตรงๆ โดยไม่เช็คว่า <code>portfolio.ownerId === req.user.id</code> ก่อนส่งข้อมูลกลับ<br/><br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <strong>ความจริงที่ตรงไปตรงมา:</strong> ตรวจสอบโค้ดจริงของ My-Investment-Port แล้วเป็นแอป single-user (ไม่มี multi-tenant, ไม่มี endpoint แบบ <code>/api/portfolio/:id</code> ที่แยกข้อมูลตามเจ้าของจริง) จึงไม่มี IDOR ให้ทดสอบตรงๆ ในโปรเจกต์นี้ บทนี้จึงเป็นสถานการณ์สมมติที่ขยายจาก domain พอร์ตโฟลิโอของโปรเจกต์ เพื่อฝึกเทคนิคการทดสอบ IDOR ซึ่งเป็นช่องโหว่ที่พบบ่อยมากในระบบ multi-tenant จริง (เช่น SaaS ที่มีหลายผู้ใช้)`,
     example: `// ตัวอย่างเช็คด้านตรงข้าม: ผู้ใช้ A ใช้ key ของตัวเองเข้าถึงพอร์ตของตัวเองต้องผ่านได้ปกติ (positive case คู่กัน)
 const ownResponse = await request.get('/api/portfolio/a-111', {
   headers: { 'X-API-Key': apiKeyA },
@@ -737,12 +732,15 @@ test('npm audit ต้องไม่มี critical vulnerability ใน produc
 
   expect(report.metadata.vulnerabilities.critical).toBe(0);
 });`,
-    theory: `<strong>Dependency Vulnerability Awareness</strong> คือการยอมรับว่าโค้ดที่ทีมเขียนเองไม่ใช่ความเสี่ยงด้าน security เพียงอย่างเดียว — library ที่ติดตั้งผ่าน npm ก็มีช่องโหว่ที่ถูกค้นพบใหม่ได้ตลอดเวลา <code>npm audit</code> เทียบ dependency ที่ติดตั้งจริงกับฐานข้อมูลช่องโหว่ (GitHub Advisory Database) แล้วรายงานเป็นระดับ info/low/moderate/high/critical<br/><br/>
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>Dependency Vulnerability Awareness</strong> คือการยอมรับว่าโค้ดที่ทีมเขียนเองไม่ใช่ความเสี่ยงด้าน security เพียงอย่างเดียว — library ที่ติดตั้งผ่าน npm ก็มีช่องโหว่ที่ถูกค้นพบใหม่ได้ตลอดเวลา <code>npm audit</code> เทียบ dependency ที่ติดตั้งจริงกับฐานข้อมูลช่องโหว่ (GitHub Advisory Database) แล้วรายงานเป็นระดับ info/low/moderate/high/critical<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>Dependency Vulnerability Awareness</strong> คือการยอมรับว่าโค้ดที่ทีมเขียนเองไม่ใช่ความเสี่ยงด้าน security เพียงอย่างเดียว — library ที่ติดตั้งผ่าน npm ก็มีช่องโหว่ที่ถูกค้นพบใหม่ได้ตลอดเวลา <code>npm audit</code> เทียบ dependency ที่ติดตั้งจริงกับฐานข้อมูลช่องโหว่ (GitHub Advisory Database) แล้วรายงานเป็นระดับ info/low/moderate/high/critical<br/><br/>
     <strong>ความจริงที่ตรงไปตรงมา (ตรวจสอบแล้ว ณ วันที่เตรียมบทเรียนนี้ 2026-07-29):</strong> My-Investment-Port ไม่มี CI gate ตรวจเรื่องนี้เลย — ไม่มีโฟลเดอร์ <code>.github/workflows/</code> และไม่มี script <code>npm audit</code> อยู่ใน <code>package.json</code> เลยสักบรรทัด รันคำสั่งจริงแล้วพบ:<br/><br/>
     • <code>npm audit --omit=dev --json</code> (เฉพาะ dependency ที่ใช้จริงตอน production) → <code>metadata.vulnerabilities</code> เท่ากับ <code>{ moderate: 1, high: 4, critical: 1, total: 6 }</code> — รวมถึงช่องโหว่ระดับ critical จริงใน dependency ชื่อ <code>seroval</code> (type confusion ระหว่าง deserialize)<br/>
     • <code>npm audit --json</code> (รวม devDependencies ด้วย) → รายงานสูงถึง 35 ช่องโหว่ (2 low, 15 moderate, 16 high, 2 critical)<br/><br/>
     <strong>บทเรียนสำคัญจากตัวเลขสองชุดนี้:</strong> devDependency (เช่น build tool, test runner) ไม่เคยถูกส่งไปรันจริงบน production ผู้ใช้ปลายทางเข้าถึงไม่ได้เลย — QA gate ที่ fail build ทุกครั้งที่เจอช่องโหว่ใน devDependency (35 รายการ) จะกลายเป็น noise ที่ทีมเริ่มเมินเฉย (เหมือน "the boy who cried wolf") ดังนั้น gate ที่มีประโยชน์จริงมักจำกัดขอบเขตด้วย <code>--omit=dev</code> ก่อน แล้วค่อยตัดสินใจ threshold (เช่น fail เฉพาะ critical)<br/><br/>
-    <strong>กับดักทางเทคนิค (ยืนยันจาก Node.js docs):</strong> <code>npm audit</code> จะ exit ด้วย code ที่ไม่ใช่ 0 เมื่อเจอช่องโหว่ตาม <code>--audit-level</code> ที่ตั้งไว้ (ค่า default ตรวจทุกระดับ) — เมื่อรันผ่าน Node's <code>execSync()</code> พฤติกรรม exit ไม่เป็น 0 จะทำให้ฟังก์ชัน<strong>throw Error ทันที</strong> ไม่ return string ตามปกติ แต่ error object ที่ throw ออกมามี property <code>stdout</code>/<code>stderr</code> เก็บ output ตัวเต็มที่ capture ไว้ก่อน throw อยู่แล้ว โค้ดที่ไม่ catch ตรงนี้จะ crash ก่อนได้ตรวจสอบอะไรเลย`,
+    <strong>กับดักทางเทคนิค (ยืนยันจาก Node.js docs):</strong> <code>npm audit</code> จะ exit ด้วย code ที่ไม่ใช่ 0 เมื่อเจอช่องโหว่ตาม <code>--audit-level</code> ที่ตั้งไว้ (ค่า default ตรวจทุกระดับ) — เมื่อรันผ่าน Node's <code>execSync()</code> พฤติกรรม exit ไม่เป็น 0 จะทำให้ฟังก์ชัน<strong>throw Error ทันที</strong> ไม่ return string ตามปกติ แต่ error object ที่ throw ออกมามี property <code>stdout</code>/<code>stderr</code> เก็บ output ตัวเต็มที่ capture ไว้ก่อน throw อยู่แล้ว โค้ดที่ไม่ catch ตรงนี้จะ crash ก่อนได้ตรวจสอบอะไรเลย<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/><strong>ความจริงที่ตรงไปตรงมา (ตรวจสอบแล้ว ณ วันที่เตรียมบทเรียนนี้ 2026-07-29):</strong> My-Investment-Port ไม่มี CI gate ตรวจเรื่องนี้เลย — ไม่มีโฟลเดอร์ <code>.github/workflows/</code> และไม่มี script <code>npm audit</code> อยู่ใน <code>package.json</code> เลยสักบรรทัด รันคำสั่งจริงแล้วพบ:<br/><br/><br/>• <code>npm audit --omit=dev --json</code> (เฉพาะ dependency ที่ใช้จริงตอน production) → <code>metadata.vulnerabilities</code> เท่ากับ <code>{ moderate: 1, high: 4, critical: 1, total: 6 }</code> — รวมถึงช่องโหว่ระดับ critical จริงใน dependency ชื่อ <code>seroval</code> (type confusion ระหว่าง deserialize)<br/><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ตรวจสอบไวยากรณ์ (Syntax) และ Parameter ที่ส่งเข้าฟังก์ชันให้ถูกต้องครบถ้วนเสมอ`,
     example: `// อีกวิธี: ใช้ --audit-level=high แล้วอาศัย exit code ตรงๆ แทนการ parse JSON เอง
 try {
   execSync('npm audit --omit=dev --audit-level=high', { encoding: 'utf-8' });

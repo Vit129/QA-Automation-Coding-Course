@@ -531,6 +531,30 @@
       color: var(--text-primary);
     }
 
+    .github-star-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 8px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 9999px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .github-star-btn:hover {
+      background: rgba(234, 179, 8, 0.15);
+      border-color: rgba(234, 179, 8, 0.4);
+      color: #fde68a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
+    }
+
     .badge-chip {
       font-size: 0.8rem;
       font-weight: 600;
@@ -735,6 +759,9 @@
       <p class="subtitle">
         หลักสูตรเรียนรู้และทดสอบการเขียนโค้ดระบบจำลอง Automation แบบโต้ตอบด้วย Code Sandbox และรันชุดทดสอบเสมือนจริงในเบราว์เซอร์
       </p>
+      <a href="https://github.com/Vit129/QA-Automation-Coding-Course" target="_blank" rel="noopener noreferrer" class="github-star-btn">
+        ⭐ Star on GitHub
+      </a>
     </header>
 
     <div id="update-banner-slot"></div>
