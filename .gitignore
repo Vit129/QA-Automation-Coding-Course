@@ -1,5 +1,8 @@
 .DS_Store
 node_modules/
 graphify-out/
-.claude/
+.claude/*
+!.claude/CLAUDE.md
+!.claude/settings.json
+!.claude/skills/
 .kouen-worktrees/
