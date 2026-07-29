@@ -3,15 +3,20 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.7.0] - 2026-07-28
+## [0.8.0] - 2026-07-29
 
 ### Added
 - Add lazygit teaching content to CLI-Essentials git track ([`44b46c3`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/44b46c3efd9d726354d24607e0fbaf70a079f3fe))
-- Add 48 new git/vim/unix lessons to CLI-Essentials — amend/tag/status/log/diff/add-p/clone/remote/reset/revert/rebase-i/cherry-pick/reflog/bisect/worktree (git), quit-variants/search/macros/registers/splits/global-command/marks (vim), and chmod/cd/mkdir/symlink/ls/cat/head-tail/cp-mv/rm/wc/redirection/xargs/ps-kill/curl/tar/sed/export/background-jobs/awk/rsync/ssh-scp/cron/lsof (unix) ([`be0c142`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/be0c142d8df8011c6d4faad5275d85ca42295622))
+- Deepen Visual-Regression-Testing track (7 -> 12 lessons) ([`f8c2182`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/f8c2182e58e951904f9a80e253022ad8a4223f5f))
+- Deepen CI-CD-Pipeline track (9 -> 13 lessons) ([`8271d4d`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/8271d4d8f61debc9eac4f6b86dce46d7fcd5775b))
+- Deepen Framework-Design track (8 -> 13 lessons) ([`ad24e3c`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/ad24e3c1644ef27276a8bff622a9481c811955fa))
+- Deepen Accessibility-Testing track (8 -> 13 lessons) ([`84fe28e`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/84fe28e26f93d9106a4b26e9e384cf7f3219bf75))
+- Deepen Security-Testing track (8 -> 13 lessons) ([`504c4d8`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/504c4d89567b2b2cfa4aa875101005e06bc10240))
 
 ### Fixed
 - Enable arrow-key line editing in ship commit-message prompt ([`72938b6`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/72938b6bb4f98d7f228f5f1697c2fc0ca53851f4))
-- Sync homepage per-track lesson-count tags with actual course.js totals across all 12 tracks ([`be0c142`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/be0c142d8df8011c6d4faad5275d85ca42295622))
+- Close coverage gaps found in Fable curriculum review ([`b3b0e5e`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/b3b0e5e52f9d7eacb6900049458cfa1b258afd19))
+- Re-sync landing page lesson counts after deepening 5 tracks ([`7ac3929`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/7ac3929e784c727dab4cff9ccd80765dd2f8af81))
 
 ## [0.6.1] - 2026-07-22
 
