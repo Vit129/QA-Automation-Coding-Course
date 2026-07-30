@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.8.4] - 2026-07-30
+
+### Added
+- Add keyboard navigation to editor autocomplete dropdown ([`ffb1511`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/ffb15114ebff2df709024f57668ab0f56e027ed9))
+
 ## [0.8.3] - 2026-07-30
 
 ### Added
