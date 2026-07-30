@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final Project: Japan Concert Trip — QA Automation Coding Course</title>
+  <meta name="description" content="โครงการจบการศึกษา: ออกแบบและทดสอบระบบจองทริปคอนเสิร์ตโตเกียว ญี่ปุ่น แบบครบวงจร (DB, API, Security, Web UI, Mobile App, CI/CD)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Custom Scenario Banner for Capstone Project */
+    .capstone-banner {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(59, 130, 246, 0.15));
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .capstone-banner h2 { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .capstone-banner p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; }
+    .capstone-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .capstone-tag {
+      background: rgba(255,255,255,0.08); border: 1px solid var(--border-color);
+      padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+    }
+    .tag-rose { color: #f43f5e; border-color: rgba(244,63,94,0.3); }
+    .tag-blue { color: #3b82f6; border-color: rgba(59,130,246,0.3); }
+    .tag-amber { color: #f59e0b; border-color: rgba(245,158,11,0.3); }
+
+    /* Mock Elements Grid Box */
+    .mock-web-preview {
+      background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);
+      border-radius: 8px; padding: 12px; margin-top: 14px;
+    }
+    .mock-web-preview h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px; }
+    .mock-elements-grid { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; }
+    .mock-elem { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: #e5e7eb; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar: Lesson Navigation & Progress -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        🎯 Final Project
+      </div>
+      <div class="sidebar-subtitle">Japan Concert Trip E2E</div>
+    </div>
+    
+    <nav class="lesson-list" id="lesson-list">
+      <!-- Loaded dynamically via course.js -->
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="progress-container">
+        <div class="progress-header">
+          <span>ความคืบหน้าภาพรวม</span>
+          <span id="progress-label">0 / 6</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Workspace -->
+  <main class="main-content">
+    <header class="main-header">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <h1 style="font-size: 1.15rem; font-weight: 700;" id="current-lesson-title">🎯 Final Project: Japan Concert Trip</h1>
+      </div>
+
+      <div class="header-actions">
+        <a href="../index.html" class="btn btn-secondary" style="text-decoration: none;" title="กลับหน้าหลัก">🏠 หน้าหลัก</a>
+        <button class="btn btn-secondary" onclick="resetCourse()">🔄 เริ่มหลักสูตรใหม่</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <!-- Left Panel: Reading material & Capstone Scenario -->
+      <section class="panel panel-left">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📖</span> ภารกิจ Capstone (6 ขั้นตอน)
+          </div>
+        </div>
+
+        <div class="panel-body content-text">
+          <!-- Scenario Banner -->
+          <div class="capstone-banner">
+            <h2>🇯🇵 ทริปดูคอนเสิร์ตโตเกียว ญี่ปุ่น (All-in-One Capstone)</h2>
+            <p>วันออกเดินทาง: 14 ต.ค. 2026 | วันดูคอนเสิร์ต: 16 ต.ค. 2026 (Tokyo Dome) | วันเดินทางกลับ: 18 ต.ค. 2026</p>
+            <div class="capstone-tags">
+              <span class="capstone-tag tag-rose">🗼 โตเกียว ญี่ปุ่น</span>
+              <span class="capstone-tag tag-blue">✈️ เที่ยวบิน 14-18 ต.ค.</span>
+              <span class="capstone-tag tag-amber">🛂 ฟรีวีซ่าไทย 15 วัน</span>
+            </div>
+          </div>
+
+          <!-- Lesson content populated dynamically by engine.js -->
+          <div id="lesson-body"></div>
+
+          <!-- UI Elements Mock Preview Grid -->
+          <div class="mock-web-preview">
+            <h4>🌐 Web & Mobile UI Elements ที่ระบบเตรียมไว้ให้พร้อมใช้งาน:</h4>
+            <div class="mock-elements-grid">
+              <span class="mock-elem">#departure-date (14 ต.ค. 2026)</span>
+              <span class="mock-elem">#concert-date (16 ต.ค. 2026)</span>
+              <span class="mock-elem">#return-date (18 ต.ค. 2026)</span>
+              <span class="mock-elem">#passport-no (TH1234567)</span>
+              <span class="mock-elem">#confirm-booking-btn</span>
+              <span class="mock-elem">#booking-status</span>
+              <span class="mock-elem">#ticket-title (Japan Concert E-Ticket)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Code Sandbox Editor & Terminal -->
+      <section class="panel panel-right">
+        <!-- Editor Header (Tabs + Actions) -->
+        <div class="editor-header">
+          <div class="editor-tabs" id="editor-tabs">
+            <div class="editor-tab active" id="active-filename">final-project.spec.ts</div>
+          </div>
+          <div class="editor-actions">
+            <button class="btn btn-secondary btn-hint" id="hint-btn" onclick="showLessonHint()">💡 คำใบ้</button>
+            <button class="btn btn-secondary btn-solution" id="solution-btn" onclick="showLessonSolution()">🔑 เฉลย</button>
+            <button class="btn btn-run" id="run-tests-btn" onclick="runSandboxCode()">
+              <span>▶</span> Run Tests
+            </button>
+          </div>
+        </div>
+        
+        <!-- Code Editor Area -->
+        <div class="editor-container">
+          <div class="editor-gutter" id="editor-gutter">
+            <!-- Line numbers generated by JS -->
+          </div>
+          <textarea class="editor-textarea" id="editor-textarea" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+        </div>
+        
+        <!-- Terminal / Test Runner Output -->
+        <div class="terminal-panel">
+          <div class="terminal-header">
+            <span>💻</span> Terminal & Test Runner
+          </div>
+          <div class="terminal-body" id="terminal-body">
+            <div class="terminal-line text-muted">พร้อมสำหรับรันการทดสอบ... กด Run Tests หรือคลิกปุ่มเพื่อเริ่มต้น</div>
+          </div>
+        </div>
+
+        <!-- Next Lesson Overlay Card -->
+        <div class="lesson-overlay" id="lesson-overlay">
+          <div class="overlay-card">
+            <div class="overlay-icon">🎉</div>
+            <h2 class="overlay-title">บทเรียนผ่านการทดสอบแล้ว!</h2>
+            <p class="overlay-desc">คุณตอบโค้ดการทำงานได้ตรงตามเป้าหมายของบทเรียนนี้เรียบร้อยแล้ว</p>
+            <button class="btn btn-primary" id="next-lesson-btn" style="padding: 12px 24px; font-size: 0.95rem;">เรียนรู้บทเรียนถัดไป →</button>
+          </div>
+        </div>
+
+        <!-- Dialog Overlay Modal (for Hint/Solution) -->
+        <div class="lesson-overlay" id="dialog-overlay">
+          <div class="overlay-card" style="max-width: 500px; text-align: left; position: relative;">
+            <button class="dialog-close-btn" onclick="closeDialog()" aria-label="ปิดหน้าต่าง" style="position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-secondary); font-size: 1.1rem; line-height: 1; cursor: pointer;">✕</button>
+            <h2 class="overlay-title" id="dialog-title" style="color: var(--text-primary); margin-bottom: 16px; font-size: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">หัวข้อ</h2>
+            <div id="dialog-content" style="color: #d1d5db; font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px; white-space: pre-line; max-height: 300px; overflow-y: auto; font-family: var(--font-mono); background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">เนื้อหา...</div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+              <button class="btn btn-primary" id="dialog-action-btn" style="display: none;">ใช้เฉลยใน Editor</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="course.js"></script>
+  <script src="editor-autocomplete.js"></script>
+  <script src="gamification.js"></script>
+  <script src="engine.js"></script>
+</body>
+</html>

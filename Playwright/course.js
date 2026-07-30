@@ -9,7 +9,12 @@ function stripComments(code) {
     .split('\n')
     .filter((line) => !line.trim().startsWith('//'))
     .join('\n');
-  return noLineComments.replace(/\/\*[\s\S]*?\*\//g, '');
+  const clean = noLineComments.replace(/\/\*[\s\S]*?\*\//g, '');
+  if (/\.(GET|POST|PUT|DELETE|PATCH)\s*\(/.test(clean)) {
+    const match = clean.match(/\.(GET|POST|PUT|DELETE|PATCH)\s*\(/)[1];
+    throw new Error(`⚠️ ข้อผิดพลาด: Playwright และ JavaScript เป็น Case-sensitive กรุณาใช้ตัวพิมพ์เล็ก .${match.toLowerCase()}() เท่านั้น (ห้ามใช้ตัวพิมพ์ใหญ่ .${match})`);
+  }
+  return clean;
 }
 
 const LESSONS = [

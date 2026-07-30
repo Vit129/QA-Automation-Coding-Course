@@ -85,12 +85,76 @@ function handleAutoClosePair(textarea, key) {
   return false;
 }
 
+// Handle deleting auto-closed pairs in tandem when backspacing between them
+function handlePairBackspace(textarea) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  if (start !== end || start === 0) return false;
+
+  const leftChar = textarea.value[start - 1];
+  const rightChar = textarea.value[start];
+
+  if (AUTO_CLOSE_PAIRS[leftChar] && AUTO_CLOSE_PAIRS[leftChar] === rightChar) {
+    textarea.value = textarea.value.slice(0, start - 1) + textarea.value.slice(start + 1);
+    textarea.selectionStart = textarea.selectionEnd = start - 1;
+    updateGutter();
+    if (typeof updateEditorAutocomplete === 'function') updateEditorAutocomplete();
+    return true;
+  }
+  return false;
+}
+
+// Handle smart Enter inside bracket pairs ({}, (), []) with proper indentation
+function handleSmartEnter(textarea) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  if (start !== end) return false;
+
+  const val = textarea.value;
+  const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+  const currentLine = val.slice(lineStart, start);
+  const baseIndent = (currentLine.match(/^\s*/) || [''])[0];
+
+  const leftChar = val[start - 1];
+  const rightChar = val[start];
+
+  if (leftChar && AUTO_CLOSE_PAIRS[leftChar] && AUTO_CLOSE_PAIRS[leftChar] === rightChar) {
+    const tabIndent = ' '.repeat(typeof TAB_WIDTH === 'number' ? TAB_WIDTH : 2);
+    const innerIndent = baseIndent + tabIndent;
+    const insertText = '\n' + innerIndent + '\n' + baseIndent;
+
+    textarea.value = val.slice(0, start) + insertText + val.slice(start);
+    textarea.selectionStart = textarea.selectionEnd = start + 1 + innerIndent.length;
+    updateGutter();
+    if (typeof updateEditorAutocomplete === 'function') updateEditorAutocomplete();
+    return true;
+  }
+
+  if (baseIndent.length > 0) {
+    const insertText = '\n' + baseIndent;
+    textarea.value = val.slice(0, start) + insertText + val.slice(start);
+    textarea.selectionStart = textarea.selectionEnd = start + insertText.length;
+    updateGutter();
+    if (typeof updateEditorAutocomplete === 'function') updateEditorAutocomplete();
+    return true;
+  }
+
+  return false;
+}
+
 // Keydown handler to prevent tab key escaping the editor
 function handleTextareaKeydown(e) {
   const textarea = e.target;
 
   if (typeof handleEditorAutocompleteKeydown === 'function') {
     if (handleEditorAutocompleteKeydown(e)) return;
+  }
+
+  if (e.key === 'Backspace') {
+    if (handlePairBackspace(textarea)) {
+      e.preventDefault();
+      return;
+    }
   }
 
   if (AUTO_CLOSE_PAIRS[e.key] || Object.values(AUTO_CLOSE_PAIRS).includes(e.key)) {
@@ -120,10 +184,17 @@ function handleTextareaKeydown(e) {
     hideEditorAutocomplete();
   }
 
-  // CMD/Ctrl + Enter shortcut to run tests
-  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault();
-    runSandboxCode();
+  if (e.key === 'Enter') {
+    if (e.metaKey || e.ctrlKey) {
+      e.preventDefault();
+      runSandboxCode();
+      return;
+    }
+
+    if (handleSmartEnter(textarea)) {
+      e.preventDefault();
+      return;
+    }
   }
 }
 

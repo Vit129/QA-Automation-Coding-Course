@@ -8,6 +8,60 @@ const EDITOR_WORD_MIN_LEN = 2;
 var editorAutocompleteMatches = [];
 var editorAutocompleteIndex = 0;
 
+// Built-in domain keyword dictionary spanning all 12 course tracks:
+// API-Testing, Playwright, Robot-Framework, Performance-Testing, DB-Design-SQL,
+// CLI-Essentials, Security-Testing, Accessibility-Testing, Visual-Regression-Testing,
+// CI-CD-Pipeline, Framework-Design, Data-Structures-Algorithms.
+const BUILTIN_KEYWORDS = [
+  // Playwright & API Methods
+  'request', 'get', 'post', 'put', 'delete', 'patch', 'status', 'json', 'text', 'headers',
+  'extraHTTPHeaders', 'newContext', 'dispose', 'page', 'goto', 'locator', 'getByRole',
+  'getByText', 'getByTestId', 'getByPlaceholder', 'getByLabel', 'getByTitle', 'getByAltText',
+  'click', 'fill', 'type', 'press', 'check', 'uncheck', 'selectOption', 'waitForSelector',
+  'waitForURL', 'waitForLoadState', 'screenshot', 'pdf',
+
+  // Assertions & Matchers
+  'expect', 'toBe', 'toEqual', 'toContain', 'toHaveProperty', 'toHaveLength', 'toBeOK',
+  'toBeVisible', 'toHaveText', 'toContainText', 'toHaveValue', 'toBeChecked', 'toBeDisabled',
+  'toBeEnabled', 'toHaveURL', 'toHaveTitle', 'toHaveCount', 'toHaveScreenshot', 'toBeDefined',
+  'toBeUndefined', 'toBeTruthy', 'toBeFalsy',
+
+  // Robot Framework Keywords
+  'Library', 'Browser', 'AppiumLibrary', 'SeleniumLibrary', 'Keywords', 'Variables',
+  'New Page', 'Click', 'Fill Text', 'Get Text', 'Should Be Equal', 'Should Contain',
+  'Should Be True', 'Open Browser', 'Input Text', 'Click Element', 'Element Should Be Visible',
+  'Set Variable', 'Create List', 'Create Dictionary',
+
+  // k6 Performance Testing
+  'http', 'del', 'group', 'sleep', 'options', 'vus', 'duration', 'stages', 'thresholds',
+  'Trend', 'Counter', 'Gauge', 'Rate', 'scenario',
+
+  // SQL & DB Design
+  'SELECT', 'FROM', 'WHERE', 'INSERT', 'INTO', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'INNER',
+  'LEFT', 'RIGHT', 'ON', 'GROUP', 'BY', 'HAVING', 'ORDER', 'ASC', 'DESC', 'LIMIT', 'OFFSET',
+  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'PRIMARY', 'KEY', 'FOREIGN', 'UNIQUE', 'DEFAULT',
+  'CREATE', 'TABLE', 'ALTER', 'DROP', 'INDEX', '1NF', '2NF', '3NF', 'BCNF',
+
+  // CLI, Git & Unix
+  'git', 'commit', 'checkout', 'branch', 'push', 'pull', 'rebase', 'merge', 'log',
+  'diff', 'clone', 'init', 'add', 'reset', 'stash', 'ls', 'cd', 'pwd', 'mkdir', 'rm',
+  'cp', 'mv', 'cat', 'grep', 'find', 'chmod', 'chown', 'curl', 'ssh', 'tar', 'sed', 'awk',
+
+  // Security, A11y, Visual & CI/CD
+  'XSS', 'SQLi', 'CSRF', 'sanitize', 'encodeURIComponent', 'innerHTML', 'textContent',
+  'Authorization', 'Bearer', 'JWT', 'hash', 'salt', 'bcrypt', 'cors', 'rateLimit',
+  'axe', 'violations', 'aria-label', 'aria-expanded', 'aria-hidden', 'role', 'tabindex',
+  'alt', 'focus', 'blur', 'heading', 'button', 'link', 'img', 'contrast',
+  'maxDiffPixels', 'maxDiffPixelRatio', 'threshold', 'mask', 'fullPage', 'clip',
+  'pull_request', 'schedule', 'jobs', 'runs-on', 'ubuntu-latest', 'steps', 'uses', 'matrix',
+
+  // Framework Design & DSA
+  'PageObject', 'BasePage', 'fixtures', 'extend', 'globalSetup', 'globalTeardown',
+  'config', 'reporter', 'use', 'storageState', 'trace',
+  'BigO', 'Array', 'Map', 'Set', 'Stack', 'Queue', 'LinkedList', 'BinaryTree', 'Graph',
+  'DFS', 'BFS', 'binarySearch', 'quickSort', 'mergeSort', 'dynamicProgramming', 'memo', 'collision'
+];
+
 // Word (identifier) touching the caret, e.g. typing "res" inside "const res" -> { start, end, word: "res" }
 function getCurrentWord(textarea) {
   const caret = textarea.selectionStart;
@@ -17,9 +71,10 @@ function getCurrentWord(textarea) {
   return { start, end: caret, word: value.slice(start, caret) };
 }
 
-// Every distinct identifier already typed in the editor (word-based completion, like an IDE's local suggestions)
+// Every distinct identifier typed in the editor plus built-in domain keywords
 function getKnownWords(text) {
-  return [...new Set(text.match(EDITOR_WORD_REGEX) || [])];
+  const localWords = text.match(EDITOR_WORD_REGEX) || [];
+  return [...new Set([...localWords, ...BUILTIN_KEYWORDS])];
 }
 
 // Recompute autocomplete matches for the word at the caret and show/hide the dropdown accordingly
@@ -36,7 +91,7 @@ function updateEditorAutocomplete() {
   const known = getKnownWords(textarea.value);
   editorAutocompleteMatches = known
     .filter(w => w !== word && w.toLowerCase().startsWith(word.toLowerCase()))
-    .slice(0, 6);
+    .slice(0, 8);
 
   if (!editorAutocompleteMatches.length) {
     hideEditorAutocomplete();
@@ -55,7 +110,7 @@ function getEditorAutocompleteEl(textarea) {
     if (!container) return null;
     el = document.createElement('div');
     el.id = 'editor-autocomplete';
-    el.style.cssText = 'display: none; position: absolute; max-height: 160px; overflow-y: auto; background-color: #0b0f17; border: 1px solid var(--border-color); border-radius: 6px; z-index: 20; font-family: var(--font-mono); font-size: 0.8rem;';
+    el.style.cssText = 'display: none; position: absolute; max-height: 180px; overflow-y: auto; background-color: #0b0f17; border: 1px solid var(--border-color); border-radius: 6px; z-index: 20; font-family: var(--font-mono); font-size: 0.8rem;';
     container.appendChild(el);
   }
   return el;

@@ -7,7 +7,12 @@
 // commented-out / fake snippet (e.g. `// expect(response.status()).toBe(200);`)
 // can't satisfy a check meant for real, executed code.
 function stripComments(code) {
-  return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  const clean = code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  if (/\.(GET|POST|PUT|DELETE|PATCH)\s*\(/.test(clean)) {
+    const match = clean.match(/\.(GET|POST|PUT|DELETE|PATCH)\s*\(/)[1];
+    throw new Error(`⚠️ ข้อผิดพลาด: Playwright และ JavaScript เป็น Case-sensitive กรุณาใช้ตัวพิมพ์เล็ก .${match.toLowerCase()}() เท่านั้น (ห้ามใช้ตัวพิมพ์ใหญ่ .${match})`);
+  }
+  return clean;
 }
 
 const LESSONS = [

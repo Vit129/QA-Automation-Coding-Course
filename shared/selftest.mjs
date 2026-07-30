@@ -32,6 +32,7 @@ const TRACKS = [
   'CI-CD-Pipeline',
   'Framework-Design',
   'Data-Structures-Algorithms',
+  'Final-Project',
 ];
 
 function extractLessons(src, sandbox) {
