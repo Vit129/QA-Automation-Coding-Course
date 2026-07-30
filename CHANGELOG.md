@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.9.0] - 2026-07-30
+
+### Added
+- Add editor autocomplete navigation, pair deletion, case-sensitivity guard, and Final Project Capstone (v0.9.0) ([`ebcfa73`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/ebcfa734976ec01030dbdd6cc43f614e87cbad46))
+
 ## [0.8.4] - 2026-07-30
 
 ### Added
