@@ -723,271 +723,164 @@ test('TC-3009: สลับ AI Model แล้วต้องคืนค่า�
     <code>const { currentModel: original } = await before.json();</code><br/>
     <code>await request.post('/api/ai/model/switch', { data: { model: original } });</code><br/><br/>
     🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าไม่คืนค่าเดิม การรัน Parallel Worker จะทำให้ Test อื่นพังอย่างสุ่ม (Flaky) เพราะเจอ State ค้าง`,
-    example: `// ตัวอย่างเช็คไฟล์ที่ mimeType ถูกต้องแต่ชื่อไฟล์แปลก (ยังต้องผ่าน เพราะ Backend เช็ค mimeType ไม่ใช่นามสกุล)
+    example: `// ตัวอย่างการบังคับ test กลุ่มที่แก้ shared state เดียวกันให้รันเรียงลำดับ ไม่ขนาน
+test.describe('AI Model switching (shares global state)', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  test('...', async ({ request }) => { /* ... */ });
+  test('...', async ({ request }) => { /* ... */ });
+});`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ โดยยึดหลัก "อ่านก่อน-แก้-คืนค่า" กับ Global State จริงใน <code>gemini-service.js</code>:<br/>
+    1. ยิง GET <code>/api/ai/model</code> เก็บค่าโมเดลเดิมไว้ในตัวแปร <code>originalModel</code><br/>
+    2. ยิง POST <code>/api/ai/model/switch</code> พร้อม <code>data: { model: 'gemini-3.5-flash' }</code> แล้วตรวจสอบ status <code>200</code><br/>
+    3. คืนค่าโมเดลกลับเป็น <code>originalModel</code> ด้วย POST <code>/api/ai/model/switch</code> อีกครั้งเสมอ`
+  },
+  {
+    id: "pagination_edge_case",
+    meta: "บทที่ 9",
+    title: "Pagination Edge Case: หน้าที่เกินขอบเขต (Mock Endpoint)",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3010: ขอหน้าที่เกินขอบเขตของ Pagination ต้องได้ array ว่าง ไม่ error', async ({ request }) => {
+  // หมายเหตุ: /api/portfolio/history เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Pagination เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง GET /api/portfolio/history?page=999&limit=20 (หน้าที่เกินขอบเขตจริงแน่นอน)
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่า status code เป็น 200 (ไม่ใช่ error แม้จะขอหน้าที่เกินขอบเขต)
+
+
+  // 3. ตรวจสอบว่า body.items เป็น array ว่าง (length 0)
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ Pagination Edge Case...");
+      const hasGet = /await\s+request\.get\(['"]\/api\/portfolio\/history\?page=999&limit=20['"]\)/.test(code);
+      if (hasGet) {
+        log("✓ ขั้นตอนที่ 1: ยิง request.get('/api/portfolio/history?page=999&limit=20') ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบคำสั่ง request.get('/api/portfolio/history?page=999&limit=20')\nตัวอย่าง: const response = await request.get('/api/portfolio/history?page=999&limit=20');");
+      }
+
+      if (/expect\(response\.status\(\)\)\.toBe\(200\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 200 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบ status code 200\nตัวอย่าง: expect(response.status()).toBe(200);");
+      }
+
+      if (/expect\(body\.items\)\.toHaveLength\(0\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 3: ตรวจสอบว่า body.items เป็น array ว่างถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบว่า body.items มีความยาว 0\nตัวอย่าง: expect(body.items).toHaveLength(0);");
+      }
+    },
+    hint: "ใช้ const response = await request.get('/api/portfolio/history?page=999&limit=20'); แล้ว expect(response.status()).toBe(200); จากนั้น const body = await response.json(); expect(body.items).toHaveLength(0);",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3010: ขอหน้าที่เกินขอบเขตของ Pagination ต้องได้ array ว่าง ไม่ error', async ({ request }) => {
+  // หมายเหตุ: /api/portfolio/history เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Pagination เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง GET /api/portfolio/history?page=999&limit=20 (หน้าที่เกินขอบเขตจริงแน่นอน)
+  const response = await request.get('/api/portfolio/history?page=999&limit=20');
+
+  // 2. ตรวจสอบว่า status code เป็น 200 (ไม่ใช่ error แม้จะขอหน้าที่เกินขอบเขต)
+  expect(response.status()).toBe(200);
+
+  // 3. ตรวจสอบว่า body.items เป็น array ว่าง (length 0)
+  const body = await response.json();
+  expect(body.items).toHaveLength(0);
+});`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> ทดสอบ Pagination Edge Case เมื่อ Client ขอหน้าที่เกินขอบเขตข้อมูลจริง ต้องได้ Array ว่าง ไม่ใช่ Error<br/><br/>
+    ⚖️ <strong>2 บั๊กที่พบบ่อยของ Pagination:</strong><br/>
+    1. โยน <code>400/500</code> ทั้งที่ query parameter ถูกต้องตามรูปแบบทุกอย่าง (แค่ "เกินขอบเขต" ไม่ใช่ "ผิดรูปแบบ")<br/>
+    2. วนกลับไปคืนข้อมูลหน้าแรกซ้ำ (data leak แบบเงียบๆ ทำให้ client เข้าใจผิดว่ามีข้อมูลจริง)<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>GET /api/portfolio/history?page=999&limit=20</code> ➔ <code>200</code> พร้อม <code>items: []</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> หน้าที่เกินขอบเขตต้องได้ <code>200</code> พร้อม array ว่างตาม REST convention เสมอ ไม่ต้อง special-case จัดการ error แยก`,
+    example: `// ตัวอย่าง happy path ของ pagination ปกติ (หน้าที่ 1 มีข้อมูลจริง)
+const response = await request.get('/api/portfolio/history?page=1&limit=20');
+const body = await response.json();
+expect(body.items.length).toBeGreaterThan(0);
+expect(body.totalPages).toBeGreaterThanOrEqual(1);`,
+    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
+    1. ยิง GET <code>/api/portfolio/history?page=999&limit=20</code> (หน้าที่เกินขอบเขต)<br/>
+    2. ตรวจสอบว่า status code เป็น <code>200</code> ไม่ใช่ error<br/>
+    3. ตรวจสอบว่า <code>body.items</code> เป็น array ว่าง (<code>length 0</code>)`
+  },
+  {
+    id: "file_import_validation",
+    meta: "บทที่ 10",
+    title: "File Import: ตรวจสอบไฟล์ผิดรูปแบบก่อนประมวลผล (Mock Endpoint)",
+    template: `import { test, expect } from '@playwright/test';
+
+test('TC-3011: อัปโหลดไฟล์ CSV ว่างเปล่าต้องได้ 400 ไม่ใช่ Server Crash', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด File Import Validation เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ชื่อ empty.csv เนื้อหาว่างเปล่า
+  // WRITE YOUR CODE HERE
+
+
+  // 2. ตรวจสอบว่า status code เป็น 400 (ไม่ใช่ 500 Server Crash)
+
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'CSV file is empty or invalid'
+
+});`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบ File Import Validation...");
+      const hasMultipart = /await\s+request\.post\(['"]\/api\/holdings\/import['"][\s\S]*?multipart:\s*\{[\s\S]*?file:\s*\{[\s\S]*?buffer:\s*Buffer\.from\(['"]{2}\)/.test(code);
+      if (hasMultipart) {
+        log("✓ ขั้นตอนที่ 1: ส่งไฟล์ CSV ว่างเปล่าผ่าน multipart ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการยิง POST /api/holdings/import แบบ multipart พร้อมไฟล์เนื้อหาว่างเปล่า\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') } }\n});");
+      }
+
+      if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+      }
+
+      if (/body\.error\)\.toBe\(['"]CSV file is empty or invalid['"]\)/.test(code)) {
+        log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
+      } else {
+        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'CSV file is empty or invalid'\nตัวอย่าง: expect(body.error).toBe('CSV file is empty or invalid');");
+      }
+    },
+    hint: "ใช้ request.post('/api/holdings/import', { multipart: { file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') } } }); แล้วเช็ค status 400 และ body.error === 'CSV file is empty or invalid'",
+    solution: `import { test, expect } from '@playwright/test';
+
+test('TC-3011: อัปโหลดไฟล์ CSV ว่างเปล่าต้องได้ 400 ไม่ใช่ Server Crash', async ({ request }) => {
+  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด File Import Validation เพราะ API จริงของ My-Investment-Port ยังไม่มี endpoint แบบนี้
+  // 1. ยิง POST /api/holdings/import ด้วย multipart file ชื่อ empty.csv เนื้อหาว่างเปล่า
+  const response = await request.post('/api/holdings/import', {
+    multipart: {
+      file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') }
+    }
+  });
+
+  // 2. ตรวจสอบว่า status code เป็น 400 (ไม่ใช่ 500 Server Crash)
+  expect(response.status()).toBe(400);
+
+  // 3. ตรวจสอบว่า body.error ตรงกับ 'CSV file is empty or invalid'
+  const body = await response.json();
+  expect(body.error).toBe('CSV file is empty or invalid');
+});`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> ทดสอบว่า Backend Validate เนื้อหาไฟล์ก่อนประมวลผล ไฟล์ว่างเปล่าต้องได้ <code>400</code> ไม่ใช่ <code>500 Server Crash</code><br/><br/>
+    ⚖️ <strong>บั๊กที่พบบ่อยที่สุดของ Endpoint รับไฟล์:</strong><br/>
+    Dev เขียนโค้ด parse ไฟล์โดยเชื่อว่าไฟล์ต้อง "ถูกรูปแบบเสมอ" แล้วส่งตรงเข้า logic ประมวลผลทันที พอเจอไฟล์ว่างเปล่า/format ผิด โค้ด parser จะโยน exception ที่ไม่ได้ดักไว้ ทำให้ server ตอบ <code>500</code> (หรือ process ล่ม) แทนที่จะเป็น <code>400</code> พร้อมข้อความชัดเจน<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    Endpoint รับไฟล์ต้อง validate เนื้อหา "ก่อน" ส่งเข้า business logic เสมอ ไม่ใช่ parse ไปก่อนแล้วค่อยเช็ค<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า validate ไม่ผ่านต้องตอบ <code>4xx</code> พร้อมเหตุผลที่ผู้ใช้แก้ไขได้ ไม่ใช่ปล่อยให้ crash`,
+    example: `// ตัวอย่าง happy path: ไฟล์ CSV ถูกต้องตามรูปแบบ
 const response = await request.post('/api/holdings/import', {
   multipart: {
-    file: { name: 'my_data_file', mimeType: 'text/csv', buffer: Buffer.from('ticker,shares\\nAAPL,10') }
+    file: { name: 'holdings.csv', mimeType: 'text/csv', buffer: Buffer.from('ticker,shares\\nAAPL,10') }
   }
 });
 expect(response.status()).toBe(200);`,
     task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
-    1. ยิง POST <code>/api/holdings/import</code> ด้วย multipart ไฟล์ชื่อ <code>malware.exe</code> mimeType <code>application/x-msdownload</code><br/>
-    2. ตรวจสอบว่า status code เป็น <code>400</code><br/>
-    3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'Only CSV files are allowed'</code>`
-  },
-  {
-    id: "file_size_validation",
-    meta: "บทที่ 12",
-    title: "File Size Validation: ปฏิเสธไฟล์ใหญ่เกินก่อนจะกินหน่วยความจำ (Mock Endpoint)",
-    template: `import { test, expect } from '@playwright/test';
-
-test('TC-3013: อัปโหลดไฟล์ใหญ่เกิน 5MB ต้องโดนบล็อกด้วย 413', async ({ request }) => {
-  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) ต่อยอดจากบทที่ 10-11
-  // 1. ยิง POST /api/holdings/import ด้วย multipart file ขนาด 6MB (เกิน limit 5MB)
-  // WRITE YOUR CODE HERE
-
-
-  // 2. ตรวจสอบว่า status code เป็น 413
-
-
-  // 3. ตรวจสอบว่า body.error ตรงกับ 'File size exceeds 5MB limit'
-
-});`,
-    validate: (code, log) => {
-      code = stripComments(code);
-      log("🔍 ตรวจสอบ File Size Validation...");
-      const hasBigBuffer = /Buffer\.alloc\(\s*6\s*\*\s*1024\s*\*\s*1024\s*\)/.test(code);
-      const hasMultipart = /await\s+request\.post\(['"]\/api\/holdings\/import['"][\s\S]*?multipart:/.test(code);
-      if (hasBigBuffer && hasMultipart) {
-        log("✓ ขั้นตอนที่ 1: ส่งไฟล์ขนาด 6MB (Buffer.alloc(6 * 1024 * 1024)) ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการยิง POST /api/holdings/import พร้อมไฟล์ขนาด 6MB\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) } }\n});");
-      }
-
-      if (/expect\(response\.status\(\)\)\.toBe\(413\)/.test(code)) {
-        log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 413 ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 413\nตัวอย่าง: expect(response.status()).toBe(413);");
-      }
-
-      if (/body\.error\)\.toBe\(['"]File size exceeds 5MB limit['"]\)/.test(code)) {
-        log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'File size exceeds 5MB limit'\nตัวอย่าง: expect(body.error).toBe('File size exceeds 5MB limit');");
-      }
-    },
-    hint: "ไม่ต้องมีไฟล์ใหญ่จริงในเครื่อง สร้าง buffer ขนาดใหญ่ขึ้นมาในหน่วยความจำตรงๆ ให้เกิน limit ที่ backend กำหนด แล้วดูว่า status code ที่ถูกต้องตาม HTTP spec สำหรับ 'ไฟล์ใหญ่เกินไป' คืออะไร (ไม่ใช่ 400 ธรรมดา)",
-    solution: `import { test, expect } from '@playwright/test';
-
-test('TC-3013: อัปโหลดไฟล์ใหญ่เกิน 5MB ต้องโดนบล็อกด้วย 413', async ({ request }) => {
-  // หมายเหตุ: /api/holdings/import เป็น endpoint จำลอง (mock) ต่อยอดจากบทที่ 10-11
-  // 1. ยิง POST /api/holdings/import ด้วย multipart file ขนาด 6MB (เกิน limit 5MB)
-  const response = await request.post('/api/holdings/import', {
-    multipart: {
-      file: { name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) }
-    }
-  });
-
-  // 2. ตรวจสอบว่า status code เป็น 413
-  expect(response.status()).toBe(413);
-
-  // 3. ตรวจสอบว่า body.error ตรงกับ 'File size exceeds 5MB limit'
-  const body = await response.json();
-  expect(body.error).toBe('File size exceeds 5MB limit');
-});`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> ตรวจสอบว่า Backend บล็อกไฟล์ขนาดใหญ่เกินกำหนดด้วย Status <code>413 Payload Too Large</code><br/><br/>
-    ⚖️ <strong>เทคนิคสร้างไฟล์ใหญ่แบบไม่อิง ดิสก์:</strong><br/>
-    สร้าง Buffer ใน Memory ตรงๆ ด้วย <code>Buffer.alloc(6 * 1024 * 1024)</code> (6MB) ช่วยให้รัน Test เร็วและไม่ต้องมีไฟล์ใหญ่ติดใน Repository<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>
-    <code>Status 413 Payload Too Large</code> = HTTP Specification สากลสำหรับปฏิเสธไฟล์ที่ใหญ่เกินขีดจำกัด<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> Backend ต้องเช็คขนาดไฟล์ "ก่อน" parse เนื้อหาเสมอ เพื่อป้องกันการกิน CPU และ RAM โดยไม่จำเป็น`,
-    example: `// ตัวอย่างไฟล์ขนาดพอดี limit (5MB เป๊ะ) ต้องผ่าน ไม่ใช่โดนบล็อก
-const response = await request.post('/api/holdings/import', {
-  multipart: {
-    file: { name: 'ok.csv', mimeType: 'text/csv', buffer: Buffer.alloc(5 * 1024 * 1024, 'a') }
-  }
-});
-expect(response.status()).not.toBe(413);`,
-    task: `จงเขียนสคริปต์ทดสอบให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
-    1. ยิง POST <code>/api/holdings/import</code> ด้วยไฟล์ขนาด <code>6MB</code> (<code>Buffer.alloc(6 * 1024 * 1024)</code>)<br/>
-    2. ตรวจสอบว่า status code เป็น <code>413</code><br/>
-    3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'File size exceeds 5MB limit'</code>`
-  },
-  {
-    id: "chained_workflow",
-    meta: "ขั้นสูง 1",
-    title: "Chained Request Workflow: สร้าง Resource แล้วดึงข้อมูลกลับด้วย id ที่ได้จาก Response (Mock Endpoint)",
-    template: `import { test, expect } from '@playwright/test';
-
-test('TC-3014: สร้าง Watchlist แล้วใช้ id จาก response ไปดึงข้อมูลกลับมาตรวจสอบ', async ({ request }) => {
-  // หมายเหตุ: /api/watchlist เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Chained Request Workflow
-
-  // 1. ยิง POST ไปที่ /api/watchlist พร้อม data: { ticker: 'TSLA' } แล้วดึง id จาก response body มาเก็บไว้ในตัวแปรชื่อ id
-  // WRITE YOUR CODE HERE
-
-
-  // 2. ใช้ id ที่ได้จากขั้นตอนที่ 1 (ห้ามเขียน id เอง) ยิง GET ไปที่ /api/watchlist/\${id}
-
-
-  // 3. ตรวจสอบว่า status code ของ GET เป็น 200 และ body.ticker ตรงกับ 'TSLA'
-
-});`,
-    validate: (code, log) => {
-      code = stripComments(code);
-      log("🔍 ตรวจสอบ Chained Request Workflow...");
-
-      const postMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.post\(['"]\/api\/watchlist['"]\s*,\s*\{\s*data:\s*\{\s*ticker:\s*['"]TSLA['"]\s*\}\s*\}\s*\)/);
-      const postVar = postMatch ? postMatch[1] : null;
-      if (postVar) {
-        log(`✓ ขั้นตอนที่ 1: ยิง request.post('/api/watchlist', { data: { ticker: 'TSLA' } }) เก็บผลไว้ในตัวแปร ${postVar} ถูกต้อง`);
-      } else {
-        throw new Error("ไม่พบการยิง POST /api/watchlist ด้วย data: { ticker: 'TSLA' } พร้อมเก็บผลลัพธ์ไว้ในตัวแปร\nตัวอย่าง: const createResponse = await request.post('/api/watchlist', { data: { ticker: 'TSLA' } });");
-      }
-
-      const hasIdCapture = postVar && new RegExp(`const\\s*\\{\\s*id\\s*\\}\\s*=\\s*await\\s+${postVar}\\.json\\(\\)`).test(code);
-      if (hasIdCapture) {
-        log("✓ ขั้นตอนที่ 2: ดึง id จาก response body ของการสร้าง resource มาเก็บไว้ในตัวแปร id ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการดึง id จาก response body ของการสร้าง resource\nตัวอย่าง: const { id } = await createResponse.json();");
-      }
-
-      const getMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.get\(`\/api\/watchlist\/\$\{id\}`\)/);
-      const getVar = getMatch ? getMatch[1] : null;
-      if (getVar) {
-        log(`✓ ขั้นตอนที่ 3: ใช้ id ที่ได้ยิง GET ไปที่ /api/watchlist/\${id} เก็บผลไว้ในตัวแปร ${getVar} ถูกต้อง`);
-      } else {
-        throw new Error("ไม่พบการยิง GET ไปที่ /api/watchlist/${id} โดยใช้ id ที่ดึงมาจากขั้นตอนก่อนหน้า (ต้องใช้ template literal แทรกตัวแปร id จริง)\nตัวอย่าง: const getResponse = await request.get(`/api/watchlist/${id}`);");
-      }
-
-      const hasStatusCheck = getVar && new RegExp(`expect\\(${getVar}\\.status\\(\\)\\)\\.toBe\\(200\\)`).test(code);
-      const hasJsonRead = getVar && new RegExp(`await\\s+${getVar}\\.json\\(\\)`).test(code);
-      const hasTickerCheck = /body\.ticker\)\.toBe\(['"]TSLA['"]\)/.test(code);
-      if (hasStatusCheck && hasJsonRead && hasTickerCheck) {
-        log("✓ ขั้นตอนที่ 4: ตรวจสอบ status 200 และ body.ticker === 'TSLA' จาก response ของ GET ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 200 และ body.ticker ที่ตรงกับ 'TSLA' จาก response ของ GET\nตัวอย่าง: expect(getResponse.status()).toBe(200);\nconst body = await getResponse.json();\nexpect(body.ticker).toBe('TSLA');");
-      }
-    },
-    hint: "ห้ามคิด id เอง — ต้องดึงค่าที่ backend สร้างขึ้นให้จากการยิง POST ครั้งแรกออกมาจาก response body ก่อน แล้วค่อยเอาค่านั้นแทรกลงใน URL ของ request ถัดไปด้วย template literal จากนั้นตรวจสอบว่าข้อมูลที่ดึงกลับมาตรงกับสิ่งที่สร้างไว้จริง",
-    solution: `import { test, expect } from '@playwright/test';
-
-test('TC-3014: สร้าง Watchlist แล้วใช้ id จาก response ไปดึงข้อมูลกลับมาตรวจสอบ', async ({ request }) => {
-  // หมายเหตุ: /api/watchlist เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Chained Request Workflow
-
-  // 1. ยิง POST ไปที่ /api/watchlist พร้อม data: { ticker: 'TSLA' } แล้วดึง id จาก response body มาเก็บไว้ในตัวแปรชื่อ id
-  const createResponse = await request.post('/api/watchlist', { data: { ticker: 'TSLA' } });
-  const { id } = await createResponse.json();
-
-  // 2. ใช้ id ที่ได้จากขั้นตอนที่ 1 (ห้ามเขียน id เอง) ยิง GET ไปที่ /api/watchlist/\${id}
-  const getResponse = await request.get(\`/api/watchlist/\${id}\`);
-
-  // 3. ตรวจสอบว่า status code ของ GET เป็น 200 และ body.ticker ตรงกับ 'TSLA'
-  expect(getResponse.status()).toBe(200);
-  const body = await getResponse.json();
-  expect(body.ticker).toBe('TSLA');
-});`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> ทดสอบ Chained Request Workflow (นำผลลัพธ์จาก Request แรกไปใช้ใน Request ถัดไป)<br/><br/>
-    ⚖️ <strong>3 ขั้นตอนของ Chained Workflow:</strong><br/>
-    1. <strong>Create & Extract:</strong> ยิง <code>POST</code> สร้าง Resource แล้วดึง <code>id</code> จาก Response Body<br/>
-    2. <strong>Chain Query:</strong> ใช้ Template Literal แทรก <code>id</code> เข้าไปใน URL ของ <code>GET</code> Request ถัดไป<br/>
-    3. <strong>Verify Integrity:</strong> ตรวจสอบว่าข้อมูลที่ดึงกลับมาตรงกับสิ่งที่สร้างจริง<br/><br/>
-    💡 <strong>Mental Model:</strong><br/>
-    <code>const { id } = await createRes.json();</code><br/>
-    <code>const getRes = await request.get(\`/api/resource/\${id}\`);</code><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ห้าม Hardcode หรือสุ่ม <code>id</code> เอาเองเด็ดขาด ต้องใช้ <code>id</code> ที่ส่งกลับมาจาก Server จริงๆ`,
-    example: `// ตัวอย่าง Chained Request กับ endpoint สร้างและดึงข้อมูล order
-const createRes = await request.post('/api/orders', { data: { item: 'widget' } });
-const { orderId } = await createRes.json();
-
-const getRes = await request.get(\`/api/orders/\${orderId}\`);
-expect(getRes.status()).toBe(200);
-const orderBody = await getRes.json();
-expect(orderBody.item).toBe('widget');`,
-    task: `จงเขียนสคริปต์ทดสอบ Multi-step Workflow ให้สมบูรณ์ (endpoint จำลองเพื่อฝึกแนวคิด) โดย:<br/>
-    1. ยิง POST ไปที่ <code>/api/watchlist</code> พร้อม <code>data: { ticker: 'TSLA' }</code> แล้วดึง <code>id</code> จาก response body มาเก็บไว้ในตัวแปรชื่อ <code>id</code><br/>
-    2. ใช้ <code>id</code> ที่ได้จากขั้นตอนที่ 1 (ห้ามเขียน id เอง) ยิง GET ไปที่ <code>/api/watchlist/\${id}</code><br/>
-    3. ตรวจสอบว่า status code ของ GET เป็น <code>200</code> และ <code>body.ticker</code> ตรงกับ <code>'TSLA'</code>`
-  },
-  {
-    id: "auth_token_flow",
-    meta: "ขั้นสูง 2",
-    title: "Session/Token Authentication: Login แล้วแนบ Token ใช้ข้าม Request (Mock Endpoint)",
-    template: `import { test, expect } from '@playwright/test';
-
-test('TC-3015: Login ดึง Token แล้วใช้ Authorization Header เข้าถึง Endpoint ที่ต้อง Auth', async ({ request }) => {
-  // หมายเหตุ: /api/auth/login และ /api/portfolio/secure เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Token-based Authentication
-
-  // 1. ยิง GET ไปที่ /api/portfolio/secure โดยไม่แนบ Authorization header ใดๆ แล้วตรวจสอบว่า status code เป็น 401
-  // WRITE YOUR CODE HERE
-
-
-  // 2. ยิง POST ไปที่ /api/auth/login พร้อม data: { username: 'qa_user', password: 'qa_pass' } แล้วดึง token จาก response body
-
-
-  // 3. ใช้ token ที่ได้ แนบเป็น Authorization header รูปแบบ Bearer ยิง GET ไปที่ /api/portfolio/secure อีกครั้ง แล้วตรวจสอบว่า status code เป็น 200
-
-});`,
-    validate: (code, log) => {
-      code = stripComments(code);
-      log("🔍 ตรวจสอบ Token-based Authentication Flow...");
-
-      const unauthMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.get\(['"]\/api\/portfolio\/secure['"]\)/);
-      const unauthVar = unauthMatch ? unauthMatch[1] : null;
-      const hasUnauthCheck = unauthVar && new RegExp(`expect\\(${unauthVar}\\.status\\(\\)\\)\\.toBe\\(401\\)`).test(code);
-      if (hasUnauthCheck) {
-        log("✓ ขั้นตอนที่ 1: ยิง GET /api/portfolio/secure โดยไม่มี token แล้วตรวจสอบ status 401 ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการยิง GET /api/portfolio/secure โดยไม่แนบ Authorization header แล้วตรวจสอบ status 401\nตัวอย่าง: const unauthorizedResponse = await request.get('/api/portfolio/secure');\nexpect(unauthorizedResponse.status()).toBe(401);");
-      }
-
-      const loginMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.post\(['"]\/api\/auth\/login['"]\s*,\s*\{\s*data:\s*\{\s*username:\s*['"]qa_user['"]\s*,\s*password:\s*['"]qa_pass['"]\s*\}\s*\}\s*\)/);
-      const loginVar = loginMatch ? loginMatch[1] : null;
-      const hasTokenCapture = loginVar && new RegExp(`const\\s*\\{\\s*token\\s*\\}\\s*=\\s*await\\s+${loginVar}\\.json\\(\\)`).test(code);
-      if (hasTokenCapture) {
-        log("✓ ขั้นตอนที่ 2: ยิง POST /api/auth/login แล้วดึง token จาก response body ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการยิง POST /api/auth/login ด้วย data: { username: 'qa_user', password: 'qa_pass' } พร้อมดึง token จาก response body\nตัวอย่าง: const loginResponse = await request.post('/api/auth/login', { data: { username: 'qa_user', password: 'qa_pass' } });\nconst { token } = await loginResponse.json();");
-      }
-
-      const authedMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.get\(['"]\/api\/portfolio\/secure['"]\s*,\s*\{\s*headers:\s*\{\s*Authorization:\s*`Bearer\s*\$\{token\}`\s*\}\s*\}\s*\)/);
-      const authedVar = authedMatch ? authedMatch[1] : null;
-      const hasAuthedCheck = authedVar && new RegExp(`expect\\(${authedVar}\\.status\\(\\)\\)\\.toBe\\(200\\)`).test(code);
-      if (authedVar && hasAuthedCheck) {
-        log("✓ ขั้นตอนที่ 3: แนบ token เป็น Authorization: Bearer header ยิง GET อีกครั้งแล้วตรวจสอบ status 200 ถูกต้อง");
-      } else {
-        throw new Error("ไม่พบการยิง GET /api/portfolio/secure พร้อมแนบ headers: { Authorization: `Bearer ${token}` } แล้วตรวจสอบ status 200\nตัวอย่าง: const authorizedResponse = await request.get('/api/portfolio/secure', { headers: { Authorization: `Bearer ${token}` } });\nexpect(authorizedResponse.status()).toBe(200);");
-      }
-    },
-    hint: "แยกทดสอบสองสถานการณ์ให้ชัดเจน: (1) ไม่มี token เลยต้องถูกปฏิเสธ (2) มี token ที่ได้จากการ login จริงต้องผ่านได้ — token ที่ได้จากขั้นตอน login ต้องถูกแนบไปกับ request ถัดไปผ่าน header สำหรับยืนยันตัวตนในรูปแบบ Bearer scheme ไม่ใช่ header ธรรมดา",
-    solution: `import { test, expect } from '@playwright/test';
-
-test('TC-3015: Login ดึง Token แล้วใช้ Authorization Header เข้าถึง Endpoint ที่ต้อง Auth', async ({ request }) => {
-  // หมายเหตุ: /api/auth/login และ /api/portfolio/secure เป็น endpoint จำลอง (mock) เพื่อสอนแนวคิด Token-based Authentication
-
-  // 1. ยิง GET ไปที่ /api/portfolio/secure โดยไม่แนบ Authorization header ใดๆ แล้วตรวจสอบว่า status code เป็น 401
-  const unauthorizedResponse = await request.get('/api/portfolio/secure');
-  expect(unauthorizedResponse.status()).toBe(401);
-
-  // 2. ยิง POST ไปที่ /api/auth/login พร้อม data: { username: 'qa_user', password: 'qa_pass' } แล้วดึง token จาก response body
-  const loginResponse = await request.post('/api/auth/login', {
-    data: { username: 'qa_user', password: 'qa_pass' }
-  });
-  const { token } = await loginResponse.json();
-
-  // 3. ใช้ token ที่ได้ แนบเป็น Authorization header รูปแบบ Bearer ยิง GET ไปที่ /api/portfolio/secure อีกครั้ง แล้วตรวจสอบว่า status code เป็น 200
-  const authorizedResponse = await request.get('/api/portfolio/secure', {
-    headers: { Authorization: \`Bearer \${token}\` }
-  });
-  expect(authorizedResponse.status()).toBe(200);
-});`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> ทดสอบ Token-Based Authentication Flow (Login ➔ ดึง Token ➔ แนบ Bearer Header ➔ เข้าถึง Secure API)<br/><br/>
-    ⚖️ <strong>โครงสร้าง Bearer Token Header:</strong><br/>
-    <code>headers: { Authorization: \`Bearer \${token}\` }</code><br/><br/>
-    💡 <strong>Mental Model:</strong><br/>
-    1. Unauthenticated Request ➔ ได้ <code>401 Unauthorized</code><br/>
-    2. Login Request ➔ ได้ <code>{ token }</code><br/>
-    3. Authenticated Request ➔ แนบ <code>Authorization: Bearer token</code> ➔ ได้ <code>200 OK</code><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องมีคำว่า <code>Bearer </code> นำหน้า string เสมอ (เว้นวรรค 1 ช่องหลังคำว่า Bearer)`
+    1. ยิง POST <code>/api/holdings/import</code> ด้วย multipart ไฟล์ชื่อ <code>empty.csv</code> เนื้อหาว่างเปล่า<br/>
+    2. ตรวจสอบว่า status code เป็น <code>400</code> ไม่ใช่ <code>500</code><br/>
+    3. ตรวจสอบว่า <code>body.error</code> ตรงกับ <code>'CSV file is empty or invalid'</code>`
   },
   {
     id: "file_type_validation",
@@ -1126,13 +1019,12 @@ test('TC-3013: อัปโหลดไฟล์ใหญ่เกิน 5MB ต
   const body = await response.json();
   expect(body.error).toBe('File size exceeds 5MB limit');
 });`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ File Size Validation: ปฏิเสธไฟล์ใหญ่เกินก่อนจะกินหน่วยความจำ (Mock Endpoint) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>นอกจากประเภทไฟล์ผิด อีกเคสที่ระบบรับไฟล์ต้องป้องกันคือ <strong>ไฟล์ใหญ่เกินไป</strong> — ถ้าไม่จำกัดขนาดไว้ ผู้ใช้ (หรือคนร้าย) ส่งไฟล์ขนาดหลาย GB มาได้ ทำให้ server กินหน่วยความจำจนล่ม (Denial of Service แบบไม่ตั้งใจหรือตั้งใจก็ได้)<br/><br/>
-    Status code ที่ถูกต้องตาม HTTP spec สำหรับเคสนี้คือ <strong><code>413 Payload Too Large</code></strong> (ไม่ใช่ 400 ธรรมดา) — บอกชัดเจนว่าปัญหาคือ "ขนาด" ไม่ใช่ "รูปแบบข้อมูล"<br/><br/>
-    ในการทดสอบจริง ไม่จำเป็นต้องมีไฟล์ 6MB เก็บไว้ในเครื่องจริงๆ — ใช้ <code>Buffer.alloc(6 * 1024 * 1024)</code> สร้าง buffer ขนาด 6MB ขึ้นมาในหน่วยความจำตรงๆ ตอนรัน test ได้เลย (เร็วกว่าและไม่ต้อง commit ไฟล์ใหญ่ๆ ติดไปกับ test repo)<br/><br/>
-    ลำดับการตรวจสอบที่ถูกต้องของ Backend: เช็ค "ขนาดไฟล์" ก่อนเช็ค "เนื้อหาไฟล์" เสมอ (เช็คขนาดเร็วและถูกกว่ามาก ไม่ต้องอ่าน/parse เนื้อหาทั้งไฟล์ก่อนถึงจะรู้ว่ามันใหญ่เกินไป) — บั๊กที่พบบ่อยคือเขียนโค้ด parse ไฟล์ก่อนแล้วค่อยเช็คขนาดทีหลัง ทำให้ยังเสีย CPU/Memory ไปกับการ parse ไฟล์ใหญ่ๆ อยู่ดีก่อนจะถูกปฏิเสธ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>Status code ที่ถูกต้องตาม HTTP spec สำหรับเคสนี้คือ <strong><code>413 Payload Too Large</code></strong> (ไม่ใช่ 400 ธรรมดา) — บอกชัดเจนว่าปัญหาคือ "ขนาด" ไม่ใช่ "รูปแบบข้อมูล"<br/><br/><br/>ในการทดสอบจริง ไม่จำเป็นต้องมีไฟล์ 6MB เก็บไว้ในเครื่องจริงๆ — ใช้ <code>Buffer.alloc(6 * 1024 * 1024)</code> สร้าง buffer ขนาด 6MB ขึ้นมาในหน่วยความจำตรงๆ ตอนรัน test ได้เลย (เร็วกว่าและไม่ต้อง commit ไฟล์ใหญ่ๆ ติดไปกับ test repo)<br/><br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ลำดับการตรวจสอบที่ถูกต้องของ Backend: เช็ค "ขนาดไฟล์" ก่อนเช็ค "เนื้อหาไฟล์" เสมอ (เช็คขนาดเร็วและถูกกว่ามาก ไม่ต้องอ่าน/parse เนื้อหาทั้งไฟล์ก่อนถึงจะรู้ว่ามันใหญ่เกินไป) — บั๊กที่พบบ่อยคือเขียนโค้ด parse ไฟล์ก่อนแล้วค่อยเช็คขนาดทีหลัง ทำให้ยังเสีย CPU/Memory ไปกับการ parse ไฟล์ใหญ่ๆ อยู่ดีก่อนจะถูกปฏิเสธ`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> ตรวจสอบว่า Backend บล็อกไฟล์ขนาดใหญ่เกินกำหนดด้วย Status <code>413 Payload Too Large</code><br/><br/>
+    ⚖️ <strong>เทคนิคสร้างไฟล์ใหญ่แบบไม่อิง ดิสก์:</strong><br/>
+    สร้าง Buffer ใน Memory ตรงๆ ด้วย <code>Buffer.alloc(6 * 1024 * 1024)</code> (6MB) ช่วยให้รัน Test เร็วและไม่ต้องมีไฟล์ใหญ่ติดใน Repository<br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    <code>Status 413 Payload Too Large</code> = HTTP Specification สากลสำหรับปฏิเสธไฟล์ที่ใหญ่เกินขีดจำกัด<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> Backend ต้องเช็คขนาดไฟล์ "ก่อน" parse เนื้อหาเสมอ เพื่อป้องกันการกิน CPU และ RAM โดยไม่จำเป็น`,
     example: `// ตัวอย่างไฟล์ขนาดพอดี limit (5MB เป๊ะ) ต้องผ่าน ไม่ใช่โดนบล็อก
 const response = await request.post('/api/holdings/import', {
   multipart: {
@@ -1310,10 +1202,14 @@ test('TC-3015: Login ดึง Token แล้วใช้ Authorization Header 
   });
   expect(authorizedResponse.status()).toBe(200);
 });`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Session/Token Authentication: Login แล้วแนบ Token ใช้ข้าม Request (Mock Endpoint) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>การทดสอบ Authentication ที่ครบถ้วนต้องมี <strong>2 เงื่อนไขคู่กันเสมอ</strong> ไม่ใช่แค่เงื่อนไขเดียว:<br/><br/>2. <strong>Positive case</strong>: request ที่มี token ถูกต้องจากการ login จริง ต้องผ่านเข้าไปทำงานได้ปกติ<br/><br/><br/>การทดสอบแค่เงื่อนไขเดียว (เช่น เช็คแค่ว่า login สำเร็จ แต่ไม่เคยเช็คว่าไม่มี token แล้วโดนบล็อกจริง) คือช่องโหว่ที่ QA พลาดบ่อยที่สุดในระบบที่มี Authentication<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>1. <strong>Negative case</strong>: request ที่ไม่มี token (หรือ token ผิด/หมดอายุ) ต้องถูกปฏิเสธด้วย <code>401 Unauthorized</code> เสมอ<br/><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> รูปแบบที่พบบ่อยที่สุดคือ <strong>Bearer Token</strong>: หลัง login สำเร็จ backend จะตอบ token กลับมาใน response body แล้ว client ต้องแนบ token นั้นไปกับ header <code>Authorization</code> ในรูปแบบ <code>Bearer &lt;token&gt;</code> ในทุก request ที่ต้องการสิทธิ์เข้าถึง<br/><br/>`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> ทดสอบ Token-Based Authentication Flow (Login ➔ ดึง Token ➔ แนบ Bearer Header ➔ เข้าถึง Secure API)<br/><br/>
+    ⚖️ <strong>โครงสร้าง Bearer Token Header:</strong><br/>
+    <code>headers: { Authorization: \`Bearer \${token}\` }</code><br/><br/>
+    💡 <strong>Mental Model:</strong><br/>
+    1. Unauthenticated Request ➔ ได้ <code>401 Unauthorized</code><br/>
+    2. Login Request ➔ ได้ <code>{ token }</code><br/>
+    3. Authenticated Request ➔ แนบ <code>Authorization: Bearer token</code> ➔ ได้ <code>200 OK</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ต้องมีคำว่า <code>Bearer </code> นำหน้า string เสมอ (เว้นวรรค 1 ช่องหลังคำว่า Bearer)`,
     example: `// ตัวอย่าง Token-based Authentication กับ endpoint สมมติอื่น
 const loginRes = await request.post('/api/auth/login', {
   data: { username: 'admin', password: 'secret' }
