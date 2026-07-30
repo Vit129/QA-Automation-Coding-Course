@@ -3,6 +3,14 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.8.3] - 2026-07-30
+
+### Added
+- Show latest GitHub release tag in footer, fetched at runtime so it never goes stale ([`aeb418e`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/aeb418ec0f1b10d3ad095f451aed6a1a5b3cf0db))
+
+### Fixed
+- Recover API-Testing lessons 9-10 and dedupe corrupted lesson data from v0.8.1 bulk edit ([`31e0b30`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/31e0b3042c73aba582554f98f6fe33af2585376a))
+
 ## [0.8.2] - 2026-07-29
 
 ### Fixed
