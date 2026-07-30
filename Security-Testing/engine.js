@@ -89,6 +89,10 @@ function handleAutoClosePair(textarea, key) {
 function handleTextareaKeydown(e) {
   const textarea = e.target;
 
+  if (typeof handleEditorAutocompleteKeydown === 'function') {
+    if (handleEditorAutocompleteKeydown(e)) return;
+  }
+
   if (AUTO_CLOSE_PAIRS[e.key] || Object.values(AUTO_CLOSE_PAIRS).includes(e.key)) {
     if (handleAutoClosePair(textarea, e.key)) {
       e.preventDefault();

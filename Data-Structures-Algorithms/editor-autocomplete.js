@@ -5,7 +5,8 @@
 
 const EDITOR_WORD_REGEX = /[A-Za-z_$][A-Za-z0-9_$]*/g;
 const EDITOR_WORD_MIN_LEN = 2;
-let editorAutocompleteMatches = [];
+var editorAutocompleteMatches = [];
+var editorAutocompleteIndex = 0;
 
 // Word (identifier) touching the caret, e.g. typing "res" inside "const res" -> { start, end, word: "res" }
 function getCurrentWord(textarea) {
@@ -42,6 +43,7 @@ function updateEditorAutocomplete() {
     return;
   }
 
+  editorAutocompleteIndex = 0;
   renderEditorAutocomplete(textarea, word);
 }
 
@@ -93,16 +95,31 @@ function renderEditorAutocomplete(textarea, word) {
   const el = getEditorAutocompleteEl(textarea);
   if (!el) return;
 
-  el.innerHTML = editorAutocompleteMatches.map(w => `
-    <div class="editor-suggestion-item" onclick="acceptEditorAutocompleteClick('${w.replace(/'/g, "\\'")}')" style="padding: 4px 10px; cursor: pointer; color: var(--text-secondary);">
-      <b style="color: var(--accent-emerald);">${escapeHtml(word)}</b>${escapeHtml(w.slice(word.length))}
+  if (editorAutocompleteIndex < 0) editorAutocompleteIndex = 0;
+  if (editorAutocompleteIndex >= editorAutocompleteMatches.length) {
+    editorAutocompleteIndex = Math.max(0, editorAutocompleteMatches.length - 1);
+  }
+
+  el.innerHTML = editorAutocompleteMatches.map((w, idx) => {
+    const isActive = idx === editorAutocompleteIndex;
+    const bgStyle = isActive ? 'background-color: rgba(59, 130, 246, 0.25); font-weight: bold;' : '';
+    return `
+    <div class="editor-suggestion-item ${isActive ? 'active' : ''}" onclick="acceptEditorAutocompleteClick('${w.replace(/'/g, "\\'")}')" style="padding: 4px 10px; cursor: pointer; color: var(--text-secondary); ${bgStyle}">
+      <b style="color: var(--accent-emerald, #10b981);">${escapeHtml(word)}</b>${escapeHtml(w.slice(word.length))}
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   const { x, y } = getCaretPixelPosition(textarea);
   el.style.left = x + 'px';
   el.style.top = y + 'px';
   el.style.display = 'block';
+
+  // Ensure active element is scrolled into view inside the dropdown
+  const activeChild = el.children[editorAutocompleteIndex];
+  if (activeChild && activeChild.scrollIntoView) {
+    activeChild.scrollIntoView({ block: 'nearest' });
+  }
 }
 
 // Hide the dropdown and clear the current match list
@@ -110,15 +127,19 @@ function hideEditorAutocomplete() {
   const el = document.getElementById('editor-autocomplete');
   if (el) el.style.display = 'none';
   editorAutocompleteMatches = [];
+  editorAutocompleteIndex = 0;
 }
 
-// Replace the word at the caret with the top match (used by the Tab key)
-function acceptEditorAutocomplete() {
+// Replace the word at the caret with the chosen match (index-based or top match)
+function acceptEditorAutocomplete(index) {
   const textarea = document.getElementById('editor-textarea');
   if (!textarea || !editorAutocompleteMatches.length) return false;
 
+  const chosenIndex = typeof index === 'number' ? index : editorAutocompleteIndex;
+  const chosen = editorAutocompleteMatches[chosenIndex] || editorAutocompleteMatches[0];
+  if (!chosen) return false;
+
   const { start, end } = getCurrentWord(textarea);
-  const chosen = editorAutocompleteMatches[0];
   textarea.value = textarea.value.slice(0, start) + chosen + textarea.value.slice(end);
   textarea.selectionStart = textarea.selectionEnd = start + chosen.length;
   hideEditorAutocomplete();
@@ -137,4 +158,43 @@ function acceptEditorAutocompleteClick(word) {
   hideEditorAutocomplete();
   updateGutter();
   textarea.focus();
+}
+
+// Handle keyboard navigation for the autocomplete dropdown (ArrowUp, ArrowDown, Enter, Tab, Escape)
+function handleEditorAutocompleteKeydown(e) {
+  const el = document.getElementById('editor-autocomplete');
+  const isVisible = el && el.style.display !== 'none' && editorAutocompleteMatches.length > 0;
+
+  if (!isVisible) return false;
+
+  if (e.key === 'ArrowDown') {
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    editorAutocompleteIndex = (editorAutocompleteIndex + 1) % editorAutocompleteMatches.length;
+    const textarea = document.getElementById('editor-textarea');
+    if (textarea) renderEditorAutocomplete(textarea, getCurrentWord(textarea).word);
+    return true;
+  }
+
+  if (e.key === 'ArrowUp') {
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    editorAutocompleteIndex = (editorAutocompleteIndex - 1 + editorAutocompleteMatches.length) % editorAutocompleteMatches.length;
+    const textarea = document.getElementById('editor-textarea');
+    if (textarea) renderEditorAutocomplete(textarea, getCurrentWord(textarea).word);
+    return true;
+  }
+
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    if (e.metaKey || e.ctrlKey) return false;
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    acceptEditorAutocomplete(editorAutocompleteIndex);
+    return true;
+  }
+
+  if (e.key === 'Escape') {
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    hideEditorAutocomplete();
+    return true;
+  }
+
+  return false;
 }
