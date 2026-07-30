@@ -1,12 +1,11 @@
 # Glossary
 
-## Cloud Progress Sync
+## Cross-Device Progress Sync
 
-Opt-in feature (not yet built) letting a learner's lesson progress (currently `localStorage`-only, per-browser) follow them across devices by saving to a cloud storage provider they sign into voluntarily.
+Learner's lesson progress lives in `localStorage` (per-browser). Moving it between devices is handled entirely via the existing Export/Import buttons plus whatever cloud-sync client (Google Drive, iCloud Drive, Dropbox, etc.) the learner already has running on their OS — no code integration with any cloud provider needed.
 
-- **Provider phasing:** Google Drive first (feasible from a static GitHub Pages site — client-side OAuth via Google Identity Services + Drive API `appDataFolder`, no backend needed, free). iCloud deferred — requires a paid Apple Developer Program membership ($99/yr) plus a CloudKit JS container verified against the `vit129.github.io` domain; not started until that cost is accepted.
-- **Mechanism:** extends the existing "Export progress" flow (today: downloads a JSON file the learner manually re-imports on another device). Adds a "Save to Google Drive" / "Load from Google Drive" action using the same progress JSON shape already produced by the local export and consumed by `applyProgressData()`.
-- **Relationship to existing no-account design:** `PRODUCT.md`'s Out of Scope line ("Backend/accounts/cross-device progress sync") stays true for the *default* experience — no sign-in required, `localStorage` remains the source of truth. Cloud sync is an additive, opt-in layer: signing into Google is only needed if the learner wants cross-device sync. No custom backend is introduced — Drive API is called directly from the browser.
-- **Hard external blocker:** a Google Cloud Console project + OAuth 2.0 Client ID (configured with the `vit129.github.io` origin) must exist before any Drive-sync code can authenticate. This requires the repo owner's own Google account — Claude cannot create it. This is the actual next step before `dev-architect` can design the integration in detail.
+- **Import** (📥): already uses a native `<input type="file">` picker — the learner can browse into any folder, including one synced by Google Drive/iCloud Drive desktop apps. No change needed.
+- **Export** (📤): planned upgrade to the File System Access API (`showSaveFilePicker()`) so the learner can choose the save destination directly — e.g. save straight into their iCloud Drive or Google Drive synced folder — instead of silently landing in the browser's default Downloads folder. Falls back to the original `<a download>` behavior in browsers without File System Access API support (Safari, Firefox). Not yet implemented — `exportProgress()` in `index.html` still uses the plain `<a download>` flow.
+- **Why this and not OAuth+Drive/CloudKit integration:** considered and rejected during `/interview` (2026-07-29) — building direct Google Drive/iCloud API integration would need a Google Cloud OAuth client (free but requires setup) and, for iCloud, a paid Apple Developer Program membership ($99/yr) plus CloudKit JS domain verification. The OS-level file-picker approach gets the same "sync across my own devices" outcome for free, with zero new backend/account surface, and privacy is automatic (each learner only ever touches their own file system and their own cloud client — this site never sees or stores anyone's data either way).
 
-**Status:** scoped via `/interview`, 2026-07-29. Not yet designed or implemented.
+**Status:** decided, 2026-07-29. Not yet implemented.
