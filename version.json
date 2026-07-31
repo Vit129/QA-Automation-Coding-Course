@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "tag": "v0.9.2",
+  "version": 4,
+  "tag": "v0.9.3",
   "updated": "2026-07-31",
-  "summary": "Final Project Capstone: Japan Concert Trip (9-step PRD & AC Specification Standard)"
+  "summary": "Final Project Capstone: Japan Concert Trip (8-step Integrated Lifecycle — merged Booking+Visa flow, cross-phase reuse, SLA thresholds, index-based algorithm)"
 }

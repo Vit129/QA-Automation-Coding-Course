@@ -8,3 +8,4 @@
 
 | ID | Trigger | Fix | Domain | Outcome | Applied | Prevented |
 |----|---------|-----|--------|---------|---------|-----------|
+| CASE-001 | course.js validate() regex silently fails on solution containing `(` `)` e.g. `VARCHAR(100)` | Negated char class `[^,()]*` excludes parens too — swap to `[^,]*` (stop only at comma) unless parens must truly be excluded | course-content/js-regex | Prevented (caught before merge via solution+template sanity check) | 0 | 1 |
