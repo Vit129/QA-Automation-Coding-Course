@@ -116,12 +116,21 @@ function initEditorHighlight() {
   // fires last for the same keydown), re-syncing after any such direct mutation.
   textarea.addEventListener('keydown', () => updateSyntaxHighlight());
 
-  // engine.js's loadLesson() swaps textarea.value directly (no 'input' event fires),
-  // so wrap it to refresh the overlay whenever the student switches lessons.
+  // engine.js's loadLesson() (per-track pages) and exam-engine.js's renderQuestion()
+  // (exam page) both swap textarea.value directly (no 'input' event fires) when the
+  // student navigates - wrap whichever one exists so the overlay refreshes on navigation
+  // too, not just on typing.
   if (typeof loadLesson === 'function') {
     const originalLoadLesson = loadLesson;
     loadLesson = function (...args) {
       originalLoadLesson.apply(this, args);
+      updateSyntaxHighlight();
+    };
+  }
+  if (typeof renderQuestion === 'function') {
+    const originalRenderQuestion = renderQuestion;
+    renderQuestion = function (...args) {
+      originalRenderQuestion.apply(this, args);
       updateSyntaxHighlight();
     };
   }

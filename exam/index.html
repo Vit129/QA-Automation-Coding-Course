@@ -99,12 +99,32 @@
     #exam-question-task { line-height: 1.7; margin-bottom: 16px; font-size: 0.95rem; }
     #exam-question-task code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; }
 
-    #exam-answer-textarea {
-      width: 100%; min-height: 220px; background: #050709; color: #e5e7eb;
-      border: 1px solid var(--border-color); border-radius: 10px; padding: 14px;
-      font-family: 'SF Mono', Monaco, monospace; font-size: 0.88rem; line-height: 1.6;
-      resize: vertical; margin-bottom: 16px;
+    .editor-container {
+      display: flex; position: relative; margin-bottom: 16px;
+      border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;
+      background: #050709; min-height: 220px;
     }
+    .editor-gutter {
+      width: 40px; padding: 14px 0; display: flex; flex-direction: column; align-items: flex-end;
+      padding-right: 10px; color: var(--text-secondary); font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.8rem; line-height: 1.6; user-select: none; border-right: 1px solid var(--border-color);
+    }
+    #editor-textarea {
+      flex: 1; width: 100%; background: transparent; color: #e5e7eb;
+      border: none; outline: none; padding: 14px;
+      font-family: 'SF Mono', Monaco, monospace; font-size: 0.88rem; line-height: 1.6;
+      resize: vertical; position: relative; z-index: 1; white-space: pre; overflow: auto;
+    }
+    #editor-textarea.has-syntax-highlight { color: transparent; caret-color: #e5e7eb; }
+    .editor-highlight-layer {
+      position: absolute; top: 0; left: 41px; right: 0; bottom: 0; margin: 0; padding: 14px;
+      font-family: 'SF Mono', Monaco, monospace; font-size: 0.88rem; line-height: 1.6;
+      white-space: pre; overflow: hidden; pointer-events: none; z-index: 0; color: #e5e7eb;
+    }
+    .tok-comment { color: var(--text-secondary); font-style: italic; }
+    .tok-string { color: var(--accent-orange); }
+    .tok-number { color: #c084fc; }
+    .tok-keyword { color: var(--accent-blue); font-weight: 600; }
     .exam-nav-buttons { display: flex; justify-content: space-between; gap: 10px; }
 
     .exam-score-big { font-size: 3rem; font-weight: 800; text-align: center; }
@@ -137,7 +157,7 @@
       body { padding: 20px 14px 60px; }
       .panel { padding: 18px; }
       /* font-size below 16px makes iOS Safari auto-zoom the page on focus */
-      .config-field input, #exam-answer-textarea {
+      .config-field input, #editor-textarea {
         font-size: 16px;
       }
       .exam-nav-buttons {
@@ -190,7 +210,10 @@
       <div id="exam-question-badge"></div>
       <div id="exam-question-title"></div>
       <div id="exam-question-task"></div>
-      <textarea id="exam-answer-textarea" spellcheck="false"></textarea>
+      <div class="editor-container">
+        <div class="editor-gutter" id="editor-gutter"></div>
+        <textarea id="editor-textarea" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+      </div>
 
       <div class="exam-nav-buttons">
         <div style="display:flex; gap:10px;">
@@ -229,6 +252,21 @@
   <script src="../Data-Structures-Algorithms/course.js"></script>
   <!-- DB-Design-SQL's validate() runs real SQL via AlaSQL — same CDN version as its standalone page -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js"></script>
+
+  <!-- Same editor conveniences (autocomplete, auto-close pairs, smart-enter, tab-indent,
+       dedent-on-close, comment-toggle, syntax highlight) as every per-track sandbox page.
+       Every course.js above just finished overwriting window.TAB_WIDTH/PREFIX/LESSONS with
+       its own values (last one loaded wins) - explicitly pin TAB_WIDTH before engine.js
+       needs it, since exam-engine.js has no course.js of its own to source it from.
+       engine.js's own window.onload=initApp is intentionally never allowed to run here
+       (it assumes a single-track LESSONS array that doesn't exist on this page) - it gets
+       overwritten below by exam-engine.js's window.onload=initExamPage, which is fine since
+       we only need engine.js's keydown-handling functions, not its lesson-rendering ones. -->
+  <script>window.TAB_WIDTH = 2;</script>
+  <script src="../shared/engine.js"></script>
+  <script src="../shared/editor-autocomplete.js"></script>
+  <script src="../shared/editor-enhancements.js"></script>
+  <script src="../shared/editor-highlight.js"></script>
   <script src="../shared/exam-engine.js"></script>
 </body>
 </html>

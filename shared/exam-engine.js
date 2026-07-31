@@ -58,6 +58,25 @@ function initExamPage() {
     const poolSize = Object.values(window.QA_TRACKS).reduce((sum, t) => sum + t.lessons.length, 0);
     countInput.max = String(poolSize);
   }
+
+  // engine.js's own textarea wiring lives inside initApp(), which never runs on this page
+  // (its window.onload=initApp assignment gets overwritten by this file's window.onload
+  // below - intentional, initApp() assumes a single-track LESSONS array this page doesn't
+  // have). Replicate just the textarea event wiring so the shared keydown behaviors
+  // (auto-close pairs, smart-enter, tab-indent) still work here.
+  const textarea = document.getElementById('editor-textarea');
+  if (textarea && typeof handleTextareaKeydown === 'function') {
+    textarea.addEventListener('keydown', handleTextareaKeydown);
+    textarea.addEventListener('input', () => {
+      if (typeof updateGutter === 'function') updateGutter();
+      if (typeof updateEditorAutocomplete === 'function') updateEditorAutocomplete();
+    });
+    textarea.addEventListener('scroll', () => {
+      const gutter = document.getElementById('editor-gutter');
+      if (gutter) gutter.scrollTop = textarea.scrollTop;
+      if (typeof hideEditorAutocomplete === 'function') hideEditorAutocomplete();
+    });
+  }
 }
 
 function renderTrackChecklist() {
@@ -126,7 +145,7 @@ function updateTimerDisplay() {
 }
 
 function saveCurrentAnswer() {
-  const textarea = document.getElementById('exam-answer-textarea');
+  const textarea = document.getElementById('editor-textarea');
   if (!textarea) return;
   const q = EXAM_STATE.questions[EXAM_STATE.currentIndex];
   if (!q) return;
@@ -170,7 +189,7 @@ function renderQuestion(idx) {
   const badge = document.getElementById('exam-question-badge');
   const title = document.getElementById('exam-question-title');
   const task = document.getElementById('exam-question-task');
-  const textarea = document.getElementById('exam-answer-textarea');
+  const textarea = document.getElementById('editor-textarea');
   const progress = document.getElementById('exam-progress-label');
   const prevBtn = document.getElementById('exam-prev-btn');
   const nextBtn = document.getElementById('exam-next-btn');
@@ -178,7 +197,11 @@ function renderQuestion(idx) {
   if (badge) badge.textContent = `${q.trackTitle} · ${q.lesson.meta}`;
   if (title) title.textContent = q.lesson.title;
   if (task) task.innerHTML = q.lesson.task;
-  if (textarea) textarea.value = EXAM_STATE.answers[questionKey(q)] !== undefined ? EXAM_STATE.answers[questionKey(q)] : q.lesson.template;
+  if (textarea) {
+    textarea.value = EXAM_STATE.answers[questionKey(q)] !== undefined ? EXAM_STATE.answers[questionKey(q)] : q.lesson.template;
+    if (typeof updateGutter === 'function') updateGutter();
+    if (typeof hideEditorAutocomplete === 'function') hideEditorAutocomplete();
+  }
   if (progress) progress.textContent = `ข้อ ${idx + 1} / ${EXAM_STATE.questions.length}`;
   if (prevBtn) prevBtn.disabled = idx === 0;
   if (nextBtn) nextBtn.disabled = idx === EXAM_STATE.questions.length - 1;
