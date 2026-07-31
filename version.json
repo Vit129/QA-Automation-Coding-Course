@@ -1,6 +1,6 @@
 {
-  "version": 5,
-  "tag": "v0.9.4",
+  "version": 6,
+  "tag": "v0.9.5",
   "updated": "2026-07-31",
-  "summary": "Editor syntax highlight + dedent/comment-toggle, plus course-wide fix: validate() failure messages no longer reveal the answer"
+  "summary": "Exam page now has the same editor features as the tracks: syntax highlight, autocomplete, dedent, comment-toggle"
 }
