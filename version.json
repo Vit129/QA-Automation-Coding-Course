@@ -1,5 +1,6 @@
 {
-  "version": 2,
-  "updated": "2026-07-15",
-  "summary": "Added Security, Accessibility, Visual Regression, CI/CD Pipeline, and Framework Design tracks (11 tracks, 115 lessons total)"
+  "version": 3,
+  "tag": "v0.9.2",
+  "updated": "2026-07-31",
+  "summary": "Final Project Capstone: Japan Concert Trip (9-step PRD & AC Specification Standard)"
 }
