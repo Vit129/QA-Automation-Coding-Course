@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.9.5] - 2026-07-31
+
+### Added
+- Wire same editor conveniences (highlight, autocomplete, dedent, comment-toggle) into exam page ([`476f328`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/476f3287186b3af11db329a9833664503e706a7c))
+
 ## [0.9.4] - 2026-07-31
 
 ### Added
