@@ -19,6 +19,7 @@ Source: per-track `style.css` + `index.html` CSS custom properties (not perfectl
 - Shadows: soft dark drop-shadow on cards (`0 20px 40px -15px rgba(0,0,0,0.6)`), glow-style accent shadow (`0 0 12px rgba(accent,0.4)`) on interactive elements
 - Gradients: sparse — progress bars, headline text-fill only
 - Same structural conventions repeat per track, accent color is the per-track differentiator
+- Code editor syntax-highlight tokens (`shared/editor-highlight.js`, added 2026-07-31 — same across all tracks, not accent-colored per track): `.tok-comment` (`var(--text-muted)`, italic), `.tok-string` (`#f59e0b`), `.tok-number` (`#c084fc`), `.tok-keyword` (`#60a5fa`, semibold)
 
 ## Avoid
 - Introducing a UI framework/build step — the site is intentionally vanilla HTML/CSS/JS

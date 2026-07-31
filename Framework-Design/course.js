@@ -115,7 +115,7 @@ const LESSONS = [
       const clean = stripComments(code);
       const hasBaseURL = /use\s*:\s*\{[\s\S]*?baseURL:\s*['"]http:\/\/localhost:5173['"][\s\S]*?\}/.test(clean);
       if (!hasBaseURL) {
-        throw new Error("ไม่พบการตั้งค่า baseURL: 'http://localhost:5173' ภายใน use: { ... } block\nตัวอย่าง: use: { baseURL: 'http://localhost:5173' }");
+        throw new Error("ยังไม่พบการกำหนดค่า baseURL ให้ตรงกับที่ระบุในโจทย์ ภายใน use ของ defineConfig");
       }
       log("✓ ตั้งค่า baseURL ถูกต้อง");
     },
@@ -163,14 +163,14 @@ export default defineConfig({
       // floating anywhere else in the file — prevents passing via scattered snippets.
       const fixtureMatch = /watchlistPage\s*:\s*async\s*\(\s*\{[^)]*page[^)]*\}\s*,\s*use\s*\)\s*=>\s*\{([\s\S]*?)\}/.exec(clean);
       if (!fixtureMatch) {
-        throw new Error("ไม่พบ fixture ชื่อ watchlistPage ที่เป็นรูปแบบ async ({ page }, use) => { ... }");
+        throw new Error("ไม่พบการประกาศ fixture ชื่อ watchlistPage ในรูปแบบฟังก์ชัน async ที่รับ page และ use ตามแบบแผนของ Playwright fixture");
       }
       const body = fixtureMatch[1];
       if (!/goto\(\s*['"]\/watchlist['"]\s*\)/.test(body)) {
-        throw new Error("fixture watchlistPage ต้องยิง goto('/watchlist') ภายในตัว fixture เอง");
+        throw new Error("fixture watchlistPage ยังไม่ได้ไปที่หน้าที่ระบุในโจทย์ ภายในตัว fixture เอง");
       }
       if (!/await\s+use\(/.test(body)) {
-        throw new Error("fixture watchlistPage ต้องเรียก await use(...) ภายในตัว fixture เอง เพื่อส่งค่าต่อให้ test");
+        throw new Error("fixture watchlistPage ยังไม่ได้ส่งค่ากลับไปให้ test ผ่าน use() ภายในตัว fixture เอง");
       }
       log("✓ สร้าง Custom Fixture ถูกต้อง");
     },
@@ -220,7 +220,7 @@ test('เพิ่ม ticker ใหม่ใน watchlist', async ({ watchlistPa
       const hasFixtures = /\bfixtures\//.test(code);
       const hasUtils = /\butils\//.test(code);
       if (!hasTests || !hasPages || !hasFixtures || !hasUtils) {
-        throw new Error("ต้องระบุครบทั้ง 4 โฟลเดอร์: tests/, pages/, fixtures/, utils/");
+        throw new Error("ยังระบุโครงสร้างโฟลเดอร์มาตรฐานไม่ครบตามที่โจทย์กำหนด (ต้องมีทั้ง 4 ส่วน)");
       }
       log("✓ ระบุโครงสร้างโฟลเดอร์ครบถ้วนถูกต้อง");
     },
@@ -291,7 +291,7 @@ test('เพิ่ม ticker ใหม่ใน watchlist', async ({ watchlistPa
       }
       const fwkCount = fn("fwk");
       if (fwkCount !== 3) {
-        throw new Error(`countCompletedLessons('fwk') ควรได้ 3 (นับเฉพาะ key ที่ขึ้นต้นด้วย fwk_course_completed_ และค่าเป็น 'true') แต่ได้ ${fwkCount}`);
+        throw new Error(`countCompletedLessons('fwk') ควรนับได้ 3 รายการ ตรวจสอบเงื่อนไขการกรอง key และค่าที่นับตามที่ระบุในโจทย์อีกครั้ง แต่ได้ ${fwkCount}`);
       }
       const otherCount = fn("other");
       if (otherCount !== 1) {
@@ -352,7 +352,7 @@ for (const t of tracks) {
       const hasShares = /shares:\s*40\b/.test(block);
       const hasAvgCost = /avgCost:\s*178(\.0+)?\b/.test(block);
       if (!hasTicker || !hasShares || !hasAvgCost) {
-        throw new Error("testHoldings ต้องมี ticker: 'AAPL', shares: 40, avgCost: 178.00 อยู่ภายใน object เดียวกันจริง");
+        throw new Error("testHoldings ยังมีข้อมูลไม่ครบ ตรวจสอบว่ามีค่า ticker, shares และ avgCost ตรงกับที่ระบุในโจทย์ครบถ้วนภายใน object เดียวกัน");
       }
       log("✓ แยก Test Data ออกจาก Logic ถูกต้อง");
     },
@@ -393,16 +393,16 @@ test('เพิ่ม Holding ใหม่', async ({ page }) => {
       // not just present anywhere in the file.
       const block = extractBalancedBlock(clean, /reporter:\s*\[/, "[", "]");
       if (!block) {
-        throw new Error("ไม่พบการตั้งค่า reporter: [...]");
+        throw new Error("ไม่พบการตั้งค่า reporter อย่างครบถ้วน");
       }
       const hasHtml = /['"]html['"]/.test(block);
       const hasJson = /['"]json['"]/.test(block);
       const hasOutputFile = /outputFile:\s*['"]results\.json['"]/.test(block);
       if (!hasHtml || !hasJson) {
-        throw new Error("reporter ต้องมีทั้ง 'html' และ 'json' อยู่ภายใน reporter: [...] เดียวกันจริง");
+        throw new Error("reporter ต้องมีทั้ง 'html' และ 'json' อยู่ในการตั้งค่าเดียวกันจริง");
       }
       if (!hasOutputFile) {
-        throw new Error("ไม่พบ outputFile: 'results.json' ภายใน reporter: [...]");
+        throw new Error("ไม่พบการตั้งค่า outputFile ให้ตรงกับชื่อไฟล์ผลลัพธ์ที่ระบุในโจทย์ ภายใน reporter ของ 'json'");
       }
       log("✓ ตั้งค่า Reporter ถูกต้อง");
     },
@@ -644,7 +644,7 @@ console.log(tc1.id, tc2.id); // ตัวเลขต่างกันเสม
         throw new Error("ไม่พบ method searchTicker(ticker) { ... } ที่ครบถ้วน");
       }
       if (!/this\.searchInput\.fill\(\s*ticker\s*\)/.test(searchBlock)) {
-        throw new Error("searchTicker(ticker) ต้องเรียก this.searchInput.fill(ticker)");
+        throw new Error("searchTicker(ticker) ยังไม่ได้กรอกค่าลงช่องค้นหาตามที่ระบุในโจทย์");
       }
       if (/expect\(/.test(searchBlock)) {
         throw new Error("searchTicker(ticker) เป็น action method ต้อง 'กระทำ' อย่างเดียว ห้ามมี expect() ปนอยู่ข้างใน — ผิดหลักการแยก action ออกจาก verify");
@@ -654,7 +654,7 @@ console.log(tc1.id, tc2.id); // ตัวเลขต่างกันเสม
         throw new Error("ไม่พบ method verifyHoldingInTable(ticker) { ... } ที่ครบถ้วน");
       }
       if (!/expect\(\s*this\.getHoldingRow\(\s*ticker\s*\)\s*\)\s*\.\s*toBeVisible\(\)/.test(verifyBlock)) {
-        throw new Error("verifyHoldingInTable(ticker) ต้องมี expect(this.getHoldingRow(ticker)).toBeVisible()");
+        throw new Error("verifyHoldingInTable(ticker) ยังไม่ได้ตรวจสอบว่าแถวข้อมูลที่ต้องการปรากฏอยู่จริงด้วย expect()");
       }
       log("✓ แยก Action Method และ Verify Method ตามหลัก POM ถูกต้อง");
     },
@@ -710,11 +710,11 @@ await holdingsPage.verifyHoldingInTable('AAPL');`,
       const clean = stripComments(code);
       const hasBaseURL = /const\s+baseURL\s*=\s*process\.env\.BASE_URL\s*\|\|\s*['"]http:\/\/localhost:5175['"]/.test(clean);
       if (!hasBaseURL) {
-        throw new Error("ไม่พบ const baseURL = process.env.BASE_URL || 'http://localhost:5175'");
+        throw new Error("ไม่พบการประกาศตัวแปร baseURL ที่อ่านค่าจาก environment variable พร้อม fallback ตามที่ระบุในโจทย์");
       }
       const guardMatch = /if\s*\(\s*!\s*baseURL\.includes\(\s*['"]localhost['"]\s*\)\s*\)\s*\{([\s\S]*?)\}/.exec(clean);
       if (!guardMatch) {
-        throw new Error("ไม่พบ if (!baseURL.includes('localhost')) { ... } เป็น safety guard");
+        throw new Error("ไม่พบ safety guard ที่เช็คว่า baseURL ไม่ใช่ localhost ตามที่ระบุในโจทย์");
       }
       if (!/throw\s+new\s+Error\(/.test(guardMatch[1])) {
         throw new Error("ภายใน safety guard ต้อง throw new Error(...) เพื่อบล็อกการรัน test");
@@ -767,10 +767,10 @@ if (!baseURL.includes('localhost')) {
       }
       const body = fixtureMatch[1];
       if (!/watchlistPage\.getByTestId\(\s*['"]sector-filter['"]\s*\)\.selectOption\(\s*['"]Technology['"]\s*\)/.test(body)) {
-        throw new Error("fixture filteredWatchlistPage ต้องเรียก watchlistPage.getByTestId('sector-filter').selectOption('Technology')");
+        throw new Error("fixture filteredWatchlistPage ยังไม่ได้กรองหมวดหมู่ตามที่ระบุในโจทย์ ผ่าน watchlistPage ที่รับมา");
       }
       if (!/await\s+use\(\s*watchlistPage\s*\)/.test(body)) {
-        throw new Error("fixture filteredWatchlistPage ต้อง await use(watchlistPage) ส่งต่อ watchlistPage (ที่ filter แล้ว) ให้ test ใช้งาน ไม่ใช่ use(page) ตัวเปล่า");
+        throw new Error("fixture filteredWatchlistPage ต้องส่งต่อ watchlistPage ที่กรองแล้วให้ test ใช้งานผ่าน use() ไม่ใช่ค่าตัวเปล่าที่ยังไม่ได้กรอง");
       }
       log("✓ Fixture Composition ถูกต้อง: fixture ใหม่พึ่งพา fixture เดิมได้จริง");
     },
@@ -825,17 +825,17 @@ test('เห็นเฉพาะหุ้นกลุ่ม Technology', async 
       const clean = stripComments(code);
       const loginStep = /test\.step\(\s*['"]login['"]\s*,\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\}\s*\)/.exec(clean);
       if (!loginStep) {
-        throw new Error("ไม่พบ test.step('login', async () => { ... })");
+        throw new Error("ไม่พบ test.step() สำหรับขั้นตอน login ตามที่ระบุในโจทย์");
       }
       if (!/goto\(\s*['"]\/login['"]\s*\)/.test(loginStep[1])) {
-        throw new Error("step 'login' ต้องเรียก page.goto('/login') อยู่ภายใน");
+        throw new Error("step 'login' ยังไม่ได้ไปที่หน้าที่ระบุในโจทย์อยู่ภายใน");
       }
       const addStep = /test\.step\(\s*['"]add holding['"]\s*,\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\}\s*\)/.exec(clean);
       if (!addStep) {
-        throw new Error("ไม่พบ test.step('add holding', async () => { ... })");
+        throw new Error("ไม่พบ test.step() สำหรับขั้นตอน add holding ตามที่ระบุในโจทย์");
       }
       if (!/getByTestId\(\s*['"]btn-add-holding['"]\s*\)\.click\(\)/.test(addStep[1])) {
-        throw new Error("step 'add holding' ต้องเรียก page.getByTestId('btn-add-holding').click() อยู่ภายใน");
+        throw new Error("step 'add holding' ยังไม่ได้กระทำการที่ระบุในโจทย์อยู่ภายใน");
       }
       if (!/await\s+test\.step\(/.test(clean)) {
         throw new Error("ต้องเรียก test.step() ด้วย await เสมอ (test.step คืน Promise)");
@@ -902,7 +902,7 @@ const total = await test.step('คำนวณยอดรวม', async () => {
       const results = [0, 1, 2].map((i) => fn(i));
       results.forEach((r, idx) => {
         if (r !== `user-${idx}`) {
-          throw new Error(`makeWorkerTestUser(${idx}) ควรได้ 'user-${idx}' แต่ได้ ${JSON.stringify(r)}`);
+          throw new Error(`makeWorkerTestUser(${idx}) ยังคืนค่าไม่ตรงกับรูปแบบที่ระบุในโจทย์ แต่ได้ ${JSON.stringify(r)}`);
         }
       });
       const uniqueVals = new Set(results);

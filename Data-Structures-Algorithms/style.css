@@ -3,18 +3,18 @@
   --bg-secondary: #121824;
   --bg-tertiary: #1a2332;
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-glow: rgba(139, 92, 246, 0.3);
-
+  --border-color-glow: rgba(59, 130, 246, 0.3);
+  
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
   --text-muted: #4e5666;
-
-  --accent-blue: #8b5cf6;      /* Violet theme (API Testing) */
+  
+  --accent-blue: #3b82f6;
   --accent-emerald: #10b981;
   --accent-amber: #f59e0b;
   --accent-rose: #f43f5e;
-  --accent-terminal: #a78bfa;
-
+  --accent-terminal: #58a6ff;
+  
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
 }
@@ -128,8 +128,8 @@ body {
 }
 
 .lesson-item.active {
-  background-color: rgba(139, 92, 246, 0.1);
-  border-color: rgba(139, 92, 246, 0.3);
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
   color: var(--text-primary);
 }
 
@@ -251,8 +251,8 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #7c3aed;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+  background-color: #2563eb;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
 }
 
 .btn-secondary {
@@ -524,7 +524,40 @@ body {
   tab-size: 2;
   overflow: auto;
   white-space: pre;
+  position: relative;
+  z-index: 1;
 }
+
+.editor-textarea.has-syntax-highlight {
+  color: transparent;
+  caret-color: var(--text-primary);
+}
+
+/* Non-interactive syntax-highlight layer, sits directly behind .editor-textarea
+   (see shared/editor-highlight.js) - must match its font/padding/line-height exactly
+   so highlighted tokens line up with the (now-transparent) textarea text on top. */
+.editor-highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 48px; /* .editor-gutter width */
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.825rem;
+  line-height: 1.6;
+  white-space: pre;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--text-primary);
+}
+
+.tok-comment { color: var(--text-muted); font-style: italic; }
+.tok-string { color: #f59e0b; }
+.tok-number { color: #c084fc; }
+.tok-keyword { color: #60a5fa; font-weight: 600; }
 
 /* Terminal Area */
 .terminal-panel {
@@ -805,6 +838,7 @@ body {
   color: var(--text-primary) !important;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
+
 
 /* XP toast (lesson completion feedback) */
 .xp-toast {

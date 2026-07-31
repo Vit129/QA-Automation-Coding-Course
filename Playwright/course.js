@@ -41,21 +41,21 @@ const LESSONS = [
       if (/await\s+page\.goto\(['"]\/holdings['"]\)/.test(clean)) {
         log("✓ ขั้นตอนที่ 1: ไปที่พิกัด /holdings ถูกต้อง");
       } else {
-        throw new Error("ลบคำสั่ง page.goto('/holdings') หรือไม่? กรุณาเขียนคืนด้วย");
+        throw new Error("ยังไม่พบขั้นตอนการเปิดไปยังหน้า /holdings ที่ระบุไว้ในโจทย์ กรุณาตรวจสอบว่าใช้เมธอด navigate ของ page ไปยังพิกัดดังกล่าวแล้วหรือยัง");
       }
 
       const hasFill = /await\s+page\.getByTestId\(['"]search-input['"]\)\.fill\(['"]AAPL['"]\)/.test(clean);
       if (hasFill) {
         log("✓ ขั้นตอนที่ 2: ใช้ getByTestId('search-input').fill('AAPL') ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่งกรอกข้อมูล AAPL ลงในช่องค้นหา หรือไม่ได้ค้นหาด้วย TestId 'search-input'\nตัวอย่าง: await page.getByTestId('search-input').fill('AAPL');");
+        throw new Error("ไม่พบคำสั่งกรอกข้อมูล AAPL ลงในช่องค้นหา หรือไม่ได้ค้นหาด้วย Test ID 'search-input' ให้ทบทวนวิธีค้นหาอิลิเมนต์ด้วย Test ID แล้วตามด้วยแอคชันกรอกข้อความแทนที่ค่าทั้งหมดในช่อง (ดูตัวอย่างใน theory ด้านบน)");
       }
 
       const hasExpect = /await\s+expect\(page\.getByTestId\(['"]table-container['"]\)\)\.toContainText\(['"]AAPL['"]\)/.test(clean);
       if (hasExpect) {
         log("✓ ขั้นตอนที่ 3: ใช้ expect(table-container).toContainText('AAPL') ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่งทำ Assertion เพื่อเช็คว่าตารางประกอบด้วยข้อความ AAPL\nตัวอย่าง: await expect(page.getByTestId('table-container')).toContainText('AAPL');");
+        throw new Error("ไม่พบคำสั่งทำ Assertion เพื่อเช็คว่าตารางประกอบด้วยข้อความ AAPL ให้ใช้ Web-first assertion ตระกูลตรวจสอบว่ามีข้อความปรากฏอยู่บางส่วนภายใน element ตามที่อธิบายไว้ในทฤษฎี");
       }
     },
     hint: "ขั้นตอนที่ 2 ต้องใช้ Locator ค้นหาด้วย Test ID แล้วตามด้วยแอคชันสำหรับกรอกข้อความแทนที่ค่าทั้งหมดในช่อง (ไม่ใช่การพิมพ์ทีละตัวอักษร) ส่วนขั้นตอนที่ 3 ให้ใช้ Web-first assertion ตระกูลตรวจสอบว่ามีข้อความปรากฏอยู่บางส่วนภายใน element",
@@ -108,7 +108,7 @@ test('ทดสอบคลิกปุ่ม', async ({ page }) => {
       log("🔍 วิเคราะห์ความต้องการ...");
       const clean = stripComments(code);
       if (!/page\.evaluate\s*\(/.test(clean)) {
-        throw new Error("คุณจำเป็นต้องรันสคริปต์ในฝั่งเบราว์เซอร์ด้วยคำสั่ง page.evaluate()");
+        throw new Error("คุณจำเป็นต้องรันสคริปต์ให้ไปทำงานในบริบทฝั่งเบราว์เซอร์ผ่านเมธอดของ Page ที่ออกแบบมาสำหรับข้ามไปประมวลผล JavaScript ในหน้าเว็บโดยตรง");
       }
       log("✓ ค้นพบคำสั่ง page.evaluate");
 
@@ -123,7 +123,7 @@ test('ทดสอบคลิกปุ่ม', async ({ page }) => {
       if (pattern) {
         log("✓ โค้ดคอมไพล์สำเร็จ: ดึงและรีเทิร์นค่า JSON จาก localStorage สำเร็จ");
       } else {
-        throw new Error("โค้ดดึงค่าไม่ถูกต้อง\nตัวอย่างการเขียน:\nreturn await page.evaluate(() => localStorage.getItem('portfolio_holdings'));");
+        throw new Error("รูปแบบการดึงค่าคืนยังไม่ถูกต้อง ตรวจสอบว่าได้ return ผลลัพธ์จากฟังก์ชันที่รันในฝั่งเบราว์เซอร์ ซึ่งภายในต้องเรียกใช้เมธอดมาตรฐานของ Web Storage API เพื่อดึงค่าตามคีย์เป้าหมายที่กำหนดไว้ในโจทย์");
       }
     },
     hint: "ต้องส่งฟังก์ชัน callback ไปรันในบริบทของเบราว์เซอร์ผ่านเมธอดของ Page ที่ทำหน้าที่นี้โดยเฉพาะ แล้วภายใน callback นั้นเรียกใช้เมธอดมาตรฐานของ Web Storage API สำหรับดึงค่าตามคีย์ที่กำหนด",
@@ -177,7 +177,7 @@ export class TaxPage extends BasePage {
       if (/super\(page\)/.test(clean)) {
         log("✓ ขั้นตอนที่ 1: เรียก constructor คลาสแม่ด้วย super(page) ถูกต้อง");
       } else {
-        throw new Error("คุณลืมเรียกใช้ super(page) ภายใน constructor หรือไม่?");
+        throw new Error("คุณลืมเรียกใช้ constructor ของคลาสแม่เป็นบรรทัดแรกภายใน constructor หรือไม่? (ทบทวนหลักการ Class Inheritance ใน theory)");
       }
 
       const hasMetric = /this\.metricsSection\s*=\s*page\.getByTestId\(['"]tax-metrics-section['"]\)/.test(clean) ||
@@ -185,14 +185,14 @@ export class TaxPage extends BasePage {
       if (hasMetric) {
         log("✓ ขั้นตอนที่ 2: ลงทะเบียนตัวแปร metricsSection สำเร็จ");
       } else {
-        throw new Error("ไม่พบการลงทะเบียน metricsSection ด้วยการค้นหา TestId 'tax-metrics-section'\nตัวอย่าง: this.metricsSection = page.getByTestId('tax-metrics-section');");
+        throw new Error("ไม่พบการลงทะเบียนตัวแปร metricsSection ด้วยการค้นหาผ่าน Test ID 'tax-metrics-section' ให้ตรวจสอบว่าใช้วิธีค้นหาด้วย Test ID แบบเดียวกับที่ formPanel ใช้ในบทอื่นหรือยัง");
       }
 
       const hasNav = /await\s+this\.navigateTo\(['"]\/tax['"]\)/.test(clean);
       if (hasNav) {
         log("✓ ขั้นตอนที่ 3: เมธอด navigate เรียกใช้งานพิกัด /tax สำเร็จ");
       } else {
-        throw new Error("ไม่พบคำสั่งเปลี่ยนหน้าไปพิกัด '/tax' โดยเรียกผ่าน navigateTo ของคลาสแม่\nตัวอย่าง: await this.navigateTo('/tax');");
+        throw new Error("ไม่พบคำสั่งเปลี่ยนหน้าไปพิกัด '/tax' ให้ตรวจสอบว่าเรียกผ่านเมธอดของ BasePage ที่มีไว้สำหรับเปลี่ยนเส้นทางหน้าโดยเฉพาะหรือยัง");
       }
     },
     hint: "constructor ของคลาสลูกที่สืบทอด (extends) ต้องเรียก constructor ของคลาสแม่เป็นบรรทัดแรกเสมอ ส่วน Locator ให้ใช้วิธีค้นหาด้วย Test ID แบบเดียวกับที่ formPanel ใช้ในบทอื่น และเมธอด navigate ให้เรียกใช้เมธอดของ BasePage ที่มีไว้สำหรับเปลี่ยนเส้นทางหน้าโดยเฉพาะ",
@@ -252,7 +252,7 @@ export async function setupTestData(page: Page, baseline: any) {
       log("🔍 กำลังตรวจสอบระบบ Seed Data...");
       const clean = stripComments(code);
       if (!/addInitScript\s*\(/.test(clean)) {
-        throw new Error("โปรเจคนี้ต้องการให้เพิ่มข้อมูลเริ่มต้นก่อนหน้าเว็บเรนเดอร์ กรุณาใช้งาน page.addInitScript()");
+        throw new Error("โปรเจคนี้ต้องการให้เพิ่มข้อมูลเริ่มต้นก่อนหน้าเว็บเรนเดอร์ ให้ตรวจสอบว่าใช้เมธอดของ Page ที่แทรกสคริปต์ให้รันตั้งแต่ก่อนหน้าเว็บถูกสร้างขึ้นหรือยัง");
       }
       log("✓ ตรวจพบการใช้งาน page.addInitScript");
 
@@ -266,7 +266,7 @@ export async function setupTestData(page: Page, baseline: any) {
       if (checkSet) {
         log("✓ โค้ดคอมไพล์สำเร็จ: โหลดชุดจำลองข้อมูลเข้า LocalStorage ก่อนเรนเดอร์สำเร็จ");
       } else {
-        throw new Error("รูปแบบสคริปต์ addInitScript ไม่ถูกต้อง\nตัวอย่างการเขียน:\nawait page.addInitScript((data) => {\n  localStorage.setItem('portfolio_holdings', JSON.stringify(data));\n}, baseline);");
+        throw new Error("รูปแบบสคริปต์การแทรกข้อมูลเริ่มต้นยังไม่ถูกต้อง ตรวจสอบว่าภายใน callback ได้เรียกใช้เมธอดมาตรฐานของ Web Storage สำหรับบันทึกค่า โดยแปลง object ให้เป็นสตริงก่อนด้วยเมธอดมาตรฐานของ JSON และส่ง baseline เป็นพารามิเตอร์ที่สองของฟังก์ชันแทรกสคริปต์");
       }
     },
     hint: "ต้องแทรกสคริปต์ให้รันตั้งแต่ก่อนหน้าเว็บเรนเดอร์ (เมธอดของ Page ที่ตรงข้ามกับ evaluate ตรงที่รันล่วงหน้าก่อน document ถูกสร้างขึ้น) แล้วภายในนั้นใช้เมธอดมาตรฐานของ Web Storage สำหรับบันทึกค่า โดยแปลง object ให้เป็นสตริงก่อนด้วยเมธอดมาตรฐานของ JSON",
@@ -317,7 +317,7 @@ export class HoldingsPage {
       if (pattern) {
         log("✓ โค้ดคอมไพล์สำเร็จ: ทำการจำกัดขอบเขตการค้นหาปุ่มบันทึกสำเร็จ (Scoped Locator)");
       } else {
-        throw new Error("การอ้างอิงปุ่มบันทึกไม่ถูกต้อง หรือไม่ได้จำกัดขอบเขต (Scoped) ลงใน formPanel\nตัวอย่าง: this.formSaveBtn = this.formPanel.getByTestId('form-save-btn');");
+        throw new Error("การอ้างอิงปุ่มบันทึกไม่ถูกต้อง หรือไม่ได้จำกัดขอบเขต (Scoped) ลงใน formPanel ให้ตรวจสอบว่าเรียกเมธอดค้นหาด้วย Test ID ต่อจากตัวแปร formPanel แทนที่จะเรียกจาก page ตรง ๆ");
       }
     },
     hint: "Locator สามารถเรียกเมธอดค้นหาต่อจาก Locator อีกตัวได้โดยตรงเพื่อจำกัดขอบเขตการค้นหาเฉพาะลูกหลานของมัน (Scoped Locator) — ลองเรียกเมธอดค้นหาด้วย Test ID ต่อจากตัวแปร formPanel แทนที่จะเรียกจาก page ตรง ๆ",
@@ -364,7 +364,7 @@ async function verifyHoldingsRedirect(page: Page, formPanel: Locator) {
       if (hasNotVisible) {
         log("✓ ขั้นตอนที่ 1: ตรวจสอบความซ่อนรูปของฟอร์ม (not.toBeVisible) สำเร็จ");
       } else {
-        throw new Error("ไม่พบคำสั่งตรวจเช็คว่าฟอร์มซ่อนตัว\nตัวอย่าง: await expect(formPanel).not.toBeVisible();");
+        throw new Error("ไม่พบคำสั่งตรวจเช็คว่าฟอร์มซ่อนตัว ให้ใช้ Web-first assertion ตระกูลตรวจสอบการมองเห็น พร้อม negate ผลลัพธ์ด้วยคีย์เวิร์ดที่ใช้กลับด้านเงื่อนไข");
       }
 
       const hasURL = /await\s+expect\(page\)\.toHaveURL\(\/\\\/holdings\/\)/.test(clean) ||
@@ -372,7 +372,7 @@ async function verifyHoldingsRedirect(page: Page, formPanel: Locator) {
       if (hasURL) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบเส้นทาง URL ของระบบจัดพอร์ตสำเร็จ");
       } else {
-        throw new Error("ไม่พบการเช็ค URL ของหน้าด้วย expect(page).toHaveURL()\nตัวอย่าง: await expect(page).toHaveURL(/\\/holdings/);");
+        throw new Error("ไม่พบการเช็ค URL ของหน้าปัจจุบัน ให้ใช้ assertion ตระกูลตรวจสอบ URL โดยรับ RegExp ที่ตรงกับพิกัด /holdings เป็นอาร์กิวเมนต์");
       }
     },
     hint: "ขั้นตอนที่ 1 ต้องใช้ Web-first assertion ตระกูลตรวจสอบการมองเห็น พร้อม negate ผลลัพธ์ด้วยคีย์เวิร์ดที่ใช้กลับด้านเงื่อนไข ขั้นตอนที่ 2 ต้องใช้ assertion ตระกูลตรวจสอบ URL ของหน้าปัจจุบัน โดยรับ RegExp เป็นอาร์กิวเมนต์",
@@ -415,14 +415,14 @@ async function mockGoogleScript(page: Page) {
       log("🔍 กำลังประเมินการดักจับเน็ตเวิร์ก...");
       const clean = stripComments(code);
       if (!/page\.route\s*\(/.test(clean)) {
-        throw new Error("ไม่ได้เรียกใช้ page.route() เพื่อสกัดกั้นสัญญาณเน็ตเวิร์ก");
+        throw new Error("ไม่ได้เรียกใช้เมธอดของ Page สำหรับดักจับคำร้องขอเน็ตเวิร์กเพื่อสกัดกั้นสัญญาณเน็ตเวิร์กที่ยิงไปยังปลายทางเป้าหมาย");
       }
 
       const checkGlob = /page\.route\(\s*['"][^'"]*script\.google\.com[^'"]*['"]/.test(clean);
       if (checkGlob) {
         log("✓ ขั้นตอนที่ 1: ตรวจพบการตั้ง Glob Pattern ดักเซิร์ฟเวอร์ยิง Google Sheets");
       } else {
-        throw new Error("ตั้งค่าพิกัด URL ดักจับไม่ถูกต้องสำหรับ script.google.com\nตัวอย่าง: '**/script.google.com/**'");
+        throw new Error("ตั้งค่าพิกัด URL ดักจับไม่ถูกต้องสำหรับ script.google.com ให้ตรวจสอบว่าใช้ glob pattern ที่ครอบคลุมโดเมนดังกล่าวถูกต้องหรือไม่");
       }
 
       const checkFulfill = /route\.fulfill\(.*?status:\s*200.*?body:\s*JSON\.stringify\(.*?ok:\s*true.*?\).*?\)/s.test(clean) ||
@@ -430,7 +430,7 @@ async function mockGoogleScript(page: Page) {
       if (checkFulfill) {
         log("✓ ขั้นตอนที่ 2: ส่งข้อมูลตอบกลับจำลองจำลองสำเร็จ (route.fulfill)");
       } else {
-        throw new Error("สคริปต์ตอบข้อมูล fulfill ผิดพลาด\nตัวอย่างการเขียน:\nawait page.route('**/script.google.com/**', route => {\n  route.fulfill({ status: 200, body: JSON.stringify({ ok: true }) });\n});");
+        throw new Error("สคริปต์ตอบข้อมูล fulfill ผิดพลาด ให้ตรวจสอบว่าภายใน callback เรียกเมธอดของออบเจกต์ route ที่ใช้ส่งข้อมูลตอบกลับปลอม พร้อมกำหนด status code เป็น 200 และแปลง body เป็น JSON string ที่มีค่า ok เป็น true");
       }
     },
     hint: "ต้องใช้เมธอดของ Page สำหรับดักจับคำร้องขอเน็ตเวิร์กโดยระบุ glob pattern ของโดเมนเป้าหมายเป็นอาร์กิวเมนต์แรก แล้วภายใน callback เรียกเมธอดของออบเจกต์ route ที่ใช้ส่งข้อมูลตอบกลับปลอม พร้อมกำหนด status code และแปลง body เป็น JSON string",
@@ -482,14 +482,14 @@ test.describe('Holdings Suite', () => {
       if (/test\.describe\.configure\s*\(/.test(clean)) {
         log("✓ ค้นพบคำสั่งจัดแจงโหมดทดสอบ");
       } else {
-        throw new Error("คุณจำเป็นต้องเรียกใช้งานคำสั่ง configure บนกลุ่มเทส describe");
+        throw new Error("คุณจำเป็นต้องเรียกใช้งานเมธอด configure ที่แนบอยู่กับกลุ่มเทส describe");
       }
 
       const checkMode = /test\.describe\.configure\(\{\s*mode:\s*['"]serial['"]\s*\}\)/.test(clean);
       if (checkMode) {
         log("✓ โค้ดคอมไพล์สำเร็จ: ตั้งค่าเทสให้รันต่อเนื่องกัน CRUD Flow สำเร็จ");
       } else {
-        throw new Error("ตั้งค่าโหมด Serial ไม่ถูกต้อง\nตัวอย่างการเขียน:\ntest.describe.configure({ mode: 'serial' });");
+        throw new Error("ตั้งค่าโหมดการรันไม่ถูกต้อง ให้ตรวจสอบว่าส่ง option object ที่มีคีย์ mode และค่าที่หมายถึง 'เรียงต่อกันเป็นลำดับ' (ตรงข้ามกับการรันแบบขนาน) เข้าไปในเมธอด configure หรือไม่");
       }
     },
     hint: "ใช้เมธอด configure ที่แนบอยู่กับ test.describe เพื่อกำหนดโหมดการรันของกลุ่มเทสทั้งหมด โดยส่ง option object ที่มีคีย์ mode และค่าที่หมายถึง 'เรียงต่อกันเป็นลำดับ' (คำภาษาอังกฤษที่ตรงข้ามกับการรันแบบขนาน)",
@@ -532,19 +532,19 @@ function listenBrowserErrors(page: Page) {
       log("🔍 ตรวจสอบระบบดักสัญญาณ console...");
       const clean = stripComments(code);
       if (!/page\.on\s*\(/.test(clean)) {
-        throw new Error("คุณต้องจับเหตุการณ์ (Event Listener) ด้วยคำสั่ง page.on()");
+        throw new Error("คุณต้องจับเหตุการณ์ (Event Listener) ที่ผูกไว้กับ page");
       }
       log("✓ ตรวจพบเหตุการณ์ดัก page.on");
 
       if (!/page\.on\(\s*['"]console['"]/.test(clean)) {
-        throw new Error("ไม่ได้ผูกรับเหตุการณ์สืบจับของคลาส 'console'");
+        throw new Error("ไม่ได้ผูกรับเหตุการณ์สืบจับของคลาส 'console' ให้ตรวจสอบว่าฟังอีเวนต์ชื่อ console เป็นอาร์กิวเมนต์แรกของการผูก Event Listener หรือยัง");
       }
 
       const checkType = /msg\.type\(\)\s*===\s*['"]error['"]/.test(clean);
       if (checkType) {
         log("✓ โค้ดคอมไพล์สำเร็จ: ตั้งสคริปต์สืบจับและสกรีนข้อผิดพลาดสีแดงหลังบ้านสำเร็จ");
       } else {
-        throw new Error("รูปแบบสคริปต์การสืบจับคลาสคอนโซลคลาดเคลื่อน\nตัวอย่างการเขียน:\npage.on('console', msg => {\n  if (msg.type() === 'error') console.log(msg.text());\n});");
+        throw new Error("รูปแบบสคริปต์การสืบจับคลาสคอนโซลคลาดเคลื่อน ให้ตรวจสอบว่าใน callback มีการเช็ค property ที่บอกระดับของข้อความผ่านเมธอด .type() เทียบกับค่าที่หมายถึงข้อผิดพลาด แล้วปริ้นท์ข้อความออกทาง console.log หรือไม่");
       }
     },
     hint: "ต้องผูก Event Listener เข้ากับ page โดยฟังอีเวนต์ชื่อ 'console' เป็นอาร์กิวเมนต์แรก แล้วใน callback ตรวจสอบ property ที่บอกระดับของข้อความผ่านเมธอด .type() ของอ็อบเจกต์ message เทียบกับค่าที่หมายถึงข้อผิดพลาด",
@@ -599,14 +599,14 @@ async function inputSalaryAndSave(page: Page, salaryInput: Locator, saveBtn: Loc
       if (checkFill) {
         log("✓ ขั้นตอนที่ 1: เลือกกรอกข้อมูลด้วยเมธอด fill() ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่งกรอกเงินเดือน 65000 ด้วยคำสั่ง fill\nตัวอย่าง: await salaryInput.fill('65000');");
+        throw new Error("ไม่พบคำสั่งกรอกเงินเดือน 65000 ลงในช่องกรอกข้อมูล ให้ใช้เมธอดกรอกข้อมูลที่ล้างค่าเดิมแล้ว set ค่าใหม่ทันที (ตามที่อธิบายไว้ใน hint)");
       }
 
       const checkAssert = /await\s+expect\(saveBtn\)\.toBeEnabled\(\)/.test(clean);
       if (checkAssert) {
         log("✓ ขั้นตอนที่ 2: ตรวจพบคำสั่งเช็คความพร้อมปุ่มเซฟ (toBeEnabled)");
       } else {
-        throw new Error("ไม่พบคำสั่งตรวจสอบสถานะความพร้อมของปุ่มเซฟ\nตัวอย่าง: await expect(saveBtn).toBeEnabled();");
+        throw new Error("ไม่พบคำสั่งตรวจสอบสถานะความพร้อมของปุ่มเซฟ ให้ใช้ Web-first assertion ตระกูลตรวจสอบว่าอิลิเมนต์อยู่ในสถานะพร้อมกดโต้ตอบหรือไม่");
       }
     },
     hint: "ห้ามใช้ .type() กับ React controlled component เพราะไม่กระตุ้น state ให้ครบทุกตัวอักษร ใช้เมธอดกรอกข้อมูลที่ล้างค่าเดิมแล้ว set ค่าใหม่ทันทีแทน ส่วนขั้นตอนที่ 2 ใช้ Web-first assertion ตระกูลตรวจสอบว่าอิลิเมนต์อยู่ในสถานะพร้อมกดโต้ตอบหรือไม่",
@@ -657,7 +657,7 @@ async function testLayouts(page: Page) {
       if (checkSet) {
         log("✓ โค้ดคอมไพล์สำเร็จ: วนลูปสลับความกว้าง Responsive (Mobile/Tablet) สำเร็จ");
       } else {
-        throw new Error("ไม่พบสคริปต์การสลับขนาดหน้าต่างเบราว์เซอร์ด้วยคำสั่ง setViewportSize\nตัวอย่าง: await page.setViewportSize({ width: vp.width, height: vp.height });");
+        throw new Error("ไม่พบสคริปต์การสลับขนาดหน้าต่างเบราว์เซอร์ตามตัวแปรลูป vp ให้ตรวจสอบว่าใช้เมธอดของ Page ที่เปลี่ยนขนาดหน้าต่างโดยตรง รับ object ที่มี width/height เป็นอาร์กิวเมนต์ (ส่งตัวแปรลูปเข้าไปตรง ๆ หรือ destructure เป็น object ใหม่ก็ได้)");
       }
     },
     hint: "มีเมธอดของ Page ที่ใช้เปลี่ยนขนาดหน้าต่างเบราว์เซอร์โดยตรง รับ object ที่มี width/height เป็นอาร์กิวเมนต์ — ลองส่งตัวแปรลูปเข้าไปตรง ๆ หรือ destructure เป็น object ใหม่ก็ได้",
@@ -710,28 +710,28 @@ test('TC-11: ค่า Resistance R1 ที่ API ส่งมาต้อง�
       if (hasApiCall) {
         log("✓ ขั้นตอนที่ 1a: ยิง request.get('/api/ta/levels?ticker=AAPL') ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง request.get('/api/ta/levels?ticker=AAPL')\nตัวอย่าง: const response = await request.get('/api/ta/levels?ticker=AAPL');");
+        throw new Error("ไม่พบการยิง GET request ไปที่ /api/ta/levels?ticker=AAPL ให้ตรวจสอบว่าใช้เมธอดของ fixture request สำหรับยิง HTTP GET ตรง ๆ หรือยัง");
       }
 
       const hasJsonParse = /await\s+response\.json\(\)/.test(clean) && /\.resistance\[0\]/.test(clean);
       if (hasJsonParse) {
         log("✓ ขั้นตอนที่ 1b: ดึงค่า resistance[0] จาก response.json() ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการแปลง response เป็น JSON แล้วดึงค่า resistance[0]\nตัวอย่าง: const body = await response.json();\nconst r1 = body.resistance[0];");
+        throw new Error("ไม่พบการแปลง response เป็น JSON แล้วดึงค่า index แรกของอาร์เรย์ resistance ให้ตรวจสอบว่าแปลง response เป็น JSON ด้วยเมธอดมาตรฐานก่อน แล้วเข้าถึง index แรกของอาร์เรย์เป้าหมายหรือยัง");
       }
 
       const hasGoto = /await\s+page\.goto\(['"]\/holdings['"]\)/.test(clean);
       if (hasGoto) {
         log("✓ ขั้นตอนที่ 2a: เปิดหน้า /holdings ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง page.goto('/holdings')");
+        throw new Error("ไม่พบคำสั่งเปิดไปยังหน้า /holdings");
       }
 
       const hasCrossCheck = /getByText\(\s*['"]\$['"]\s*\+\s*\w+\.toFixed\(2\)\s*\)/.test(clean) && /toBeVisible\(\)/.test(clean);
       if (hasCrossCheck) {
         log("✓ ขั้นตอนที่ 2b: ตรวจสอบว่า UI แสดงตัวเลขตรงกับค่าจาก API สำเร็จ (Cross-check)");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความราคาบน UI ที่ตรงกับค่าจาก API\nตัวอย่าง: await expect(page.getByText('$' + r1.toFixed(2))).toBeVisible();");
+        throw new Error("ไม่พบการตรวจสอบข้อความราคาบน UI ที่ตรงกับค่าจาก API ให้ใช้ getByText() ประกอบสตริงราคาที่มีเครื่องหมาย $ นำหน้าและปัดทศนิยม 2 ตำแหน่งด้วยเมธอดมาตรฐานของตัวเลข แล้วตรวจสอบด้วย Web-first assertion ตระกูลการมองเห็น");
       }
     },
     hint: "fixture request มีเมธอดสำหรับยิง HTTP GET ตรง ๆ แล้วแปลง response เป็น JSON ด้วยเมธอดมาตรฐาน จากนั้นเข้าถึง index แรกของอาร์เรย์ resistance ที่ได้ ฝั่ง UI ใช้ getByText() ประกอบสตริงราคาที่มีเครื่องหมาย $ นำหน้าและปัดทศนิยม 2 ตำแหน่งด้วยเมธอดมาตรฐานของตัวเลข แล้วตรวจสอบด้วย Web-first assertion ตระกูลการมองเห็น",
@@ -789,7 +789,7 @@ test('TC-12: หน้า Holdings โหลดราคาแบบ async บ�
       if (hasRetryConfig) {
         log("✓ ขั้นตอนที่ 1: กำหนด test.describe.configure({ retries: 2 }) ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ test.describe.configure({ retries: 2 })\nตัวอย่าง: test.describe.configure({ retries: 2 });");
+        throw new Error("ไม่พบการกำหนดค่า retries ให้ suite นี้ ให้ตรวจสอบว่า configure ของ describe block รับ option ชื่อ retries เป็นตัวเลขจำนวนครั้งที่ยอมให้ลองซ้ำตามที่โจทย์กำหนดหรือยัง");
       }
 
       const hasAutoRetryAssertion = /await\s+expect\(page\.getByText\(['"]AAPL['"]\)\)\.toBeVisible\(\)/.test(clean);
@@ -797,16 +797,16 @@ test('TC-12: หน้า Holdings โหลดราคาแบบ async บ�
       if (hasAutoRetryAssertion && !hasFixedWait) {
         log("✓ ขั้นตอนที่ 2: ใช้ auto-retry assertion toBeVisible() แทน waitForTimeout ถูกต้อง");
       } else if (hasFixedWait) {
-        throw new Error("ห้ามใช้ waitForTimeout ตายตัว ให้ใช้ await expect(page.getByText('AAPL')).toBeVisible(); แทน (auto-retry จนกว่าจะเจอหรือ timeout)");
+        throw new Error("ห้ามใช้การหน่วงเวลาคงที่ ให้ใช้ Web-first assertion ตระกูลตรวจสอบการมองเห็นรอข้อความ 'AAPL' แทน (auto-retry จนกว่าจะเจอหรือ timeout)");
       } else {
-        throw new Error("ไม่พบการรอด้วย auto-retry assertion\nตัวอย่าง: await expect(page.getByText('AAPL')).toBeVisible();");
+        throw new Error("ไม่พบการรอด้วย auto-retry assertion ให้ใช้ Web-first assertion ตระกูลตรวจสอบการมองเห็นรอข้อความ 'AAPL' ปรากฏบนหน้าจอ");
       }
 
       const hasRetryLog = /testInfo\.retry\s*>\s*0/.test(clean) && /console\.log\(.*Retry attempt.*testInfo\.retry/.test(clean);
       if (hasRetryLog) {
         log("✓ ขั้นตอนที่ 3: log เตือนเมื่อ testInfo.retry > 0 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบเงื่อนไข if (testInfo.retry > 0) พร้อม console.log('Retry attempt: ' + testInfo.retry)");
+        throw new Error("ไม่พบเงื่อนไขตรวจสอบว่า testInfo.retry มีค่ามากกว่า 0 พร้อมปริ้นท์ข้อความเตือนบอกรอบที่กำลังรันซ้ำผ่าน console.log ตามที่โจทย์กำหนด");
       }
     },
     hint: "configure ของ describe block รับ option ชื่อ retries เป็นตัวเลขจำนวนครั้งที่ยอมให้ลองซ้ำ การรอข้อความปรากฏให้ใช้ Web-first assertion ตระกูลการมองเห็นแทนการหน่วงเวลาคงที่เด็ดขาด และ testInfo (พารามิเตอร์ตัวที่สองของ test callback) มี property บอกจำนวนรอบที่กำลังรันซ้ำ",
@@ -863,14 +863,14 @@ test('TC-13: ค้นหาหุ้นต้องทำงานได้แ�
       const clean = stripComments(code);
       const usesFragileClassLocator = /\.locator\(\s*['"]\./.test(clean);
       if (usesFragileClassLocator) {
-        throw new Error("ห้ามใช้ page.locator('.class-name') เพราะ CSS class เปลี่ยนได้ทุกครั้งที่ Dev รีแฟคเตอร์ ให้ใช้ page.getByTestId('search-input') แทน");
+        throw new Error("ห้ามใช้ page.locator() ด้วย CSS selector เพราะ CSS class เปลี่ยนได้ทุกครั้งที่ Dev รีแฟคเตอร์ ให้ค้นหาด้วยเมธอดที่อ้างอิง data-testid attribute แทน");
       }
 
       const hasTestIdFill = /await\s+page\.getByTestId\(['"]search-input['"]\)\.fill\(['"]AAPL['"]\)/.test(clean);
       if (hasTestIdFill) {
         log("✓ ใช้ getByTestId('search-input').fill('AAPL') ที่ทนต่อการรีแฟคเตอร์ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง page.getByTestId('search-input').fill('AAPL')\nตัวอย่าง: await page.getByTestId('search-input').fill('AAPL');");
+        throw new Error("ไม่พบการค้นหาช่องค้นหาด้วย Test ID 'search-input' แล้วกรอกคำว่า 'AAPL' ให้ตรวจสอบว่าใช้เมธอดที่อ้างอิง data-testid ตามด้วยแอคชันกรอกข้อความหรือยัง");
       }
     },
     hint: "ห้ามใช้ page.locator() ด้วย CSS selector เด็ดขาด ให้ค้นหาด้วยเมธอดที่อ้างอิง data-testid attribute แทน แล้วตามด้วยแอคชันกรอกข้อความมาตรฐานเหมือนบทนำ",
@@ -921,21 +921,21 @@ test('TC-14: กดลบ Holdings ต้องเจอ Confirm Dialog ก่�
       if (hasDeleteClick) {
         log("✓ ขั้นตอนที่ 1: คลิกปุ่มลบ (btn-delete-holding) ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง page.getByTestId('btn-delete-holding').first().click()\nตัวอย่าง: await page.getByTestId('btn-delete-holding').first().click();");
+        throw new Error("ไม่พบคำสั่งคลิกปุ่มลบแถวแรก ให้ตรวจสอบว่าค้นหาด้วย Test ID btn-delete-holding แล้วเลือกอิลิเมนต์แถวแรกจากหลายแถวด้วยเมธอดที่ระบุลำดับก่อนคลิกหรือยัง");
       }
 
       const hasDialogCheck = /await\s+expect\(page\.getByTestId\(['"]confirm-dialog-confirm['"]\)\)\.toBeVisible\(\)/.test(clean);
       if (hasDialogCheck) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบว่า Dialog ยืนยันปรากฏจริงก่อนถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบว่า Dialog ยืนยันปรากฏอยู่จริง\nตัวอย่าง: await expect(page.getByTestId('confirm-dialog-confirm')).toBeVisible();");
+        throw new Error("ไม่พบการตรวจสอบว่า Dialog ยืนยันปรากฏอยู่จริงก่อนคลิกยืนยัน ให้ใช้ Web-first assertion ตระกูลตรวจสอบการมองเห็นกับปุ่มยืนยัน");
       }
 
       const hasConfirmClick = /await\s+page\.getByTestId\(['"]confirm-dialog-confirm['"]\)\.click\(\)/.test(clean);
       if (hasConfirmClick) {
         log("✓ ขั้นตอนที่ 3: คลิกยืนยันลบจริงถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่งคลิกยืนยันลบ\nตัวอย่าง: await page.getByTestId('confirm-dialog-confirm').click();");
+        throw new Error("ไม่พบคำสั่งคลิกปุ่มยืนยันเพื่อลบจริง หลังจากตรวจสอบว่า Dialog ปรากฏแล้ว");
       }
     },
     hint: "ขั้นตอนที่ 1 และ 3 ใช้เมธอดค้นหาด้วย Test ID ตามด้วยแอคชันคลิก (ขั้นตอนที่ 1 ต้องเลือกอิลิเมนต์แถวแรกจากหลายแถวด้วยเมธอดที่ระบุลำดับ) ขั้นตอนที่ 2 ใช้ Web-first assertion ตระกูลตรวจสอบการมองเห็นก่อนคลิกยืนยันจริง",
@@ -996,7 +996,7 @@ test('TC-15: ถามคำถาม AI แล้วต้องรอคำต
       if (hasFill && hasSendClick) {
         log("✓ ขั้นตอนที่ 1: กรอกคำถามแล้วกดส่งถูกต้อง");
       } else {
-        throw new Error("ไม่พบการกรอกคำถามลงในช่อง ai-overview-chat-input แล้วคลิก ai-overview-chat-send\nตัวอย่าง: await page.getByTestId('ai-overview-chat-input').fill('...');\nawait page.getByTestId('ai-overview-chat-send').click();");
+        throw new Error("ไม่พบการกรอกคำถามลงในช่อง Test ID ai-overview-chat-input แล้วคลิกปุ่มส่ง Test ID ai-overview-chat-send ให้ตรวจสอบว่าทำครบทั้งสองขั้นตอนหรือยัง");
       }
 
       const hasFixedWait = /waitForTimeout/.test(clean);
@@ -1006,7 +1006,7 @@ test('TC-15: ถามคำถาม AI แล้วต้องรอคำต
       } else if (hasEnabledWait) {
         log("✓ ขั้นตอนที่ 2: รอปุ่มส่งกลับมาพร้อมใช้งาน (toBeEnabled) แทนการเดาเวลาถูกต้อง");
       } else {
-        throw new Error("ไม่พบการรอด้วย auto-retry assertion\nตัวอย่าง: await expect(page.getByTestId('ai-overview-chat-send')).toBeEnabled();");
+        throw new Error("ไม่พบการรอด้วย auto-retry assertion ให้ใช้ Web-first assertion ตระกูลตรวจสอบว่าอิลิเมนต์กลับมาอยู่ในสถานะพร้อมโต้ตอบ (ไม่ disabled) แทนการเดาเวลา");
       }
     },
     hint: "กรอกข้อมูลด้วยเมธอด fill ตามด้วยคลิกปุ่มส่ง แล้วรอด้วย Web-first assertion ตระกูลตรวจสอบว่าอิลิเมนต์กลับมาอยู่ในสถานะพร้อมโต้ตอบ (ไม่ disabled) แทนการหน่วงเวลาคงที่เด็ดขาด",
@@ -1062,14 +1062,14 @@ test('TC-16: นำเข้าไฟล์ CSV ผ่านหน้าจอ H
       if (hasSetInputFiles) {
         log("✓ ขั้นตอนที่ 1: อัปโหลดไฟล์ด้วย setInputFiles ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง page.getByTestId('import-csv-input').setInputFiles('./fixtures/holdings-sample.csv')\nตัวอย่าง: await page.getByTestId('import-csv-input').setInputFiles('./fixtures/holdings-sample.csv');");
+        throw new Error("ไม่พบการอัปโหลดไฟล์ ./fixtures/holdings-sample.csv ผ่าน input Test ID import-csv-input ให้ตรวจสอบว่าใช้เมธอดของ Locator ที่แนบไฟล์เข้ากับ input type=file โดยตรง รับ path ของไฟล์เป็นอาร์กิวเมนต์หรือยัง");
       }
 
       const hasResultCheck = /await\s+expect\(page\.getByTestId\(['"]import-result-message['"]\)\)\.toContainText\(['"]Imported['"]\)/.test(clean);
       if (hasResultCheck) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบข้อความผลลัพธ์การนำเข้าถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความผลลัพธ์\nตัวอย่าง: await expect(page.getByTestId('import-result-message')).toContainText('Imported');");
+        throw new Error("ไม่พบการตรวจสอบข้อความผลลัพธ์ ให้ตรวจสอบข้อความ Test ID import-result-message ด้วย assertion ตระกูลตรวจสอบว่ามีข้อความ 'Imported' ปรากฏอยู่บางส่วนหรือยัง");
       }
     },
     hint: "ใช้เมธอดของ Locator ที่แนบไฟล์เข้ากับ input type=file โดยตรง (ข้าม Native File Picker ของ OS) รับ path string ของไฟล์เป็นอาร์กิวเมนต์ แล้วตรวจสอบข้อความผลลัพธ์ด้วย assertion ตระกูลตรวจสอบว่ามีข้อความปรากฏอยู่บางส่วน",
@@ -1125,14 +1125,14 @@ test('TC-17: อัปโหลดไฟล์ .exe ต้องขึ้น Err
       if (hasSetInputFiles) {
         log("✓ ขั้นตอนที่ 1: อัปโหลดไฟล์ malware.exe ด้วย setInputFiles ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง page.getByTestId('import-csv-input').setInputFiles('./fixtures/malware.exe')\nตัวอย่าง: await page.getByTestId('import-csv-input').setInputFiles('./fixtures/malware.exe');");
+        throw new Error("ไม่พบการอัปโหลดไฟล์ ./fixtures/malware.exe ผ่าน input Test ID import-csv-input ด้วยเทคนิคเดียวกับบทก่อนหน้า");
       }
 
       const hasResultCheck = /await\s+expect\(page\.getByTestId\(['"]import-result-message['"]\)\)\.toContainText\(['"]Only CSV files are allowed['"]\)/.test(clean);
       if (hasResultCheck) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบข้อความ error ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error\nตัวอย่าง: await expect(page.getByTestId('import-result-message')).toContainText('Only CSV files are allowed');");
+        throw new Error("ไม่พบการตรวจสอบข้อความ error ให้ตรวจสอบข้อความ Test ID import-result-message ว่ามีคำว่า 'Only CSV files are allowed' ปรากฏอยู่บางส่วนหรือยัง");
       }
     },
     hint: "เทคนิคเดียวกับบทก่อนหน้า (setInputFiles รับ path string ของไฟล์) แต่เปลี่ยนไฟล์เป็นนามสกุลที่ไม่ใช่ CSV แล้วตรวจสอบข้อความ error ที่ระบบควรแสดงด้วย assertion ตระกูลเดิม",
@@ -1190,14 +1190,14 @@ test('TC-18: อัปโหลดไฟล์ใหญ่เกิน 5MB ต�
       if (hasSetInputFiles) {
         log("✓ ขั้นตอนที่ 1: อัปโหลดไฟล์จำลองขนาด 6MB ด้วย setInputFiles แบบ object ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการอัปโหลดไฟล์จำลองขนาด 6MB\nตัวอย่าง: await page.getByTestId('import-csv-input').setInputFiles({ name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) });");
+        throw new Error("ไม่พบการอัปโหลดไฟล์จำลองขนาด 6MB ให้ตรวจสอบว่าใช้ setInputFiles แบบ object (name, mimeType, buffer) พร้อมจองพื้นที่หน่วยความจำขนาด 6MB ด้วยเมธอดมาตรฐานของ Buffer โดยไม่ต้องมีไฟล์จริงหรือยัง");
       }
 
       const hasResultCheck = /await\s+expect\(page\.getByTestId\(['"]import-result-message['"]\)\)\.toContainText\(['"]File size exceeds 5MB limit['"]\)/.test(clean);
       if (hasResultCheck) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบข้อความ error ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error\nตัวอย่าง: await expect(page.getByTestId('import-result-message')).toContainText('File size exceeds 5MB limit');");
+        throw new Error("ไม่พบการตรวจสอบข้อความ error ให้ตรวจสอบข้อความ Test ID import-result-message ว่ามีคำว่า 'File size exceeds 5MB limit' ปรากฏอยู่บางส่วนหรือยัง");
       }
     },
     hint: "setInputFiles รองรับการส่ง object แทน path string ได้ (มี name, mimeType, buffer) ใช้เมธอดมาตรฐานของ Buffer สำหรับจองพื้นที่หน่วยความจำขนาดที่ต้องการโดยไม่ต้องมีไฟล์จริง แล้วตรวจสอบข้อความ error ด้วย assertion ตระกูลเดิม",
@@ -1269,7 +1269,7 @@ test('TC-ADV1: กดปุ่มรีเฟรชราคาแล้วร�
       if (hasFix) {
         log("✓ แก้ไข Race Condition ด้วย Web-first assertion (toHaveText) สำเร็จ ระบบจะ auto-retry รอจนกว่าข้อความจะอัปเดตหรือ timeout เอง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบด้วย Web-first assertion ที่ถูกต้อง\nตัวอย่าง: await expect(page.getByTestId('current-price')).toHaveText('$150.25');");
+        throw new Error("ไม่พบการตรวจสอบด้วย Web-first assertion ที่ถูกต้อง ให้ส่ง Locator ของ current-price เข้า expect() ตรง ๆ แล้วใช้ assertion ตระกูลตรวจสอบข้อความให้ตรงกับราคาที่คาดหวังเป๊ะ");
       }
     },
     hint: "ปัญหาคือมีการอ่านค่าจาก DOM ด้วยเมธอด synchronous ทันทีหลังคลิก ก่อนที่ state ของแอปจะอัปเดตเสร็จจริง (Race Condition) ให้ลบขั้นตอนอ่านค่า+เปรียบเทียบแบบ manual ทิ้งทั้งหมด แล้วเปลี่ยนไปใช้ Web-first assertion ของ expect ที่รับ Locator ตรง ๆ และรอเช็คข้อความเอง ห้ามแก้ด้วยการหน่วงเวลาคงที่ (waitForTimeout) เด็ดขาด",
@@ -1342,14 +1342,14 @@ export class HoldingsPage {
       if (hasSearch) {
         log("✓ เมธอด searchTicker กรอกคำค้นหาผ่าน Locator ที่ประกาศไว้ในคลาสถูกต้อง");
       } else {
-        throw new Error("เมธอด searchTicker ต้องเรียกใช้ this.searchInput (Locator ที่ประกาศไว้แล้วในคลาส) ด้วยแอคชันกรอกข้อความ โดยส่งพารามิเตอร์ ticker เข้าไป\nตัวอย่าง: await this.searchInput.fill(ticker);");
+        throw new Error("เมธอด searchTicker ต้องเรียกใช้ this.searchInput (Locator ที่ประกาศไว้แล้วในคลาส) ด้วยแอคชันกรอกข้อความ โดยส่งพารามิเตอร์ ticker เข้าไปแทนค่าตายตัว");
       }
 
       const hasReadTable = /async\s+getVisibleTableText[^{]*\{[^}]*return\s+await\s+this\.tableContainer\.textContent\(\)/s.test(clean);
       if (hasReadTable) {
         log("✓ เมธอด getVisibleTableText คืนค่าข้อความจาก Locator ตารางถูกต้อง");
       } else {
-        throw new Error("เมธอด getVisibleTableText ต้องคืนค่าข้อความทั้งหมดจาก this.tableContainer ด้วยเมธอดที่ดึงข้อความล้วนออกมาเป็น string\nตัวอย่าง: return await this.tableContainer.textContent();");
+        throw new Error("เมธอด getVisibleTableText ต้องคืนค่าข้อความทั้งหมดจาก this.tableContainer ด้วยเมธอดที่ดึงข้อความล้วนออกมาเป็น string (ไม่ใช่ innerHTML หรือค่า attribute)");
       }
     },
     hint: "searchTicker ควรใช้ Locator ของช่องค้นหาที่ประกาศไว้แล้วในคลาส (this.searchInput) ตามด้วยแอคชันกรอกข้อความมาตรฐานที่เจอมาตั้งแต่บทนำ โดยส่งพารามิเตอร์ ticker เข้าไปแทนค่าตายตัว ส่วน getVisibleTableText ให้ใช้เมธอดของ Locator ที่คืนค่าข้อความทั้งหมดภายใน element ออกมาเป็น string ล้วน (ไม่ใช่ innerHTML หรือค่า attribute)",

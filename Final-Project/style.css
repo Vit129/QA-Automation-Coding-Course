@@ -524,7 +524,40 @@ body {
   tab-size: 2;
   overflow: auto;
   white-space: pre;
+  position: relative;
+  z-index: 1;
 }
+
+.editor-textarea.has-syntax-highlight {
+  color: transparent;
+  caret-color: var(--text-primary);
+}
+
+/* Non-interactive syntax-highlight layer, sits directly behind .editor-textarea
+   (see shared/editor-highlight.js) - must match its font/padding/line-height exactly
+   so highlighted tokens line up with the (now-transparent) textarea text on top. */
+.editor-highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 48px; /* .editor-gutter width */
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.825rem;
+  line-height: 1.6;
+  white-space: pre;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--text-primary);
+}
+
+.tok-comment { color: var(--text-muted); font-style: italic; }
+.tok-string { color: #f59e0b; }
+.tok-number { color: #c084fc; }
+.tok-keyword { color: #60a5fa; font-weight: 600; }
 
 /* Terminal Area */
 .terminal-panel {

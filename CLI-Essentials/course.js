@@ -23,7 +23,7 @@ const LESSONS = [
       if (hasStash) {
         log("✓ ใช้ git stash push -u -m \"wip-login-fix\" ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git stash push -u -m \"wip-login-fix\"\nตัวอย่าง: git stash push -u -m \"wip-login-fix\"");
+        throw new Error("ยังไม่พบคำสั่ง git stash ที่ใช้ flag รวมไฟล์ untracked พร้อมตั้งป้ายกำกับข้อความตามที่โจทย์กำหนด");
       }
     },
     hint: "นึกถึงคำสั่ง git ที่เก็บงานค้างไว้ชั่วคราว ต้องมี flag ที่รวมไฟล์ untracked เข้าไปด้วย และ flag ที่ตั้งป้ายกำกับข้อความให้จำได้ทีหลัง",
@@ -57,7 +57,7 @@ git stash apply <sha-ที่เจอ>`,
       if (hasConfig) {
         log("✓ ใช้ git config core.hooksPath .githooks ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git config core.hooksPath .githooks\nตัวอย่าง: git config core.hooksPath .githooks");
+        throw new Error("ยังไม่พบการตั้งค่า git config ที่ชี้ core.hooksPath ไปยังโฟลเดอร์ .githooks ตามที่โจทย์กำหนด");
       }
     },
     hint: "นึกถึงคำสั่งตั้งค่า config ของ git (git config) แล้วหา key ที่ควบคุมว่า git จะไปหา hook scripts จากโฟลเดอร์ไหน จากนั้นชี้ไปที่โฟลเดอร์ .githooks",
@@ -93,7 +93,7 @@ fi`,
       if (hasInit) {
         log("✓ ใช้ git init ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git init\nตัวอย่าง: git init");
+        throw new Error("ยังไม่พบคำสั่งเริ่มต้น git repository ใหม่ในโฟลเดอร์ปัจจุบัน");
       }
     },
     hint: "นึกถึงคำสั่งพื้นฐานที่สุดของ git ที่ใช้เริ่มสร้าง repository ใหม่เอี่ยมในโฟลเดอร์ปัจจุบัน ไม่ต้องมี flag หรือ argument ใดๆ เพิ่ม",
@@ -123,7 +123,7 @@ git status`,
       if (hasFetch) {
         log("✓ ใช้ git fetch origin main ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git fetch origin main\nตัวอย่าง: git fetch origin main");
+        throw new Error("ยังไม่พบคำสั่ง git fetch ที่ระบุชื่อ remote และ branch ตามที่โจทย์กำหนด");
       }
     },
     hint: "นึกถึงคำสั่ง git ที่ดึงข้อมูลจาก remote มาเก็บไว้เฉยๆ โดยไม่ merge เข้า branch ปัจจุบัน ระบุชื่อ remote และชื่อ branch ที่ต้องการต่อท้าย",
@@ -154,7 +154,7 @@ git log HEAD..origin/main --oneline  # ดูว่า main มี commit ให
       if (hasPull) {
         log("✓ ใช้ git pull --rebase origin feature/login-fix ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git pull --rebase origin feature/login-fix\nตัวอย่าง: git pull --rebase origin feature/login-fix");
+        throw new Error("ยังไม่พบคำสั่ง git pull แบบ rebase ที่ระบุ remote และ branch ตามที่โจทย์กำหนด");
       }
     },
     hint: "git pull ปกติคือ fetch+merge รวมกัน แต่โจทย์นี้ต้องการไม่ให้เกิด merge commit — มี flag ที่เปลี่ยนวิธีรวม history จาก merge เป็นวางต่อแบบเรียงเส้นตรงแทน ระบุ remote และชื่อ branch ต่อท้ายด้วย",
@@ -187,7 +187,7 @@ git rebase --abort`,
       if (hasSwitch) {
         log("✓ ใช้ git switch -c feature/login-fix ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git switch -c feature/login-fix\nตัวอย่าง: git switch -c feature/login-fix");
+        throw new Error("ยังไม่พบคำสั่งสร้างและสลับไปยัง branch ใหม่ตามชื่อที่โจทย์กำหนด");
       }
     },
     hint: "นึกถึงคำสั่งสมัยใหม่ (git 2.23+) ที่ทำหน้าที่สลับ branch อย่างเดียว แล้วหา flag ตัวย่อที่แปลว่า 'สร้างใหม่' เพื่อสร้าง+สลับในคำสั่งเดียว",
@@ -219,7 +219,7 @@ git rebase --abort`,
       if (hasMerge) {
         log("✓ ใช้ git merge feature/login-fix ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git merge feature/login-fix\nตัวอย่าง: git merge feature/login-fix");
+        throw new Error("ยังไม่พบคำสั่ง git merge ที่ระบุชื่อ branch ตามที่โจทย์กำหนด");
       }
     },
     hint: "นึกถึงคำสั่ง git ที่เอา commit จาก branch อื่นมารวมเข้า branch ที่ยืนอยู่ตอนนี้ (ต้องยืนอยู่ branch ปลายทางก่อน) แล้วระบุชื่อ branch ต้นทางที่จะถูกดึงเข้ามาต่อท้าย",
@@ -250,7 +250,7 @@ git merge --abort  # ยกเลิกถ้าแค่อยากลอง�
       if (hasPush) {
         log("✓ ใช้ git push -u origin feature/login-fix ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git push -u origin feature/login-fix\nตัวอย่าง: git push -u origin feature/login-fix");
+        throw new Error("ยังไม่พบคำสั่ง git push ที่ตั้งค่า upstream tracking ไปยัง branch ตามที่โจทย์กำหนด");
       }
     },
     hint: "push ครั้งแรกของ branch ใหม่ต้องระบุ remote+branch ชัดเจน แล้วมี flag ตัวย่อที่ผูก local branch เข้ากับ remote branch ไว้ให้เลย (จะได้ไม่ต้องพิมพ์ origin/branch ซ้ำในครั้งถัดไป)",
@@ -282,7 +282,7 @@ git push`,
       if (hasAmend) {
         log("✓ ใช้ git commit --amend -m \"fix: correct login validation logic\" ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git commit --amend -m \"fix: correct login validation logic\"\nตัวอย่าง: git commit --amend -m \"fix: correct login validation logic\"");
+        throw new Error("ยังไม่พบคำสั่งแก้ไข commit ล่าสุดพร้อมข้อความใหม่ตามที่โจทย์กำหนด");
       }
     },
     hint: "amend ไม่ใช่คำสั่งแยกของ git แต่เป็น flag ต่อท้าย git commit ที่บอกว่าให้แก้ไข commit ล่าสุดแทนสร้างใหม่ ใช้คู่กับ -m เพื่อตั้งข้อความใหม่ได้เลยในคำสั่งเดียว",
@@ -315,10 +315,10 @@ git commit --amend --no-edit`,
       const hasTag = /git tag\s+-a\s+v1\.2\.0\s+-m\s+["']Release v1\.2\.0: add login retry logic["']/.test(activeCode);
       const hasPush = /git push\s+origin\s+v1\.2\.0\b/.test(activeCode);
       if (!hasTag) {
-        throw new Error("ไม่พบคำสั่ง git tag -a v1.2.0 -m \"Release v1.2.0: add login retry logic\"\nตัวอย่าง: git tag -a v1.2.0 -m \"...\"");
+        throw new Error("ยังไม่พบคำสั่งสร้าง annotated tag พร้อมชื่อ version และข้อความตามที่โจทย์กำหนด");
       }
       if (!hasPush) {
-        throw new Error("ไม่พบคำสั่ง git push origin v1.2.0\nตัวอย่าง: git push origin v1.2.0");
+        throw new Error("ยังไม่พบคำสั่ง push tag ที่สร้างไว้ขึ้น remote");
       }
       log("✓ ใช้ git tag -a v1.2.0 -m \"...\" แล้ว push origin v1.2.0 ถูกต้อง");
     },
@@ -355,7 +355,7 @@ git push origin --delete v1.2.0`,
       if (hasLazygit) {
         log("✓ ใช้คำสั่ง lazygit ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง lazygit\nตัวอย่าง: lazygit");
+        throw new Error("ยังไม่พบคำสั่งเปิดใช้งานเครื่องมือ lazygit");
       }
     },
     hint: "พิมพ์แค่ชื่อโปรแกรมเฉยๆ ไม่ต้องมี flag หรือ argument ใดๆ — lazygit จะอ่าน repo จากโฟลเดอร์ปัจจุบันเอง",
@@ -393,16 +393,16 @@ lazygit`,
       const hasWq = lines.some(l => l === ':wq');
 
       if (!hasInsert) {
-        throw new Error("ไม่พบคำสั่งเข้าโหมด Insert\nตัวอย่าง: พิมพ์ i ในบรรทัดแรก");
+        throw new Error("ยังไม่พบคำสั่งเข้าสู่โหมด Insert ในบรรทัดแรก");
       }
       if (!hasMessage) {
         throw new Error("ไม่พบข้อความ commit message 'fix: correct typo'");
       }
       if (!hasEsc) {
-        throw new Error("ไม่พบคำสั่งออกจากโหมด Insert\nตัวอย่าง: พิมพ์ <Esc>");
+        throw new Error("ยังไม่พบคำสั่งออกจากโหมด Insert กลับสู่ Normal mode");
       }
       if (!hasWq) {
-        throw new Error("ไม่พบคำสั่งบันทึก+ออก\nตัวอย่าง: พิมพ์ :wq");
+        throw new Error("ยังไม่พบคำสั่งบันทึกไฟล์แล้วออกจาก Vim");
       }
       log("✓ ลำดับคีย์ i → พิมพ์ข้อความ → Esc → :wq ถูกต้อง");
     },
@@ -448,10 +448,10 @@ fix: correct typo
       const hasG = lines.some(l => l === 'G');
 
       if (!hasGg) {
-        throw new Error("ไม่พบคำสั่งกระโดดไปบรรทัดแรกสุด\nตัวอย่าง: พิมพ์ gg ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งกระโดดไปยังบรรทัดแรกสุดของไฟล์");
       }
       if (!hasG) {
-        throw new Error("ไม่พบคำสั่งกระโดดไปบรรทัดสุดท้ายสุด\nตัวอย่าง: พิมพ์ G (ตัวใหญ่) ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งกระโดดไปยังบรรทัดสุดท้ายของไฟล์");
       }
       log("✓ ลำดับคีย์ gg → G ถูกต้อง");
     },
@@ -483,7 +483,7 @@ G`,
       if (hasSubstitute) {
         log("✓ ใช้ :%s/3000/3001/g ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง :%s/3000/3001/g\nตัวอย่าง: :%s/3000/3001/g");
+        throw new Error("ยังไม่พบคำสั่ง Ex command แบบ substitute ที่แทนที่เลขพอร์ตเดิมด้วยเลขพอร์ตใหม่ทุกจุดทั้งไฟล์");
       }
     },
     hint: "นึกถึง Ex command แบบ substitute ของ Vim (:s/หา/แทน/) แล้วเติมสัญลักษณ์ขอบเขตที่แปลว่า 'ทั้งไฟล์' นำหน้า s และอย่าลืม flag ท้ายสุดที่ทำให้แทนที่ทุกจุดในแต่ละบรรทัด ไม่ใช่แค่จุดแรก",
@@ -517,10 +517,10 @@ G`,
       const hasPaste = lines.some(l => l === 'p');
 
       if (!hasDelete) {
-        throw new Error("ไม่พบคำสั่งลบทั้งบรรทัด\nตัวอย่าง: พิมพ์ dd ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งลบทั้งบรรทัดใน Normal mode");
       }
       if (!hasPaste) {
-        throw new Error("ไม่พบคำสั่งวาง (paste)\nตัวอย่าง: พิมพ์ p ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งวางข้อความที่ลบไว้กลับคืน");
       }
       log("✓ ลำดับคีย์ dd → p ถูกต้อง");
     },
@@ -565,13 +565,13 @@ p`,
       const dIdx = lines.findIndex(l => l === 'd');
 
       if (vIdx === -1) {
-        throw new Error("ไม่พบคำสั่งเข้า Visual Line mode\nตัวอย่าง: พิมพ์ V (ตัวใหญ่) ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งเข้าสู่ Visual Line mode");
       }
       if (!(lines.some(l => l === 'jj') || jCount >= 2)) {
-        throw new Error("ไม่พบคำสั่งเลื่อนลง 2 บรรทัดเพื่อขยายพื้นที่เลือก\nตัวอย่าง: พิมพ์ jj หรือ j สองครั้ง");
+        throw new Error("ยังไม่พบคำสั่งขยายพื้นที่เลือกลงมา 2 บรรทัด");
       }
       if (dIdx === -1 || dIdx < vIdx) {
-        throw new Error("ไม่พบคำสั่งลบข้อความที่เลือกไว้\nตัวอย่าง: พิมพ์ d หลังเลือกพื้นที่เสร็จแล้ว");
+        throw new Error("ยังไม่พบคำสั่งลบข้อความที่เลือกไว้ใน Visual mode");
       }
       log("✓ ลำดับคีย์ V → jj → d ถูกต้อง");
     },
@@ -610,10 +610,10 @@ y`,
       const hasRedo = lines.some(l => /^(ctrl-r|<c-r>|ctrl\+r)$/i.test(l));
 
       if (!hasUndo) {
-        throw new Error("ไม่พบคำสั่ง undo\nตัวอย่าง: พิมพ์ u ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่ง undo ใน Normal mode");
       }
       if (!hasRedo) {
-        throw new Error("ไม่พบคำสั่ง redo\nตัวอย่าง: พิมพ์ Ctrl+r ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่ง redo ใน Normal mode");
       }
       log("✓ ลำดับคีย์ u → Ctrl+r ถูกต้อง");
     },
@@ -646,7 +646,7 @@ Ctrl+r`,
       if (hasSet) {
         log("✓ ใช้ set -euo pipefail ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ set -euo pipefail\nตัวอย่าง: set -euo pipefail");
+        throw new Error("ยังไม่พบการตั้งค่า shell option ที่ทำให้ script หยุดทันทีเมื่อเจอ error, ตัวแปรไม่ได้กำหนดค่า, หรือ pipeline ล้มเหลว");
       }
     },
     hint: "นึกถึงคำสั่ง set ของ bash ที่รวม 3 flag ไว้ด้วยกัน: หยุดทันทีเมื่อคำสั่งพัง, เตือนเมื่ออ้างอิงตัวแปรที่ไม่เคยประกาศ, และจับ error ที่เกิดกลางทาง pipeline ด้วย",
@@ -683,7 +683,7 @@ cd "$ROOT"
       if (hasPipe) {
         log("✓ ใช้ git diff --cached --name-only | grep -q \"Info.plist\" ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git diff --cached --name-only | grep -q \"Info.plist\"\nตัวอย่าง: git diff --cached --name-only | grep -q \"Info.plist\"");
+        throw new Error("ยังไม่พบคำสั่งตรวจสอบไฟล์ที่ staged ไว้แล้วกรองหาชื่อไฟล์ที่ต้องระวังด้วย grep แบบเงียบ (quiet mode)");
       }
     },
     hint: "ต่อคำสั่งที่แสดงรายชื่อไฟล์ staged เข้ากับเครื่องมือค้นหา pattern แบบมาตรฐานผ่าน pipe แล้วใช้ flag ของเครื่องมือนั้นที่ทำให้ทำงานแบบเงียบ (ไม่ print อะไรออกมา แค่ตั้งค่า exit code ไว้เช็คใน if)",
@@ -717,7 +717,7 @@ fi`,
       if (hasFind) {
         log("✓ ใช้ find graphify-out -type f -name '*.html' -delete ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง find graphify-out -type f -name '*.html' -delete\nตัวอย่าง: find graphify-out -type f -name '*.html' -delete");
+        throw new Error("ยังไม่พบคำสั่ง find ที่ค้นหาไฟล์ตามนามสกุลที่กำหนดแล้วลบทิ้งในขั้นตอนเดียว");
       }
     },
     hint: "นึกถึงคำสั่งค้นหาไฟล์แบบวนลึกที่มี flag กรองประเภท (เอาเฉพาะไฟล์) และ flag กรองชื่อแบบ wildcard แล้วต่อท้ายด้วย action ที่ลบสิ่งที่เจอทันที",
@@ -751,7 +751,7 @@ find graphify-out -type f -name '*.html' -print`,
       if (hasChmod) {
         log("✓ ใช้ chmod +x deploy.sh ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง chmod +x deploy.sh\nตัวอย่าง: chmod +x deploy.sh");
+        throw new Error("ยังไม่พบคำสั่งเพิ่มสิทธิ์ execute ให้กับไฟล์ script ตามที่โจทย์กำหนด");
       }
     },
     hint: "นึกถึงคำสั่งเปลี่ยนสิทธิ์ไฟล์ของ Unix แล้วหา flag แบบสัญลักษณ์ที่แปลว่า 'เพิ่มสิทธิ์ execute' ต่อท้ายด้วยชื่อไฟล์ที่ต้องการ",
@@ -788,10 +788,10 @@ chmod 755 deploy.sh`,
       const hasBack = lines.some(l => /^cd\s+-$/.test(l));
 
       if (!hasUp) {
-        throw new Error("ไม่พบคำสั่งขึ้นไป 2 ระดับ\nตัวอย่าง: cd ../..");
+        throw new Error("ยังไม่พบคำสั่งย้ายขึ้นไป 2 ระดับโฟลเดอร์");
       }
       if (!hasBack) {
-        throw new Error("ไม่พบคำสั่งสลับกลับไปโฟลเดอร์ก่อนหน้า\nตัวอย่าง: cd -");
+        throw new Error("ยังไม่พบคำสั่งสลับกลับไปโฟลเดอร์ก่อนหน้า");
       }
       log("✓ ใช้ cd ../.. แล้ว cd - ถูกต้อง");
     },
@@ -831,7 +831,7 @@ pwd`,
       if (hasMkdir) {
         log("✓ ใช้ mkdir -p tests/e2e/fixtures ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง mkdir -p tests/e2e/fixtures\nตัวอย่าง: mkdir -p tests/e2e/fixtures");
+        throw new Error("ยังไม่พบคำสั่งสร้างโฟลเดอร์ซ้อนกันหลายชั้นในคำสั่งเดียว (รวม parent directory ที่ยังไม่มี)");
       }
     },
     hint: "mkdir เฉยๆ สร้างได้แค่โฟลเดอร์ปลายทางเดียวและต้องมีโฟลเดอร์แม่อยู่ก่อนแล้ว มี flag ตัวเดียวที่สั่งให้สร้างโฟลเดอร์แม่ทุกชั้นที่ยังไม่มีไปพร้อมกันด้วย",
@@ -863,7 +863,7 @@ mkdir -p reports/{screenshots,logs,coverage}`,
       if (hasSymlink) {
         log("✓ ใช้ ln -s config/production.env .env ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง ln -s config/production.env .env\nตัวอย่าง: ln -s config/production.env .env");
+        throw new Error("ยังไม่พบคำสั่งสร้าง symbolic link ที่ชี้จากไฟล์ปลายทางไปยังชื่อลิงก์ตามที่โจทย์กำหนด");
       }
     },
     hint: "คำสั่งสร้าง link มี flag ตัวเดียวที่ทำให้เป็น 'symbolic' (ตัวชี้ ไม่ใช่ก็อปปี้จริง) แล้วเรียงลำดับ argument เป็น: ไฟล์จริงที่จะถูกชี้ไปก่อน ตามด้วยชื่อ link ที่จะสร้างใหม่",
@@ -897,7 +897,7 @@ TMP_STAGE=$(mktemp -d)
       if (hasTrap) {
         log("✓ ใช้ trap 'rm -rf \"$TMP_STAGE\"' EXIT ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง trap 'rm -rf \"$TMP_STAGE\"' EXIT\nตัวอย่าง: trap 'rm -rf \"$TMP_STAGE\"' EXIT");
+        throw new Error("ยังไม่พบการตั้งค่า trap ที่ลบโฟลเดอร์ชั่วคราวทิ้งเมื่อ script จบการทำงาน (EXIT)");
       }
     },
     hint: `นึกถึงคำสั่ง shell ที่ผูก action ให้รันอัตโนมัติเมื่อสคริปต์จบการทำงาน ไม่ว่าจะจบแบบสำเร็จหรือ error กลางทาง — action ที่ต้องผูกไว้คือคำสั่งลบโฟลเดอร์แบบ recursive บน $TMP_STAGE และสัญญาณที่ต้องดักคือตอนสคริปต์กำลังจะออก`,
@@ -950,11 +950,11 @@ trap cleanup EXIT INT TERM`,
       ];
 
       if (stages.length !== 5) {
-        throw new Error(`pipeline ต้องมีทั้งหมด 5 ขั้นตอนต่อกันด้วย | (ตอนนี้พบ ${stages.length} ขั้นตอน)\nโครงสร้างที่ต้องการ: grep ... | awk '{print $4}' | sort | uniq -c | sort -rn`);
+        throw new Error(`pipeline ต้องมีทั้งหมด 5 ขั้นตอนต่อกันด้วย | (ตอนนี้พบ ${stages.length} ขั้นตอน)\nลองทบทวนลำดับ 5 ขั้นตอนที่ระบุไว้ใน task: กรอง -> ดึงคอลัมน์ -> เรียงข้อมูล -> นับจำนวนซ้ำ -> เรียงผลลัพธ์`);
       }
       for (let i = 0; i < stageChecks.length; i++) {
         if (!stageChecks[i].re.test(stages[i])) {
-          throw new Error(`ขั้นตอนที่ ${i + 1} ของ pipeline ไม่ถูกต้อง\nคาดหวังประมาณ: ${stageChecks[i].desc}\nพบจริง: ${stages[i]}`);
+          throw new Error(`ขั้นตอนที่ ${i + 1} ของ pipeline ไม่ตรงกับที่โจทย์ต้องการ\nลองทบทวนคำอธิบายขั้นตอนที่ ${i + 1} ใน task อีกครั้งว่าต้องใช้เครื่องมือหรือ flag แบบไหน`);
         }
       }
       log("✓ pipeline grep → awk → sort → uniq -c → sort -rn ถูกต้องครบทุกขั้นตอน");
@@ -998,13 +998,13 @@ grep " 500 " access.log | awk '{print $1}' | sort | uniq -c | sort -rn`,
       const doneIdx = lines.findIndex(l => l === 'done');
 
       if (forIdx === -1) {
-        throw new Error("ไม่พบ for loop ที่วนไฟล์ .txt ในโฟลเดอร์ results/ ให้ถูกต้อง\nตัวอย่างโครงสร้าง: for f in results/*.txt; do");
+        throw new Error("ยังไม่พบ for loop ที่วนไฟล์ .txt ในโฟลเดอร์ results/ ให้ถูกต้องตามโครงสร้างที่โจทย์อธิบายไว้");
       }
       if (ifIdx === -1) {
-        throw new Error("ไม่พบเงื่อนไข if ที่เช็คคำว่า FAIL ในไฟล์ $f ด้วย grep -q แบบเงียบ\nตัวอย่างโครงสร้าง: if grep -q \"FAIL\" \"$f\"; then");
+        throw new Error("ยังไม่พบเงื่อนไข if ที่เช็คคำว่า FAIL ในไฟล์ปัจจุบันด้วยการค้นหาแบบเงียบ (ไม่ print เอง) ตามที่โจทย์กำหนด");
       }
       if (echoIdx === -1) {
-        throw new Error("ไม่พบคำสั่ง echo แสดงชื่อไฟล์ $f เมื่อเจอ FAIL\nตัวอย่าง: echo \"$f\"");
+        throw new Error("ยังไม่พบคำสั่งแสดงชื่อไฟล์ปัจจุบันออกมาเมื่อเจอคำว่า FAIL");
       }
       if (fiIdx === -1) {
         throw new Error("ไม่พบ fi ปิดท้ายเงื่อนไข if");
@@ -1063,7 +1063,7 @@ echo "พบไฟล์ fail ทั้งหมด $count ไฟล์"`,
       if (hasStatus) {
         log("✓ ใช้ git status ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git status\nตัวอย่าง: git status");
+        throw new Error("ยังไม่พบคำสั่งตรวจสอบสถานะปัจจุบันของ working directory");
       }
     },
     hint: "คำสั่งพื้นฐานที่สุดที่ควรพิมพ์ก่อนทำอะไรก็ตามใน git เพื่อดูภาพรวมของ working directory ตอนนี้",
@@ -1093,7 +1093,7 @@ git status -s`,
       if (hasLog) {
         log("✓ ใช้ git log --oneline -5 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git log --oneline -5\nตัวอย่าง: git log --oneline -5");
+        throw new Error("ยังไม่พบคำสั่งดูประวัติ commit แบบย่อ จำนวน 5 รายการล่าสุด");
       }
     },
     hint: "git log เฉยๆ แสดงรายละเอียดยาวทีละ commit — มี flag ที่ย่อให้เหลือบรรทัดเดียวต่อ commit แล้วใส่เลขจำกัดจำนวน commit ที่จะแสดงต่อท้าย",
@@ -1128,10 +1128,10 @@ git log --oneline --graph --all`,
       const hasDiff = /^git diff\s*$/m.test(activeCode);
       const hasCachedDiff = /git diff\s+--cached\b/.test(activeCode);
       if (!hasDiff) {
-        throw new Error("ไม่พบคำสั่ง git diff (ดู unstaged changes)\nตัวอย่าง: git diff");
+        throw new Error("ยังไม่พบคำสั่งดูการเปลี่ยนแปลงที่ยังไม่ได้ stage (unstaged changes)");
       }
       if (!hasCachedDiff) {
-        throw new Error("ไม่พบคำสั่ง git diff --cached (ดู staged changes)\nตัวอย่าง: git diff --cached");
+        throw new Error("ยังไม่พบคำสั่งดูการเปลี่ยนแปลงที่ stage ไว้แล้ว (staged changes)");
       }
       log("✓ ใช้ git diff แล้ว git diff --cached ถูกต้อง");
     },
@@ -1167,7 +1167,7 @@ git diff HEAD`,
       if (hasAddP) {
         log("✓ ใช้ git add -p login.ts ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git add -p login.ts\nตัวอย่าง: git add -p login.ts");
+        throw new Error("ยังไม่พบคำสั่ง add แบบเลือกทีละส่วน (interactive/patch mode) สำหรับไฟล์ที่โจทย์กำหนด");
       }
     },
     hint: "git add ธรรมดา stage ทั้งไฟล์เท่านั้น มี flag ตัวย่อ (patch mode) ที่ทำให้เลือก stage ได้ทีละส่วน (hunk) ของไฟล์แทน",
@@ -1198,7 +1198,7 @@ git commit -p`,
       if (hasClone) {
         log("✓ ใช้ git clone https://github.com/acme/webapp.git ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git clone https://github.com/acme/webapp.git\nตัวอย่าง: git clone https://github.com/acme/webapp.git");
+        throw new Error("ยังไม่พบคำสั่ง clone repository จาก URL ที่โจทย์กำหนด");
       }
     },
     hint: "คำสั่งเดียวที่ทำครบทั้ง init + ผูก remote + ดึงโค้ดทั้งหมดมาจาก URL ที่ระบุ",
@@ -1228,7 +1228,7 @@ git clone https://github.com/acme/webapp.git my-local-webapp`,
       if (hasRemote) {
         log("✓ ใช้ git remote add origin https://github.com/acme/webapp.git ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git remote add origin https://github.com/acme/webapp.git\nตัวอย่าง: git remote add origin https://github.com/acme/webapp.git");
+        throw new Error("ยังไม่พบคำสั่งเพิ่ม remote ชื่อ origin ที่ชี้ไปยัง URL ตามที่โจทย์กำหนด");
       }
     },
     hint: "คำสั่งย่อยของ remote ที่ใช้เพิ่ม remote ใหม่ ตามด้วยชื่อที่จะเรียก (ตามธรรมเนียมมักใช้ origin) แล้วตามด้วย URL ของ repo",
@@ -1260,7 +1260,7 @@ git remote -v`,
       if (hasReset) {
         log("✓ ใช้ git reset --soft HEAD~1 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git reset --soft HEAD~1\nตัวอย่าง: git reset --soft HEAD~1");
+        throw new Error("ยังไม่พบคำสั่ง reset แบบ soft ที่ถอย commit ล่าสุดกลับ 1 ครั้งตามที่โจทย์กำหนด");
       }
     },
     hint: "git reset มี flag ควบคุมว่าจะเก็บไฟล์ที่แก้ไว้ระดับไหน แบบที่ยังเก็บไว้แบบ staged ครบเหมือนเดิมคือ flag ที่แปลว่า 'เบาที่สุด' ตามด้วยตำแหน่งย้อนกลับ 1 commit ก่อนหน้า HEAD",
@@ -1293,7 +1293,7 @@ git reset --hard HEAD~1`,
       if (hasRevert) {
         log("✓ ใช้ git revert abc1234 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git revert abc1234\nตัวอย่าง: git revert abc1234");
+        throw new Error("ยังไม่พบคำสั่ง revert ที่ระบุ commit hash ตามที่โจทย์กำหนด");
       }
     },
     hint: "นึกถึงคำสั่งที่ 'ย้อนผล' ของ commit หนึ่งโดยไม่ลบ commit เดิมออกจาก history เลย แล้วระบุ commit hash ที่ต้องการย้อนต่อท้าย",
@@ -1334,13 +1334,13 @@ git revert HEAD~2..HEAD`,
       const hasWqBang = lines.some(l => l === ':wq!');
 
       if (!hasQ) {
-        throw new Error("ไม่พบคำสั่ง :q\nตัวอย่าง: พิมพ์ :q ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งออกจาก Vim แบบปกติ (ไม่มีการเปลี่ยนแปลงค้างอยู่)");
       }
       if (!hasQBang) {
-        throw new Error("ไม่พบคำสั่ง :q!\nตัวอย่าง: พิมพ์ :q! ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งออกจาก Vim แบบบังคับทิ้งการเปลี่ยนแปลงที่ยังไม่บันทึก");
       }
       if (!hasWqBang) {
-        throw new Error("ไม่พบคำสั่ง :wq!\nตัวอย่าง: พิมพ์ :wq! ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งบันทึกแล้วออกจาก Vim แบบบังคับ (เช่น กรณีไฟล์ readonly)");
       }
       log("✓ ใช้ :q, :q!, :wq! ครบทั้ง 3 แบบถูกต้อง");
     },
@@ -1385,10 +1385,10 @@ git revert HEAD~2..HEAD`,
       const hasNext = lines.some(l => l === 'n');
 
       if (!hasSearch) {
-        throw new Error("ไม่พบคำสั่งค้นหา ERROR\nตัวอย่าง: พิมพ์ /ERROR แล้ว Enter");
+        throw new Error("ยังไม่พบคำสั่งค้นหาคำว่า ERROR ในไฟล์");
       }
       if (!hasNext) {
-        throw new Error("ไม่พบคำสั่งเลื่อนไปผลถัดไป\nตัวอย่าง: พิมพ์ n ใน Normal mode");
+        throw new Error("ยังไม่พบคำสั่งเลื่อนไปยังผลการค้นหาถัดไป");
       }
       log("✓ ใช้ /ERROR แล้ว n ถูกต้อง");
     },
@@ -1433,12 +1433,12 @@ n`,
       const stopIdx = lines.findIndex((l, i) => l === 'q' && i > downIdx);
       const replayIdx = lines.findIndex(l => l === '9@a');
 
-      if (startIdx === -1) throw new Error("ไม่พบคำสั่งเริ่มบันทึก macro ลง register a\nตัวอย่าง: พิมพ์ qa");
-      if (appendIdx === -1 || appendIdx < startIdx) throw new Error("ไม่พบคำสั่ง A; เพื่อเติม ; ท้ายบรรทัด\nตัวอย่าง: พิมพ์ A; หลังเริ่มบันทึก");
-      if (escIdx === -1 || escIdx < appendIdx) throw new Error("ไม่พบคำสั่งออกจาก Insert mode\nตัวอย่าง: พิมพ์ <Esc>");
-      if (downIdx === -1 || downIdx < escIdx) throw new Error("ไม่พบคำสั่งเลื่อนลง 1 บรรทัด\nตัวอย่าง: พิมพ์ j");
-      if (stopIdx === -1) throw new Error("ไม่พบคำสั่งหยุดบันทึก macro\nตัวอย่าง: พิมพ์ q หลังทำเสร็จ");
-      if (replayIdx === -1 || replayIdx < stopIdx) throw new Error("ไม่พบคำสั่งเล่น macro ซ้ำ 9 ครั้ง\nตัวอย่าง: พิมพ์ 9@a");
+      if (startIdx === -1) throw new Error("ยังไม่พบคำสั่งเริ่มบันทึก macro ลง register a");
+      if (appendIdx === -1 || appendIdx < startIdx) throw new Error("ยังไม่พบคำสั่งเข้า Insert mode เพื่อเติมอักขระตามที่โจทย์กำหนดท้ายบรรทัด");
+      if (escIdx === -1 || escIdx < appendIdx) throw new Error("ยังไม่พบคำสั่งออกจาก Insert mode กลับสู่ Normal mode");
+      if (downIdx === -1 || downIdx < escIdx) throw new Error("ยังไม่พบคำสั่งเลื่อนลง 1 บรรทัด");
+      if (stopIdx === -1) throw new Error("ยังไม่พบคำสั่งหยุดบันทึก macro");
+      if (replayIdx === -1 || replayIdx < stopIdx) throw new Error("ยังไม่พบคำสั่งเล่น macro ซ้ำตามจำนวนครั้งที่โจทย์กำหนด");
       log("✓ ลำดับคีย์ qa → A; → Esc → j → q → 9@a ถูกต้อง");
     },
     hint: "macro เริ่มบันทึกด้วย q ตามด้วยชื่อ register (ตัวอักษร a-z) ทำสิ่งที่ต้องการซ้ำแล้วหยุดบันทึกด้วย q เฉยๆ อีกครั้ง จากนั้นเล่นซ้ำด้วย @ ตามด้วยชื่อ register เดิม ใส่ตัวเลขนำหน้า @ ได้เพื่อเล่นซ้ำหลายรอบในคำสั่งเดียว",
@@ -1475,7 +1475,7 @@ q
       if (hasLs) {
         log("✓ ใช้ ls -la ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง ls -la\nตัวอย่าง: ls -la");
+        throw new Error("ยังไม่พบคำสั่งแสดงรายการไฟล์แบบละเอียด รวมไฟล์ซ่อน");
       }
     },
     hint: "ls เฉยๆ แสดงแค่ชื่อไฟล์สั้นๆ ไม่รวมไฟล์ซ่อน มี 2 flag ที่ต้องรวมกัน: แบบละเอียด (long format) และแบบรวมไฟล์ซ่อนทั้งหมด",
@@ -1509,7 +1509,7 @@ ls -lah`,
       if (hasCat) {
         log("✓ ใช้ cat deploy.log ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง cat deploy.log\nตัวอย่าง: cat deploy.log");
+        throw new Error("ยังไม่พบคำสั่งแสดงเนื้อหาไฟล์ log ตามที่โจทย์กำหนด");
       }
     },
     hint: "คำสั่งพื้นฐานที่สุดสำหรับพิมพ์เนื้อหาไฟล์ออกทาง stdout ตรงๆ ไม่มี flag อะไรพิเศษ",
@@ -1542,10 +1542,10 @@ cat part1.txt part2.txt > combined.txt`,
       const hasHead = /head\s+-n\s*20\s+deploy\.log\b/.test(activeCode);
       const hasTailF = /tail\s+-f\s+deploy\.log\b/.test(activeCode);
       if (!hasHead) {
-        throw new Error("ไม่พบคำสั่ง head -n 20 deploy.log\nตัวอย่าง: head -n 20 deploy.log");
+        throw new Error("ยังไม่พบคำสั่งแสดง 20 บรรทัดแรกของไฟล์ log ตามที่โจทย์กำหนด");
       }
       if (!hasTailF) {
-        throw new Error("ไม่พบคำสั่ง tail -f deploy.log\nตัวอย่าง: tail -f deploy.log");
+        throw new Error("ยังไม่พบคำสั่งติดตามเนื้อหาไฟล์ log แบบ real-time (follow mode)");
       }
       log("✓ ใช้ head -n 20 deploy.log แล้ว tail -f deploy.log ถูกต้อง");
     },
@@ -1580,10 +1580,10 @@ tail -f deploy.log | grep ERROR`,
       const hasCp = /cp\s+config\.yaml\s+config\.yaml\.bak\b/.test(activeCode);
       const hasMv = /mv\s+config\.yaml\.bak\s+archive\/config\.yaml\.bak\b/.test(activeCode);
       if (!hasCp) {
-        throw new Error("ไม่พบคำสั่ง cp config.yaml config.yaml.bak\nตัวอย่าง: cp config.yaml config.yaml.bak");
+        throw new Error("ยังไม่พบคำสั่งคัดลอกไฟล์ config เป็นไฟล์สำรองตามชื่อที่โจทย์กำหนด");
       }
       if (!hasMv) {
-        throw new Error("ไม่พบคำสั่ง mv config.yaml.bak archive/config.yaml.bak\nตัวอย่าง: mv config.yaml.bak archive/config.yaml.bak");
+        throw new Error("ยังไม่พบคำสั่งย้ายไฟล์สำรองไปยังโฟลเดอร์ archive ตามที่โจทย์กำหนด");
       }
       log("✓ ใช้ cp config.yaml config.yaml.bak แล้ว mv config.yaml.bak archive/config.yaml.bak ถูกต้อง");
     },
@@ -1618,7 +1618,7 @@ mv old-report.json report.json`,
       if (hasRm) {
         log("✓ ใช้ rm -rf tmp-cache ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง rm -rf tmp-cache\nตัวอย่าง: rm -rf tmp-cache");
+        throw new Error("ยังไม่พบคำสั่งลบโฟลเดอร์แบบ recursive และบังคับ (ไม่ถาม confirm) ตามที่โจทย์กำหนด");
       }
     },
     hint: "ลบโฟลเดอร์ต้องมี flag ที่ทำให้ลบแบบวนลึกเข้าไปทุกไฟล์ข้างใน รวมกับ flag ที่ไม่ถามยืนยันและไม่ error ถ้าไม่เจอไฟล์บางไฟล์",
@@ -1650,7 +1650,7 @@ rm -ri tmp-cache`,
       if (hasWc) {
         log("✓ ใช้ wc -l test-results.log ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง wc -l test-results.log\nตัวอย่าง: wc -l test-results.log");
+        throw new Error("ยังไม่พบคำสั่งนับจำนวนบรรทัดของไฟล์ log ตามที่โจทย์กำหนด");
       }
     },
     hint: "wc (word count) มี flag เฉพาะสำหรับนับจำนวนบรรทัด (ไม่ใช่คำ) ตามด้วยชื่อไฟล์ที่ต้องการนับ",
@@ -1690,9 +1690,9 @@ grep FAIL test-results.log | wc -l`,
       const hasAppend = lines.some(l => l === 'run-tests.sh >> out.log');
       const hasBoth = lines.some(l => l === 'run-tests.sh > out.log 2>&1');
 
-      if (!hasOverwrite) throw new Error("ไม่พบคำสั่ง run-tests.sh > out.log\nตัวอย่าง: run-tests.sh > out.log");
-      if (!hasAppend) throw new Error("ไม่พบคำสั่ง run-tests.sh >> out.log\nตัวอย่าง: run-tests.sh >> out.log");
-      if (!hasBoth) throw new Error("ไม่พบคำสั่ง run-tests.sh > out.log 2>&1\nตัวอย่าง: run-tests.sh > out.log 2>&1");
+      if (!hasOverwrite) throw new Error("ยังไม่พบคำสั่ง redirect output แบบเขียนทับไฟล์ log ตามที่โจทย์กำหนด");
+      if (!hasAppend) throw new Error("ยังไม่พบคำสั่ง redirect output แบบต่อท้ายไฟล์ log (append) ตามที่โจทย์กำหนด");
+      if (!hasBoth) throw new Error("ยังไม่พบคำสั่ง redirect ทั้ง stdout และ stderr ไปยังไฟล์เดียวกันตามที่โจทย์กำหนด");
       log("✓ ใช้ >, >>, และ 2>&1 ครบทั้ง 3 แบบถูกต้อง");
     },
     hint: "> ตัวเดียวทับไฟล์เดิม, >> สองตัวต่อท้ายไม่ทับ, ส่วนการรวม stderr เข้ากับ stdout ต้องเติม 2>&1 ต่อท้ายสุด (หลัง > ที่กำหนดปลายทางแล้ว)",
@@ -1728,7 +1728,7 @@ noisy-command.sh > /dev/null 2>&1`,
       if (hasXargs) {
         log("✓ ใช้ find . -name '*.tmp' | xargs rm ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง find . -name '*.tmp' | xargs rm\nตัวอย่าง: find . -name '*.tmp' | xargs rm");
+        throw new Error("ยังไม่พบคำสั่ง find ไฟล์ตามนามสกุลที่กำหนดแล้วส่งต่อให้ xargs ลบทิ้ง");
       }
     },
     hint: "หาไฟล์ก่อนด้วย find ปกติ แล้วต่อ pipe เข้ากับคำสั่งที่แปลง stdin แต่ละบรรทัดให้กลายเป็น argument ของคำสั่งถัดไป ตามด้วยชื่อคำสั่งที่ต้องการรัน (rm)",
@@ -1761,8 +1761,8 @@ find . -name '*.tmp' -print0 | xargs -0 rm`,
       const hasPs = lines.some(l => /^ps\s+aux\s*\|\s*grep\s+node$/.test(l));
       const hasKill = lines.some(l => /^kill\s+-9\s+1234$/.test(l));
 
-      if (!hasPs) throw new Error("ไม่พบคำสั่ง ps aux | grep node\nตัวอย่าง: ps aux | grep node");
-      if (!hasKill) throw new Error("ไม่พบคำสั่ง kill -9 1234\nตัวอย่าง: kill -9 1234");
+      if (!hasPs) throw new Error("ยังไม่พบคำสั่งแสดงรายการ process ทั้งหมดแล้วกรองหา process ที่เกี่ยวข้องด้วย grep");
+      if (!hasKill) throw new Error("ยังไม่พบคำสั่งบังคับหยุด process ตาม PID ที่โจทย์กำหนด");
       log("✓ ใช้ ps aux | grep node แล้ว kill -9 1234 ถูกต้อง");
     },
     hint: "แสดง process ทั้งหมดของทุก user (aux) แล้วต่อ pipe กรองด้วยเครื่องมือค้นหา pattern มาตรฐาน จากนั้นสั่งปิด process ด้วย PID ที่เจอ พร้อม flag ที่แปลว่า 'บังคับปิดทันที ไม่ต้องรอ'",
@@ -1794,7 +1794,7 @@ pkill -9 node`,
       if (hasCurl) {
         log("✓ ใช้ curl -s -o /dev/null -w \"%{http_code}\" https://api.example.com/health ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง curl -s -o /dev/null -w \"%{http_code}\" https://api.example.com/health\nตัวอย่าง: curl -s -o /dev/null -w \"%{http_code}\" https://api.example.com/health");
+        throw new Error("ยังไม่พบคำสั่ง curl ที่ตรวจสอบ HTTP status code ของ endpoint ตามที่โจทย์กำหนด แบบไม่แสดง response body");
       }
     },
     hint: "ต้องปิด progress meter ก่อน (silent) ทิ้งเนื้อหา response ไปที่ /dev/null (ไม่สนใจ) แล้วใช้ flag format output พิมพ์แค่ status code ออกมาแทน",
@@ -1826,8 +1826,8 @@ curl -X POST -H "Content-Type: application/json" -d '{"user":"qa"}' https://api.
       const hasCreate = lines.some(l => /^tar\s+-czvf\s+test-reports\.tar\.gz\s+test-reports\/?$/.test(l));
       const hasExtract = lines.some(l => /^tar\s+-xzvf\s+test-reports\.tar\.gz$/.test(l));
 
-      if (!hasCreate) throw new Error("ไม่พบคำสั่ง tar -czvf test-reports.tar.gz test-reports/\nตัวอย่าง: tar -czvf test-reports.tar.gz test-reports/");
-      if (!hasExtract) throw new Error("ไม่พบคำสั่ง tar -xzvf test-reports.tar.gz\nตัวอย่าง: tar -xzvf test-reports.tar.gz");
+      if (!hasCreate) throw new Error("ยังไม่พบคำสั่งบีบอัดโฟลเดอร์เป็นไฟล์ tar.gz ตามชื่อที่โจทย์กำหนด");
+      if (!hasExtract) throw new Error("ยังไม่พบคำสั่งแตกไฟล์ tar.gz ตามที่โจทย์กำหนด");
       log("✓ ใช้ tar -czvf ... แล้ว tar -xzvf ... ถูกต้อง");
     },
     hint: "สร้าง archive ใช้ flag c (create) รวมกับ z (gzip) v (verbose) f (filename ต้องอยู่ท้ายสุดก่อนชื่อไฟล์) ส่วนแตกไฟล์เปลี่ยนแค่ c เป็น x (extract) ที่เหลือเหมือนเดิม",
@@ -1863,7 +1863,7 @@ tar -tzvf test-reports.tar.gz`,
       if (hasSed) {
         log("✓ ใช้ sed -i 's/1.2.0/1.3.0/g' version.txt ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง sed -i 's/1.2.0/1.3.0/g' version.txt\nตัวอย่าง: sed -i 's/1.2.0/1.3.0/g' version.txt");
+        throw new Error("ยังไม่พบคำสั่ง sed แทนที่ค่า version เดิมด้วยค่าใหม่แบบแก้ไขไฟล์ตรง (in-place) ตามที่โจทย์กำหนด");
       }
     },
     hint: "sed ใช้ syntax แทนที่แบบเดียวกับ :%s ของ Vim (s/หา/แทน/g) แต่ต้องมี flag บอกว่าให้แก้ไฟล์ตรงๆ ในที่ (in-place) แล้วตามด้วยชื่อไฟล์",
@@ -1893,7 +1893,7 @@ sed -i.bak 's/1.2.0/1.3.0/g' version.txt`,
       if (hasExport) {
         log("✓ ใช้ export API_URL=https://staging.api.example.com ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง export API_URL=https://staging.api.example.com\nตัวอย่าง: export API_URL=https://staging.api.example.com");
+        throw new Error("ยังไม่พบคำสั่งตั้งค่า environment variable ตามชื่อและค่าที่โจทย์กำหนด");
       }
     },
     hint: "ตั้งค่าตัวแปรแบบ VAR=value เฉยๆ จะเห็นได้แค่ shell ปัจจุบัน มีคำสั่งนำหน้าที่ทำให้ตัวแปรนั้นกลายเป็น environment variable ที่ subprocess ที่ถูกเรียกต่อจากนี้มองเห็นได้ด้วย",
@@ -1926,7 +1926,7 @@ unset API_URL`,
       if (hasRebaseI) {
         log("✓ ใช้ git rebase -i HEAD~3 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git rebase -i HEAD~3\nตัวอย่าง: git rebase -i HEAD~3");
+        throw new Error("ยังไม่พบคำสั่ง rebase แบบ interactive ย้อนกลับไปตามจำนวน commit ที่โจทย์กำหนด");
       }
     },
     hint: "rebase ปกติมี flag ที่เปิด editor ให้เลือก action ทีละ commit ได้ (interactive) แล้วระบุว่าย้อนไปกี่ commit จาก HEAD",
@@ -1957,7 +1957,7 @@ git reset --soft HEAD~3 && git commit -m "feat: complete login validation logic"
       if (hasCherryPick) {
         log("✓ ใช้ git cherry-pick abc1234 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git cherry-pick abc1234\nตัวอย่าง: git cherry-pick abc1234");
+        throw new Error("ยังไม่พบคำสั่ง cherry-pick ที่ระบุ commit hash ตามที่โจทย์กำหนด");
       }
     },
     hint: "คำสั่งที่หยิบการแก้ไขจาก commit เดียว (ระบุด้วย hash) มาสร้างเป็น commit ใหม่ที่ branch ปัจจุบัน ไม่เกี่ยวกับ commit อื่นใน branch ต้นทางเลย",
@@ -1990,10 +1990,10 @@ git cherry-pick --no-commit abc1234`,
       const hasReflog = /git reflog\b/.test(activeCode);
       const hasReset = /git reset\s+--hard\s+HEAD@\{2\}/.test(activeCode);
       if (!hasReflog) {
-        throw new Error("ไม่พบคำสั่ง git reflog\nตัวอย่าง: git reflog");
+        throw new Error("ยังไม่พบคำสั่งดูประวัติการเคลื่อนไหวของ HEAD (reflog)");
       }
       if (!hasReset) {
-        throw new Error("ไม่พบคำสั่ง git reset --hard HEAD@{2}\nตัวอย่าง: git reset --hard HEAD@{2}");
+        throw new Error("ยังไม่พบคำสั่ง reset แบบ hard กลับไปยัง reflog entry ตามที่โจทย์กำหนด");
       }
       log("✓ ใช้ git reflog แล้ว git reset --hard HEAD@{2} ถูกต้อง");
     },
@@ -2031,9 +2031,9 @@ git reflog --date=iso`,
       const hasBad = lines.some(l => l === 'git bisect bad');
       const hasGood = lines.some(l => l === 'git bisect good v1.0.0');
 
-      if (!hasStart) throw new Error("ไม่พบคำสั่ง git bisect start\nตัวอย่าง: git bisect start");
-      if (!hasBad) throw new Error("ไม่พบคำสั่ง git bisect bad\nตัวอย่าง: git bisect bad");
-      if (!hasGood) throw new Error("ไม่พบคำสั่ง git bisect good v1.0.0\nตัวอย่าง: git bisect good v1.0.0");
+      if (!hasStart) throw new Error("ยังไม่พบคำสั่งเริ่มต้น bisect session");
+      if (!hasBad) throw new Error("ยังไม่พบคำสั่งทำเครื่องหมาย commit ปัจจุบันว่าเป็น bad");
+      if (!hasGood) throw new Error("ยังไม่พบคำสั่งทำเครื่องหมาย commit ที่ระบุว่าเป็น good");
       log("✓ ใช้ git bisect start → bad → good v1.0.0 ถูกต้อง");
     },
     hint: "ต้องเริ่มโหมด bisect ก่อนเสมอ แล้วบอกสถานะ 2 จุด: จุดปัจจุบันที่รู้ว่ามีบั๊ก (bad) และจุดในอดีตที่รู้ว่ายังไม่มีบั๊ก (good) ระบุ tag/commit ต่อท้าย good ได้เลย",
@@ -2066,7 +2066,7 @@ git bisect run npm test`,
       if (hasWorktree) {
         log("✓ ใช้ git worktree add ../hotfix-work hotfix ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง git worktree add ../hotfix-work hotfix\nตัวอย่าง: git worktree add ../hotfix-work hotfix");
+        throw new Error("ยังไม่พบคำสั่งสร้าง worktree ใหม่ที่ path และ branch ตามที่โจทย์กำหนด");
       }
     },
     hint: "worktree มีคำสั่งย่อย add ตามด้วย path โฟลเดอร์ใหม่ที่จะสร้าง แล้วตามด้วยชื่อ branch ที่ต้องการ checkout เข้าไปในโฟลเดอร์นั้น",
@@ -2098,8 +2098,8 @@ git worktree list`,
       const hasYank = lines.some(l => l === '"ayy');
       const hasPaste = lines.some(l => l === '"ap');
 
-      if (!hasYank) throw new Error("ไม่พบคำสั่งคัดลอกลง register a\nตัวอย่าง: พิมพ์ \"ayy");
-      if (!hasPaste) throw new Error("ไม่พบคำสั่งวางจาก register a\nตัวอย่าง: พิมพ์ \"ap");
+      if (!hasYank) throw new Error("ยังไม่พบคำสั่งคัดลอก (yank) บรรทัดปัจจุบันลง register a");
+      if (!hasPaste) throw new Error("ยังไม่พบคำสั่งวางเนื้อหาจาก register a");
       log("✓ ใช้ \"ayy แล้ว \"ap ถูกต้อง");
     },
     hint: "นำหน้าคำสั่ง yank/paste ปกติด้วย \" (double quote) ตามด้วยชื่อ register (ตัวอักษร a-z) ที่ต้องการใช้แทนที่ unnamed register เริ่มต้น",
@@ -2132,8 +2132,8 @@ git worktree list`,
       const hasSplit = lines.some(l => l === ':sp test/login.spec.ts');
       const hasSwitch = lines.some(l => /^ctrl-w\s*w$|^<c-w>\s*w$|^ctrl\+w\s*w$/i.test(l));
 
-      if (!hasSplit) throw new Error("ไม่พบคำสั่ง split เปิดไฟล์ test/login.spec.ts\nตัวอย่าง: :sp test/login.spec.ts");
-      if (!hasSwitch) throw new Error("ไม่พบคำสั่งสลับ focus ไปหน้าต่างถัดไป\nตัวอย่าง: Ctrl+w w");
+      if (!hasSplit) throw new Error("ยังไม่พบคำสั่งเปิดไฟล์ที่โจทย์กำหนดในหน้าต่างแบบ split");
+      if (!hasSwitch) throw new Error("ยังไม่พบคำสั่งสลับ focus ไปยังหน้าต่างถัดไป");
       log("✓ ใช้ :sp test/login.spec.ts แล้ว Ctrl+w w ถูกต้อง");
     },
     hint: "คำสั่ง Ex สำหรับ split แนวนอนตามด้วยชื่อไฟล์ที่จะเปิดในช่องใหม่ ส่วนการสลับ focus ระหว่างช่องใช้ปุ่ม Ctrl ค้างไว้กับ w แล้วกด w ซ้ำอีกทีเพื่อวนไปช่องถัดไป",
@@ -2169,7 +2169,7 @@ Ctrl+w w`,
       if (hasGlobal) {
         log("✓ ใช้ :g/DEBUG/d ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง :g/DEBUG/d\nตัวอย่าง: :g/DEBUG/d");
+        throw new Error("ยังไม่พบคำสั่ง global command ที่ลบทุกบรรทัดซึ่งมีคำว่า DEBUG");
       }
     },
     hint: "คำสั่ง Ex ที่หาทุกบรรทัดที่ match pattern ก่อน (คั่นด้วย /) แล้วรันคำสั่งต่อท้ายกับทุกบรรทัดที่เจอ — คำสั่งที่จะรันในที่นี้คือคำสั่งลบบรรทัด",
@@ -2204,8 +2204,8 @@ Ctrl+w w`,
       const hasMark = lines.some(l => l === 'ma');
       const hasJump = lines.some(l => l === '`a');
 
-      if (!hasMark) throw new Error("ไม่พบคำสั่งปักหมุด a\nตัวอย่าง: พิมพ์ ma ใน Normal mode");
-      if (!hasJump) throw new Error("ไม่พบคำสั่งกระโดดกลับไปหมุด a\nตัวอย่าง: พิมพ์ `a (backtick ตามด้วย a)");
+      if (!hasMark) throw new Error("ยังไม่พบคำสั่งปักหมุด (mark) ตำแหน่งปัจจุบันไว้ที่ a");
+      if (!hasJump) throw new Error("ยังไม่พบคำสั่งกระโดดกลับไปยังตำแหน่งที่ปักหมุดไว้ที่ a");
       log("✓ ใช้ ma แล้ว `a ถูกต้อง");
     },
     hint: "ปักหมุดใช้ m ตามด้วยชื่อหมุด (ตัวอักษรใดก็ได้) ส่วนกระโดดกลับไปตำแหน่งเป๊ะของหมุดนั้นใช้เครื่องหมาย backtick ตามด้วยชื่อหมุดเดียวกัน",
@@ -2242,9 +2242,9 @@ Ctrl+w w`,
       const hasJobs = lines.some(l => l === 'jobs');
       const hasDisown = lines.some(l => l === 'disown');
 
-      if (!hasBg) throw new Error("ไม่พบคำสั่ง npm start &\nตัวอย่าง: npm start &");
-      if (!hasJobs) throw new Error("ไม่พบคำสั่ง jobs\nตัวอย่าง: jobs");
-      if (!hasDisown) throw new Error("ไม่พบคำสั่ง disown\nตัวอย่าง: disown");
+      if (!hasBg) throw new Error("ยังไม่พบคำสั่งรัน process เบื้องหลัง (background) ตามที่โจทย์กำหนด");
+      if (!hasJobs) throw new Error("ยังไม่พบคำสั่งแสดงรายการ background job ที่กำลังทำงานอยู่");
+      if (!hasDisown) throw new Error("ยังไม่พบคำสั่งตัดการเชื่อมโยง job ออกจาก shell session ปัจจุบัน (disown)");
       log("✓ ใช้ npm start &, jobs, disown ถูกต้อง");
     },
     hint: "เติม & ท้ายคำสั่งเพื่อส่งไปรันเบื้องหลังทันที คำสั่งดูรายการ background job ของ shell ปัจจุบันมีชื่อตรงตัว ส่วนคำสั่งถอด job ออกจากการดูแลของ shell ก็มีชื่อตรงตัวเช่นกัน",
@@ -2281,7 +2281,7 @@ nohup npm start > server.log 2>&1 &`,
       if (hasAwk) {
         log("✓ ใช้ awk -F',' '$3 > 1000 {print $1}' sales.csv ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง awk -F',' '$3 > 1000 {print $1}' sales.csv\nตัวอย่าง: awk -F',' '$3 > 1000 {print $1}' sales.csv");
+        throw new Error("ยังไม่พบคำสั่ง awk ที่กรองแถวตามเงื่อนไขคอลัมน์และพิมพ์คอลัมน์ที่ต้องการออกมาจากไฟล์ CSV ตามที่โจทย์กำหนด");
       }
     },
     hint: "ต้องกำหนดตัวคั่นคอลัมน์เป็น comma ก่อน (flag -F) แล้วเขียนเงื่อนไขเทียบคอลัมน์ที่ 3 นำหน้า action ที่พิมพ์คอลัมน์ที่ 1 — เงื่อนไขที่วางไว้ก่อน {action} จะกรองว่าบรรทัดไหนถึงจะรัน action นั้น",
@@ -2313,7 +2313,7 @@ awk -F',' '{sum += $3} END {print sum}' sales.csv`,
       if (hasRsync) {
         log("✓ ใช้ rsync -avz dist/ user@server:/var/www/app/ ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง rsync -avz dist/ user@server:/var/www/app/\nตัวอย่าง: rsync -avz dist/ user@server:/var/www/app/");
+        throw new Error("ยังไม่พบคำสั่ง rsync ที่ sync โฟลเดอร์ dist ไปยัง path ปลายทางบน server ตามที่โจทย์กำหนด (แบบ archive + compressed + verbose)");
       }
     },
     hint: "รวม 3 flag ที่ใช้บ่อยที่สุด: archive mode (คงสิทธิ์/timestamp/symlink ไว้), verbose (แสดง progress), compress (บีบอัดระหว่างส่ง) แล้วตามด้วยโฟลเดอร์ต้นทาง (ใส่ / ท้ายด้วย) และปลายทางแบบ user@host:path",
@@ -2344,8 +2344,8 @@ rsync -avz --delete dist/ user@server:/var/www/app/`,
       const hasSsh = lines.some(l => l === 'ssh deploy@staging.example.com');
       const hasScp = lines.some(l => l === 'scp deploy@staging.example.com:/var/log/app.log ./app.log');
 
-      if (!hasSsh) throw new Error("ไม่พบคำสั่ง ssh deploy@staging.example.com\nตัวอย่าง: ssh deploy@staging.example.com");
-      if (!hasScp) throw new Error("ไม่พบคำสั่ง scp deploy@staging.example.com:/var/log/app.log ./app.log\nตัวอย่าง: scp deploy@staging.example.com:/var/log/app.log ./app.log");
+      if (!hasSsh) throw new Error("ยังไม่พบคำสั่ง ssh เชื่อมต่อไปยัง server ตามที่โจทย์กำหนด");
+      if (!hasScp) throw new Error("ยังไม่พบคำสั่ง scp คัดลอกไฟล์ log จาก server มายังเครื่อง local ตามที่โจทย์กำหนด");
       log("✓ ใช้ ssh deploy@staging.example.com แล้ว scp ...:/var/log/app.log ./app.log ถูกต้อง");
     },
     hint: "ssh ต่อด้วย user@host ตรงๆ ส่วน scp มี syntax คล้าย cp แต่ path ฝั่งเซิร์ฟเวอร์ต้องมี user@host: นำหน้า path จริงบนเซิร์ฟเวอร์นั้น",
@@ -2379,7 +2379,7 @@ scp -r ./dist deploy@staging.example.com:/var/www/app`,
       if (hasCron) {
         log("✓ ใช้ 0 2 * * * /home/user/scripts/backup.sh ถูกต้อง");
       } else {
-        throw new Error("ไม่พบบรรทัด crontab: 0 2 * * * /home/user/scripts/backup.sh\nตัวอย่าง: 0 2 * * * /home/user/scripts/backup.sh");
+        throw new Error("ยังไม่พบบรรทัด crontab ที่ตั้งเวลาและ path script ตามที่โจทย์กำหนด");
       }
     },
     hint: "crontab มี 5 ช่องเวลาเรียงกัน: นาที ชั่วโมง วันที่ เดือน วันในสัปดาห์ ตามด้วยคำสั่งที่จะรัน ตอนตี 2 หมายถึงนาทีที่ 0 ชั่วโมงที่ 2 ส่วนอีก 3 ช่องที่เหลือใช้ * (ทุกค่า) เพราะอยากให้รันทุกวัน",
@@ -2408,7 +2408,7 @@ scp -r ./dist deploy@staging.example.com:/var/www/app`,
       if (hasLsof) {
         log("✓ ใช้ lsof -i :3000 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง lsof -i :3000\nตัวอย่าง: lsof -i :3000");
+        throw new Error("ยังไม่พบคำสั่งตรวจสอบว่ามี process ใดกำลังใช้พอร์ตตามที่โจทย์กำหนดอยู่หรือไม่");
       }
     },
     hint: "lsof (list open files) มี flag สำหรับกรองเฉพาะ network connection ตามด้วย : แล้วตามด้วยหมายเลข port ที่ต้องการเช็ค",

@@ -18,7 +18,7 @@ const LESSONS = [
       log("🔍 ตรวจสอบการตั้งชื่อ workflow...");
       const hasName = /^name:\s*CI\s*$/m.test(code);
       if (!hasName) {
-        throw new Error("ไม่พบ name: CI ที่บรรทัดบนสุด\nตัวอย่าง: name: CI");
+        throw new Error("ยังไม่พบการตั้งชื่อ workflow ที่บรรทัดบนสุดของไฟล์ให้ตรงตามที่ task กำหนด");
       }
       log("✓ ตั้งชื่อ workflow ถูกต้อง");
     },
@@ -63,13 +63,13 @@ jobs:
         /^\s*push:\s*\n\s*branches:\s*\[\s*main\s*\]\s*$/m.test(stripped);
       const hasPullRequest = /^\s*pull_request:\s*$/m.test(stripped);
       if (!hasOn) {
-        throw new Error("ไม่พบ on: ที่กำหนด trigger");
+        throw new Error("ยังไม่พบคีย์ระดับบนสุดที่กำหนด trigger event ของ workflow");
       }
       if (!hasPushMain) {
-        throw new Error("ไม่พบการตั้งค่า push branches: main");
+        throw new Error("ยังไม่พบเงื่อนไข push ที่ระบุ branch ให้ตรงกับที่โจทย์กำหนด");
       }
       if (!hasPullRequest) {
-        throw new Error("ไม่พบ pull_request: trigger");
+        throw new Error("ยังไม่พบเงื่อนไขที่ทำให้ workflow รันเมื่อมีการเปิดหรืออัปเดต pull request");
       }
       log("✓ ตั้งค่า Trigger ถูกต้อง");
     },
@@ -117,13 +117,13 @@ on:
       const hasGroup = /^\s*group:\s*ci-\$\{\{\s*github\.ref\s*\}\}\s*$/m.test(stripped);
       const hasCancelInProgress = /^\s*cancel-in-progress:\s*true\s*$/m.test(stripped);
       if (!hasConcurrency) {
-        throw new Error("ไม่พบ concurrency: block");
+        throw new Error("ยังไม่พบการประกาศ concurrency ระดับบนสุดของไฟล์");
       }
       if (!hasGroup) {
-        throw new Error("ไม่พบ group: ci-${{ github.ref }}");
+        throw new Error("ยังไม่พบการกำหนดค่า group ของ concurrency ให้ตรงกับรูปแบบที่ระบุในโจทย์");
       }
       if (!hasCancelInProgress) {
-        throw new Error("ไม่พบ cancel-in-progress: true");
+        throw new Error("ยังไม่พบการตั้งค่า cancel-in-progress ให้ยกเลิก run เก่าที่ยังไม่จบโดยอัตโนมัติ");
       }
       log("✓ ตั้งค่า Concurrency ถูกต้อง");
     },
@@ -165,13 +165,13 @@ concurrency:
       const hasPlaywrightPath = /^\s*~\/\.cache\/ms-playwright\s*$/m.test(stripped);
       const hasKeyHash = /^\s*key:.*hashFiles\(['"]package-lock\.json['"]\)/m.test(stripped);
       if (!hasCacheAction) {
-        throw new Error("ไม่พบ uses: actions/cache@v4");
+        throw new Error("ยังไม่พบ action สำหรับ cache dependency ตามที่ระบุในโจทย์");
       }
       if (!hasNodeModulesPath || !hasPlaywrightPath) {
         throw new Error("ไม่พบ path ที่ cache ทั้ง node_modules และ ~/.cache/ms-playwright");
       }
       if (!hasKeyHash) {
-        throw new Error("ไม่พบ key ที่ใช้ hashFiles('package-lock.json')");
+        throw new Error("ยังไม่พบ key ที่ผูกกับ hash ของไฟล์ package-lock.json");
       }
       log("✓ ตั้งค่า Caching ถูกต้อง");
     },
@@ -215,10 +215,10 @@ concurrency:
       const hasMatrix = /^\s*matrix:\s*$/m.test(stripped);
       const hasBrowserList = /^\s*browser:\s*\[\s*chromium\s*,\s*firefox\s*,\s*webkit\s*\]\s*$/m.test(stripped);
       if (!hasStrategy || !hasMatrix) {
-        throw new Error("ไม่พบ strategy: matrix:");
+        throw new Error("ยังไม่พบการตั้งค่า matrix strategy ใน job");
       }
       if (!hasBrowserList) {
-        throw new Error("ไม่พบรายชื่อ browser ครบ chromium, firefox, webkit ในรูปแบบ browser: [chromium, firefox, webkit]");
+        throw new Error("ไม่พบรายชื่อ browser ครบทั้ง chromium, firefox, webkit ใน matrix");
       }
       log("✓ ตั้งค่า Matrix Strategy ถูกต้อง");
     },
@@ -265,7 +265,7 @@ runs-on: \${{ matrix.os }}`,
         throw new Error("ไม่พบ job ชื่อ lint:");
       }
       if (!hasContinueOnError) {
-        throw new Error("ไม่พบ continue-on-error: true");
+        throw new Error("ยังไม่พบการตั้งค่า continue-on-error ให้ไม่บล็อก workflow เมื่อ job นี้ fail");
       }
       log("✓ ตั้งค่า Advisory Job ถูกต้อง");
     },
@@ -310,13 +310,13 @@ jobs:
       const hasName = /^\s*name:\s*playwright-report\s*$/m.test(stripped);
       const hasPath = /^\s*path:\s*playwright-report\s*$/m.test(stripped);
       if (!hasUploadAction) {
-        throw new Error("ไม่พบ uses: actions/upload-artifact@v4");
+        throw new Error("ยังไม่พบ step ที่ใช้ action สำหรับอัปโหลด artifact ตามที่ระบุในโจทย์");
       }
       if (!hasAlways) {
-        throw new Error("ไม่พบ if: always() — ถ้าไม่ใส่ step นี้จะไม่รันเลยเมื่อ test ก่อนหน้า fail");
+        throw new Error("ยังไม่พบเงื่อนไขที่บังคับให้ step นี้รันเสมอแม้ step ก่อนหน้าจะ fail");
       }
       if (!hasName || !hasPath) {
-        throw new Error("ต้องตั้งค่า name: playwright-report และ path: playwright-report");
+        throw new Error("ต้องตั้งชื่อ artifact และ path ให้ตรงกับโฟลเดอร์รายงานที่ Playwright เขียนไว้ตามที่ระบุในโจทย์");
       }
       log("✓ ตั้งค่า Artifact Upload ถูกต้อง");
     },
@@ -388,13 +388,13 @@ jobs:
       const hasDownloadName = /^\s*name:\s*playwright-report\s*$/m.test(deployBlock);
       const hasDownloadPath = /^\s*path:\s*playwright-report\s*$/m.test(deployBlock);
       if (!hasNeedsBuild) {
-        throw new Error("job deploy ต้องมี needs: build เพื่อรอให้ build เสร็จก่อน ไม่งั้นทั้งสอง job จะรันพร้อมกัน");
+        throw new Error("job deploy ยังไม่ถูกตั้งให้รอ job build ให้เสร็จก่อน ไม่งั้นทั้งสอง job จะรันพร้อมกัน");
       }
       if (!hasDownloadAction) {
-        throw new Error("job deploy ต้องมี step ที่ใช้ actions/download-artifact@v4 เพื่อดึง artifact ที่ build อัปโหลดไว้กลับมาใช้");
+        throw new Error("job deploy ยังไม่มี step สำหรับดึง artifact ที่ build อัปโหลดไว้กลับมาใช้");
       }
       if (!hasDownloadName || !hasDownloadPath) {
-        throw new Error("step download-artifact ต้องระบุ name: playwright-report และ path: playwright-report ให้ตรงกับตอนที่ build อัปโหลดไว้ ไม่งั้นดาวน์โหลดไม่เจอ");
+        throw new Error("step download-artifact ต้องระบุชื่อและ path ของ artifact ให้ตรงกับตอนที่ build อัปโหลดไว้เป๊ะ ไม่งั้นดาวน์โหลดไม่เจอ");
       }
       log("✓ ต่อ Job ด้วย needs และ Artifact hand-off ถูกต้อง");
     },
@@ -480,7 +480,7 @@ jobs:
       const deployBlock = stripped.slice(deployIdx);
       const hasNeedsE2e = /^\s*needs:\s*e2e_test\s*$/m.test(deployBlock);
       if (!hasNeedsE2e) {
-        throw new Error("job deploy ยังไม่รอ job e2e_test ให้เสร็จก่อน — เพิ่ม needs: e2e_test ใน job deploy (การสลับลำดับ job ในไฟล์ไม่ได้ทำให้รันตามลำดับจริง ต้องใช้ needs: เท่านั้น)");
+        throw new Error("job deploy ยังไม่ถูกตั้งให้รอ job e2e_test ให้เสร็จก่อน (การสลับลำดับ job ในไฟล์ไม่ได้ทำให้รันตามลำดับจริง ต้องใช้ key ที่ประกาศ dependency ระหว่าง job เท่านั้น)");
       }
       log("✓ แก้ไข Pipeline ให้รันตามลำดับที่ถูกต้องแล้ว");
     },
@@ -539,7 +539,7 @@ jobs:
         throw new Error("ไม่พบ env: ที่ระดับบนสุดของไฟล์ (นอก jobs:)");
       }
       if (!hasVersionVar) {
-        throw new Error("ไม่พบตัวแปร PLAYWRIGHT_VERSION: \"1.48.0\" ใต้ env:");
+        throw new Error("ไม่พบตัวแปร PLAYWRIGHT_VERSION ที่มีค่าตรงกับที่โจทย์กำหนดใต้ env:");
       }
       log("✓ ตั้งค่า env: ถูกต้อง");
     },
@@ -648,7 +648,7 @@ on:
       }
       const hasFailFastFalse = /^\s*fail-fast:\s*false\s*$/m.test(stripped);
       if (!hasFailFastFalse) {
-        throw new Error("ไม่พบ fail-fast: false ใน strategy: (ค่า default ของ fail-fast คือ true — ยกเลิก job อื่นในทันทีเมื่อมี job หนึ่ง fail)");
+        throw new Error("ยังไม่พบการตั้งค่า fail-fast ให้ปิดพฤติกรรม default ใน strategy: (ค่า default ของ fail-fast คือ true — ยกเลิก job อื่นในทันทีเมื่อมี job หนึ่ง fail)");
       }
       log("✓ ตั้งค่า fail-fast: false ถูกต้อง");
     },
@@ -722,7 +722,7 @@ jobs:
       }
       const hasEnvironment = /^\s*environment:\s*production\s*$/m.test(deployBlock);
       if (!hasEnvironment) {
-        throw new Error("ไม่พบ environment: production ใน job deploy — key นี้ผูก job เข้ากับ protection rule ที่ตั้งไว้ใน repo Settings");
+        throw new Error("ยังไม่พบการอ้างอิงชื่อ environment ที่ตั้งไว้ใน job deploy — key นี้ผูก job เข้ากับ protection rule ที่ตั้งไว้ใน repo Settings");
       }
       log("✓ ผูก Job deploy เข้ากับ Environment ถูกต้อง");
     },

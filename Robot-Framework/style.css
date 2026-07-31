@@ -3,17 +3,17 @@
   --bg-secondary: #121824;
   --bg-tertiary: #1a2332;
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-glow: rgba(245, 158, 11, 0.3);
+  --border-color-glow: rgba(59, 130, 246, 0.3);
   
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
   --text-muted: #4e5666;
   
-  --accent-blue: #f97316;      /* Orange theme */
-  --accent-emerald: #f59e0b;   /* Amber theme */
-  --accent-amber: #eab308;
+  --accent-blue: #3b82f6;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
   --accent-rose: #f43f5e;
-  --accent-terminal: #f59e0b;
+  --accent-terminal: #58a6ff;
   
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
@@ -128,8 +128,8 @@ body {
 }
 
 .lesson-item.active {
-  background-color: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.3);
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
   color: var(--text-primary);
 }
 
@@ -251,8 +251,8 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #ea580c;
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
+  background-color: #2563eb;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
 }
 
 .btn-secondary {
@@ -390,7 +390,7 @@ body {
 
 .content-text blockquote {
   border-left: 4px solid var(--accent-emerald);
-  background-color: rgba(245, 158, 11, 0.05);
+  background-color: rgba(16, 185, 129, 0.05);
   padding: 16px 20px;
   margin-bottom: 24px;
   border-radius: 0 8px 8px 0;
@@ -398,7 +398,7 @@ body {
 
 .content-text blockquote p {
   margin-bottom: 0;
-  color: #fed7aa;
+  color: #a7f3d0;
   font-weight: 500;
 }
 
@@ -422,8 +422,8 @@ body {
 .keyword { color: #ff7b72; font-weight: bold; }
 .string { color: #a5d6ff; }
 .comment { color: #8b949e; font-style: italic; }
-.function { color: #ffa657; }
-.variable { color: #79c0ff; }
+.function { color: #d2a8ff; }
+.variable { color: #ffa657; }
 .number { color: #79c0ff; }
 .boolean { color: #79c0ff; }
 .type { color: #ff7b72; }
@@ -481,8 +481,8 @@ body {
 }
 
 .btn-run:hover {
-  background-color: #fbbf24;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+  background-color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
 .editor-container {
@@ -521,10 +521,43 @@ body {
   font-size: 0.825rem;
   line-height: 1.6;
   padding: 16px;
-  tab-size: 4; /* Standard RF spacing is 4 spaces */
+  tab-size: 2;
   overflow: auto;
   white-space: pre;
+  position: relative;
+  z-index: 1;
 }
+
+.editor-textarea.has-syntax-highlight {
+  color: transparent;
+  caret-color: var(--text-primary);
+}
+
+/* Non-interactive syntax-highlight layer, sits directly behind .editor-textarea
+   (see shared/editor-highlight.js) - must match its font/padding/line-height exactly
+   so highlighted tokens line up with the (now-transparent) textarea text on top. */
+.editor-highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 48px; /* .editor-gutter width */
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.825rem;
+  line-height: 1.6;
+  white-space: pre;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--text-primary);
+}
+
+.tok-comment { color: var(--text-muted); font-style: italic; }
+.tok-string { color: #f59e0b; }
+.tok-number { color: #c084fc; }
+.tok-keyword { color: #60a5fa; font-weight: 600; }
 
 /* Terminal Area */
 .terminal-panel {

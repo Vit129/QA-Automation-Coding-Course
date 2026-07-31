@@ -37,10 +37,10 @@ const LESSONS = [
       const hasPost = /request\.post\(['"`].*\/api\/ai\/recommend['"`]/.test(stripped);
       const has401 = /expect\(response\.status\(\)\)\.toBe\(401\)/.test(stripped);
       if (!hasPost) {
-        throw new Error("ไม่พบการยิง POST ไปที่ /api/ai/recommend\nตัวอย่าง: const response = await request.post('/api/ai/recommend', { data: {} });");
+        throw new Error("ไม่พบการยิง POST ไปที่ /api/ai/recommend");
       }
       if (!has401) {
-        throw new Error("ไม่พบการตรวจสอบ status 401\nตัวอย่าง: expect(response.status()).toBe(401);");
+        throw new Error("ไม่พบการตรวจสอบ status 401");
       }
       log("✓ ยืนยันได้ว่า endpoint ปฏิเสธ request ที่ไม่มี API Key ถูกต้อง");
     },
@@ -88,13 +88,13 @@ expect(response.status()).toBe(401);`,
       const hasSafeCheck = /not\.toMatch\(.*(?:at Object|stack|axios|ENOENT)/.test(stripped) ||
                             /toBe\(['"]Failed to calculate levels['"]\)/.test(stripped);
       if (!hasInjectionString) {
-        throw new Error("ไม่พบการทดสอบด้วย input แบบ injection-like\nตัวอย่าง: ticker=AAPL'; DROP TABLE users;--");
+        throw new Error("ไม่พบการทดสอบด้วย input แบบ injection-like");
       }
       if (!hasErrorRead) {
         throw new Error("ไม่พบการอ่านค่า body.error จาก response");
       }
       if (!hasSafeCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า error message ปลอดภัย (ไม่หลุด stack trace) หรือเป็นข้อความควบคุมที่คาดไว้\nตัวอย่าง: expect(body.error).toBe('Failed to calculate levels'); หรือ expect(body.error).not.toMatch(/at Object|stack/);");
+        throw new Error("ไม่พบการตรวจสอบว่า error message ปลอดภัย (ไม่หลุด stack trace) หรือเป็นข้อความควบคุมที่คาดไว้");
       }
       log("✓ ยืนยันได้ว่า error message ยังปลอดภัยแม้ยิง input แปลกปลอมเข้าไป");
     },
@@ -141,10 +141,10 @@ expect(body2.error).not.toMatch(/at Object|stack|axios/);`,
         throw new Error("ไม่พบการกรอกข้อความที่มี <script>window.__xss = true</script>");
       }
       if (!hasEvaluateCheck) {
-        throw new Error("ไม่พบการเช็คค่า window.__xss ผ่าน page.evaluate()\nตัวอย่าง: const xssRan = await page.evaluate(() => window.__xss);");
+        throw new Error("ไม่พบการเช็คค่า window.__xss ผ่าน page.evaluate()");
       }
       if (!hasFalsyCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่าค่าที่ได้เป็น falsy (สคริปต์ไม่ถูกรัน)\nตัวอย่าง: expect(xssRan).toBeFalsy();");
+        throw new Error("ไม่พบการตรวจสอบว่าค่าที่ได้เป็น falsy (สคริปต์ไม่ถูกรัน)");
       }
       log("✓ ยืนยันได้ว่าข้อความไม่ถูกรันเป็นโค้ดจริง (ป้องกัน XSS)");
     },
@@ -188,13 +188,13 @@ expect(scriptTagCount).toBe(0);`,
       const has401 = /expect\(response\.status\(\)\)\.toBe\(401\)/.test(stripped);
       const hasMessageCheck = /Unauthorized/.test(stripped) && /body\.error|toContain/.test(stripped);
       if (!hasWrongKey) {
-        throw new Error("ไม่พบการยิง request พร้อม header X-API-Key เป็นค่าผิด\nตัวอย่าง: headers: { 'X-API-Key': 'wrong-key-12345' }");
+        throw new Error("ไม่พบการยิง request พร้อม header X-API-Key เป็นค่าผิด");
       }
       if (!has401) {
         throw new Error("ไม่พบการตรวจสอบ status 401");
       }
       if (!hasMessageCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า error message มีคำว่า 'Unauthorized'\nตัวอย่าง: expect(body.error).toContain('Unauthorized');");
+        throw new Error("ไม่พบการตรวจสอบว่า error message มีคำว่า 'Unauthorized'");
       }
       log("✓ ยืนยันได้ว่า API Key ปลอมถูกปฏิเสธพร้อม error message ที่ถูกต้อง");
     },
@@ -246,7 +246,7 @@ expect(response2.status()).not.toBe(401);`,
         throw new Error("ไม่พบการอ่านค่า body.error จาก response");
       }
       if (!hasLeakPatternCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า error message ไม่มี pattern ที่บ่งบอกรายละเอียดภายใน (stack trace/system error)\nตัวอย่าง: expect(body.error).not.toMatch(/at Object|ENOENT|ECONNREFUSED/);");
+        throw new Error("ไม่พบการตรวจสอบว่า error message ไม่มี pattern ที่บ่งบอกรายละเอียดภายใน (stack trace/system error)");
       }
       log("✓ ยืนยันได้ว่า error message ไม่หลุดรายละเอียดภายในของระบบ");
     },
@@ -291,10 +291,10 @@ for (const field of forbiddenFields) {
       const hasHeadersRead = /response\.headers\(\)/.test(stripped);
       const hasRealAssertion = /expect\(\s*headers\[['"]x-content-type-options['"]\]\s*\)\.toBe\(['"]nosniff['"]\)/.test(stripped);
       if (!hasHeadersRead) {
-        throw new Error("ไม่พบการอ่าน response.headers()\nตัวอย่าง: const headers = response.headers();");
+        throw new Error("ไม่พบการอ่าน response.headers()");
       }
       if (!hasRealAssertion) {
-        throw new Error("ไม่พบการ assert ค่าจริงของ header 'x-content-type-options' — แค่ log ออกมาดูไม่นับ ต้องมี expect() ที่ยืนยันค่าที่คาดหวังจริง\nตัวอย่าง: expect(headers['x-content-type-options']).toBe('nosniff');");
+        throw new Error("ไม่พบการ assert ค่าจริงของ header 'x-content-type-options' — แค่ log ออกมาดูไม่นับ ต้องมี expect() ที่ยืนยันค่าที่คาดหวังจริง");
       }
       log("✓ ยืนยันได้ด้วย assertion จริงว่า header ถูกตรวจสอบตามที่คาดหวัง (ไม่ใช่แค่รายงานสถานะเฉยๆ)");
     },
@@ -347,16 +347,16 @@ expect(headers['x-frame-options']).toBe('DENY');`,
       const hasNegativeAssertion = /expect\(\s*body\.error\s*\)\.not\.(toMatch|toContain)\(/.test(stripped);
       const hasLineColPattern = /:\\d\+.*:\\d\+/.test(stripped);
       if (!hasRequest) {
-        throw new Error("ไม่พบการยิง request ไปที่ /api/reports/generate\nตัวอย่าง: const response = await request.post('/api/reports/generate', { data: { reportId: 'invalid' } });");
+        throw new Error("ไม่พบการยิง request ไปที่ /api/reports/generate");
       }
       if (!hasBodyRead) {
         throw new Error("ไม่พบการอ่านค่า body.error จาก response");
       }
       if (!hasNegativeAssertion) {
-        throw new Error("ไม่พบ negative assertion บน body.error\nตัวอย่าง: expect(body.error).not.toMatch(...);");
+        throw new Error("ไม่พบ negative assertion บน body.error");
       }
       if (!hasLineColPattern) {
-        throw new Error("assertion ที่มีต้องจับรูปแบบ 'path:เลขบรรทัด:เลขคอลัมน์' ของ stack trace จริงๆ ไม่ใช่แค่คำเฉพาะคำเดียว\nตัวอย่าง: expect(body.error).not.toMatch(/at .*\\(.*:\\d+:\\d+\\)/);");
+        throw new Error("assertion ที่มีต้องจับรูปแบบ 'path:เลขบรรทัด:เลขคอลัมน์' ของ stack trace จริงๆ ไม่ใช่แค่คำเฉพาะคำเดียว");
       }
       log("✓ ยืนยันได้ว่า error message ไม่หลุด stack trace ที่มี path และเลขบรรทัดจริง");
     },
@@ -408,7 +408,7 @@ expect(body).not.toHaveProperty('stack');`,
         throw new Error(`ยังไม่ได้ทดสอบ endpoint ที่ต้องมี API Key ครบทั้งหมด — ขาด: ${missingEndpoints.join(', ')}`);
       }
       if (!has401Assertion) {
-        throw new Error("ไม่พบการตรวจสอบ status 401 จริง\nตัวอย่าง: expect(response.status()).toBe(401);");
+        throw new Error("ไม่พบการตรวจสอบ status 401 จริง");
       }
       log("✓ ยืนยันได้ว่า endpoint ที่ควรถูกป้องกันทั้งหมดถูกทดสอบและปฏิเสธ request ที่ไม่มี API Key จริง");
     },
@@ -468,16 +468,16 @@ expect(panelResponse.status()).not.toBe(401);`,
       const hasHeadersRead = /response\.headers\(\)/.test(stripped);
       const hasNegativeAssertion = /expect\(\s*headers\[['"]access-control-allow-origin['"]\]\s*\)\.not\.toBe\(/.test(stripped);
       if (!hasRequest) {
-        throw new Error("ไม่พบการยิง GET ไปที่ /api/ai/health\nตัวอย่าง: const response = await request.get('/api/ai/health', { headers: {...} });");
+        throw new Error("ไม่พบการยิง GET ไปที่ /api/ai/health");
       }
       if (!hasOriginHeader) {
-        throw new Error("ไม่พบการใส่ header Origin เป็นโดเมนแปลกปลอมในการยิง request\nตัวอย่าง: headers: { Origin: 'https://attacker-evil.example' }");
+        throw new Error("ไม่พบการใส่ header Origin เป็นโดเมนแปลกปลอมในการยิง request");
       }
       if (!hasHeadersRead) {
-        throw new Error("ไม่พบการอ่าน response.headers()\nตัวอย่าง: const headers = response.headers();");
+        throw new Error("ไม่พบการอ่าน response.headers()");
       }
       if (!hasNegativeAssertion) {
-        throw new Error("ไม่พบการตรวจสอบว่า header access-control-allow-origin ไม่เท่ากับ origin แปลกปลอมที่ยิงไป\nตัวอย่าง: expect(headers['access-control-allow-origin']).not.toBe(evilOrigin);");
+        throw new Error("ไม่พบการตรวจสอบว่า header access-control-allow-origin ไม่เท่ากับ origin แปลกปลอมที่ยิงไป");
       }
       log("✓ ยืนยันได้ว่าเขียน assertion ตรวจสอบพฤติกรรม CORS ต่อ Origin แปลกปลอมถูกต้อง");
     },
@@ -531,16 +531,16 @@ expect(preflight.headers()['access-control-allow-origin']).not.toBe('https://att
       const has429 = /expect\(\s*\w+\.status\(\)\s*\)\.toBe\(429\)/.test(stripped);
       const hasMessageCheck = /Too many requests/.test(stripped) && /body\.error/.test(stripped);
       if (!hasLoop) {
-        throw new Error("ไม่พบการยิง request ซ้ำหลายครั้ง (ต้องใช้ loop ยิงจนเกินโควต้า)\nตัวอย่าง: for (let i = 0; i <= 100; i++) { ... }");
+        throw new Error("ไม่พบการยิง request ซ้ำหลายครั้ง (ต้องใช้ loop ยิงจนเกินโควต้า)");
       }
       if (!hasRequest) {
         throw new Error("ไม่พบการยิง GET ไปที่ /api/ai/health ภายใน loop");
       }
       if (!has429) {
-        throw new Error("ไม่พบการตรวจสอบ status 429 จาก response ตัวสุดท้าย\nตัวอย่าง: expect(lastResponse.status()).toBe(429);");
+        throw new Error("ไม่พบการตรวจสอบ status 429 จาก response ตัวสุดท้าย");
       }
       if (!hasMessageCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า body.error ตรงกับข้อความที่ระบบกำหนดไว้จริง\nตัวอย่าง: expect(body.error).toBe('Too many requests, please try again later');");
+        throw new Error("ไม่พบการตรวจสอบว่า body.error ตรงกับข้อความที่ระบบกำหนดไว้จริง");
       }
       log("✓ ยืนยันได้ว่า rate limiter บล็อก request ที่เกินโควต้าจริงตามที่ระบบออกแบบไว้");
     },
@@ -606,16 +606,16 @@ expect(okResponse.status()).not.toBe(429);`,
       const hasHttpOnlyCheck = /expect\(\s*\w+\.httpOnly\s*\)\.toBe\(true\)/.test(stripped);
       const hasSecureCheck = /expect\(\s*\w+\.secure\s*\)\.toBe\(true\)/.test(stripped);
       if (!hasCookiesCall) {
-        throw new Error("ไม่พบการอ่าน cookies ด้วย page.context().cookies()\nตัวอย่าง: const cookies = await page.context().cookies();");
+        throw new Error("ไม่พบการอ่าน cookies ด้วย page.context().cookies()");
       }
       if (!hasFind) {
-        throw new Error("ไม่พบการหา cookie ชื่อ 'sessionId' ด้วย .find()\nตัวอย่าง: const sessionCookie = cookies.find((c) => c.name === 'sessionId');");
+        throw new Error("ไม่พบการหา cookie ชื่อ 'sessionId' ด้วย .find()");
       }
       if (!hasHttpOnlyCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า httpOnly เป็น true\nตัวอย่าง: expect(sessionCookie.httpOnly).toBe(true);");
+        throw new Error("ไม่พบการตรวจสอบว่า httpOnly เป็น true");
       }
       if (!hasSecureCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า secure เป็น true\nตัวอย่าง: expect(sessionCookie.secure).toBe(true);");
+        throw new Error("ไม่พบการตรวจสอบว่า secure เป็น true");
       }
       log("✓ ยืนยันได้ว่า session cookie ตั้งค่า HttpOnly และ Secure flag ถูกต้อง");
     },
@@ -665,13 +665,13 @@ expect(['Strict', 'Lax']).toContain(sessionCookie.sameSite);`,
       const hasOwnKey = /apiKeyA/.test(stripped) || /X-API-Key/.test(stripped);
       const hasDenyStatus = /expect\(response\.status\(\)\)\.toBe\((403|404)\)/.test(stripped);
       if (!hasRequest) {
-        throw new Error("ไม่พบการยิง GET ไปที่ /api/portfolio/b-222 (พอร์ตของผู้ใช้อื่น)\nตัวอย่าง: const response = await request.get('/api/portfolio/b-222', { headers: {...} });");
+        throw new Error("ไม่พบการยิง GET ไปที่ /api/portfolio/b-222 (พอร์ตของผู้ใช้อื่น)");
       }
       if (!hasOwnKey) {
         throw new Error("ไม่พบการใส่ API Key ของผู้ใช้ A (ต้องเป็น key ที่ถูกต้องจริง ไม่ใช่ key ปลอม — จุดสำคัญของ IDOR คือ auth ผ่านแล้ว แต่ authorization ต้องถูกเช็คแยกต่างหาก)");
       }
       if (!hasDenyStatus) {
-        throw new Error("ไม่พบการตรวจสอบว่า status เป็น 403 หรือ 404 (ห้ามเป็น 200)\nตัวอย่าง: expect(response.status()).toBe(403);");
+        throw new Error("ไม่พบการตรวจสอบว่า status เป็น 403 หรือ 404 (ห้ามเป็น 200)");
       }
       log("✓ ยืนยันได้ว่าระบบปฏิเสธการเข้าถึงพอร์ตของผู้ใช้อื่นแม้ API Key จะถูกต้องจริง");
     },
@@ -726,16 +726,16 @@ expect(ownResponse.status()).toBe(200);`,
       const hasJsonParse = /JSON\.parse/.test(stripped);
       const hasCriticalAssertion = /expect\(\s*\w+(\.metadata)?\.vulnerabilities\.critical\s*\)\.toBe\(0\)/.test(stripped);
       if (!hasAuditCommand) {
-        throw new Error("ไม่พบคำสั่ง npm audit --json\nตัวอย่าง: execSync('npm audit --omit=dev --json', { encoding: 'utf-8' });");
+        throw new Error("ไม่พบคำสั่ง npm audit --json");
       }
       if (!hasTryCatch) {
-        throw new Error("ไม่พบการดักจับ error ด้วย try/catch พร้อมอ่านค่า err.stdout — npm audit exit code ไม่เป็น 0 เมื่อเจอช่องโหว่ ทำให้ execSync throw ก่อนได้ output เสมอถ้าไม่ดักไว้\nตัวอย่าง: catch (err) { output = err.stdout; }");
+        throw new Error("ไม่พบการดักจับ error ด้วย try/catch พร้อมอ่านค่า err.stdout — npm audit exit code ไม่เป็น 0 เมื่อเจอช่องโหว่ ทำให้ execSync throw ก่อนได้ output เสมอถ้าไม่ดักไว้");
       }
       if (!hasJsonParse) {
-        throw new Error("ไม่พบการ parse JSON ด้วย JSON.parse()\nตัวอย่าง: const report = JSON.parse(output);");
+        throw new Error("ไม่พบการ parse JSON ด้วย JSON.parse()");
       }
       if (!hasCriticalAssertion) {
-        throw new Error("ไม่พบการตรวจสอบว่า vulnerabilities.critical เท่ากับ 0\nตัวอย่าง: expect(report.metadata.vulnerabilities.critical).toBe(0);");
+        throw new Error("ไม่พบการตรวจสอบว่า vulnerabilities.critical เท่ากับ 0");
       }
       log("✓ ยืนยันได้ว่าเขียน npm audit gate ที่ parse ผลจริงและ assert ค่าที่คาดหวังถูกต้อง");
     },

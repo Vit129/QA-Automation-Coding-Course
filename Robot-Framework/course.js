@@ -64,7 +64,7 @@ Test Teardown     Quit Kouen`,
       if (checkResource) {
         log("✓ ขั้นตอนที่ 1: ดึง Resource จากพิกัดที่กำหนดสำเร็จ");
       } else {
-        throw new Error("ไม่พบการดึง Resource หรือพิมพ์แยกเว้นวรรคไม่ถูกต้อง\nหมายเหตุ: Robot Framework ใช้ช่องว่างอย่างน้อย 2 เคาะ (Double Spaces) หรือ 1 Tab ในการแยกคีย์เวิร์ด\nตัวอย่าง: Resource         ../resources/kouen.resource");
+        throw new Error("ไม่พบการดึง Resource หรือพิมพ์แยกเว้นวรรคไม่ถูกต้อง\nหมายเหตุ: Robot Framework ใช้ช่องว่างอย่างน้อย 2 เคาะ (Double Spaces) หรือ 1 Tab ในการแยกคีย์เวิร์ดกับพิกัดไฟล์ที่ระบุไว้ใน task");
       }
 
       const checkSetupTeardown = (rfLineMatch(code, /Test Setup\s{2,}Launch Kouen/, "Settings") ||
@@ -123,7 +123,7 @@ Test Setup       Open Browser  http://example.com  chrome`,
       if (checkEnv) {
         log("✓ ขั้นตอนที่ 1: ประกาศตัวแปรสเกลาร์ ${KOUEN_ENV} สำเร็จ");
       } else {
-        throw new Error("การตั้งค่าตัวแปร ${KOUEN_ENV} คลาดเคลื่อน หรือเว้นวรรคคำไม่ถึง 2 เคาะ\nตัวอย่าง: \${KOUEN_ENV}    preview");
+        throw new Error("การตั้งค่าตัวแปรสเกลาร์ ${KOUEN_ENV} คลาดเคลื่อน หรือเว้นวรรคระหว่างชื่อตัวแปรกับค่าไม่ถึง 2 เคาะ");
       }
 
       const checkShortcuts = rfLineMatch(code, /@{PANE_SHORTCUTS}\s{2,}cmd\+d\s{2,}cmd\+w/, "Variables") ||
@@ -133,7 +133,7 @@ Test Setup       Open Browser  http://example.com  chrome`,
       if (checkShortcuts) {
         log("✓ ขั้นตอนที่ 2: ประกาศตัวแปรรายการลิสต์ @{PANE_SHORTCUTS} สำเร็จ");
       } else {
-        throw new Error("การกำหนดตัวแปร @{PANE_SHORTCUTS} ไม่ถูกต้อง ต้องระบุค่า cmd+d และ cmd+w แยกกันตัวละ 2 ช่องว่าง\nตัวอย่าง: @{PANE_SHORTCUTS}    cmd+d    cmd+w");
+        throw new Error("การกำหนดตัวแปรลิสต์ @{PANE_SHORTCUTS} ไม่ถูกต้อง ต้องระบุค่าทั้งสองตามที่ task กำหนด โดยแยกกันตัวละ 2 ช่องว่างขึ้นไป");
       }
     },
     hint: "ตัวแปรเดี่ยว (Scalar, \${...}) เก็บได้ค่าเดียว ส่วนตัวแปรลิสต์ (@{...}) เก็บได้หลายค่าโดยเรียงต่อกันแบบเว้นวรรคอย่างน้อย 2 เคาะต่อค่า — กำหนดค่าตามที่ task ระบุให้ครบทั้งสองตัวแปร",
@@ -201,7 +201,7 @@ Open File Via Palette
       if (checkArgs) {
         log("✓ ขั้นตอนที่ 1: กำหนดการรับค่าอาร์กิวเมนต์ [Arguments] ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง [Arguments] เพื่อระบุตัวแปรสืบทอด \${filename}\nตัวอย่าง: [Arguments]    \${filename}");
+        throw new Error("ไม่พบการประกาศ [Arguments] เพื่อระบุตัวแปรสืบทอด \${filename} ให้คีย์เวิร์ดนี้รับพารามิเตอร์ได้");
       }
 
       const checkType = rfLineMatch(code, /Type Text\s{2,}\${filename}/, "Keywords") ||
@@ -210,7 +210,7 @@ Open File Via Palette
       if (checkType) {
         log("✓ ขั้นตอนที่ 2: ผูกการพิมพ์คีย์บอร์ดเข้ากับ Command Palette สำเร็จ");
       } else {
-        throw new Error("การเขียนคีย์เวิร์ดป้อนข้อมูลไม่ถูกต้อง\nตัวอย่าง: Type Text    \${filename}");
+        throw new Error("ยังไม่พบการเรียกคีย์เวิร์ดป้อนข้อความจริงของ KouenUILibrary เพื่อพิมพ์ \${filename} ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "คีย์เวิร์ดที่ต้องรับค่าที่เปลี่ยนไปในแต่ละครั้งที่เรียกใช้ ต้องประกาศตัวรับพารามิเตอร์ไว้เป็นบรรทัดแรกในตัวคีย์เวิร์ดก่อนเสมอ (ใช้คีย์คำสั่งที่อยู่ในวงเล็บเหลี่ยม) จากนั้นค่อยส่งตัวแปรที่รับมานั้นต่อให้คีย์เวิร์ดพิมพ์ข้อความจริงของ KouenUILibrary ที่ระบุไว้ใน task",
@@ -256,7 +256,7 @@ Reset Config File
       if (checkRemove) {
         log("✓ ขั้นตอนที่ 1: ตรวจพบสคริปต์สืบจับและสั่งลบไฟล์เก่าทิ้งสำเร็จ");
       } else {
-        throw new Error("ไม่พบคีย์เวิร์ดลบไฟล์คอนฟิกเก่าทิ้ง หรือระบุตัวแปรไฟล์ปลายทางคลาดเคลื่อน\nตัวอย่าง: Remove File    \${CONFIG_FILE}");
+        throw new Error("ไม่พบการเรียกคีย์เวิร์ดลบไฟล์เก่าทิ้งของไลบรารี OperatingSystem หรือระบุตัวแปรไฟล์ปลายทาง \${CONFIG_FILE} คลาดเคลื่อน");
       }
 
       // Require the exact log content too — a "Create File" line with
@@ -267,7 +267,7 @@ Reset Config File
       if (checkCreate) {
         log("✓ ขั้นตอนที่ 2: ตรวจพบสคริปต์เขียนทับไฟล์ระบบคอมพิวเตอร์สำเร็จ");
       } else {
-        throw new Error("คำสั่งสร้างและเขียนข้อมูลลงไฟล์ไม่ถูกต้อง\nตัวอย่าง: Create File    \${CONFIG_FILE}    kouen.toast(\"v1\")");
+        throw new Error("คำสั่งสร้างไฟล์ใหม่พร้อมเขียนเนื้อหาลงไปไม่ถูกต้อง ตรวจสอบทั้งพิกัดไฟล์ปลายทางและเนื้อหาที่ต้องเขียนตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "OperatingSystem library มีคีย์เวิร์ดคู่สำหรับลบไฟล์เก่าทิ้งแบบปลอดภัย (ไม่ฟ้องเออเรอร์แม้ไม่มีไฟล์อยู่) และอีกตัวสำหรับสร้างไฟล์ใหม่พร้อมเขียนเนื้อหาลงไปในคราวเดียว — ทั้งสองคำสั่งรับพิกัดไฟล์ปลายทางเป็นอาร์กิวเมนต์แรก",
@@ -311,7 +311,7 @@ TC-01: เปิดแท็บใหม่ผ่านปุ่มบนหน�
       if (checkExist) {
         log("✓ ขั้นตอนที่ 1: ตรวจพบสคริปต์ยืนยันอิลิเมนต์มีอยู่จริง (Element Should Exist)");
       } else {
-        throw new Error("การระบุคำสั่งตรวจสอบอิลิเมนต์ไม่สมบูรณ์\nตัวอย่าง: Element Should Exist    new-tab-button");
+        throw new Error("ยังไม่พบการเรียกคีย์เวิร์ดยืนยันการมีอยู่จริงของอิลิเมนต์เป้าหมายตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkClick = rfLineMatch(code, /Click UI Element\s{2,}new-tab-button/, "Test Cases") ||
@@ -320,7 +320,7 @@ TC-01: เปิดแท็บใหม่ผ่านปุ่มบนหน�
       if (checkClick) {
         log("✓ ขั้นตอนที่ 2: สั่งคลิกที่อิลิเมนต์สำเร็จ");
       } else {
-        throw new Error("ไม่พบคีย์เวิร์ดคลิกเป้าหมายปุ่มเปิดแท็บใหม่\nตัวอย่าง: Click UI Element    new-tab-button");
+        throw new Error("ไม่พบการเรียกคีย์เวิร์ดคลิกอิลิเมนต์เป้าหมายปุ่มเปิดแท็บใหม่ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "ก่อนโต้ตอบกับอิลิเมนต์ใดๆ ผ่าน Accessibility API ควรมีคีย์เวิร์ดยืนยันการมีอยู่จริงของมันก่อนเสมอ (กันคลิกอิลิเมนต์ที่ยังเรนเดอร์ไม่เสร็จ) จากนั้นจึงค่อยเรียกคีย์เวิร์ดคลิกจริงตามด้วยชื่ออิลิเมนต์เป้าหมายเดียวกัน",
@@ -363,7 +363,7 @@ TC-02: ตรวจสอบ Kanban Board ของ Kouen สำเร็จ
       if (checkContain) {
         log("✓ ขั้นตอนที่ 1: ใช้คีย์เวิร์ดตรวจสอบคอลัมน์บนกระดาน Backlog ถูกต้อง");
       } else {
-        throw new Error("คำสั่งตรวจเช็คคอลัมน์บนกระดานคลาดเคลื่อน\nตัวอย่าง: Kouen Board Should Have Column    Backlog");
+        throw new Error("ไม่พบการเรียกคีย์เวิร์ดที่เช็คว่าคอลัมน์ 'Backlog' มีอยู่จริงบนกระดาน Kanban ตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkTrue = rfLineMatch(code, /Should Be True\s{2,}\${count}\s*>\s*0/, "Test Cases") ||
@@ -372,7 +372,7 @@ TC-02: ตรวจสอบ Kanban Board ของ Kouen สำเร็จ
       if (checkTrue) {
         log("✓ ขั้นตอนที่ 2: ใช้ Should Be True ตรวจสอบประเมินค่าถูกต้อง");
       } else {
-        throw new Error("สคริปต์เปรียบเทียบตรรกะตัวเลขด้วยคำสั่ง Should Be True ไม่ถูกต้อง\nตัวอย่าง: Should Be True    \${count} > 0");
+        throw new Error("ยังไม่พบการประเมินเงื่อนไขตรรกะของตัวแปร \${count} ด้วยคีย์เวิร์ดตระกูล Should Be... ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "Assertion ของ Robot ไม่จำเป็นต้องผูกกับ UI เสมอไป มีคีย์เวิร์ดเฉพาะที่เขียนขึ้นเช็คผลลัพธ์จากฝั่ง CLI ของกระดาน Kanban อยู่แล้ว ให้เรียกใช้พร้อมชื่อคอลัมน์ที่ต้องการยืนยัน ส่วนการเช็คเงื่อนไขตัวเลข/ตรรกะทั่วไปให้ใช้คีย์เวิร์ดตระกูล Should Be... ที่ประเมินนิพจน์ Python ได้ตรงๆ",
@@ -414,7 +414,7 @@ Launch Application Process
       if (checkLaunch) {
         log("✓ ขั้นตอนที่ 1: เรียกใช้ Launch Process และส่งค่า handle='kouen_process' ถูกต้อง");
       } else {
-        throw new Error("การตั้งคำสั่งรันโปรเซสแอปพลิเคชันไม่ถูกต้อง\nตัวอย่าง: Launch Process    kouen-cli    handle=kouen_process");
+        throw new Error("การตั้งคำสั่งรันโปรเซสแอปพลิเคชันไม่ถูกต้อง ตรวจสอบทั้งอาร์กิวเมนต์ของโปรเซสและการผูก handle ตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkWait = rfLineMatch(code, /Wait For Process\s{2,}kouen_process\s{2,}timeout=10s/, "Test Cases") ||
@@ -423,7 +423,7 @@ Launch Application Process
       if (checkWait) {
         log("✓ ขั้นตอนที่ 2: สั่งหน่วงรอด้วย Wait For Process สำเร็จ");
       } else {
-        throw new Error("ไม่พบคำสั่ง Wait For Process หรือส่ง handle ไม่ถูกต้อง\nตัวอย่าง: Wait For Process    kouen_process    timeout=10s");
+        throw new Error("ไม่พบการเรียกคีย์เวิร์ดรอโปรเซสจบการทำงาน หรือระบุ handle/timeout คลาดเคลื่อนตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "การรันโปรเซสเบื้องหลังแบบไม่บล็อก ต้องผูก handle ตัวแปรอ้างอิงไว้ตอนสั่งรัน (ผ่าน keyword argument ชื่อ handle) เพื่อให้ขั้นตอนถัดไปเรียกคีย์เวิร์ดที่รอให้โปรเซสนั้นจบการทำงานได้ พร้อมระบุ timeout ป้องกันค้างตลอดไป",
@@ -466,7 +466,7 @@ Verify App Windows Count
       if (checkGet) {
         log("✓ ขั้นตอนที่ 1: รับค่าจาก Custom Python Keyword เซฟในตัวแปรสำเร็จ");
       } else {
-        throw new Error("รูปแบบรับข้อมูลจากคีย์เวิร์ด Get Window Count ไม่ถูกต้อง\nตัวอย่าง: \${count}=    Get Window Count");
+        throw new Error("รูปแบบการรับค่าคืนกลับจากคีย์เวิร์ดมาเก็บในตัวแปร \${count} ไม่ถูกต้อง ตรวจสอบเครื่องหมาย = ต่อท้ายชื่อตัวแปรตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkTrue = rfLineMatch(code, /Should Be True\s{2,}\${count}\s*>\s*0/, "Test Cases") ||
@@ -475,7 +475,7 @@ Verify App Windows Count
       if (checkTrue) {
         log("✓ ขั้นตอนที่ 2: เช็คตรรกะจำนวนหน้าต่าง UI สำเร็จ");
       } else {
-        throw new Error("กรุณาใช้ Should Be True เช็คความถูกต้องของ \${count} > 0");
+        throw new Error("ยังไม่พบการเช็คตรรกะยืนยันความถูกต้องของตัวแปร \${count} ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "การรับค่าคืนกลับจากคีย์เวิร์ดมาเก็บในตัวแปร ต้องประกาศชื่อตัวแปรพร้อมเครื่องหมาย = ต่อท้ายก่อนเรียกชื่อคีย์เวิร์ดในบรรทัดเดียวกัน จากนั้นค่อยนำตัวแปรที่ได้ไปเช็คเงื่อนไขตรรกะตามที่ task ระบุ",
@@ -518,7 +518,7 @@ Prepare Config Workspace
       if (checkCreate) {
         log("✓ ขั้นตอนที่ 1: เรียกใช้คำสั่ง Create Directory สำเร็จ");
       } else {
-        throw new Error("คำสั่งสร้างโฟลเดอร์เป้าหมายไม่ถูกต้อง\nตัวอย่าง: Create Directory    \${CONFIG_DIR}");
+        throw new Error("ไม่พบการเรียกคีย์เวิร์ดสร้างโฟลเดอร์เป้าหมาย \${CONFIG_DIR} ของไลบรารี OperatingSystem ตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkExist = rfLineMatch(code, /Directory Should Exist\s{2,}\${CONFIG_DIR}/, "Keywords") ||
@@ -527,7 +527,7 @@ Prepare Config Workspace
       if (checkExist) {
         log("✓ ขั้นตอนที่ 2: เรียกใช้ระบบตรวจจับโฟลเดอร์สำเร็จ");
       } else {
-        throw new Error("คำสั่งตรวจสอบความมีอยู่ของโฟลเดอร์ปลายทางไม่ถูกต้อง\nตัวอย่าง: Directory Should Exist    \${CONFIG_DIR}");
+        throw new Error("ไม่พบการเรียกคีย์เวิร์ดยืนยันความมีอยู่ของโฟลเดอร์ \${CONFIG_DIR} ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "OperatingSystem library มีคีย์เวิร์ดคู่กันสำหรับจัดการโฟลเดอร์: ตัวหนึ่งสร้างไดเรกทอรีขึ้นมาใหม่ (ทำงานคล้าย mkdir -p ไม่พังแม้มีอยู่แล้ว) อีกตัวยืนยันว่าโฟลเดอร์นั้นมีอยู่จริง ทั้งสองรับพิกัดโฟลเดอร์เป้าหมายเป็นอาร์กิวเมนต์เดียว",
@@ -569,7 +569,7 @@ Script Reload Spec Test
       if (checkSetup) {
         log("✓ ขั้นตอนที่ 1: ตรวจพบสคริปต์ [Setup] สำหรับจำลองเตรียมไฟล์เริ่มต้นเฉพาะเคสสำเร็จ");
       } else {
-        throw new Error("คำสั่งการเขียน Setup เฉพาะตัวเทสไม่ถูกต้อง\nตัวอย่าง: [Setup]    Create Config File");
+        throw new Error("ไม่พบการเขียน [Setup] เฉพาะตัวเทสเพื่อเรียกคีย์เวิร์ดเตรียมไฟล์คอนฟิกตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkTeardown = rfLineMatch(code, /\[Teardown\]\s{2,}Cleanup And Quit/, "Test Cases") ||
@@ -578,7 +578,7 @@ Script Reload Spec Test
       if (checkTeardown) {
         log("✓ ขั้นตอนที่ 2: ตรวจพบสคริปต์ [Teardown] ล้างข้อมูลสำเร็จ");
       } else {
-        throw new Error("คำสั่งการเขียน Teardown เฉพาะตัวเทสไม่ถูกต้อง\nตัวอย่าง: [Teardown]    Cleanup And Quit");
+        throw new Error("ไม่พบการเขียน [Teardown] เฉพาะตัวเทสเพื่อเรียกคีย์เวิร์ดคืนค่าล้างข้อมูลตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "การล็อกทับ Setup/Teardown เฉพาะเคสหนึ่งๆ ใช้คีย์คำสั่งในวงเล็บเหลี่ยมวางเป็นบรรทัดแรก(และบรรทัดใดก็ได้)ภายในตัวเทสเคสเอง ตามด้วยชื่อคีย์เวิร์ดที่ต้องการให้เรียกแทนค่าของ Suite Setup/Teardown เดิม",
@@ -622,7 +622,7 @@ System Control Over osascript
       if (checkRun) {
         log("✓ ขั้นตอนที่ 1: ตรวจพบคำสั่งเรียกใช้โปรเซส osascript เก็บในตัวแปรสำเร็จ");
       } else {
-        throw new Error("คำสั่งรันโปรเซสสคริปต์ปลายทางไม่ถูกต้อง\nตัวอย่าง: \${result}=    Run Process    osascript");
+        throw new Error("คำสั่งรันโปรเซส osascript แบบบล็อกพร้อมเก็บผลลัพธ์ไว้ในตัวแปร \${result} ไม่ถูกต้อง ตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkAssert = rfLineMatch(code, /Should Be Equal As Integers\s{2,}\${result\.rc}\s{2,}0/, "Test Cases") ||
@@ -631,7 +631,7 @@ System Control Over osascript
       if (checkAssert) {
         log("✓ ขั้นตอนที่ 2: ทำการเปรียบเทียบ Exit Code ตัวเลขเป็น 0 ถูกต้อง");
       } else {
-        throw new Error("การเช็ค Exit Code ด้วย Should Be Equal As Integers ล้มเหลว\nตัวอย่าง: Should Be Equal As Integers    \${result.rc}    0");
+        throw new Error("การเปรียบเทียบ Exit Code ของ \${result.rc} กับค่า 0 ด้วยคีย์เวิร์ดเปรียบเทียบเลขจำนวนเต็มไม่ถูกต้องตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "คีย์เวิร์ดรันโปรเซสแบบบล็อกจะคืนค่าออบเจกต์ผลลัพธ์กลับมา ให้เก็บไว้ในตัวแปร (อย่าลืมเครื่องหมาย = ต่อท้ายชื่อตัวแปร) แล้วดึงค่า Return Code ของออบเจกต์นั้นไปเทียบกับ 0 ด้วยคีย์เวิร์ดเปรียบเทียบเลขจำนวนเต็ม",
@@ -671,7 +671,7 @@ Retry Flaky Window Check
       if (checkRetry) {
         log("✓ ขั้นตอนที่ 1: เรียกใช้ Wait Until Keyword Succeeds กำหนด 5x/2s เรียก Verify App Window Ready ถูกต้อง");
       } else {
-        throw new Error("คำสั่ง Wait Until Keyword Succeeds ไม่ถูกต้อง\nตัวอย่าง: Wait Until Keyword Succeeds    5x    2s    Verify App Window Ready");
+        throw new Error("การเรียก Wait Until Keyword Succeeds เพื่อวนเรียก keyword ตรวจสอบหน้าต่างไม่ถูกต้อง ตรวจสอบจำนวนครั้ง/ช่วงเวลาตามที่ task ระบุ");
       }
     },
     hint: "BuiltIn keyword ตัวนี้รับอาร์กิวเมนต์เรียงกัน 3 ค่า: จำนวนครั้ง/เวลารวมสูงสุดที่จะ retry, ช่วงห่างระหว่างแต่ละครั้ง, แล้วตามด้วยชื่อ keyword ที่จะถูกวนเรียก — ใส่ค่าตามที่ task ระบุให้ครบตามลำดับนี้",
@@ -712,14 +712,14 @@ Type Into Ready Element Only
       if (checkExist) {
         log("✓ ขั้นตอนที่ 1: เช็ค Element Should Exist    search-field ก่อนพิมพ์ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Element Should Exist    search-field\nตัวอย่าง: Element Should Exist    search-field");
+        throw new Error("ไม่พบการเช็คว่าอิลิเมนต์ search-field พร้อมใช้งานจริงก่อนพิมพ์ ตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkType = rfLineMatch(code, /Type Text\s{2,}AAPL/, "Test Cases") || rfLineMatch(code, /Type Text\t+AAPL/, "Test Cases");
       if (checkType) {
         log("✓ ขั้นตอนที่ 2: พิมพ์ข้อความ AAPL ด้วย Type Text หลังยืนยัน element พร้อมแล้วถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Type Text    AAPL\nตัวอย่าง: Type Text    AAPL");
+        throw new Error("ไม่พบการพิมพ์ข้อความ AAPL หลังยืนยัน element พร้อมแล้ว ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "อย่าใช้คีย์เวิร์ดที่แค่หน่วงเวลาตายตัวมาแทนการเช็คสภาพจริง — ต้องมีคีย์เวิร์ดยืนยันว่าอิลิเมนต์ปรากฏใน accessibility tree จริงก่อนเสมอ แล้วจึงค่อยพิมพ์ข้อความตามที่ task ระบุ",
@@ -765,7 +765,7 @@ Confirm Before Closing Session
       if (checkExist) {
         log("✓ ขั้นตอนที่ 1: เช็ค Element Should Exist    dialog-confirm-close ก่อนคลิกถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Element Should Exist    dialog-confirm-close\nตัวอย่าง: Element Should Exist    dialog-confirm-close");
+        throw new Error("ไม่พบการเช็คว่าปุ่มยืนยัน dialog-confirm-close มีอยู่จริง ก่อนคลิก ตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkClick = rfLineMatch(code, /Click UI Element\s{2,}dialog-confirm-close/, "Test Cases") ||
@@ -773,7 +773,7 @@ Confirm Before Closing Session
       if (checkClick) {
         log("✓ ขั้นตอนที่ 2: คลิกปุ่มยืนยันถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Click UI Element    dialog-confirm-close\nตัวอย่าง: Click UI Element    dialog-confirm-close");
+        throw new Error("ไม่พบการคลิกปุ่มยืนยัน dialog-confirm-close ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "ก่อน automate ปุ่มที่เพิ่งได้ identifier มาใหม่ ให้ยึดหลักเดิมจากบทที่แล้ว: ยืนยันการมีอยู่จริงของอิลิเมนต์ก่อนเสมอ แล้วจึงค่อยคลิกอิลิเมนต์เป้าหมายเดียวกันนั้น",
@@ -818,7 +818,7 @@ Wait For Task List Ready
       if (checkWait) {
         log("✓ วนเช็คด้วย Wait Until Keyword Succeeds 10x/0.5s จนกว่า Loading จะหายไปถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Wait Until Keyword Succeeds    10x    0.5s    Element Should Not Exist    task-dashboard-loading");
+        throw new Error("ยังไม่พบการวนเช็คด้วย Wait Until Keyword Succeeds ตามจำนวนครั้งและช่วงเวลาที่ task ระบุ จนกว่า element loading จะหายไปจากจอ");
       }
     },
     hint: "รวมสองเทคนิคที่เรียนมาแล้วเข้าด้วยกัน: คีย์เวิร์ดวน retry เรียกอีกคีย์เวิร์ดหนึ่งซ้ำจนสำเร็จ (จากบทก่อนหน้า) ผสานกับคีย์เวิร์ดที่เช็คว่าอิลิเมนต์หายไปจากจอแล้ว — ใส่จำนวนครั้งและช่วงเวลาตามที่ task ระบุ",
@@ -863,7 +863,7 @@ Import Project Folder Via Open Panel
       if (checkGoToFolder) {
         log("✓ ขั้นตอนที่ 1: เปิดช่อง Go to Folder ด้วย Press Shortcut    cmd+shift+g ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Press Shortcut    cmd+shift+g\nตัวอย่าง: Press Shortcut    cmd+shift+g");
+        throw new Error("ไม่พบการเปิดช่อง \"Go to Folder\" ด้วยคีย์ลัดมาตรฐาน macOS ตามที่ task ระบุ (ข้อ 1)");
       }
 
       const checkType = rfLineMatch(code, /Type Text\s{2,}\/tmp\/demo-project/, "Test Cases") ||
@@ -871,7 +871,7 @@ Import Project Folder Via Open Panel
       if (checkType) {
         log("✓ ขั้นตอนที่ 2a: พิมพ์ path /tmp/demo-project ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Type Text    /tmp/demo-project\nตัวอย่าง: Type Text    /tmp/demo-project");
+        throw new Error("ไม่พบการพิมพ์ path /tmp/demo-project ลงในช่องที่เปิดอยู่ ตามที่ task ระบุ (ข้อ 2)");
       }
 
       const checkReturn = rfLineMatch(code, /Press Shortcut\s{2,}return/, "Test Cases") ||
@@ -879,7 +879,7 @@ Import Project Folder Via Open Panel
       if (checkReturn) {
         log("✓ ขั้นตอนที่ 2b: กด Enter เพื่อเปิดโฟลเดอร์ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Press Shortcut    return\nตัวอย่าง: Press Shortcut    return");
+        throw new Error("ไม่พบการกดคีย์ลัดยืนยันเพื่อเปิดโฟลเดอร์ที่พิมพ์ path ไว้ ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "Open Panel ของ macOS เป็น system sheet ที่ไม่มี AXIdentifier ให้เกาะ — ใช้คีย์ลัดมาตรฐานของ Finder/Open Panel เพื่อเปิดช่องพิมพ์ path ตรงๆ แทน แล้วพิมพ์พิกัดโฟลเดอร์ตามที่ task ระบุ ปิดท้ายด้วยคีย์ลัดยืนยัน",
@@ -934,14 +934,14 @@ Open Demo File From Palette
       if (checkArgs) {
         log("✓ ขั้นตอนที่ 1a: คีย์เวิร์ดใหม่รับอาร์กิวเมนต์ \${filename} ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการประกาศ [Arguments] รับตัวแปร \${filename} ในคีย์เวิร์ดที่สร้างขึ้นใหม่\nตัวอย่าง: [Arguments]    \${filename}");
+        throw new Error("ไม่พบการประกาศ [Arguments] รับตัวแปร \${filename} ในคีย์เวิร์ดที่สร้างขึ้นใหม่ ตามที่คอมเมนต์ข้อ a ระบุ");
       }
 
       const checkPalette = rfLineMatch(code, /Open Command Palette/, "Keywords");
       if (checkPalette) {
         log("✓ ขั้นตอนที่ 1b: เรียกเปิด Command Palette ด้วยคีย์เวิร์ดสำเร็จรูปถูกต้อง");
       } else {
-        throw new Error("ไม่พบการเรียกคีย์เวิร์ด Open Command Palette ภายในคีย์เวิร์ดที่ประกอบขึ้นใหม่");
+        throw new Error("ยังไม่พบการเรียกคีย์เวิร์ดสำเร็จรูปของ kouen.resource ที่ไม่รับอาร์กิวเมนต์เพื่อเปิด Command Palette ตามที่คอมเมนต์ข้อ a ระบุ");
       }
 
       const checkType = rfLineMatch(code, /Type Text\s{2,}\${filename}/, "Keywords") ||
@@ -949,7 +949,7 @@ Open Demo File From Palette
       if (checkType) {
         log("✓ ขั้นตอนที่ 1c: พิมพ์ชื่อไฟล์ \${filename} ลงในช่องถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Type Text    \${filename} ภายในคีย์เวิร์ดที่ประกอบขึ้นใหม่");
+        throw new Error("ยังไม่พบการพิมพ์ชื่อไฟล์ \${filename} ที่รับเข้ามาลงในช่องที่เปิดอยู่ ตามที่คอมเมนต์ข้อ b ระบุ");
       }
 
       const checkReturn = rfLineMatch(code, /Press Shortcut\s{2,}return/, "Keywords") ||
@@ -957,7 +957,7 @@ Open Demo File From Palette
       if (checkReturn) {
         log("✓ ขั้นตอนที่ 1d: กดคีย์ลัดยืนยันเปิดไฟล์ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง Press Shortcut    return ภายในคีย์เวิร์ดที่ประกอบขึ้นใหม่");
+        throw new Error("ยังไม่พบการกดคีย์ลัดยืนยันเพื่อเปิดไฟล์ที่เลือกไว้ ตามที่คอมเมนต์ข้อ c ระบุ");
       }
 
       const checkUsage = rfLineMatch(code, /Open File Via Command Palette\s{2,}demo\.robot/, "Test Cases") ||
@@ -965,7 +965,7 @@ Open Demo File From Palette
       if (checkUsage) {
         log("✓ ขั้นตอนที่ 2: เรียกใช้คีย์เวิร์ดที่ประกอบขึ้นเองพร้อมส่งชื่อไฟล์ demo.robot สำเร็จ");
       } else {
-        throw new Error("ไม่พบการเรียกใช้ Open File Via Command Palette    demo.robot ในบล็อก *** Test Cases ***");
+        throw new Error("ไม่พบการเรียกใช้คีย์เวิร์ดที่เพิ่งประกอบขึ้นเอง พร้อมส่งชื่อไฟล์ demo.robot ในบล็อก *** Test Cases *** ตามที่ task ระบุ (ข้อ 2)");
       }
     },
     hint: "คีย์เวิร์ดใหม่นี้ต้องรับพารามิเตอร์ชื่อไฟล์เข้ามาก่อน (ทบทวนวิธีรับอาร์กิวเมนต์จากบทที่ 3) จากนั้นเรียงประกอบคีย์เวิร์ดสำเร็จรูป 3 ตัวต่อกันตามลำดับที่คอมเมนต์ระบุไว้ในเทมเพลต — คีย์เวิร์ดตัวแรกไม่รับอาร์กิวเมนต์ ตัวที่สองรับตัวแปรที่เพิ่งประกาศ ตัวที่สามกดคีย์ลัดมาตรฐานตัวเดียวกับที่เคยใช้ยืนยันในบทเรียนก่อนหน้า จากนั้นในเทสเคสให้เรียกคีย์เวิร์ดใหม่นี้พร้อมส่งชื่อไฟล์ตามที่ task ระบุ",
@@ -1025,7 +1025,7 @@ Load Recent Sessions List
       if (checkWait) {
         log("✓ แก้ไข flaky test ด้วยการวนเช็คสภาพจริงแทนการหน่วงเวลาคงที่สำเร็จ");
       } else {
-        throw new Error("ไม่พบคำสั่งแก้ไขที่ถูกต้อง\nตัวอย่าง: Wait Until Keyword Succeeds    8x    1s    Element Should Exist    session-list-item");
+        throw new Error("ยังไม่พบการแทนที่ด้วยคีย์เวิร์ดวนเช็คสภาพจริงตามจำนวนครั้งและช่วงเวลาที่คอมเมนต์ในเทมเพลตระบุ");
       }
     },
     hint: "ต้นตอบั๊กนี้คือการหน่วงเวลาคงที่ (ตายตัว) ก่อนเช็คอิลิเมนต์ที่โหลดแบบ async — ทางแก้ไม่ใช่การเดาเวลาให้นานขึ้น แต่ต้องลบ Sleep ออกไปทั้งหมด แล้วผสานคีย์เวิร์ดวนเช็คซ้ำ (ทบทวนบทที่ 12) เข้ากับคีย์เวิร์ดตรวจสอบการมีอยู่ของอิลิเมนต์ (ทบทวนบทที่ 5) เข้าด้วยกันเป็นคำสั่งเดียว โดยกำหนดจำนวนครั้งและช่วงเวลาตามที่คอมเมนต์ในเทมเพลตระบุ",

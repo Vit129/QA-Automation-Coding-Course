@@ -40,20 +40,20 @@ test('TC-3001: ดึงค่าแนวรับ-แนวต้านขอ�
       if (hasGet) {
         log("✓ ขั้นตอนที่ 1: ยิง request.get('/api/ta/levels?ticker=AAPL') ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง request.get('/api/ta/levels?ticker=AAPL')\nตัวอย่าง: const response = await request.get('/api/ta/levels?ticker=AAPL');");
+        throw new Error("ยังไม่พบการยิง GET request ไปยัง endpoint และ query param ที่โจทย์กำหนดไว้ ลองกลับไปดู task ของบทนี้ว่าต้องยิงไปที่ path ใดพร้อมแนบค่าอะไรใน query string");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(200\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 200 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code\nตัวอย่าง: expect(response.status()).toBe(200);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่าที่คาดหวังในขั้นตอนที่ 2 หรือไม่");
       }
 
       const hasBodyCheck = /toHaveProperty\(['"]pivot['"]\)/.test(code) || /body\.pivot\)\.toBeDefined\(\)/.test(code) || /\.pivot\).*\.not\.toBeUndefined\(\)/.test(code);
       if (hasBodyCheck) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบว่า body มี property 'pivot' ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบว่า response body มี property 'pivot'\nตัวอย่าง: expect(body).toHaveProperty('pivot');");
+        throw new Error("ยังไม่พบการตรวจสอบว่า response body มี property ที่โจทย์ระบุอยู่จริง ลองมองหา matcher ที่เช็คการมีอยู่ของ property หนึ่งๆ ใน object");
       }
     },
     hint: "ใช้ request.get() ยิงไปยัง endpoint พร้อมแนบ query string ตามที่โจทย์กำหนด แล้วอ่านค่า status ผ่าน method ของ response ก่อนแปลง body เป็น JSON ด้วย method ที่เหมาะสม จากนั้นมองหา matcher ของ expect ที่ใช้ตรวจสอบว่า object มี property หนึ่งๆ อยู่จริง (ไม่ใช่การเทียบค่าเป๊ะๆ)",
@@ -118,19 +118,19 @@ test('TC-3002: ไม่ระบุ ticker ต้องได้ 400', async ({
       if (/await\s+request\.get\(['"]\/api\/ta\/levels['"]\)/.test(code)) {
         log("✓ ขั้นตอนที่ 1: ยิง request.get('/api/ta/levels') โดยไม่ใส่ ticker ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง request.get('/api/ta/levels') (ห้ามใส่ query param ticker ในบทนี้)");
+        throw new Error("ยังไม่พบการยิง GET request ไปยัง endpoint เดียวกับบทก่อนหน้า โดยจงใจไม่แนบ query param ticker เลยในบทนี้");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่า Error ที่คาดหวังในขั้นตอนที่ 2 หรือไม่");
       }
 
       if (/body\.error\)\.toBe\(['"]Ticker is required['"]\)/.test(code) || /toEqual\(\{\s*error:\s*['"]Ticker is required['"]\s*\}\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error 'Ticker is required' ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'Ticker is required'\nตัวอย่าง: expect(body.error).toBe('Ticker is required');");
+        throw new Error("ยังไม่พบการตรวจสอบว่าข้อความ error ใน body ตรงกับที่ theory ของบทนี้ระบุไว้เป๊ะๆ หรือไม่");
       }
     },
     hint: "ลองยิง GET ไปยัง endpoint เดียวกับบทก่อนหน้าแต่จงใจไม่แนบ query param เลย แล้วดูว่า backend ตอบกลับด้วย status code และ error message อะไร (อ่านโค้ด validation ฝั่ง server ที่ theory อ้างถึงประกอบ) ก่อนเขียน assertion เทียบข้อความให้ตรงเป๊ะ",
@@ -190,19 +190,19 @@ test('TC-3003: ไม่ส่ง panel ต้องได้ 400', async ({ req
       if (hasPost) {
         log("✓ ขั้นตอนที่ 1: ยิง request.post('/api/ai/panel', { data: {} }) ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง request.post('/api/ai/panel', { data: {} })\nตัวอย่าง: const response = await request.post('/api/ai/panel', { data: {} });");
+        throw new Error("ยังไม่พบการยิง POST request ไปยัง endpoint ที่โจทย์กำหนด พร้อมแนบ body ว่างเปล่าตามที่ task อธิบายไว้");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่า Error ที่คาดหวังในขั้นตอนที่ 2 หรือไม่");
       }
 
       if (/body\.error\)\.toBe\(['"]panel is required['"]\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error 'panel is required' ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'panel is required'\nตัวอย่าง: expect(body.error).toBe('panel is required');");
+        throw new Error("ยังไม่พบการตรวจสอบว่าข้อความ error ใน body ตรงกับ field ที่ขาดหายไปตามที่ theory ของบทนี้ระบุไว้เป๊ะๆ หรือไม่");
       }
     },
     hint: "POST request ใน Playwright ใช้ option สำหรับแนบ body เป็น object ธรรมดา (ไม่ต้อง stringify เอง, Content-Type ถูกตั้งให้อัตโนมัติ) — ลองส่ง object ว่างเพื่อจงใจให้ field บังคับหายไป แล้วดูว่า backend ตอบ status และ error message อะไรกลับมา",
@@ -262,13 +262,13 @@ test('TC-3004: เรียก API ที่ต้อง Auth โดยไม่
       if (hasPost) {
         log("✓ ขั้นตอนที่ 1: ยิง request.post('/api/ai/portfolio-snapshot', { data: { holdings: [] } }) ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง request.post('/api/ai/portfolio-snapshot', { data: { holdings: [] } })\nตัวอย่าง: const response = await request.post('/api/ai/portfolio-snapshot', { data: { holdings: [] } });");
+        throw new Error("ยังไม่พบการยิง POST request ไปยัง endpoint ที่ต้อง auth พร้อม body ตามที่ task กำหนด โดยไม่แนบ header ยืนยันตัวตนใดๆ");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(401\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 401 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 401\nตัวอย่าง: expect(response.status()).toBe(401);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่าที่บ่งบอกว่าไม่ผ่านการยืนยันตัวตนหรือไม่");
       }
 
       if (/body\.error\)\.toBe\(['"]Unauthorized: Invalid or missing API key['"]\)/.test(code)) {
@@ -340,7 +340,7 @@ test('TC-3005: ตรวจสอบโครงสร้าง (Schema) ขอ�
       if (hasArrayLen) {
         log("✓ ขั้นตอนที่ 1: ตรวจสอบความยาว resistance/support = 3 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบความยาว array\nตัวอย่าง: expect(body.resistance).toHaveLength(3);\nexpect(body.support).toHaveLength(3);");
+        throw new Error("ยังไม่พบการตรวจสอบความยาวของทั้งสอง array ตามที่โจทย์ระบุ ลองมองหา matcher ที่เช็คจำนวนสมาชิกใน array");
       }
 
       const hasOhlc = /toMatchObject\(\{\s*high:.*low:.*close:.*\}\)/s.test(code) ||
@@ -348,14 +348,14 @@ test('TC-3005: ตรวจสอบโครงสร้าง (Schema) ขอ�
       if (hasOhlc) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ property high/low/close ของ ohlc ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ property high, low, close ของ body.ohlc\nตัวอย่าง: expect(body.ohlc).toMatchObject({ high: expect.any(Number), low: expect.any(Number), close: expect.any(Number) });");
+        throw new Error("ยังไม่พบการตรวจสอบว่า body.ohlc มี property ครบตามที่โจทย์ระบุ ลองมองหา matcher ที่เช็คโครงสร้างบางส่วนของ object โดยไม่สนใจค่าจริง (เพราะราคาหุ้นเปลี่ยนทุกวัน)");
       }
 
       const hasIsoCheck = /body\.updated\)\.toMatch\(\/.*\\d\{4\}-\\d\{2\}-\\d\{2\}.*\//.test(code);
       if (hasIsoCheck) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบรูปแบบวันที่ ISO 8601 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบรูปแบบวันที่ ISO 8601 ของ body.updated\nตัวอย่าง: expect(body.updated).toMatch(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}/);");
+        throw new Error("ยังไม่พบการตรวจสอบว่า body.updated อยู่ในรูปแบบวันที่ ISO 8601 ลองมองหา matcher ที่เทียบ string กับรูปแบบ (pattern) แทนการเทียบค่าเป๊ะๆ");
       }
     },
     hint: "มองหา matcher ของ Playwright/Jest ที่เช็คความยาวของ array, matcher ที่เช็คว่า object มีบาง property ตรงตามรูปแบบโดยไม่ต้องเท่ากันทั้งหมด (ใช้ร่วมกับ helper ที่เช็คแค่ 'ชนิดข้อมูล' แทนค่าจริง เพราะราคาหุ้นเปลี่ยนทุกวัน) และการเทียบ string กับ regular expression เพื่อยืนยันรูปแบบวันที่",
@@ -443,7 +443,7 @@ test('TC-3006: สร้าง Request Context พร้อม Header เริ�
       if (hasContext) {
         log("✓ ขั้นตอนที่ 1: สร้าง context ด้วย extraHTTPHeaders แนบ X-API-Key ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการสร้าง context ด้วย playwright.request.newContext({ extraHTTPHeaders: { 'X-API-Key': ... } })");
+        throw new Error("ยังไม่พบการสร้าง APIRequestContext ใหม่ผ่าน fixture ของ playwright พร้อมแนบ header สำหรับยืนยันตัวตนเป็นค่าเริ่มต้น");
       }
 
       const contextVarMatch = code.match(/const\s+(\w+)\s*=\s*await\s+playwright\.request\.newContext/);
@@ -458,7 +458,7 @@ test('TC-3006: สร้าง Request Context พร้อม Header เริ�
       if (/expect\(response\.status\(\)\)\.toBe\(200\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบ status code 200 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 200\nตัวอย่าง: expect(response.status()).toBe(200);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่าที่คาดหวังหรือไม่");
       }
 
       if (varName && new RegExp(`${varName}\\.dispose\\(\\)`).test(code)) {
@@ -532,13 +532,13 @@ test('TC-3007: ไม่ระบุ tickers ต้องได้ 400 พร้
       if (/await\s+request\.get\(['"]\/api\/calendar\/alerts['"]\)/.test(code)) {
         log("✓ ขั้นตอนที่ 1: ยิง request.get('/api/calendar/alerts') โดยไม่ใส่ tickers ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง request.get('/api/calendar/alerts') (ห้ามใส่ query param tickers ในบทนี้)");
+        throw new Error("ยังไม่พบการยิง GET request ไปยัง endpoint ที่โจทย์กำหนด โดยจงใจไม่แนบ query param tickers เลยในบทนี้");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่า Error ที่คาดหวังในขั้นตอนที่ 2 หรือไม่");
       }
 
       if (/body\.error\)\.toBe\(['"]tickers parameter required \(comma-separated\)['"]\)/.test(code)) {
@@ -605,19 +605,19 @@ test('TC-3008: ยิง Request เกิน 100 ครั้งต่อนา
       if (hasLoop && hasGetInLoop) {
         log("✓ ขั้นตอนที่ 1: วน for loop 101 ครั้งยิง request.get('/api/ai/health') เก็บลง lastResponse ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ for loop ที่วนยิง request.get('/api/ai/health') 101 ครั้งแล้วเก็บผลลง lastResponse\nตัวอย่าง: for (let i = 0; i < 101; i++) {\n  lastResponse = await request.get('/api/ai/health');\n}");
+        throw new Error("ยังไม่พบ loop ที่วนยิง GET request ไปยัง endpoint ที่กำหนดจนครบจำนวนครั้งตามที่โจทย์ระบุ พร้อมเก็บเฉพาะ response ตัวสุดท้ายไว้ในตัวแปรที่กำหนด");
       }
 
       if (/expect\(lastResponse\.status\(\)\)\.toBe\(429\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 429 ของ lastResponse ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 429\nตัวอย่าง: expect(lastResponse.status()).toBe(429);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ตัวสุดท้ายว่าตรงกับค่าที่บ่งบอกว่าถูกจำกัดอัตราการยิง (rate limit) หรือไม่");
       }
 
       if (/body\.error\)\.toBe\(['"]Too many requests, please try again later['"]\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ของ Rate Limit ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'Too many requests, please try again later'\nตัวอย่าง: expect(body.error).toBe('Too many requests, please try again later');");
+        throw new Error("ยังไม่พบการตรวจสอบว่าข้อความ error ใน body ตรงกับที่ theory ของ middleware limiter ระบุไว้เป๊ะๆ หรือไม่");
       }
     },
     hint: "ต้องวนยิง request ซ้ำๆ ด้วยลูปจนเกินจำนวนที่ backend อนุญาตต่อหน้าต่างเวลา แล้วเก็บเฉพาะ response ตัวสุดท้ายไว้ตรวจสอบ (ไม่ใช่ทุกตัว) จากนั้นเทียบ status code กับ error message ที่ middleware limiter กำหนดไว้ตามโค้ดจริงใน theory",
@@ -684,7 +684,7 @@ test('TC-3009: สลับ AI Model แล้วต้องคืนค่า�
       if (hasDestructure) {
         log("✓ ขั้นตอนที่ 1: อ่านค่าโมเดลเดิม (currentModel) เก็บไว้ในตัวแปร originalModel ก่อนแก้ไขถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง GET /api/ai/model แล้วดึง currentModel ออกมาเก็บไว้ในตัวแปร originalModel ก่อนแก้ไขอะไร\nตัวอย่าง: const before = await request.get('/api/ai/model');\nconst { currentModel: originalModel } = await before.json();");
+        throw new Error("ยังไม่พบการยิง GET ไปยัง endpoint ที่อ่านค่าโมเดลปัจจุบัน แล้ว destructure ค่า currentModel จาก response body เก็บไว้ในตัวแปรชื่อ originalModel ก่อนแก้ไขค่าใดๆ");
       }
 
       const hasSwitch = /await\s+request\.post\(['"]\/api\/ai\/model\/switch['"]\s*,\s*\{\s*data:\s*\{\s*model:\s*['"]gemini-3\.5-flash['"]\s*\}\s*\}\s*\)/.test(code);
@@ -692,14 +692,14 @@ test('TC-3009: สลับ AI Model แล้วต้องคืนค่า�
       if (hasSwitch && hasStatusCheck) {
         log("✓ ขั้นตอนที่ 2: สลับโมเดลเป็น 'gemini-3.5-flash' แล้วตรวจสอบ status 200 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง POST /api/ai/model/switch ด้วย data: { model: 'gemini-3.5-flash' } พร้อมตรวจสอบ status 200\nตัวอย่าง: const res = await request.post('/api/ai/model/switch', { data: { model: 'gemini-3.5-flash' } });\nexpect(res.status()).toBe(200);");
+        throw new Error("ยังไม่พบการยิง POST ไปยัง endpoint สำหรับสลับโมเดล พร้อมแนบชื่อโมเดลใหม่ตามที่โจทย์กำหนด และตรวจสอบ status code ว่าสำเร็จหรือไม่");
       }
 
       const hasRestore = /request\.post\(['"]\/api\/ai\/model\/switch['"]\s*,\s*\{\s*data:\s*\{\s*model:\s*originalModel\s*\}\s*\}\s*\)/.test(code);
       if (hasRestore) {
         log("✓ ขั้นตอนที่ 3: คืนค่าโมเดลกลับเป็น originalModel ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการคืนค่าโมเดลกลับเป็น originalModel ด้วย POST /api/ai/model/switch อีกครั้งท้ายเทส\nตัวอย่าง: await request.post('/api/ai/model/switch', { data: { model: originalModel } });");
+        throw new Error("ยังไม่พบการคืนค่าโมเดลกลับเป็นค่าที่อ่านมาตอนแรก (ตัวแปร originalModel) ด้วยการยิง POST ไปยัง endpoint สลับโมเดลอีกครั้งท้ายเทส เพื่อไม่ให้ test อื่นเจอ state ค้าง");
       }
     },
     hint: "อ่านค่า state ปัจจุบันจาก backend เก็บไว้ในตัวแปรก่อนเสมอ แล้วค่อยเปลี่ยนค่านั้นด้วย POST request ที่เหมาะสม สุดท้ายอย่าลืมยิง POST อีกครั้งเพื่อคืนค่ากลับเป็น 'ค่าที่อ่านมาตอนแรก' (ตัวแปรที่เก็บไว้ ไม่ใช่ค่าคงที่ที่เขียนตายตัว) ไม่เช่นนั้น test อื่นที่รันขนานกันจะเจอ state ค้างอยู่",
@@ -764,19 +764,19 @@ test('TC-3010: ขอหน้าที่เกินขอบเขตขอ�
       if (hasGet) {
         log("✓ ขั้นตอนที่ 1: ยิง request.get('/api/portfolio/history?page=999&limit=20') ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง request.get('/api/portfolio/history?page=999&limit=20')\nตัวอย่าง: const response = await request.get('/api/portfolio/history?page=999&limit=20');");
+        throw new Error("ยังไม่พบการยิง GET request ไปยัง endpoint พร้อม query param page และ limit ตามค่าที่โจทย์กำหนด (หน้าที่เกินขอบเขต)");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(200\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 200 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 200\nตัวอย่าง: expect(response.status()).toBe(200);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่าที่คาดหวังหรือไม่");
       }
 
       if (/expect\(body\.items\)\.toHaveLength\(0\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบว่า body.items เป็น array ว่างถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบว่า body.items มีความยาว 0\nตัวอย่าง: expect(body.items).toHaveLength(0);");
+        throw new Error("ยังไม่พบการตรวจสอบความยาวของ body.items ว่าเป็น array ว่างตามที่โจทย์คาดหวังหรือไม่");
       }
     },
     hint: "ใช้ const response = await request.get('/api/portfolio/history?page=999&limit=20'); แล้ว expect(response.status()).toBe(200); จากนั้น const body = await response.json(); expect(body.items).toHaveLength(0);",
@@ -835,19 +835,19 @@ test('TC-3011: อัปโหลดไฟล์ CSV ว่างเปล่า
       if (hasMultipart) {
         log("✓ ขั้นตอนที่ 1: ส่งไฟล์ CSV ว่างเปล่าผ่าน multipart ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง POST /api/holdings/import แบบ multipart พร้อมไฟล์เนื้อหาว่างเปล่า\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') } }\n});");
+        throw new Error("ยังไม่พบการยิง POST ไปยัง endpoint import ไฟล์ในรูปแบบ multipart พร้อมแนบไฟล์ที่มีเนื้อหาว่างเปล่าตามที่โจทย์กำหนด");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่า Error ที่คาดหวังในขั้นตอนที่ 2 หรือไม่");
       }
 
       if (/body\.error\)\.toBe\(['"]CSV file is empty or invalid['"]\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'CSV file is empty or invalid'\nตัวอย่าง: expect(body.error).toBe('CSV file is empty or invalid');");
+        throw new Error("ยังไม่พบการตรวจสอบว่าข้อความ error ใน body ตรงกับที่โจทย์ระบุไว้เป๊ะๆ หรือไม่");
       }
     },
     hint: "ใช้ request.post('/api/holdings/import', { multipart: { file: { name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.from('') } } }); แล้วเช็ค status 400 และ body.error === 'CSV file is empty or invalid'",
@@ -912,19 +912,19 @@ test('TC-3012: อัปโหลดไฟล์ .exe อ้างว่าเ�
       if (hasMultipart) {
         log("✓ ขั้นตอนที่ 1: ส่งไฟล์ .exe ผ่าน multipart พร้อม mimeType ผิดประเภทถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง POST /api/holdings/import แบบ multipart พร้อมไฟล์ mimeType 'application/x-msdownload'\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'malware.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('fake binary') } }\n});");
+        throw new Error("ยังไม่พบการยิง POST ไปยัง endpoint import ไฟล์แบบ multipart พร้อมแนบไฟล์ที่มี mimeType ผิดประเภทตามที่โจทย์กำหนด");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(400\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 400 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 400\nตัวอย่าง: expect(response.status()).toBe(400);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับค่า Error ที่คาดหวังในขั้นตอนที่ 2 หรือไม่");
       }
 
       if (/body\.error\)\.toBe\(['"]Only CSV files are allowed['"]\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'Only CSV files are allowed'\nตัวอย่าง: expect(body.error).toBe('Only CSV files are allowed');");
+        throw new Error("ยังไม่พบการตรวจสอบว่าข้อความ error ใน body ตรงกับที่โจทย์ระบุไว้เป๊ะๆ หรือไม่");
       }
     },
     hint: "การเช็คประเภทไฟล์ที่แนบมาไม่ควรดูจากนามสกุลชื่อไฟล์อย่างเดียว — มองหา field ใน multipart ที่ใช้ระบุ MIME type ของไฟล์ แล้วลองตั้งค่าให้ไม่ตรงกับ CSV ดูว่า backend ปฏิเสธด้วย status และข้อความอะไร",
@@ -990,19 +990,19 @@ test('TC-3013: อัปโหลดไฟล์ใหญ่เกิน 5MB ต
       if (hasBigBuffer && hasMultipart) {
         log("✓ ขั้นตอนที่ 1: ส่งไฟล์ขนาด 6MB (Buffer.alloc(6 * 1024 * 1024)) ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง POST /api/holdings/import พร้อมไฟล์ขนาด 6MB\nตัวอย่าง: const response = await request.post('/api/holdings/import', {\n  multipart: { file: { name: 'huge.csv', mimeType: 'text/csv', buffer: Buffer.alloc(6 * 1024 * 1024) } }\n});");
+        throw new Error("ยังไม่พบการยิง POST ไปยัง endpoint import ไฟล์แบบ multipart พร้อมไฟล์ที่มีขนาดเกิน limit ตามที่โจทย์กำหนด (สร้างขึ้นในหน่วยความจำ ไม่ต้องมีไฟล์จริง)");
       }
 
       if (/expect\(response\.status\(\)\)\.toBe\(413\)/.test(code)) {
         log("✓ ขั้นตอนที่ 2: ตรวจสอบ status code 413 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 413\nตัวอย่าง: expect(response.status()).toBe(413);");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ว่าตรงกับรหัสมาตรฐานสำหรับ 'ไฟล์ใหญ่เกินไป' หรือไม่ (ไม่ใช่ 400 ธรรมดา)");
       }
 
       if (/body\.error\)\.toBe\(['"]File size exceeds 5MB limit['"]\)/.test(code)) {
         log("✓ ขั้นตอนที่ 3: ตรวจสอบข้อความ error ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบข้อความ error ที่ตรงกับ 'File size exceeds 5MB limit'\nตัวอย่าง: expect(body.error).toBe('File size exceeds 5MB limit');");
+        throw new Error("ยังไม่พบการตรวจสอบว่าข้อความ error ใน body ตรงกับที่โจทย์ระบุไว้เป๊ะๆ หรือไม่");
       }
     },
     hint: "ไม่ต้องมีไฟล์ใหญ่จริงในเครื่อง สร้าง buffer ขนาดใหญ่ขึ้นมาในหน่วยความจำตรงๆ ให้เกิน limit ที่ backend กำหนด แล้วดูว่า status code ที่ถูกต้องตาม HTTP spec สำหรับ 'ไฟล์ใหญ่เกินไป' คืออะไร (ไม่ใช่ 400 ธรรมดา)",
@@ -1070,14 +1070,14 @@ test('TC-3014: สร้าง Watchlist แล้วใช้ id จาก resp
       if (postVar) {
         log(`✓ ขั้นตอนที่ 1: ยิง request.post('/api/watchlist', { data: { ticker: 'TSLA' } }) เก็บผลไว้ในตัวแปร ${postVar} ถูกต้อง`);
       } else {
-        throw new Error("ไม่พบการยิง POST /api/watchlist ด้วย data: { ticker: 'TSLA' } พร้อมเก็บผลลัพธ์ไว้ในตัวแปร\nตัวอย่าง: const createResponse = await request.post('/api/watchlist', { data: { ticker: 'TSLA' } });");
+        throw new Error("ยังไม่พบการยิง POST ไปยัง endpoint สร้าง watchlist พร้อมแนบ ticker ตามที่โจทย์กำหนด และเก็บผลลัพธ์ไว้ในตัวแปรสำหรับใช้ในขั้นตอนถัดไป");
       }
 
       const hasIdCapture = postVar && new RegExp(`const\\s*\\{\\s*id\\s*\\}\\s*=\\s*await\\s+${postVar}\\.json\\(\\)`).test(code);
       if (hasIdCapture) {
         log("✓ ขั้นตอนที่ 2: ดึง id จาก response body ของการสร้าง resource มาเก็บไว้ในตัวแปร id ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการดึง id จาก response body ของการสร้าง resource\nตัวอย่าง: const { id } = await createResponse.json();");
+        throw new Error("ยังไม่พบการ destructure ค่า id จาก response body ของการสร้าง resource ในขั้นตอนที่ 1 มาเก็บไว้ในตัวแปรชื่อ id");
       }
 
       const getMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.get\(`\/api\/watchlist\/\$\{id\}`\)/);
@@ -1085,7 +1085,7 @@ test('TC-3014: สร้าง Watchlist แล้วใช้ id จาก resp
       if (getVar) {
         log(`✓ ขั้นตอนที่ 3: ใช้ id ที่ได้ยิง GET ไปที่ /api/watchlist/\${id} เก็บผลไว้ในตัวแปร ${getVar} ถูกต้อง`);
       } else {
-        throw new Error("ไม่พบการยิง GET ไปที่ /api/watchlist/${id} โดยใช้ id ที่ดึงมาจากขั้นตอนก่อนหน้า (ต้องใช้ template literal แทรกตัวแปร id จริง)\nตัวอย่าง: const getResponse = await request.get(`/api/watchlist/${id}`);");
+        throw new Error("ยังไม่พบการยิง GET ไปที่ path ของ resource เดียวกัน โดยใช้ค่า id ที่ดึงมาจากขั้นตอนก่อนหน้า (ต้องแทรกตัวแปร id ลงใน URL ด้วย template literal ห้ามเขียน id เอง)");
       }
 
       const hasStatusCheck = getVar && new RegExp(`expect\\(${getVar}\\.status\\(\\)\\)\\.toBe\\(200\\)`).test(code);
@@ -1094,7 +1094,7 @@ test('TC-3014: สร้าง Watchlist แล้วใช้ id จาก resp
       if (hasStatusCheck && hasJsonRead && hasTickerCheck) {
         log("✓ ขั้นตอนที่ 4: ตรวจสอบ status 200 และ body.ticker === 'TSLA' จาก response ของ GET ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบ status code 200 และ body.ticker ที่ตรงกับ 'TSLA' จาก response ของ GET\nตัวอย่าง: expect(getResponse.status()).toBe(200);\nconst body = await getResponse.json();\nexpect(body.ticker).toBe('TSLA');");
+        throw new Error("ยังไม่พบการตรวจสอบ status code ของ response ที่ได้จากขั้นตอนที่ 2 และค่า ticker ใน body ว่าตรงกับที่สร้างไว้จริงหรือไม่");
       }
     },
     hint: "ห้ามคิด id เอง — ต้องดึงค่าที่ backend สร้างขึ้นให้จากการยิง POST ครั้งแรกออกมาจาก response body ก่อน แล้วค่อยเอาค่านั้นแทรกลงใน URL ของ request ถัดไปด้วย template literal จากนั้นตรวจสอบว่าข้อมูลที่ดึงกลับมาตรงกับสิ่งที่สร้างไว้จริง",
@@ -1164,7 +1164,7 @@ test('TC-3015: Login ดึง Token แล้วใช้ Authorization Header 
       if (hasUnauthCheck) {
         log("✓ ขั้นตอนที่ 1: ยิง GET /api/portfolio/secure โดยไม่มี token แล้วตรวจสอบ status 401 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง GET /api/portfolio/secure โดยไม่แนบ Authorization header แล้วตรวจสอบ status 401\nตัวอย่าง: const unauthorizedResponse = await request.get('/api/portfolio/secure');\nexpect(unauthorizedResponse.status()).toBe(401);");
+        throw new Error("ยังไม่พบการยิง GET ไปยัง endpoint ที่ต้อง auth โดยไม่แนบ Authorization header ใดๆ แล้วตรวจสอบว่า status code บ่งบอกว่าไม่ผ่านการยืนยันตัวตน");
       }
 
       const loginMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.post\(['"]\/api\/auth\/login['"]\s*,\s*\{\s*data:\s*\{\s*username:\s*['"]qa_user['"]\s*,\s*password:\s*['"]qa_pass['"]\s*\}\s*\}\s*\)/);
@@ -1173,7 +1173,7 @@ test('TC-3015: Login ดึง Token แล้วใช้ Authorization Header 
       if (hasTokenCapture) {
         log("✓ ขั้นตอนที่ 2: ยิง POST /api/auth/login แล้วดึง token จาก response body ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง POST /api/auth/login ด้วย data: { username: 'qa_user', password: 'qa_pass' } พร้อมดึง token จาก response body\nตัวอย่าง: const loginResponse = await request.post('/api/auth/login', { data: { username: 'qa_user', password: 'qa_pass' } });\nconst { token } = await loginResponse.json();");
+        throw new Error("ยังไม่พบการยิง POST ไปยัง endpoint login พร้อม credential ตามที่โจทย์กำหนด แล้ว destructure ค่า token ออกมาจาก response body");
       }
 
       const authedMatch = code.match(/const\s+(\w+)\s*=\s*await\s+request\.get\(['"]\/api\/portfolio\/secure['"]\s*,\s*\{\s*headers:\s*\{\s*Authorization:\s*`Bearer\s*\$\{token\}`\s*\}\s*\}\s*\)/);
@@ -1182,7 +1182,7 @@ test('TC-3015: Login ดึง Token แล้วใช้ Authorization Header 
       if (authedVar && hasAuthedCheck) {
         log("✓ ขั้นตอนที่ 3: แนบ token เป็น Authorization: Bearer header ยิง GET อีกครั้งแล้วตรวจสอบ status 200 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการยิง GET /api/portfolio/secure พร้อมแนบ headers: { Authorization: `Bearer ${token}` } แล้วตรวจสอบ status 200\nตัวอย่าง: const authorizedResponse = await request.get('/api/portfolio/secure', { headers: { Authorization: `Bearer ${token}` } });\nexpect(authorizedResponse.status()).toBe(200);");
+        throw new Error("ยังไม่พบการยิง GET ไปยัง endpoint เดิมอีกครั้ง พร้อมแนบ token ที่ได้จากขั้นตอนก่อนหน้าเข้า header สำหรับยืนยันตัวตนในรูปแบบ Bearer scheme แล้วตรวจสอบว่าผ่านได้สำเร็จหรือไม่");
       }
     },
     hint: "แยกทดสอบสองสถานการณ์ให้ชัดเจน: (1) ไม่มี token เลยต้องถูกปฏิเสธ (2) มี token ที่ได้จากการ login จริงต้องผ่านได้ — token ที่ได้จากขั้นตอน login ต้องถูกแนบไปกับ request ถัดไปผ่าน header สำหรับยืนยันตัวตนในรูปแบบ Bearer scheme ไม่ใช่ header ธรรมดา",

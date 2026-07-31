@@ -37,14 +37,14 @@ export default function () {
       if (hasGet) {
         log("✓ ขั้นตอนที่ 1: ยิง http.get(`${BASE_URL}/api/ai/health`) ถูกต้อง");
       } else {
-        throw new Error("ไม่พบคำสั่ง http.get(`${BASE_URL}/api/ai/health`)\nตัวอย่าง: const res = http.get(`${BASE_URL}/api/ai/health`);");
+        throw new Error("ยังไม่พบการยิง GET request ไปที่ endpoint /api/ai/health ด้วย http.get() ลองตรวจสอบว่าใช้ template literal ผสมตัวแปร BASE_URL ถูกต้องหรือไม่ และเก็บผลลัพธ์ไว้ในตัวแปรเพื่อนำไปตรวจสอบต่อ");
       }
 
       const hasCheck = /check\(res,\s*\{[\s\S]*?status\s*===\s*200[\s\S]*?\}\)/.test(src);
       if (hasCheck) {
         log("✓ ขั้นตอนที่ 2: ใช้ check() ตรวจสอบ status 200 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบการตรวจสอบด้วย check()\nตัวอย่าง: check(res, { 'status is 200': (r) => r.status === 200 });");
+        throw new Error("ยังไม่พบการใช้ check() เพื่อตรวจสอบว่า status code ของ response ที่ได้ตรงกับ 200 หรือไม่");
       }
     },
     hint: "ใช้ http.get() ของ k6 ยิงไปที่ endpoint /api/ai/health ผ่านตัวแปร BASE_URL แล้วเก็บผลลัพธ์ไว้ในตัวแปร จากนั้นใช้ check() ตรวจสอบว่าค่า status ของ response ตรงกับ 200 หรือไม่",
@@ -123,7 +123,7 @@ export default function () {
       if (hasOptions) {
         log("✓ ตั้งค่า options ด้วย vus: 10 และ duration: '30s' ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ export const options ที่มี vus: 10 และ duration: '30s'\nตัวอย่าง: export const options = { vus: 10, duration: '30s' };");
+        throw new Error("ยังไม่พบการประกาศ export const options ที่มี key สำหรับกำหนดจำนวน Virtual User และ key สำหรับระยะเวลาการทดสอบตามค่าที่โจทย์กำหนดไว้ครบทั้งสองค่า");
       }
     },
     hint: "กำหนด object ชื่อ options แล้ว export ออกไป โดยใส่ key สำหรับจำนวน Virtual User และ key สำหรับระยะเวลาการทดสอบตามค่าที่โจทย์กำหนด",
@@ -181,14 +181,14 @@ export default function () {
       if (hasDuration) {
         log("✓ ขั้นตอนที่ 1: ตั้ง threshold http_req_duration p(95)<500 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ threshold http_req_duration: ['p(95)<500']\nตัวอย่าง: http_req_duration: ['p(95)<500'],");
+        throw new Error("ยังไม่พบการตั้งค่า threshold ของ http_req_duration ให้ตรงกับเงื่อนไข percentile ที่โจทย์กำหนดภายใน thresholds");
       }
 
       const hasFailed = /http_req_failed:\s*\[\s*['"]rate<0\.01['"]\s*\]/.test(src);
       if (hasFailed) {
         log("✓ ขั้นตอนที่ 2: ตั้ง threshold http_req_failed rate<0.01 ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ threshold http_req_failed: ['rate<0.01']\nตัวอย่าง: http_req_failed: ['rate<0.01'],");
+        throw new Error("ยังไม่พบการตั้งค่า threshold ของ http_req_failed ให้ตรงกับอัตราความล้มเหลวที่โจทย์กำหนดภายใน thresholds");
       }
     },
     hint: "เพิ่ม key thresholds เข้าไปใน options โดยใช้ชื่อ metric http_req_duration และ http_req_failed เป็น key แต่ละตัวรับค่าเป็น array ของเงื่อนไขในรูปแบบ string ตามไวยากรณ์ percentile/rate ของ k6",
@@ -251,19 +251,19 @@ export default function () {
       if (hasRampUp) {
         log("✓ ขั้นตอนที่ 1: ramp up 0→20 VU ใน 10s ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ stage ramp up { duration: '10s', target: 20 }");
+        throw new Error("ยังไม่พบ stage สำหรับช่วงไต่ขึ้น (ramp-up) ที่ระยะเวลาและ VU เป้าหมายตรงกับที่โจทย์กำหนดในข้อ 1");
       }
 
       if (hasPlateau) {
         log("✓ ขั้นตอนที่ 2: คงที่ 20 VU นาน 30s ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ stage คงที่ { duration: '30s', target: 20 }");
+        throw new Error("ยังไม่พบ stage สำหรับช่วงคงที่ (plateau) ที่ระยะเวลาและ VU เป้าหมายตรงกับที่โจทย์กำหนดในข้อ 2");
       }
 
       if (hasRampDown) {
         log("✓ ขั้นตอนที่ 3: ramp down 20→0 VU ใน 10s ถูกต้อง");
       } else {
-        throw new Error("ไม่พบ stage ramp down { duration: '10s', target: 0 }");
+        throw new Error("ยังไม่พบ stage สำหรับช่วงไต่ลง (ramp-down) ที่ระยะเวลาและ VU เป้าหมายตรงกับที่โจทย์กำหนดในข้อ 3");
       }
     },
     hint: "แทนที่จะใช้ vus/duration ตรงๆ ให้ใช้ key stages ซึ่งเป็น array ของ object { duration, target } เรียงต่อกัน 3 ช่วงตามลำดับที่โจทย์อธิบาย (ไต่ขึ้น, คงที่, ไต่ลง)",
@@ -342,9 +342,9 @@ export default function () {
       if (hasCorrectCheck) {
         log("✓ ใช้ check() ที่ยอมรับทั้ง 200 และ 429 ถูกต้อง (รองรับ Rate Limit จริงของ server)");
       } else if (hasWrongCheck) {
-        throw new Error("check() นี้เช็คเฉพาะ status 200 เท่านั้น — เมื่อ 20 VU ยิงต่อเนื่องจะชน Rate Limit จริง (100 req/min) แล้วได้ 429 กลับมา ทำให้ check() นี้ fail จำนวนมากทั้งที่ server ทำงานถูกต้องตามที่ออกแบบไว้\nตัวอย่าง: check(res, { 'status is 200 or 429': (r) => r.status === 200 || r.status === 429 });");
+        throw new Error("check() นี้เช็คเฉพาะ status 200 เท่านั้น — เมื่อ 20 VU ยิงต่อเนื่องจะชน Rate Limit จริง (100 req/min) แล้วได้ 429 กลับมา ทำให้ check() นี้ fail จำนวนมากทั้งที่ server ทำงานถูกต้องตามที่ออกแบบไว้ ลองปรับเงื่อนไขใน check() ให้ยอมรับ status code ที่คาดหวังได้มากกว่าหนึ่งค่า");
       } else {
-        throw new Error("ไม่พบการเช็คด้วย check()\nตัวอย่าง: check(res, { 'status is 200 or 429': (r) => r.status === 200 || r.status === 429 });");
+        throw new Error("ยังไม่พบการตรวจสอบด้วย check() เลย ลองเพิ่มการตรวจสอบ status code ของ response ตามที่โจทย์อธิบาย");
       }
     },
     hint: "ออกแบบเงื่อนไขใน check() ให้ยอมรับได้มากกว่าหนึ่ง status code โดยใช้ operator OR (||) ระหว่างเงื่อนไข status 200 กับเงื่อนไข status 429 เพราะ Rate Limiter จริงจะตอบ 429 เมื่อโดนจำกัด ไม่ใช่ error",
@@ -414,10 +414,10 @@ export default function () {
       const hasImport = /import\s*\{\s*sleep\s*\}\s*from\s*['"]k6['"]/.test(src);
       const hasSleep = /sleep\(1\)/.test(src);
       if (!hasImport) {
-        throw new Error("ไม่พบ import { sleep } from 'k6'\nตัวอย่าง: import { sleep } from 'k6';");
+        throw new Error("ยังไม่พบการ import ฟังก์ชันสำหรับหน่วงเวลาจากโมดูล k6");
       }
       if (!hasSleep) {
-        throw new Error("ไม่พบคำสั่ง sleep(1)\nตัวอย่าง: sleep(1);");
+        throw new Error("ยังไม่พบการเรียกใช้ฟังก์ชันหน่วงเวลาด้วยจำนวนวินาทีตามที่โจทย์กำหนด");
       }
       log("✓ ใช้ sleep(1) จำลอง think time ถูกต้อง");
     },
@@ -482,13 +482,13 @@ export default function () {
       const hasConditionalAdd = /if\s*\(\s*res\.status\s*===\s*429\s*\)\s*\{[\s\S]*?\.add\(1\)[\s\S]*?\}/.test(src);
 
       if (!hasImport) {
-        throw new Error("ไม่พบ import { Counter } from 'k6/metrics'\nตัวอย่าง: import { Counter } from 'k6/metrics';");
+        throw new Error("ยังไม่พบการ import ชนิด metric สำหรับนับจำนวนสะสมจากโมดูล k6/metrics");
       }
       if (!hasDeclare) {
-        throw new Error("ไม่พบการสร้าง Counter ชื่อ 'rate_limit_count'\nตัวอย่าง: const rateLimitCount = new Counter('rate_limit_count');");
+        throw new Error("ยังไม่พบการสร้าง instance ของ Counter ด้วยชื่อ metric ตามที่โจทย์กำหนด");
       }
       if (!hasConditionalAdd) {
-        throw new Error("ต้องเพิ่มค่า Counter ด้วย .add(1) เฉพาะภายในเงื่อนไขที่ตรวจสอบ res.status === 429 เท่านั้น (ไม่ใช่เพิ่มแบบไม่มีเงื่อนไข)\nตัวอย่างโครงสร้าง: if (res.status === 429) { rateLimitCount.add(1); }");
+        throw new Error("ต้องเพิ่มค่า Counter เฉพาะภายในเงื่อนไขที่ตรวจสอบ status ของ response ว่าตรงกับค่าที่โจทย์ระบุเท่านั้น (ไม่ใช่เพิ่มแบบไม่มีเงื่อนไข)");
       }
       log("✓ สร้างและใช้งาน Custom Counter ถูกต้อง");
     },
@@ -562,10 +562,10 @@ export default function () {
       const hasModel = /\/api\/ai\/model[`'"]/.test(groupBody);
 
       if (!hasImport) {
-        throw new Error("ไม่พบ import { group } from 'k6'\nตัวอย่าง: import { group } from 'k6';");
+        throw new Error("ยังไม่พบการ import ฟังก์ชันสำหรับจัดกลุ่ม transaction จากโมดูล k6");
       }
       if (!groupMatch) {
-        throw new Error("ไม่พบ group('AI Model Check', ...)\nตัวอย่าง: group('AI Model Check', () => { ... });");
+        throw new Error("ยังไม่พบการเรียกใช้ฟังก์ชันจัดกลุ่มด้วยชื่อกลุ่มตามที่โจทย์กำหนด");
       }
       if (!hasHealth || !hasModel) {
         throw new Error("ต้องยิงทั้ง /api/ai/health และ /api/ai/model ไว้ภายใน callback ของ group('AI Model Check', ...) เดียวกัน ไม่ใช่นอก group");
@@ -639,13 +639,13 @@ export default function () {
       const hasDuration = /duration:\s*['"]20s['"]/.test(scenarioBody);
 
       if (!hasScenarios || !scenarioMatch) {
-        throw new Error("ไม่พบ scenarios ชื่อ 'steady_load'\nตัวอย่าง: scenarios: { steady_load: { ... } }");
+        throw new Error("ยังไม่พบการกำหนด scenarios ที่มีชื่อตามที่โจทย์ระบุ");
       }
       if (!hasExecutor) {
-        throw new Error("ไม่พบ executor: 'constant-vus' ภายใน scenario steady_load");
+        throw new Error("ยังไม่พบการกำหนด executor ที่ถูกต้องตามชนิดที่โจทย์ระบุภายใน scenario steady_load");
       }
       if (!hasVus || !hasDuration) {
-        throw new Error("ไม่พบ vus: 15 และ duration: '20s' ภายใน scenario steady_load");
+        throw new Error("ยังไม่พบค่าจำนวน VU และระยะเวลาให้ตรงกับที่โจทย์กำหนดภายใน scenario steady_load");
       }
       log("✓ ตั้งค่า scenarios แบบ constant-vus ถูกต้อง");
     },
@@ -720,10 +720,10 @@ export default function (data) {
       const hasTeardown = /export function teardown\s*\(\s*\)\s*\{[\s\S]*?console\.log\(['"]Load test เสร็จสมบูรณ์['"]\)/.test(src);
 
       if (!hasSetup) {
-        throw new Error("ไม่พบ setup() ที่ยิง http.get แล้ว return ค่า\nตัวอย่าง: export function setup() { const res = http.get(...); return { healthCheckStatus: res.status }; }");
+        throw new Error("ยังไม่พบฟังก์ชัน setup() ที่ยิง request ตรวจสอบ health แล้ว return ค่าผลลัพธ์ออกมาตามที่โจทย์กำหนด");
       }
       if (!hasTeardown) {
-        throw new Error("ไม่พบ teardown() ที่ console.log('Load test เสร็จสมบูรณ์')\nตัวอย่าง: export function teardown() { console.log('Load test เสร็จสมบูรณ์'); }");
+        throw new Error("ยังไม่พบฟังก์ชัน teardown() ที่พิมพ์ข้อความสรุปตามที่โจทย์กำหนดออกทาง console");
       }
       log("✓ เขียน setup() และ teardown() ถูกต้อง");
     },
@@ -807,7 +807,7 @@ export default function () {
       const hasRampDown = /\{\s*duration:\s*['"]10s['"]\s*,\s*target:\s*0\s*\}/.test(stagesBody);
 
       if (!stagesMatch) {
-        throw new Error("ไม่พบ stages array\nตัวอย่างรูปแบบ: stages: [ { duration: '10s', target: 30 }, ... ]");
+        throw new Error("ยังไม่พบการกำหนด stages เป็น array ภายใน options");
       }
       if (!hasRampUp || !hasPlateau || !hasRampDown) {
         throw new Error("stages ต้องมีครบ 3 ช่วง: ไต่ขึ้น 0→30 VU ใน 10s, คงที่ 30 VU นาน 20s, ไต่ลง 30→0 VU ใน 10s");
@@ -820,7 +820,7 @@ export default function () {
       const hasFailed = /http_req_failed:\s*\[\s*['"]rate<0\.02['"]\s*\]/.test(thresholdsBody);
 
       if (!thresholdsMatch || !hasDuration || !hasFailed) {
-        throw new Error("thresholds ต้องมีทั้ง http_req_duration: ['p(95)<400'] และ http_req_failed: ['rate<0.02'] พร้อมกันในเงื่อนไขเดียว");
+        throw new Error("thresholds ต้องมีทั้ง http_req_duration และ http_req_failed พร้อมกันในเงื่อนไขเดียว โดยแต่ละตัวตั้งค่าตามเกณฑ์ percentile และอัตราที่โจทย์กำหนด");
       }
       log("✓ ขั้นตอนที่ 2: thresholds ครอบคลุมทั้ง p95 latency และ error rate ถูกต้อง");
     },
@@ -905,7 +905,7 @@ export default function () {
       const hasBaselineDuration = /duration:\s*['"]20s['"]/.test(baselineBody);
 
       if (!baselineMatch || !hasBaselineExecutor || !hasBaselineVus || !hasBaselineDuration) {
-        throw new Error("ไม่พบ scenario 'baseline_load' ที่ถูกต้อง (ต้องมี executor: 'constant-vus', vus: 10, duration: '20s')");
+        throw new Error("ยังไม่พบ scenario 'baseline_load' ที่ถูกต้อง (ต้องกำหนด executor, จำนวน VU, และระยะเวลาให้ตรงกับที่โจทย์ระบุ)");
       }
       log("✓ ขั้นตอนที่ 1: scenario baseline_load ถูกต้อง");
 
@@ -917,7 +917,7 @@ export default function () {
       const hasRampDown = /\{\s*duration:\s*['"]5s['"]\s*,\s*target:\s*0\s*\}/.test(spikeBody);
 
       if (!spikeMatch || !hasSpikeExecutor || !hasStartVUs || !hasRampUp || !hasRampDown) {
-        throw new Error("ไม่พบ scenario 'stress_spike' ที่ถูกต้อง (ต้องมี executor: 'ramping-vus', startVUs: 0, stages ไต่ขึ้น 0→40 ใน 5s แล้วลงกลับ 0 ใน 5s, และ startTime: '10s')");
+        throw new Error("ยังไม่พบ scenario 'stress_spike' ที่ถูกต้อง (ต้องกำหนด executor แบบไต่ระดับ, startVUs, stages ไต่ขึ้น-ลงตามที่โจทย์อธิบาย, และเวลาเริ่มต้นให้ตรงกับที่โจทย์กำหนด)");
       }
       log("✓ ขั้นตอนที่ 2: scenario stress_spike ถูกต้อง");
 
@@ -927,7 +927,7 @@ export default function () {
       const hasBodyCheck = /body\.includes\(\s*['"]ok['"]\s*\)/.test(checkBody);
 
       if (!checkMatch || !hasStatusCheck || !hasBodyCheck) {
-        throw new Error("check() ต้องตรวจสอบทั้ง status === 200 และ body.includes('ok') พร้อมกันในเงื่อนไขเดียวกัน");
+        throw new Error("check() ต้องตรวจสอบทั้งค่า status code และเนื้อหาใน response body พร้อมกันในเงื่อนไขเดียวกันตามที่โจทย์กำหนด");
       }
       log("✓ ขั้นตอนที่ 3: check() แบบ compound (status + body) ถูกต้อง");
     },

@@ -42,13 +42,13 @@ export default defineConfig({
       if (/baseURL:\s*['"]https:\/\/japan-trip\.test['"]/.test(clean)) {
         log("✓ [AC-101 Passed]: กำหนด baseURL: 'https://japan-trip.test' เป็นท่อกลางสำเร็จ");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-101]: กรุณากำหนด baseURL: 'https://japan-trip.test'");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-101]: ยังไม่พบการกำหนดค่า baseURL ให้ตรงกับที่ระบุในโจทย์ ภายใน use ของ defineConfig");
       }
 
       if (/trace:\s*['"]on-first-retry['"]/.test(clean)) {
         log("✓ [AC-102 Passed]: กำหนด trace: 'on-first-retry' สำหรับ CI/CD สำเร็จ");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-102]: กรุณากำหนด trace: 'on-first-retry'");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-102]: ยังไม่พบการเปิดใช้งาน trace ตามโหมดที่ระบุในโจทย์");
       }
     },
     hint: "ใส่ baseURL: 'https://japan-trip.test', trace: 'on-first-retry' ภายใน defineConfig({ use: { ... } });",
@@ -91,19 +91,19 @@ export default defineConfig({
       if (/CREATE\s+TABLE\s+japan_trip_bookings/i.test(clean)) {
         log("✓ [AC-201 Passed]: คำสั่ง CREATE TABLE japan_trip_bookings ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-201]: ไม่พบคำสั่ง CREATE TABLE japan_trip_bookings");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-201]: ยังไม่พบคำสั่งสร้างตารางตามชื่อที่ระบุในโจทย์");
       }
 
       if (/passport_no/i.test(clean) && /concert_date/i.test(clean) && /departure_date/i.test(clean) && /return_date/i.test(clean)) {
         log("✓ [AC-202 Passed]: คอลัมน์ concert_date, departure_date, return_date, passport_no ครบถ้วน");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-202]: คอลัมน์ไม่ครบถ้วน ต้องมี concert_date, departure_date, return_date, passport_no");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-202]: คอลัมน์ยังไม่ครบตามที่ระบุในโจทย์ ลองเช็คว่าใส่ครบทุกคอลัมน์เกี่ยวกับวันเดินทางและพาสปอร์ตหรือยัง");
       }
 
       if (/user_name[^,]*NOT\s+NULL/i.test(clean) && /passport_no[^,]*NOT\s+NULL/i.test(clean)) {
         log("✓ [AC-203 Passed]: user_name และ passport_no กำหนด NOT NULL ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-203]: user_name และ passport_no ต้องกำหนด NOT NULL");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-203]: คอลัมน์ระบุตัวตนผู้จองยังไม่ถูกบังคับห้ามเว้นว่างตามที่ระบุในโจทย์");
       }
     },
     hint: "ต่อท้ายชนิดข้อมูลของ user_name และ passport_no ด้วย NOT NULL เช่น user_name VARCHAR(100) NOT NULL — type/length เลือกเองได้ ไม่มีล็อกตายตัว",
@@ -152,25 +152,25 @@ test('FP-4003: จองทริปญี่ปุ่นผ่าน API แล
       if (/await\s+request\.post\(['"]\/api\/japan-trip\/book['"]/.test(clean)) {
         log("✓ [AC-301a Passed]: ยิง request.post('/api/japan-trip/book') ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ไม่พบคำสั่ง request.post('/api/japan-trip/book', { data: ... })");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ยังไม่พบการเรียก HTTP POST ไปยัง endpoint การจองตั๋วตามที่ระบุในโจทย์");
       }
 
       if (/expect\([\w]+\.status\(\)\)\.toBe\(200\)/.test(clean) && /expect\([\w]+\.status\)\.toBe\(['"]CONFIRMED['"]\)/.test(clean)) {
         log("✓ [AC-301b Passed]: ได้รับ HTTP 200 OK และ body.status เป็น 'CONFIRMED'");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ต้องตรวจสอบ status code 200 และ body.status เป็น 'CONFIRMED' จาก /book");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ต้องตรวจสอบทั้ง status code และค่าผลลัพธ์การจองให้ตรงกับที่ระบุในโจทย์");
       }
 
       if (/await\s+request\.post\(['"]\/api\/japan-trip\/verify-visa['"]/.test(clean)) {
         log("✓ [AC-302a Passed]: ยิง request.post('/api/japan-trip/verify-visa') ต่อในเทสเดียวกัน ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ต้องยิง request.post('/api/japan-trip/verify-visa', ...) ต่อในเทสเดียวกันกับ /book");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ยังไม่พบการเรียก HTTP POST ไปยัง endpoint ตรวจสอบวีซ่า ต่อในเทสเดียวกันกับการจอง");
       }
 
       if (/expect\([\w]+\.visaRequired\)\.toBe\(false\)/.test(clean)) {
         log("✓ [AC-302b Passed]: ได้รับสิทธิ์ยกเว้นวีซ่า (visaRequired: false) ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ต้องตรวจสอบ body.visaRequired เป็น false");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ต้องตรวจสอบผลลัพธ์การยกเว้นวีซ่าให้ตรงกับที่ระบุในโจทย์");
       }
     },
     hint: "หนึ่ง test() เดียว ยิง POST /book ก่อน เช็ค response แล้วแปลง json เก็บตัวแปร จากนั้นยิง POST /verify-visa ต่อ (คำนวณ stayDays เองจาก 14-18 ต.ค. = 4 วัน) แล้วเช็ค response ที่สอง",
@@ -225,32 +225,32 @@ expect(b2.visaRequired).toBe(false);`,
 
 // [Phase 4 Spec] ก่อนกรอกฟอร์มจอง ต้องเรียกใช้ API เดียวกับ Phase 3 เพื่อยืนยัน visa compliance ในเทสเดียวกันก่อน
 test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองบนเว็บ', async ({ page, request }) => {
-  // AC-501: เรียก request.post('/api/japan-trip/verify-visa') ซ้ำแบบ Phase 3 -> ต้องได้ body.visaRequired เป็น false ก่อนไปต่อ
+  // AC-401: เรียก request.post('/api/japan-trip/verify-visa') ซ้ำแบบ Phase 3 -> ต้องได้ body.visaRequired เป็น false ก่อนไปต่อ
   // WRITE YOUR CODE HERE
 
 
-  // AC-502: page.goto('/japan-trip') กรอกวันเดินทาง 2026-10-14 ใน #departure-date คลิก #confirm-booking-btn และตรวจ #booking-status มีคำว่า 'Booking Successful'
+  // AC-402: page.goto('/japan-trip') กรอกวันเดินทาง 2026-10-14 ใน #departure-date คลิก #confirm-booking-btn และตรวจ #booking-status มีคำว่า 'Booking Successful'
 
 });`,
     validate: (code, log) => {
       const clean = stripComments(code);
       log("🔍 [Phase 4 PRD Validation] กำลังตรวจสอบ Web UI E2E Journey...");
       if (/await\s+request\.post\(['"]\/api\/japan-trip\/verify-visa['"]/.test(clean) && /expect\([\w]+\.visaRequired\)\.toBe\(false\)/.test(clean)) {
-        log("✓ [AC-501 Passed]: เรียกใช้ verify-visa API ซ้ำจาก Phase 3 และยืนยัน visaRequired เป็น false ก่อนกรอกฟอร์ม");
+        log("✓ [AC-401 Passed]: เรียกใช้ verify-visa API ซ้ำจาก Phase 3 และยืนยัน visaRequired เป็น false ก่อนกรอกฟอร์ม");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-501]: ต้องเรียก request.post('/api/japan-trip/verify-visa', ...) แล้วเช็ค body.visaRequired เป็น false ก่อนไปกรอกฟอร์ม");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-401]: ยังไม่พบการเรียก API ตรวจสอบวีซ่าซ้ำจาก Phase 3 ก่อนไปกรอกฟอร์ม (ใช้ fixture request ร่วมกับ page)");
       }
 
       if (/await\s+page\.goto\(['"]\/japan-trip['"]\)/.test(clean) && (/fill\(['"]#departure-date['"]\s*,\s*['"]2026-10-14['"]\)/.test(clean) || /locator\(['"]#departure-date['"]\)\.fill\(['"]2026-10-14['"]\)/.test(clean))) {
-        log("✓ [AC-502a Passed]: เปิดหน้า /japan-trip และกรอกวันเดินทาง #departure-date ถูกต้อง");
+        log("✓ [AC-402a Passed]: เปิดหน้า /japan-trip และกรอกวันเดินทาง #departure-date ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-502]: ต้องสั่ง page.goto('/japan-trip') และ fill '#departure-date' ด้วย '2026-10-14'");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่พบการเปิดหน้าเว็บและกรอกวันเดินทางตามที่ระบุในโจทย์");
       }
 
       if (/click\(['"]#confirm-booking-btn['"]\)/.test(clean) && /toContainText\(['"]Booking Successful['"]\)/.test(clean)) {
-        log("✓ [AC-502b Passed]: คลิกปุ่มยืนยันและได้รับการยืนยัน 'Booking Successful' บนหน้าจอ");
+        log("✓ [AC-402b Passed]: คลิกปุ่มยืนยันและได้รับการยืนยัน 'Booking Successful' บนหน้าจอ");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-502]: ต้องสั่ง click('#confirm-booking-btn') และตรวจ #booking-status มีคำว่า 'Booking Successful'");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่พบการคลิกยืนยันการจองและตรวจข้อความแจ้งผลบนหน้าจอตามที่ระบุในโจทย์");
       }
     },
     hint: "test ต้องรับทั้ง { page, request } — ยิง request.post('/api/japan-trip/verify-visa', ...) เช็ค visaRequired false ก่อน แล้วค่อย page.goto('/japan-trip'); page.fill('#departure-date', '2026-10-14'); page.click('#confirm-booking-btn'); expect(page.locator('#booking-status')).toContainText('Booking Successful');",
@@ -274,8 +274,8 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
     theory: `📌 <strong>1. Business & Architectural Context (บริบทระบบ):</strong><br/>
     ต่อยอดจาก Phase 3 โดยตรง — ทีม Frontend UX/UI และ Web QA สร้างระบบ E2E Automation บนเบราว์เซอร์จริง แต่ก่อนกรอกฟอร์มจองต้อง "reuse" API เดียวกับ Phase 3 เพื่อยืนยัน compliance ก่อน สะท้อนว่า UI flow จริงต้องพึ่งพา backend check เดิม ไม่ใช่แยกจากกัน<br/><br/>
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
-    • <code>[AC-501]</code>: เรียก API <code>/api/japan-trip/verify-visa</code> ซ้ำจาก Phase 3 ในเทสนี้ (ใช้ fixture <code>request</code> ร่วมกับ <code>page</code>) แล้วต้องได้ <code>visaRequired: false</code> ก่อนไปกรอกฟอร์ม<br/>
-    • <code>[AC-502]</code>: เปิดหน้าเว็บ <code>/japan-trip</code> ระบุวันออกเดินทาง <code>2026-10-14</code> ในช่อง <code>#departure-date</code> คลิกปุ่มยืนยัน <code>#confirm-booking-btn</code> และตรวจ <code>#booking-status</code> ต้องมีคำว่า <code>'Booking Successful'</code><br/><br/>
+    • <code>[AC-401]</code>: เรียก API <code>/api/japan-trip/verify-visa</code> ซ้ำจาก Phase 3 ในเทสนี้ (ใช้ fixture <code>request</code> ร่วมกับ <code>page</code>) แล้วต้องได้ <code>visaRequired: false</code> ก่อนไปกรอกฟอร์ม<br/>
+    • <code>[AC-402]</code>: เปิดหน้าเว็บ <code>/japan-trip</code> ระบุวันออกเดินทาง <code>2026-10-14</code> ในช่อง <code>#departure-date</code> คลิกปุ่มยืนยัน <code>#confirm-booking-btn</code> และตรวจ <code>#booking-status</code> ต้องมีคำว่า <code>'Booking Successful'</code><br/><br/>
     🏗️ <strong>3. Production Constraints:</strong> สคริปต์ต้องรอการตอบกลับจาก API (Auto-waiting) โดยไม่ใช้คำสั่งหลับแบบช้า <code>waitForTimeout</code> และห้ามข้ามขั้นตอนยืนยัน visa ไปกรอกฟอร์มตรงๆ`,
     example: `const r = await request.post('/api/example/verify-visa', { data: { ... } });
 const b = await r.json();
@@ -284,7 +284,7 @@ expect(b.visaRequired).toBe(false);
 await page.goto('/japan-trip');
 await page.fill('#departure-date', '2026-10-14');
 await page.click('#confirm-booking-btn');`,
-    task: `จงเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วค่อยทำ E2E บนหน้าเว็บ ตามเกณฑ์ <code>[AC-501]</code> และ <code>[AC-502]</code>`
+    task: `จงเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วค่อยทำ E2E บนหน้าเว็บ ตามเกณฑ์ <code>[AC-401]</code> และ <code>[AC-402]</code>`
   },
   {
     id: "fp_mobile_eticket",
@@ -296,26 +296,26 @@ Library          Browser
 
 *** Test Cases ***
 FP-4006: ตรวจสอบ E-Ticket QR Code บนแอปมือถือ
-    # AC-601: เปิดหน้าแอปมือถือไปที่ /mobile/e-ticket
+    # AC-501: เปิดหน้าแอปมือถือไปที่ /mobile/e-ticket
     # WRITE YOUR CODE HERE
 
 
-    # AC-602: ตรวจสอบว่ามีข้อความ "Japan Concert E-Ticket" บนหน้าจอ
+    # AC-502: ตรวจสอบว่ามีข้อความ "Japan Concert E-Ticket" บนหน้าจอ
 
 `,
     validate: (code, log) => {
       const clean = stripComments(code);
       log("🔍 [Phase 5 PRD Validation] กำลังตรวจสอบ Mobile Client App...");
       if (/New Page\s+https?:.*\/mobile\/e-ticket/i.test(clean) || /New Page\s+\/mobile\/e-ticket/i.test(clean) || /Open Browser\s+.*\/mobile\/e-ticket/i.test(clean)) {
-        log("✓ [AC-601 Passed]: เปิดหน้าแอปมือถือ /mobile/e-ticket ถูกต้อง");
+        log("✓ [AC-501 Passed]: เปิดหน้าแอปมือถือ /mobile/e-ticket ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-601]: ไม่พบคำสั่งเปิดหน้า /mobile/e-ticket");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-501]: ยังไม่พบคำสั่งเปิดหน้าแอปมือถือตามที่ระบุในโจทย์");
       }
 
       if (/Get Text\s+.*contains\s+Japan Concert E-Ticket/i.test(clean) || /Should Contain\s+.*Japan Concert E-Ticket/i.test(clean) || /Get Text\s+#ticket-title\s+==\s+Japan Concert E-Ticket/i.test(clean) || /Element Should Be Visible\s+.*Japan Concert E-Ticket/i.test(clean)) {
-        log("✓ [AC-602 Passed]: ตรวจพบตั๋ว 'Japan Concert E-Ticket' บนหน้าจอแอปมือถือ");
+        log("✓ [AC-502 Passed]: ตรวจพบตั๋ว 'Japan Concert E-Ticket' บนหน้าจอแอปมือถือ");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-602]: ไม่พบการตรวจสอบข้อความ 'Japan Concert E-Ticket'");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-502]: ยังไม่พบการตรวจสอบข้อความบนหน้าจอ E-Ticket ตามที่ระบุในโจทย์");
       }
     },
     hint: "ใช้ New Page  /mobile/e-ticket  แล้วเช็ค Get Text  #ticket-title  ==  Japan Concert E-Ticket",
@@ -331,12 +331,12 @@ FP-4006: ตรวจสอบ E-Ticket QR Code บนแอปมือถื�
     theory: `📌 <strong>1. Business & Architectural Context (บริบทระบบ):</strong><br/>
     ต่อยอดจาก Phase 4 เมื่อผู้ใช้จองสำเร็จบนเว็บแล้ว ทีม Mobile App พัฒนาสคริปต์ดึงตั๋ว E-Ticket และ QR Code มาแสดงบนแอปพลิเคชันมือถือสำหรับสแกนเข้าประตูเกตสนามบินและประตูหน้างานคอนเสิร์ต Tokyo Dome<br/><br/>
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
-    • <code>[AC-601]</code>: ใช้ Robot Framework สั่งเปิดหน้าแอปมือถือ <code>/mobile/e-ticket</code><br/>
-    • <code>[AC-602]</code>: ดึงข้อความจาก element <code>#ticket-title</code> และตรวจสอบว่ามีข้อความ <code>'Japan Concert E-Ticket'</code><br/><br/>
+    • <code>[AC-501]</code>: ใช้ Robot Framework สั่งเปิดหน้าแอปมือถือ <code>/mobile/e-ticket</code><br/>
+    • <code>[AC-502]</code>: ดึงข้อความจาก element <code>#ticket-title</code> และตรวจสอบว่ามีข้อความ <code>'Japan Concert E-Ticket'</code><br/><br/>
     🏗️ <strong>3. Production Constraints:</strong> ตั๋ว E-Ticket ต้องแสดงบาร์โค้ดสดและดึงข้อมูลวันดูคอนเสิร์ต 16 ต.ค. ได้ถูกต้องแม้ในโหมดออฟไลน์`,
     example: `New Page    /mobile/e-ticket
 \${title}=   Get Text    #ticket-title`,
-    task: `จงเขียน Robot Framework Keyword ตามเกณฑ์ <code>[AC-601]</code> และ <code>[AC-602]</code>`
+    task: `จงเขียน Robot Framework Keyword ตามเกณฑ์ <code>[AC-501]</code> และ <code>[AC-502]</code>`
   },
   {
     id: "fp_performance_k6",
@@ -363,19 +363,19 @@ export default function () {
       if (/vus:\s*1000/.test(clean)) {
         log("✓ [AC-601 Passed]: กำหนด vus: 1000 (1,000 Virtual Users) สำเร็จ");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-601]: ต้องกำหนด vus: 1000");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-601]: ยังไม่พบการกำหนดจำนวน Virtual Users ตามที่ระบุในโจทย์");
       }
 
       if (/duration:\s*['"]10s['"]/.test(clean)) {
         log("✓ [AC-602 Passed]: กำหนด duration: '10s' สำเร็จ");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-602]: ต้องกำหนด duration: '10s'");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-602]: ยังไม่พบการกำหนดระยะเวลาทดสอบตามที่ระบุในโจทย์");
       }
 
       if (/thresholds\s*:\s*{[\s\S]*http_req_duration[\s\S]*p\(95\)\s*<\s*500/.test(clean)) {
         log("✓ [AC-603 Passed]: กำหนด thresholds http_req_duration p(95) < 500ms สำเร็จ");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-603]: ต้องกำหนด thresholds: { http_req_duration: ['p(95)<500'] }");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-603]: ยังไม่พบการกำหนด SLA threshold สำหรับ http_req_duration ตามที่ระบุในโจทย์");
       }
     },
     hint: "ใส่ vus: 1000, duration: '10s', thresholds: { http_req_duration: ['p(95)<500'] } ใน export const options = { ... };",
@@ -439,7 +439,7 @@ jobs:
       if (/uses:\s*actions\/checkout@v4/.test(clean) || /uses:\s*actions\/checkout@v3/.test(clean)) {
         log("✓ [AC-701 Passed]: กำหนดสเต็ป uses: actions/checkout@v4 ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-701]: ต้องมีสเต็ป uses: actions/checkout@v4");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-701]: ยังไม่พบสเต็ป checkout ซอร์สโค้ดตามที่ระบุในโจทย์");
       }
 
       const setupNodeIdx = clean.search(/uses:\s*actions\/setup-node@v4/);
@@ -447,17 +447,17 @@ jobs:
       if (setupNodeIdx !== -1) {
         log("✓ [AC-702 Passed]: กำหนดสเต็ป uses: actions/setup-node@v4 ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-702]: ต้องมีสเต็ป uses: actions/setup-node@v4 ก่อนรันเทส");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-702]: ยังไม่พบสเต็ปติดตั้ง Node.js runtime ก่อนรันเทสตามที่ระบุในโจทย์");
       }
 
       if (npmTestIdx !== -1) {
         if (setupNodeIdx !== -1 && setupNodeIdx < npmTestIdx) {
           log("✓ [AC-703 Passed]: กำหนดสเต็ป run: npm test หลัง setup-node ถูกต้อง");
         } else {
-          throw new Error("ไม่ผ่านเกณฑ์ [AC-703]: สเต็ป run: npm test ต้องอยู่หลัง actions/setup-node@v4");
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-703]: สเต็ปรันเทสต้องอยู่หลังสเต็ปติดตั้ง Node.js runtime — เช็คลำดับสเต็ปอีกครั้ง");
         }
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-703]: ต้องมีสเต็ป run: npm test");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-703]: ยังไม่พบสเต็ปรันเทสทั้งหมดตามที่ระบุในโจทย์");
       }
     },
     hint: "เรียงลำดับ steps: - uses: actions/checkout@v4 แล้ว - uses: actions/setup-node@v4 แล้วค่อย - run: npm test ลำดับสำคัญ ติดตั้ง Node ก่อนรันเทสเสมอ",
@@ -518,19 +518,19 @@ function findBestTicketPrice(prices, targetPrice) {
       if (/return\s+mid\s*;/.test(clean) && /prices\[mid\]\s*===?\s*targetPrice/.test(clean)) {
         log("✓ [AC-801 Passed]: คืนค่า index (mid) เมื่อพบราคาเป้าหมาย ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-801]: ต้องคืนค่า mid (index) เมื่อ prices[mid] === targetPrice ห้ามคืนแค่ true");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-801]: เมื่อเจอราคาเป้าหมาย ยังไม่ได้คืนค่าตำแหน่ง index ตามที่ระบุในโจทย์ (ห้ามคืนค่า boolean)");
       }
 
       if (/left\s*=\s*mid\s*\+\s*1/.test(clean) && /right\s*=\s*mid\s*-\s*1/.test(clean)) {
         log("✓ [AC-802 Passed]: การปรับขอบเขต Binary Search O(log n) ถูกต้อง");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-802]: ต้องปรับขอบเขต left = mid + 1 และ right = mid - 1");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-802]: การปรับขอบเขตค้นหาทั้งสองทิศทางยังไม่ครบตามที่ระบุในโจทย์");
       }
 
       if (/return\s+-1\s*;/.test(clean)) {
         log("✓ [AC-803 Passed]: คืนค่า -1 เมื่อไม่พบ ถูกต้องตามธรรมเนียม index-based search");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-803]: ต้องคืนค่า -1 เมื่อหาไม่เจอ (ห้ามคืนค่า false)");
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-803]: เมื่อหาไม่เจอเลย ยังไม่ได้คืนค่าตามธรรมเนียม index-based search ที่ระบุในโจทย์");
       }
     },
     hint: "ถ้า prices[mid] === targetPrice คืนค่า mid (ไม่ใช่ true), ถ้า prices[mid] < targetPrice ปรับ left = mid + 1, ไม่งั้นปรับ right = mid - 1, สุดท้ายถ้าหลุด loop คืน -1",

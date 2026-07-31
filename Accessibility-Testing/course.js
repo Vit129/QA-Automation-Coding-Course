@@ -60,7 +60,7 @@ const LESSONS = [
         throw new Error("ไม่พบการรัน new AxeBuilder({ page }).analyze()");
       }
       if (!hasLengthCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า violations.length เป็น 0\nตัวอย่าง: expect(results.violations.length).toBe(0);");
+        throw new Error("ไม่พบการตรวจสอบว่า violations.length เป็น 0");
       }
       log("✓ สแกน Accessibility อัตโนมัติถูกต้อง (ไม่มี violation)");
     },
@@ -112,10 +112,10 @@ const results = await new AxeBuilder({ page })
         throw new Error("ไม่พบการดึงรูปภาพทั้งหมดด้วย page.locator('img') และ .count()");
       }
       if (!hasAltCheck) {
-        throw new Error("ไม่พบการตรวจสอบ attribute alt\nตัวอย่าง: await images.nth(i).getAttribute('alt')");
+        throw new Error("ไม่พบการตรวจสอบ attribute alt");
       }
       if (!hasTruthyCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า alt text ไม่ว่างเปล่า\nตัวอย่าง: expect(altText).toBeTruthy();");
+        throw new Error("ไม่พบการตรวจสอบว่า alt text ไม่ว่างเปล่า");
       }
       log("✓ ตรวจสอบ alt text ของรูปภาพทั้งหมดถูกต้อง");
     },
@@ -213,10 +213,10 @@ await expect(page.getByLabel('ค้นหา ticker ในประวัติ
         throw new Error("ไม่พบการกด Tab ด้วย page.keyboard.press('Tab')");
       }
       if (!hasActiveElementCheck) {
-        throw new Error("ไม่พบการเช็ค document.activeElement.tagName\nตัวอย่าง: await page.evaluate(() => document.activeElement.tagName)");
+        throw new Error("ไม่พบการเช็ค document.activeElement.tagName");
       }
       if (!hasNotBodyCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า activeElement ไม่ใช่ BODY ต่อเนื่องจากค่าที่ดึงมา\nตัวอย่าง: expect(tagName).not.toBe('BODY');");
+        throw new Error("ไม่พบการตรวจสอบว่า activeElement ไม่ใช่ BODY ต่อเนื่องจากค่าที่ดึงมา");
       }
       log("✓ ทดสอบ Keyboard Navigation ถูกต้อง (focus เลื่อนไปยัง element จริง)");
     },
@@ -267,7 +267,7 @@ const finalTag = await page.evaluate(() => document.activeElement.tagName);`,
         throw new Error("ไม่พบการดึง heading ทั้งหมดผ่าน page.evaluate() ด้วย document.querySelectorAll('h1, h2, h3, h4, h5, h6') แล้วแปลงเป็นตัวเลข level ด้วย tagName[1]");
       }
       if (!hasStepCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่าความต่างระหว่าง heading ที่ติดกันไม่เกิน 1\nตัวอย่าง: expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1);");
+        throw new Error("ไม่พบการตรวจสอบว่าความต่างระหว่าง heading ที่ติดกันไม่เกิน 1");
       }
       log("✓ ยืนยันได้ว่าลำดับ heading ไม่กระโดดข้ามระดับจริง");
     },
@@ -507,10 +507,10 @@ const results = await new AxeBuilder({ page })
         throw new Error("ไม่พบการดึง th ทั้งหมดด้วย page.locator('table th') และ .count()");
       }
       if (!hasScopeGet) {
-        throw new Error("ไม่พบการตรวจสอบ attribute scope\nตัวอย่าง: await headers.nth(i).getAttribute('scope')");
+        throw new Error("ไม่พบการตรวจสอบ attribute scope");
       }
       if (!hasColCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่า scope เป็น 'col'\nตัวอย่าง: expect(scope).toBe('col');");
+        throw new Error("ไม่พบการตรวจสอบว่า scope เป็น 'col'");
       }
       log('✓ ทุก th ในตารางผูก scope="col" ถูกต้อง');
     },
@@ -681,7 +681,7 @@ test('มี animation ตามปกติเมื่อไม่ได้ต
         throw new Error("อย่าใส่ outline: none ซ้ำใน .input-field:focus-visible — จุดประสงค์ของ selector นี้คือทดแทน outline ที่ถูกลบไป ไม่ใช่ลบซ้ำ");
       }
       if (!hasVisibleOutline) {
-        throw new Error("ใน .input-field:focus-visible ต้องกำหนด outline ที่มองเห็นได้จริง (ความหนาเป็น px + solid + สี) ไม่ใช่ outline: none หรือปล่อยว่าง\nตัวอย่าง: outline: 2px solid #10b981;");
+        throw new Error("ใน .input-field:focus-visible ต้องกำหนด outline ที่มองเห็นได้จริง (ความหนาเป็น px + solid + สี) ไม่ใช่ outline: none หรือปล่อยว่าง");
       }
       log("✓ เพิ่ม Focus Visible Indicator ทดแทน outline ที่ถูกลบไปถูกต้อง");
     },
@@ -745,7 +745,7 @@ test('มี animation ตามปกติเมื่อไม่ได้ต
         throw new Error("ไม่พบการกด Escape ด้วย page.keyboard.press('Escape')");
       }
       if (!hasDialogHidden) {
-        throw new Error("ไม่พบการตรวจสอบว่า dialog หายไปแล้วหลังกด Escape\nตัวอย่าง: expect(page.getByRole('dialog')).toBeHidden();");
+        throw new Error("ไม่พบการตรวจสอบว่า dialog หายไปแล้วหลังกด Escape");
       }
       log("✓ Modal Dialog มี role และปิดด้วย Escape ได้ถูกต้อง");
     },

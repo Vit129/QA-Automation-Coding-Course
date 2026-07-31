@@ -26,7 +26,7 @@ const LESSONS = [
       const src = stripComments(code);
       const hasScreenshot = /await expect\(page\)\.toHaveScreenshot\(\)/.test(src);
       if (!hasScreenshot) {
-        throw new Error("ไม่พบการเรียก toHaveScreenshot()\nตัวอย่าง: await expect(page).toHaveScreenshot();");
+        throw new Error("ไม่พบการเรียก toHaveScreenshot()");
       }
       log("✓ ถ่ายภาพหน้าจอเปรียบเทียบกับ baseline ถูกต้อง");
     },
@@ -65,7 +65,7 @@ await expect(page.getByTestId('watchlist-panel')).toHaveScreenshot();`,
         throw new Error("ไม่พบการเรียก toHaveScreenshot()");
       }
       if (!hasMaskOption) {
-        throw new Error("ไม่พบ option mask: [...]\nตัวอย่าง: await expect(page).toHaveScreenshot({ mask: [page.getByTestId('watchlist-current-price')] });");
+        throw new Error("ไม่พบ option mask: [...]");
       }
       if (!hasCorrectTestId) {
         throw new Error("mask ต้องเจาะจงไปที่ locator ของ data-testid='watchlist-current-price' โดยใช้ page.getByTestId(...) จริง ไม่ใช่แค่พิมพ์ชื่อ testId ไว้เฉยๆ");
@@ -111,10 +111,10 @@ await expect(page).toHaveScreenshot({
       const hasSetViewport = /setViewportSize\(\{\s*width:\s*375,\s*height:\s*667\s*\}\)/.test(src);
       const hasNamedScreenshot = /toHaveScreenshot\(['"]mobile\.png['"]\)/.test(src);
       if (!hasSetViewport) {
-        throw new Error("ไม่พบการตั้งค่า viewport 375x667\nตัวอย่าง: await page.setViewportSize({ width: 375, height: 667 });");
+        throw new Error("ไม่พบการตั้งค่า viewport 375x667");
       }
       if (!hasNamedScreenshot) {
-        throw new Error("ไม่พบการถ่ายภาพชื่อ 'mobile.png'\nตัวอย่าง: await expect(page).toHaveScreenshot('mobile.png');");
+        throw new Error("ไม่พบการถ่ายภาพชื่อ 'mobile.png'");
       }
       log("✓ เทส Responsive Visual สำหรับ viewport มือถือถูกต้อง");
     },
@@ -160,7 +160,7 @@ for (const vp of viewports) {
         throw new Error("ไม่พบการเรียก toHaveScreenshot()");
       }
       if (!hasFullPage) {
-        throw new Error("ไม่พบการตั้งค่า fullPage: true\nตัวอย่าง: await expect(page).toHaveScreenshot({ fullPage: true });");
+        throw new Error("ไม่พบการตั้งค่า fullPage: true");
       }
       log("✓ ถ่ายภาพทั้งหน้ารวมส่วนที่ต้องเลื่อนดูถูกต้อง");
     },
@@ -200,7 +200,7 @@ await expect(page.getByTestId('timeline-list')).toHaveScreenshot();`,
         throw new Error("ไม่พบการเรียก toHaveScreenshot()");
       }
       if (!hasMaxDiffRatio) {
-        throw new Error("ไม่พบการตั้งค่า maxDiffPixelRatio: 0.02\nตัวอย่าง: await expect(page).toHaveScreenshot({ maxDiffPixelRatio: 0.02 });");
+        throw new Error("ไม่พบการตั้งค่า maxDiffPixelRatio: 0.02");
       }
       log("✓ ตั้งค่า threshold ให้ยอมรับความต่างเล็กน้อยถูกต้อง");
     },
@@ -249,7 +249,7 @@ await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });`,
       const hasPriceTestId = /getByTestId\(\s*['"]watchlist-current-price['"]\s*\)/.test(src);
       const hasTimestampTestId = /getByTestId\(\s*['"]last-updated-timestamp['"]\s*\)/.test(src);
       if (!hasPriceTestId || !hasTimestampTestId) {
-        throw new Error("mask ต้องครอบคลุมทั้งสอง locator: page.getByTestId('watchlist-current-price') และ page.getByTestId('last-updated-timestamp')");
+        throw new Error("mask ต้องครอบคลุม locator ของทั้งสอง testid ที่ระบุในโจทย์ให้ครบ (watchlist-current-price และ last-updated-timestamp)");
       }
       const hasMaxDiffRatio = /maxDiffPixelRatio:\s*0\.02/.test(src);
       if (!hasMaxDiffRatio) {
@@ -316,7 +316,7 @@ test('ถ่ายภาพหน้า Dashboard อย่างเสถีย
       }
       const hasReducedMotion = /reducedMotion:\s*['"]reduce['"]/.test(src);
       if (!hasReducedMotion) {
-        throw new Error("ไม่พบการปิด CSS animation ด้วย option reducedMotion: 'reduce'\nตัวอย่าง: test.use({ reducedMotion: 'reduce' });");
+        throw new Error("ไม่พบการปิด CSS animation ด้วย option reducedMotion: 'reduce'");
       }
       const hasFontReady = /document\.fonts\.ready/.test(src);
       const hasNetworkIdle = /waitForLoadState\(\s*['"]networkidle['"]\s*\)/.test(src);
@@ -377,7 +377,7 @@ await expect(page).toHaveScreenshot();`,
       }
       const hasClip = /clip:\s*\{/.test(src);
       if (!hasClip) {
-        throw new Error("ไม่พบ option clip: {...}\nตัวอย่าง: await expect(page).toHaveScreenshot({ clip: { x: 0, y: 0, width: 1280, height: 120 } });");
+        throw new Error("ไม่พบ option clip: {...}");
       }
       const hasX = /x:\s*0\b/.test(src);
       const hasY = /y:\s*0\b/.test(src);
@@ -561,7 +561,7 @@ await expect(page).toHaveScreenshot({
       const src = stripComments(code);
       const hasCommand = /updateCommand\s*=\s*['"]npx playwright test --update-snapshots['"]/.test(src);
       if (!hasCommand) {
-        throw new Error("ไม่พบตัวแปร updateCommand ที่เก็บคำสั่ง 'npx playwright test --update-snapshots'\nตัวอย่าง: const updateCommand = 'npx playwright test --update-snapshots';");
+        throw new Error("ไม่พบตัวแปร updateCommand ที่เก็บคำสั่ง 'npx playwright test --update-snapshots'");
       }
       log("✓ คำสั่ง Update Baseline ถูกต้อง");
     },

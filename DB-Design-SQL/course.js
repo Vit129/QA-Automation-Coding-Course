@@ -53,10 +53,10 @@ const LESSONS = [
       resetDatabase();
       const result = runQuery(code);
       if (!Array.isArray(result)) {
-        throw new Error("คำสั่งนี้ต้องเป็น SELECT ที่คืนค่าเป็นแถวข้อมูล\nตัวอย่าง: SELECT ticker, shares FROM holdings WHERE broker = 'Webull';");
+        throw new Error("คำสั่งนี้ต้องเป็น SELECT ที่คืนค่าเป็นแถวข้อมูล — ตรวจสอบว่าเขียนคำสั่งดึงข้อมูลพร้อมเงื่อนไขกรองให้ครบตามที่โจทย์กำหนด");
       }
       if (result.length !== 5) {
-        throw new Error(`คาดว่าจะได้ 5 แถว (Holdings ทั้งหมดของ Webull) แต่ได้ ${result.length} แถว\nตัวอย่าง: SELECT ticker, shares FROM holdings WHERE broker = 'Webull';`);
+        throw new Error(`คาดว่าจะได้ 5 แถว (Holdings ทั้งหมดของ Webull) แต่ได้ ${result.length} แถว — ตรวจสอบว่าเงื่อนไขกรองคอลัมน์ broker ตรงกับชื่อ Broker ที่โจทย์กำหนดหรือไม่`);
       }
       const amzn = result.find(r => r.ticker === 'AMZN');
       if (!amzn || Number(amzn.shares) !== 50) {
@@ -91,12 +91,12 @@ SELECT ticker, broker FROM holdings WHERE sector = 'Technology';`,
       resetDatabase();
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 4) {
-        throw new Error(`คาดว่าจะได้ 4 แถว (มูลค่ารวมเกิน 5000) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว\nตัวอย่าง: SELECT ... WHERE shares * avgCost > 5000 ORDER BY shares * avgCost DESC;`);
+        throw new Error(`คาดว่าจะได้ 4 แถว (มูลค่ารวมเกิน 5000) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว — ตรวจสอบว่าคำนวณมูลค่ารวมและใช้เงื่อนไขกรองตามเกณฑ์ที่โจทย์กำหนดครบถ้วนหรือไม่`);
       }
       const expectedOrder = ['MSFT', 'AMZN', 'AAPL', 'TLT'];
       const actualOrder = result.map(r => r.ticker);
       if (JSON.stringify(actualOrder) !== JSON.stringify(expectedOrder)) {
-        throw new Error(`ลำดับ ticker ที่ได้ไม่ตรง คาดว่าจะได้ ${expectedOrder.join(' > ')} (เรียงมูลค่ารวมมากไปน้อย) แต่ได้ ${actualOrder.join(' > ')} — ตรวจสอบว่าใช้ ORDER BY shares * avgCost DESC ครบทุกแถวหรือยัง`);
+        throw new Error(`ลำดับ ticker ที่ได้ไม่ตรง คาดว่าจะได้ ${expectedOrder.join(' > ')} (เรียงมูลค่ารวมมากไปน้อย) แต่ได้ ${actualOrder.join(' > ')} — ตรวจสอบว่าเรียงลำดับด้วยนิพจน์คำนวณมูลค่ารวมเดียวกัน และระบุทิศทางจากมากไปน้อยครบทุกแถวหรือยัง`);
       }
       log("✓ Filter และเรียงลำดับถูกต้องครบทั้ง 4 แถว (MSFT > AMZN > AAPL > TLT ตามมูลค่ารวม)");
     },
@@ -239,7 +239,7 @@ INSERT INTO orders VALUES (99, 'FAKE', 'ThisBrokerDoesNotExist');
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 1) {
         throw new Error(`คาดว่าจะได้ 1 แถวสรุปผล แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว
-ตัวอย่าง: SELECT COUNT(*) AS totalRows, COUNT(DISTINCT broker) AS distinctBrokers FROM holdings;`);
+ตรวจสอบว่าใช้ Aggregate Function สองตัวรวมในคำสั่งเดียวกันตามที่โจทย์กำหนดหรือไม่`);
       }
       const row = result[0];
       if (Number(row.totalRows) !== 9 || Number(row.distinctBrokers) !== 3) {
@@ -277,11 +277,11 @@ SELECT COUNT(*) AS totalRows, COUNT(DISTINCT sector) AS distinctSectors FROM hol
       resetDatabase();
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 1) {
-        throw new Error(`คาดว่าจะได้ 1 แถว (AMZN) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว\nตัวอย่าง: SELECT h.ticker, h.broker, b.displayName FROM holdings h JOIN brokers b ON h.broker = b.name WHERE h.ticker = 'AMZN';`);
+        throw new Error(`คาดว่าจะได้ 1 แถว (AMZN) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว — ตรวจสอบว่า JOIN สองตารางถูกต้องและกรองเฉพาะ ticker ที่โจทย์กำหนดหรือไม่`);
       }
       const row = result[0];
       if (row.ticker !== 'AMZN' || row.broker !== 'Webull' || row.displayName !== 'Webull Financial') {
-        throw new Error(`แถวที่ได้ต้องมีคอลัมน์ ticker='AMZN', broker='Webull', displayName='Webull Financial' ครบทั้งสามคอลัมน์ แต่ได้ ${JSON.stringify(row)} — ตรวจสอบว่า SELECT คอลัมน์ ticker, broker, displayName ครบหรือไม่ และ JOIN ด้วยเงื่อนไข ON h.broker = b.name ถูกต้องหรือไม่`);
+        throw new Error(`แถวที่ได้ต้องมีคอลัมน์ ticker='AMZN', broker='Webull', displayName='Webull Financial' ครบทั้งสามคอลัมน์ แต่ได้ ${JSON.stringify(row)} — ตรวจสอบว่า SELECT คอลัมน์ ticker, broker, displayName ครบหรือไม่ และ JOIN ด้วยเงื่อนไขที่เชื่อมคอลัมน์ broker ของ holdings กับคอลัมน์ name ของ brokers ถูกต้องหรือไม่`);
       }
       log("✓ JOIN สำเร็จ ได้ ticker, broker, displayName ครบถูกต้องทุกคอลัมน์");
     },
@@ -362,7 +362,7 @@ SELECT ticker FROM price_alerts WHERE notified = FALSE;`,
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 1) {
         throw new Error(`คาดว่าจะได้ 1 แถว (ORPHAN) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว
-ตัวอย่าง: SELECT h.ticker FROM holdings h LEFT JOIN brokers b ON h.broker = b.name WHERE b.name IS NULL;`);
+ตรวจสอบว่าใช้ JOIN แบบที่เก็บทุกแถวฝั่งซ้ายไว้เสมอ แล้วกรองเฉพาะแถวที่จับคู่ฝั่งขวาไม่ได้หรือไม่`);
       }
       if (result[0].ticker !== 'ORPHAN') {
         throw new Error(`คาดว่าจะได้ ticker='ORPHAN' แต่ได้ ${JSON.stringify(result[0])}`);
@@ -399,7 +399,7 @@ SELECT h.ticker FROM holdings h JOIN brokers b ON h.broker = b.name;
       alasql("INSERT INTO holdings (ticker, broker, shares, avgCost, sector) VALUES ('EXTRA','Webull',10,100,'Technology')");
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 2) {
-        throw new Error(`คาดว่าจะได้ 2 แถว (Webull, Dime) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว\nตัวอย่าง: SELECT broker, SUM(shares * avgCost) AS totalValue FROM holdings GROUP BY broker;`);
+        throw new Error(`คาดว่าจะได้ 2 แถว (Webull, Dime) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว — ตรวจสอบว่ารวมมูลค่าพอร์ตและจับกลุ่มตาม Broker ตามที่โจทย์กำหนดหรือไม่`);
       }
       const webull = result.find(r => r.broker === 'Webull');
       const dime = result.find(r => r.broker === 'Dime');
@@ -442,7 +442,7 @@ SELECT sector, COUNT(*) AS numHoldings, AVG(avgCost) AS avgPrice FROM holdings G
       resetDatabase();
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length < 1) {
-        throw new Error("ต้องมีอย่างน้อย 2 คำสั่ง (DELETE ตามด้วย SELECT COUNT) คั่นด้วย ;\nตัวอย่าง: DELETE FROM holdings WHERE ticker = 'QQQI' AND broker = 'Webull';\nSELECT COUNT(*) AS cnt FROM holdings WHERE ticker = 'QQQI';");
+        throw new Error("ต้องมีอย่างน้อย 2 คำสั่ง (DELETE ตามด้วย SELECT COUNT) คั่นด้วย ; — คำสั่งแรกลบแถวตามเงื่อนไขที่โจทย์กำหนด คำสั่งที่สองนับจำนวนแถวที่เหลือของ ticker เดิมเพื่อยืนยันผล");
       }
       const last = result[result.length - 1];
       if (!Array.isArray(last) || last.length !== 1 || Number(last[0].cnt) !== 0) {
@@ -485,7 +485,7 @@ SELECT shares FROM holdings WHERE ticker = 'GOOGL';
       alasql("INSERT INTO holdings (ticker, broker, shares, avgCost, sector) VALUES ('NEWCO','Webull',10,100,NULL)");
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length === 0) {
-        throw new Error("ได้ผลลัพธ์ว่างเปล่า — ถ้าเขียน WHERE sector = NULL จะไม่มีวันเจอแถวไหนเลย (แม้แถวนั้นจะมี sector เป็น NULL จริงก็ตาม) เพราะ '= NULL' ไม่ใช่ตรรกะเปรียบเทียบที่ใช้ได้ใน SQL ต้องใช้ WHERE sector IS NULL แทน");
+        throw new Error("ได้ผลลัพธ์ว่างเปล่า — การเทียบเท่ากับค่าที่ยังไม่มีข้อมูลด้วยเครื่องหมาย = ตามปกติจะไม่มีวันเจอแถวไหนเลย (แม้แถวนั้นจะยังไม่มีค่าจริงก็ตาม) เพราะไม่ใช่ตรรกะเปรียบเทียบที่ใช้ได้ใน SQL ต้องใช้ตัวดำเนินการเปรียบเทียบพิเศษสำหรับตรวจสอบว่าคอลัมน์ 'ไม่มีค่า' โดยเฉพาะแทน");
       }
       if (result.length !== 1 || result[0].ticker !== 'NEWCO') {
         throw new Error(`คาดว่าจะได้แถวเดียวคือ NEWCO แต่ได้: ${JSON.stringify(result)}`);
@@ -531,7 +531,7 @@ SELECT ticker FROM holdings WHERE sector IS NULL AND broker = 'Webull';`,
       const result = runQuery(code);
       if (!Array.isArray(result) || result.length !== 2) {
         throw new Error(`คาดว่าจะได้ 2 แถว (Login, Checkout — suite ที่มี FAIL มากกว่า 1 รายการ) แต่ได้ ${Array.isArray(result) ? result.length : 'ไม่ใช่ array'} แถว
-ตัวอย่าง: SELECT s.name, COUNT(*) AS failCount FROM test_cases c JOIN test_suites s ON c.suiteId = s.id WHERE c.status = 'FAIL' GROUP BY s.name HAVING COUNT(*) > 1;`);
+ตรวจสอบว่า JOIN สองตาราง กรองเฉพาะสถานะ FAIL จับกลุ่มตาม suite แล้วกรองผลลัพธ์หลังนับตามเกณฑ์ที่โจทย์กำหนดครบทุกขั้นตอนหรือไม่`);
       }
       const login = result.find(r => r.name === 'Login');
       const checkout = result.find(r => r.name === 'Checkout');
@@ -705,7 +705,7 @@ CREATE TABLE test_run_logs (id NUMBER PRIMARY KEY, envId NUMBER, result STRING, 
 
       const cleanResult = runQuery(code);
       if (!Array.isArray(cleanResult)) {
-        throw new Error("คำสั่งนี้ต้องเป็น SELECT ที่คืนค่าเป็นแถวข้อมูล (คืนค่าว่างเปล่าได้ถ้าไม่พบการละเมิด)\nตัวอย่าง: SELECT testerEmail, COUNT(DISTINCT testerName) AS nameCount FROM test_runs_flat GROUP BY testerEmail HAVING COUNT(DISTINCT testerName) > 1;");
+        throw new Error("คำสั่งนี้ต้องเป็น SELECT ที่คืนค่าเป็นแถวข้อมูล (คืนค่าว่างเปล่าได้ถ้าไม่พบการละเมิด) — ตรวจสอบว่าจับกลุ่มตาม testerEmail แล้วนับจำนวนชื่อที่ไม่ซ้ำกันตามที่โจทย์กำหนดหรือไม่");
       }
       if (cleanResult.length !== 0) {
         throw new Error(`ข้อมูลชุดนี้ testerEmail → testerName เป็นจริงเสมอ (ไม่มีการละเมิด) แต่ query คืนค่ามา ${cleanResult.length} แถว: ${JSON.stringify(cleanResult)} — ตรวจสอบเงื่อนไข HAVING COUNT(DISTINCT testerName) > 1 อีกครั้ง`);
