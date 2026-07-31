@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.9.4] - 2026-07-31
+
+### Added
+- Add syntax highlight + dedent/comment-toggle; fix(course): remove answer-revealing hints across all tracks ([`ae6d917`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/ae6d917067c764b9a4bafc65bf63d0d7e8076fcb))
+
 ## [0.9.3] - 2026-07-31
 
 ### Added
