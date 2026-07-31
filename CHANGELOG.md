@@ -3,6 +3,16 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.9.2] - 2026-07-31
+
+### Documentation
+- Add capstone-and-course-refinement plan for next session continuation ([`eb3c515`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/eb3c515bf38e35264e3c3d4951b10d2ee34ba0e8))
+
+## [0.9.1] - 2026-07-30
+
+### Added
+- Upgrade Final Project to 9-step Software & QA Lifecycle Architecture (v0.9.1) ([`41478ee`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/41478eefdfed2b7f01f6db019362657a2a02cd4a))
+
 ## [0.9.0] - 2026-07-30
 
 ### Added
