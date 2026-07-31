@@ -3,7 +3,15 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.9.3] - 2026-07-31
+
+### Added
+- Redesign Final Project to 8 integrated phases ([`3fdbe5e`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/3fdbe5e25709983c711c754c377f027085c68991))
+
 ## [0.9.2] - 2026-07-31
+
+### Added
+- Transform Final Project into Engineering PRD Spec & AC standard (v0.9.2) ([`1f946f8`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/1f946f80d599f6622f56198b590e37b168089132))
 
 ### Documentation
 - Add capstone-and-course-refinement plan for next session continuation ([`eb3c515`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/eb3c515bf38e35264e3c3d4951b10d2ee34ba0e8))
