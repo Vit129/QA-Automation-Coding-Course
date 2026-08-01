@@ -137,6 +137,15 @@ body {
   border-left: 3px solid var(--accent-emerald);
 }
 
+.lesson-item.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.lesson-item.locked .lesson-item-title {
+  color: var(--text-muted);
+}
+
 .lesson-item-meta {
   font-size: 0.7rem;
   color: var(--accent-blue);
