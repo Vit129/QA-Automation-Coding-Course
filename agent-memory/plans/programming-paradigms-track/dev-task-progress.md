@@ -12,4 +12,4 @@ See `design.md` in this folder for the full plan (lesson list, validate() strate
 - [x] Manually verify Promise.all parallelism lesson rejects a sequential-await solution (peak concurrent stayed at 1)
 - [x] Manually verify race-condition-fix lesson rejects an unsafe (non-locking) counter (final count 1 instead of 5 — lost updates)
 - [x] Bump CURRENT_VERSION (index.html) + version.json for the update banner
-- [ ] Commit, push, PR, merge, release
+- [x] Commit, push, PR, merge, release — https://github.com/Vit129/QA-Automation-Coding-Course/pull/18, released as v0.11.0
