@@ -3,6 +3,14 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.10.2] - 2026-08-01
+
+### Documentation
+- Capture recurring sandbox class-extraction bug in PLAYBOOK ([`9996904`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/9996904e5c2dda323663ec725d210ce139bdcedc))
+
+### Fixed
+- 3 gaps found by independent second review (Fable) ([`d40ccae`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/d40ccae47df14c2205f9dc38fedaa73e3c5bf14a))
+
 ## [0.10.1] - 2026-08-01
 
 ### Fixed
