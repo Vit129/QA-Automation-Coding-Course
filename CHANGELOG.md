@@ -3,6 +3,14 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.11.0] - 2026-08-01
+
+### Added
+- Add Programming-Paradigms track (15th course) ([#18](https://github.com/Vit129/QA-Automation-Coding-Course/pull/18)) ([`5b5cf26`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/5b5cf2603271060bfc455b5f70cb1dd9cd8a562c))
+
+### Documentation
+- Log style.css propagation gap in PLAYBOOK (CASE-003) ([`2dcdf94`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/2dcdf94a8073f9b287e0e2e3cd3c864a64af1628))
+
 ## [0.10.2] - 2026-08-01
 
 ### Documentation
