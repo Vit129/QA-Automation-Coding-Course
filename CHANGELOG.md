@@ -3,6 +3,12 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.10.1] - 2026-08-01
+
+### Fixed
+- Correct OOP Fundamentals nav emoji (🟣 -> 🔴 ขั้นสูง) ([`c82b64e`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/c82b64eabcfe70ca9771152f82bad20b3cc5613a))
+- OOP-Fundamentals engine.js was stale, missing lock/resume feature ([`c4f66ce`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/c4f66ced618d4e44ec44050fd438af395e4e6711))
+
 ## [0.10.0] - 2026-08-01
 
 ### Added
