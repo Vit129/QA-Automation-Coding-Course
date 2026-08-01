@@ -424,23 +424,63 @@ expect(b2.visaRequired).toBe(false);`,
   },
   {
     id: "fp_web_ui_e2e",
-    meta: "Phase 4 จาก 8: Web UI + Visa Reuse (Page Object Model)",
+    meta: "Phase 4 จาก 8: Web UI + Visa Reuse (Page Object Model / OOP)",
     title: "4. [Phase 4] Frontend Web E2E User Journey Specification",
     template: `import { test, expect } from '@playwright/test';
 
-// [Phase 4 Spec] ก่อนกรอกฟอร์มจอง ต้องเรียกใช้ API เดียวกับ Phase 3 เพื่อยืนยัน visa compliance ในเทสเดียวกันก่อน
-test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองบนเว็บ', async ({ page, request }) => {
+// [Phase 4 Spec] Page Object Model = OOP จริงในงาน automation — encapsulate การเข้าถึงหน้าเว็บ
+// ไว้ใน class แทนที่จะเรียก page.fill/page.click ตรงๆ กระจายอยู่ใน test (ตามที่เรียนใน OOP-Fundamentals:
+// Encapsulation + Inheritance)
+class BasePage {
+  constructor(page) {
+    this.page = page;
+  }
+}
+
+// 1. เขียน class JapanTripPage extends BasePage โดยมี:
+//    - method fillDepartureDate(date): เรียก this.page.fill('#departure-date', date)
+//    - method confirmBooking(): เรียก this.page.click('#confirm-booking-btn')
+//    - method bookingStatusText(): return ค่าจาก this.page.locator('#booking-status')
+// WRITE YOUR CODE HERE
+
+
+test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองผ่าน Page Object', async ({ page, request }) => {
   // AC-401: เรียก request.post('/api/japan-trip/verify-visa') ซ้ำแบบ Phase 3 -> ต้องได้ body.visaRequired เป็น false ก่อนไปต่อ
   // WRITE YOUR CODE HERE
 
 
-  // AC-402: page.goto('/japan-trip') กรอกวันเดินทาง 2026-10-14 ใน #departure-date คลิก #confirm-booking-btn และตรวจ #booking-status มีคำว่า 'Booking Successful'
+  // AC-402: ใช้ JapanTripPage เท่านั้น (ห้ามเรียก page.fill/page.click ตรงๆ ใน test นี้) —
+  //         page.goto('/japan-trip') แล้ว fillDepartureDate('2026-10-14'), confirmBooking(),
+  //         ตรวจ bookingStatusText() มีคำว่า 'Booking Successful'
 
 });`,
     validate: (code, log) => {
-      log("🔍 [Phase 4 PRD Validation] กำลังรันโค้ดจริงผ่าน Mock Backend + Mock Page...");
+      log("🔍 [Phase 4 PRD Validation] กำลังตรวจ Page Object structure แล้วรันโค้ดจริงผ่าน Mock Backend + Mock Page...");
       if (!priorPhaseCompleted('fp_booking_visa_integration')) {
         throw new Error("ไม่ผ่านเกณฑ์: ต้องผ่าน Phase 3 (Booking + Visa Integration) ก่อน — Phase 4 reuse API เดียวกับ Phase 3 จริง ไม่ใช่แค่พิมพ์ซ้ำ");
+      }
+      const clean = stripComments(code);
+      if (!/class\s+BasePage\b/.test(clean)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: ไม่พบ class BasePage — ต้องคงโครงสร้าง Page Object ที่ให้มาในเทมเพลตไว้");
+      }
+      if (!/class\s+JapanTripPage\s+extends\s+BasePage\b/.test(clean)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: ไม่พบ class JapanTripPage extends BasePage — ต้อง encapsulate การเข้าถึงหน้าเว็บผ่าน Page Object ไม่ใช่เรียก page.fill/page.click ตรงๆ");
+      }
+      const pageObjectMatch = /class\s+JapanTripPage\s+extends\s+BasePage\s*\{([\s\S]*?)\n\}/.exec(clean);
+      const pageObjectBody = pageObjectMatch ? pageObjectMatch[1] : '';
+      if (!/fillDepartureDate\s*\(/.test(pageObjectBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: JapanTripPage ต้องมี method fillDepartureDate(date)");
+      }
+      if (!/confirmBooking\s*\(/.test(pageObjectBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: JapanTripPage ต้องมี method confirmBooking()");
+      }
+      if (!/bookingStatusText\s*\(/.test(pageObjectBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: JapanTripPage ต้องมี method bookingStatusText()");
+      }
+      const testBodyMatch = /test\(\s*['"][^'"]*['"]\s*,\s*async[\s\S]*?=>\s*\{([\s\S]*)\}\s*\)\s*;?\s*$/.exec(clean.trim());
+      const testBody = testBodyMatch ? testBodyMatch[1] : clean;
+      if (/\bpage\.fill\s*\(|\bpage\.click\s*\(/.test(testBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: test นี้ห้ามเรียก page.fill(...)/page.click(...) ตรงๆ — ต้องเรียกผ่าน method ของ JapanTripPage เท่านั้น (encapsulation)");
       }
       const env = createPhase4Env();
       return runPlaywrightLikeTest(code, { page: env.page, request: env.request }).then(() => {
@@ -448,15 +488,35 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
           throw new Error("ไม่ผ่านเกณฑ์ [AC-401]: ยังไม่พบการเรียก verify-visa API ซ้ำจาก Phase 3 ก่อนไปกรอกฟอร์ม");
         }
         if (env.dom.bookingStatus !== 'Booking Successful') {
-          throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่ยืนยันว่าหน้าจอแสดงข้อความ 'Booking Successful' สำเร็จ");
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่ยืนยันว่าหน้าจอแสดงข้อความ 'Booking Successful' สำเร็จผ่าน Page Object");
         }
-        log("✓ [AC-401+402 Passed]: ยืนยัน visa ผ่าน API แล้วกรอกฟอร์มจองบนหน้าเว็บสำเร็จทั้ง flow (รันจริง)");
+        log("✓ [AC-401+402 + POM Passed]: ยืนยัน visa ผ่าน API แล้วกรอกฟอร์มจองผ่าน JapanTripPage สำเร็จทั้ง flow (รันจริง)");
       });
     },
-    hint: "test ต้องรับทั้ง { page, request } — ยิง request.post('/api/japan-trip/verify-visa', ...) เช็ค visaRequired false ก่อน แล้วค่อย page.goto('/japan-trip'); page.fill('#departure-date', '2026-10-14'); page.click('#confirm-booking-btn'); expect(page.locator('#booking-status')).toContainText('Booking Successful');",
+    hint: "JapanTripPage extends BasePage — constructor ใช้ตัวที่ BasePage ให้มาแล้ว (this.page). fillDepartureDate(date) { return this.page.fill('#departure-date', date); } confirmBooking() { return this.page.click('#confirm-booking-btn'); } bookingStatusText() { return this.page.locator('#booking-status'); } แล้วใน test สร้าง const jpPage = new JapanTripPage(page); เรียก method เหล่านี้แทน page.fill/page.click ตรงๆ",
     solution: `import { test, expect } from '@playwright/test';
 
-test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองบนเว็บ', async ({ page, request }) => {
+class BasePage {
+  constructor(page) {
+    this.page = page;
+  }
+}
+
+class JapanTripPage extends BasePage {
+  fillDepartureDate(date) {
+    return this.page.fill('#departure-date', date);
+  }
+
+  confirmBooking() {
+    return this.page.click('#confirm-booking-btn');
+  }
+
+  bookingStatusText() {
+    return this.page.locator('#booking-status');
+  }
+}
+
+test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองผ่าน Page Object', async ({ page, request }) => {
   const visaResponse = await request.post('/api/japan-trip/verify-visa', {
     data: {
       passportCountry: 'THA',
@@ -466,25 +526,25 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
   const visaBody = await visaResponse.json();
   expect(visaBody.visaRequired).toBe(false);
 
+  const jpPage = new JapanTripPage(page);
   await page.goto('/japan-trip');
-  await page.fill('#departure-date', '2026-10-14');
-  await page.click('#confirm-booking-btn');
-  await expect(page.locator('#booking-status')).toContainText('Booking Successful');
+  await jpPage.fillDepartureDate('2026-10-14');
+  await jpPage.confirmBooking();
+  await expect(jpPage.bookingStatusText()).toContainText('Booking Successful');
 });`,
     theory: `📌 <strong>1. Business & Architectural Context (บริบทระบบ):</strong><br/>
-    ต่อยอดจาก Phase 3 โดยตรง — ทีม Frontend UX/UI และ Web QA สร้างระบบ E2E Automation บนเบราว์เซอร์จริง แต่ก่อนกรอกฟอร์มจองต้อง "reuse" API เดียวกับ Phase 3 เพื่อยืนยัน compliance ก่อน สะท้อนว่า UI flow จริงต้องพึ่งพา backend check เดิม ไม่ใช่แยกจากกัน<br/><br/>
+    ต่อยอดจาก Phase 3 โดยตรง — ทีม Frontend UX/UI และ Web QA สร้างระบบ E2E Automation บนเบราว์เซอร์จริง แต่ก่อนกรอกฟอร์มจองต้อง "reuse" API เดียวกับ Phase 3 เพื่อยืนยัน compliance ก่อน สะท้อนว่า UI flow จริงต้องพึ่งพา backend check เดิม ไม่ใช่แยกจากกัน — และครั้งนี้ยังบังคับใช้ <strong>Page Object Model</strong> ตัวจริง (ไม่ใช่แค่ชื่อ) ผ่านหลัก OOP ที่เรียนมาจาก OOP-Fundamentals: <code>BasePage</code> เก็บ <code>page</code> ไว้ (encapsulation), <code>JapanTripPage extends BasePage</code> (inheritance) แล้ว test เรียกผ่าน method ของ Page Object เท่านั้น ไม่แตะ <code>page.fill</code>/<code>page.click</code> ตรงๆ<br/><br/>
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
     • <code>[AC-401]</code>: เรียก API <code>/api/japan-trip/verify-visa</code> ซ้ำจาก Phase 3 ในเทสนี้ (ใช้ fixture <code>request</code> ร่วมกับ <code>page</code>) แล้วต้องได้ <code>visaRequired: false</code> ก่อนไปกรอกฟอร์ม<br/>
-    • <code>[AC-402]</code>: เปิดหน้าเว็บ <code>/japan-trip</code> ระบุวันออกเดินทาง <code>2026-10-14</code> ในช่อง <code>#departure-date</code> คลิกปุ่มยืนยัน <code>#confirm-booking-btn</code> และตรวจ <code>#booking-status</code> ต้องมีคำว่า <code>'Booking Successful'</code><br/><br/>
-    🏗️ <strong>3. Production Constraints:</strong> สคริปต์ต้องรอการตอบกลับจาก API (Auto-waiting) โดยไม่ใช้คำสั่งหลับแบบช้า <code>waitForTimeout</code> และห้ามข้ามขั้นตอนยืนยัน visa ไปกรอกฟอร์มตรงๆ`,
-    example: `const r = await request.post('/api/example/verify-visa', { data: { ... } });
-const b = await r.json();
-expect(b.visaRequired).toBe(false);
-
+    • <code>[AC-402]</code>: ผ่าน <code>JapanTripPage</code> เท่านั้น — เปิดหน้าเว็บ <code>/japan-trip</code>, <code>fillDepartureDate('2026-10-14')</code>, <code>confirmBooking()</code>, ตรวจ <code>bookingStatusText()</code> ต้องมีคำว่า <code>'Booking Successful'</code><br/>
+    • <code>[POM]</code>: <code>JapanTripPage extends BasePage</code> ต้องมี <code>fillDepartureDate</code>, <code>confirmBooking</code>, <code>bookingStatusText</code> และ test ต้องไม่เรียก <code>page.fill</code>/<code>page.click</code> ตรงๆ เลย<br/><br/>
+    🏗️ <strong>3. Production Constraints:</strong> สคริปต์ต้องรอการตอบกลับจาก API (Auto-waiting) โดยไม่ใช้คำสั่งหลับแบบช้า <code>waitForTimeout</code> ห้ามข้ามขั้นตอนยืนยัน visa ไปกรอกฟอร์มตรงๆ และห้าม bypass Page Object ไปเรียก page method ตรงๆ ใน test`,
+    example: `const jpPage = new JapanTripPage(page);
 await page.goto('/japan-trip');
-await page.fill('#departure-date', '2026-10-14');
-await page.click('#confirm-booking-btn');`,
-    task: `จงเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วค่อยทำ E2E บนหน้าเว็บ ตามเกณฑ์ <code>[AC-401]</code> และ <code>[AC-402]</code>`
+await jpPage.fillDepartureDate('2026-10-14');
+await jpPage.confirmBooking();
+await expect(jpPage.bookingStatusText()).toContainText('Booking Successful');`,
+    task: `จงเขียน <code>class JapanTripPage extends BasePage</code> พร้อม method <code>fillDepartureDate/confirmBooking/bookingStatusText</code> แล้วเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วทำ E2E ผ่าน Page Object เท่านั้น ตามเกณฑ์ <code>[AC-401]</code> <code>[AC-402]</code> และ <code>[POM]</code>`
   },
   {
     id: "fp_mobile_eticket",

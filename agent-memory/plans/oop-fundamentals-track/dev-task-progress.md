@@ -25,3 +25,17 @@ See `design.md` in this folder for the full plan (lesson list, validate() strate
 - [x] Verified LSP lesson rejects plausible-but-wrong solution (subclass returning wrong shape `"ok"` instead of `{passed: boolean}`)
 - [x] Reused getLearnerClasses fix for OCP/LSP multi-class extraction (same bug class as original Polymorphism/Abstraction fix)
 - [x] Commit + push expansion, update PR #15
+
+## Final-Project Phase 4 → real POM/OOP integration (2026-08-01)
+
+- [x] Extended Phase 4 (fp_web_ui_visa_reuse, Frontend E2E) to require an actual class-based
+      Page Object: `class BasePage` (encapsulation) + `class JapanTripPage extends BasePage`
+      (inheritance) with fillDepartureDate/confirmBooking/bookingStatusText methods
+- [x] validate() now rejects tests that bypass the Page Object and call `page.fill`/`page.click`
+      directly — regex structural check + still runs the real mock-Playwright execution
+      (unchanged AC-401/402 checks, since JapanTripPage's methods still call through to the
+      same mock page/request under the hood)
+- [x] `node shared/selftest.mjs` — 256 lessons, 512 checks, 0 failed (solution passes new POM
+      checks, template still correctly fails)
+- [x] Verified plausible-but-wrong bypass (old-style direct page.fill/page.click in test,
+      Page Object class present but unused) is rejected by the encapsulation regex check
