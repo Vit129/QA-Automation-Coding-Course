@@ -12,8 +12,23 @@
 
 let currentLessonIndex = 0;
 
+// Sequential lock: a lesson can only be opened once every lesson before it has passed
+// its own check (each lesson's task/validate() IS its "exam" — no skipping ahead).
+function getFirstIncompleteIndex() {
+  for (let i = 0; i < LESSONS.length; i++) {
+    if (!isLessonCompleted(LESSONS[i].id)) return i;
+  }
+  return LESSONS.length - 1;
+}
+
+function isLessonLocked(idx) {
+  const allDone = LESSONS.every(l => isLessonCompleted(l.id));
+  return !allDone && idx > getFirstIncompleteIndex();
+}
+
 // Initialize the app
 function initApp() {
+  currentLessonIndex = getFirstIncompleteIndex();
   renderLessonList();
   loadLesson(currentLessonIndex);
   updateProgressBar();
@@ -226,14 +241,17 @@ function renderLessonList() {
 
   listContainer.innerHTML = LESSONS.map((lesson, idx) => {
     const isCompleted = isLessonCompleted(lesson.id);
+    const locked = isLessonLocked(idx);
     const activeClass = idx === currentLessonIndex ? 'active' : '';
     const completedClass = isCompleted ? 'completed' : '';
+    const lockedClass = locked ? 'locked' : '';
 
     return `
-      <button class="lesson-item ${activeClass} ${completedClass}" onclick="selectLesson(${idx})">
+      <button class="lesson-item ${activeClass} ${completedClass} ${lockedClass}" ${locked ? 'disabled' : `onclick="selectLesson(${idx})"`}>
         <div class="lesson-item-meta">
           <span>${lesson.meta}</span>
           <span class="check-icon">✓ ผ่านการประเมิน</span>
+          ${locked ? '<span class="lock-icon">🔒</span>' : ''}
         </div>
         <div class="lesson-item-title">${lesson.title}</div>
       </button>
@@ -243,6 +261,11 @@ function renderLessonList() {
 
 // Select a lesson from sidebar
 function selectLesson(idx) {
+  if (isLessonLocked(idx)) {
+    alert('ต้องทำบทเรียนก่อนหน้าให้ผ่านก่อน ถึงจะปลดล็อคบทนี้ได้');
+    return;
+  }
+
   currentLessonIndex = idx;
   renderLessonList();
   loadLesson(idx);
