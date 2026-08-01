@@ -90,6 +90,40 @@ function getLearnerClass(code, className) {
   return cls;
 }
 
+// Blanks out the CONTENTS of string/template literals (keeps the quotes, same length) so a
+// keyword-presence check (e.g. /\bawait\b/) can't be satisfied by a decoy string like "await"
+// that never actually executes as code. Apply on top of stripComments().
+function blankStringLiterals(code) {
+  let result = "";
+  let i = 0;
+  const n = code.length;
+  while (i < n) {
+    const ch = code[i];
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      result += ch;
+      i++;
+      while (i < n && code[i] !== quote) {
+        if (code[i] === "\\" && i + 1 < n) {
+          result += "  ";
+          i += 2;
+        } else {
+          result += " ";
+          i++;
+        }
+      }
+      if (i < n) {
+        result += quote;
+        i++;
+      }
+      continue;
+    }
+    result += ch;
+    i++;
+  }
+  return result;
+}
+
 // Builds a mock async "check" function that proves whether the caller ran calls in PARALLEL
 // (all started before any finished — peakActive climbs above 1) or SEQUENTIALLY (peakActive
 // stays at 1, one call finishes before the next starts). No real timers — the artificial gap
@@ -122,26 +156,36 @@ const LESSONS = [
       log("🔍 ตรวจสอบ Pure Function ด้วยการรันจริง...");
       const fn = getLearnerFn(code, "toSeconds");
 
-      const input = [1000, 2000, 3000];
+      // Random inputs, expected value computed at runtime — a lookup table keyed by input
+      // shape (e.g. `input.length === 3 ? [1,2,3] : [...]`) can't survive fresh random values
+      // every run, unlike a fixed pair of fixtures.
+      const randomMsArray = () => Array.from(
+        { length: 2 + Math.floor(Math.random() * 3) },
+        () => (1 + Math.floor(Math.random() * 9)) * 1000
+      );
+
+      const input = randomMsArray();
       const inputCopy = [...input];
       const result1 = fn(input);
 
       if (JSON.stringify(input) !== JSON.stringify(inputCopy)) {
         throw new Error(`toSeconds() ต้องไม่แก้ไข array เดิมที่รับเข้ามา (pure function ห้ามมี side-effect) แต่ input ถูกแก้ไขเป็น ${JSON.stringify(input)}`);
       }
-      if (JSON.stringify(result1) !== JSON.stringify([1, 2, 3])) {
-        throw new Error(`toSeconds([1000,2000,3000]) ต้องคืนค่า [1,2,3] แต่ได้ ${JSON.stringify(result1)}`);
+      const expected1 = input.map((ms) => ms / 1000);
+      if (JSON.stringify(result1) !== JSON.stringify(expected1)) {
+        throw new Error(`toSeconds(${JSON.stringify(input)}) ต้องคืนค่า ${JSON.stringify(expected1)} แต่ได้ ${JSON.stringify(result1)}`);
       }
       const result2 = fn(input);
       if (JSON.stringify(result1) !== JSON.stringify(result2)) {
         throw new Error("เรียก toSeconds() ด้วย input เดิมซ้ำ ต้องได้ผลลัพธ์เดิมทุกครั้ง (deterministic) — pure function ห้ามขึ้นกับ state ภายนอก");
       }
-      // Second, different input — closes the "hardcode the expected output" loophole a fixed
-      // single input can't catch.
-      const input2 = [500, 4000];
-      const result3 = fn(input2);
-      if (JSON.stringify(result3) !== JSON.stringify([0.5, 4])) {
-        throw new Error(`toSeconds([500,4000]) ต้องคืนค่า [0.5,4] แต่ได้ ${JSON.stringify(result3)} — ต้องคำนวณจริงจาก input ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
+      // Second, independently-random input — same input.length could coincide with the first
+      // by chance, but the VALUES differ every run, so a per-length lookup table still fails.
+      const input3 = randomMsArray();
+      const result3 = fn(input3);
+      const expected3 = input3.map((ms) => ms / 1000);
+      if (JSON.stringify(result3) !== JSON.stringify(expected3)) {
+        throw new Error(`toSeconds(${JSON.stringify(input3)}) ต้องคืนค่า ${JSON.stringify(expected3)} แต่ได้ ${JSON.stringify(result3)} — ต้องคำนวณจริงจาก input ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
       }
       log(`✓ toSeconds() เป็น pure function จริง: ไม่แก้ไข input, ผลลัพธ์ deterministic และคำนวณจริง (${JSON.stringify(result1)}, ${JSON.stringify(result3)})`);
     },
@@ -181,25 +225,33 @@ console.log(seconds); // [0.5, 1.5]`,
       }
       const fn = getLearnerFn(code, "addTag");
 
-      const original = ['smoke', 'regression'];
-      const originalCopy = [...original];
-      const result = fn(original, 'critical');
+      // Random tags/newTag every run — a lookup table keyed by input shape can't survive.
+      const TAG_POOL = ['smoke', 'regression', 'auth', 'nightly', 'ui', 'api', 'flaky', 'perf'];
+      const randomTags = () => {
+        const shuffled = [...TAG_POOL].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, 1 + Math.floor(Math.random() * 3));
+      };
+      const randomNewTag = () => 'tag_' + Math.floor(Math.random() * 100000);
 
-      if (JSON.stringify(original) !== JSON.stringify(originalCopy)) {
-        throw new Error(`addTag() ต้องไม่แก้ไข array เดิม แต่ original ถูกแก้ไขเป็น ${JSON.stringify(original)}`);
-      }
-      if (result === original) {
-        throw new Error("addTag() ต้องคืนค่า array ใหม่ (reference ต่างจากของเดิม) ไม่ใช่คืนค่า array เดิมที่ถูกแก้ไข");
-      }
-      if (JSON.stringify(result) !== JSON.stringify(['smoke', 'regression', 'critical'])) {
-        throw new Error(`addTag(['smoke','regression'], 'critical') ต้องคืนค่า ['smoke','regression','critical'] แต่ได้ ${JSON.stringify(result)}`);
-      }
-      // Second, different input — closes the "hardcode the expected output" loophole.
-      const result2 = fn(['auth'], 'nightly');
-      if (JSON.stringify(result2) !== JSON.stringify(['auth', 'nightly'])) {
-        throw new Error(`addTag(['auth'], 'nightly') ต้องคืนค่า ['auth','nightly'] แต่ได้ ${JSON.stringify(result2)} — ต้องประกอบผลลัพธ์จริงจาก tags/newTag ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
-      }
-      log(`✓ addTag() คืนค่า array ใหม่ถูกต้อง โดยไม่แก้ไข array เดิม: ${JSON.stringify(result)}, ${JSON.stringify(result2)}`);
+      const checkAddTag = (tags, newTag) => {
+        const tagsCopy = [...tags];
+        const result = fn(tags, newTag);
+        if (JSON.stringify(tags) !== JSON.stringify(tagsCopy)) {
+          throw new Error(`addTag() ต้องไม่แก้ไข array เดิม แต่ ${JSON.stringify(tagsCopy)} ถูกแก้ไขเป็น ${JSON.stringify(tags)}`);
+        }
+        if (result === tags) {
+          throw new Error("addTag() ต้องคืนค่า array ใหม่ (reference ต่างจากของเดิม) ไม่ใช่คืนค่า array เดิมที่ถูกแก้ไข");
+        }
+        const expected = [...tags, newTag];
+        if (JSON.stringify(result) !== JSON.stringify(expected)) {
+          throw new Error(`addTag(${JSON.stringify(tags)}, ${JSON.stringify(newTag)}) ต้องคืนค่า ${JSON.stringify(expected)} แต่ได้ ${JSON.stringify(result)} — ต้องประกอบผลลัพธ์จริงจาก tags/newTag ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
+        }
+        return result;
+      };
+
+      const result1 = checkAddTag(randomTags(), randomNewTag());
+      const result2 = checkAddTag(randomTags(), randomNewTag());
+      log(`✓ addTag() คืนค่า array ใหม่ถูกต้อง โดยไม่แก้ไข array เดิม: ${JSON.stringify(result1)}, ${JSON.stringify(result2)}`);
     },
     hint: "return [...tags, newTag]; — spread operator กระจายค่าเดิมทั้งหมดลง array ใหม่ แล้วต่อท้ายด้วยค่าใหม่ ไม่แตะ array เดิมเลย",
     solution: `function addTag(tags, newTag) {
@@ -287,35 +339,31 @@ checkStrict(100); // true`,
       }
       const fn = getLearnerFn(code, "summarize");
 
-      const results = [
-        { name: 'login_test', passed: true },
-        { name: 'logout_test', passed: false },
-        { name: 'signup_test', passed: true },
-      ];
-      const summary = fn(results);
+      // Random pass/fail pattern every run — a lookup table keyed by input shape can't survive.
+      const NAME_POOL = ['login_test', 'logout_test', 'signup_test', 'search_test', 'checkout_test', 'profile_test'];
+      const checkSummarize = () => {
+        const n = 3 + Math.floor(Math.random() * 3);
+        const results = Array.from({ length: n }, (_, i) => ({
+          name: NAME_POOL[i % NAME_POOL.length] + '_' + i,
+          passed: Math.random() > 0.5,
+        }));
+        const summary = fn(results);
+        if (!summary || !Array.isArray(summary.passedNames)) {
+          throw new Error("summarize() ต้องคืนค่า object ที่มี passedNames เป็น array");
+        }
+        const expectedNames = results.filter((r) => r.passed).map((r) => r.name);
+        if (JSON.stringify(summary.passedNames) !== JSON.stringify(expectedNames)) {
+          throw new Error(`passedNames ต้องมีแค่ชื่อ test ที่ passed:true เรียงตามลำดับเดิม (${JSON.stringify(expectedNames)}) แต่ได้ ${JSON.stringify(summary.passedNames)}`);
+        }
+        if (summary.total !== expectedNames.length) {
+          throw new Error(`total ต้องเท่ากับจำนวน test ที่ passed:true (${expectedNames.length}) แต่ได้ ${summary.total}`);
+        }
+        return summary;
+      };
 
-      if (!summary || !Array.isArray(summary.passedNames)) {
-        throw new Error("summarize() ต้องคืนค่า object ที่มี passedNames เป็น array");
-      }
-      if (JSON.stringify(summary.passedNames) !== JSON.stringify(['login_test', 'signup_test'])) {
-        throw new Error(`passedNames ต้องมีแค่ชื่อ test ที่ passed:true เรียงตามลำดับเดิม แต่ได้ ${JSON.stringify(summary.passedNames)}`);
-      }
-      if (summary.total !== 2) {
-        throw new Error(`total ต้องเท่ากับจำนวน test ที่ passed:true คือ 2 แต่ได้ ${summary.total}`);
-      }
-      // Second, different input — closes the "hardcode the expected output" loophole a fixed
-      // single input can't catch.
-      const results2 = [
-        { name: 'a', passed: false },
-        { name: 'b', passed: true },
-        { name: 'c', passed: true },
-        { name: 'd', passed: true },
-      ];
-      const summary2 = fn(results2);
-      if (JSON.stringify(summary2.passedNames) !== JSON.stringify(['b', 'c', 'd']) || summary2.total !== 3) {
-        throw new Error(`summarize() กับข้อมูลชุดอื่น ต้องได้ passedNames=['b','c','d'], total=3 แต่ได้ ${JSON.stringify(summary2)} — ต้องคำนวณจริงจาก results ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
-      }
-      log(`✓ summarize() ใช้ filter/map/reduce ได้ผลลัพธ์ถูกต้อง: ${JSON.stringify(summary)}, ${JSON.stringify(summary2)}`);
+      const summary1 = checkSummarize();
+      const summary2 = checkSummarize();
+      log(`✓ summarize() ใช้ filter/map/reduce ได้ผลลัพธ์ถูกต้อง: ${JSON.stringify(summary1)}, ${JSON.stringify(summary2)}`);
     },
     hint: "const passedNames = results.filter(r => r.passed).map(r => r.name); const total = passedNames.length; (หรือใช้ .reduce() นับก็ได้) return { passedNames, total };",
     solution: `function summarize(results) {
@@ -363,7 +411,14 @@ summarize(results); // { passedNames: ['a'], total: 1 }`,
       if (reversedResult === result) {
         throw new Error("compose(addOne, double) กับ compose(double, addOne) ต้องให้ผลลัพธ์ต่างกัน (ลำดับการเรียกมีผล) — ถ้าได้ผลลัพธ์เท่ากันแปลว่า compose() ไม่ได้เรียงลำดับจริง");
       }
-      log(`✓ compose(f, g)(x) = f(g(x)) ถูกต้อง: compose(double, addOne)(3) = ${result}`);
+      // Second, different x — closes a "the returned function ignores its argument, only
+      // ever computed for x=3" loophole a single call can't catch.
+      const result2 = composed(10);
+      const expected2 = double(addOne(10));
+      if (result2 !== expected2) {
+        throw new Error(`composed(10) ต้องเท่ากับ double(addOne(10)) = ${expected2} แต่ได้ ${result2} — function ที่ compose() คืนมาต้องใช้ค่า x ที่รับเข้ามาจริง ไม่ใช่คำนวณไว้ตายตัว`);
+      }
+      log(`✓ compose(f, g)(x) = f(g(x)) ถูกต้อง: compose(double, addOne)(3) = ${result}, (10) = ${result2}`);
     },
     hint: "function compose(f, g) { return (x) => f(g(x)); } — g ทำงานก่อน (ชั้นในสุด) แล้วผลลัพธ์ค่อยส่งต่อให้ f",
     solution: `function compose(f, g) {
@@ -445,20 +500,30 @@ isNotFound(200); // false`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบ async/await ด้วยการรันจริง...");
+      const keywordCheck = blankStringLiterals(stripComments(code));
+      if (!/\basync\b/.test(keywordCheck)) {
+        throw new Error("checkStatus ต้องประกาศด้วย async function จริง (ห้ามแค่คืนค่า Promise ตรงๆ จาก function ธรรมดา)");
+      }
+      if (!/\bawait\b/.test(keywordCheck)) {
+        throw new Error("checkStatus ต้องใช้ await จริงข้างใน (ห้าม return Promise ตรงๆ โดยไม่ await)");
+      }
       const fn = getLearnerFn(code, "checkStatus");
 
       const maybePromise = fn(2);
       if (!maybePromise || typeof maybePromise.then !== "function") {
         throw new Error("checkStatus ต้องเป็น async function (เรียกแล้วต้องได้ Promise กลับมา ไม่ใช่ค่าตรงๆ)");
       }
-      return Promise.all([fn(2), fn(3)]).then(([evenResult, oddResult]) => {
-        if (evenResult !== 'passed') {
-          throw new Error(`checkStatus(2) ต้อง resolve เป็น 'passed' (เลขคู่) แต่ได้ ${JSON.stringify(evenResult)}`);
+      return Promise.all([fn(2), fn(3), fn(4), fn(7)]).then(([r2, r3, r4, r7]) => {
+        if (r2 !== 'passed') {
+          throw new Error(`checkStatus(2) ต้อง resolve เป็น 'passed' (เลขคู่) แต่ได้ ${JSON.stringify(r2)}`);
         }
-        if (oddResult !== 'failed') {
-          throw new Error(`checkStatus(3) ต้อง resolve เป็น 'failed' (เลขคี่) แต่ได้ ${JSON.stringify(oddResult)}`);
+        if (r3 !== 'failed') {
+          throw new Error(`checkStatus(3) ต้อง resolve เป็น 'failed' (เลขคี่) แต่ได้ ${JSON.stringify(r3)}`);
         }
-        log(`✓ checkStatus() เป็น async function ที่ await ค่าถูกต้อง: checkStatus(2)='${evenResult}', checkStatus(3)='${oddResult}'`);
+        if (r4 !== 'passed' || r7 !== 'failed') {
+          throw new Error(`checkStatus(4) ต้องเป็น 'passed' และ checkStatus(7) ต้องเป็น 'failed' (เช็คตามเงื่อนไข id%2 จริง ไม่ใช่จำคำตอบไว้เฉพาะ id=2/3) แต่ได้ ${JSON.stringify(r4)}/${JSON.stringify(r7)}`);
+        }
+        log(`✓ checkStatus() เป็น async function ที่ await ค่าถูกต้อง: 2='${r2}', 3='${r3}', 4='${r4}', 7='${r7}'`);
       });
     },
     hint: "async function checkStatus(id) { const result = await new Promise(resolve => resolve(id % 2 === 0 ? 'passed' : 'failed')); return result; }",
@@ -540,9 +605,25 @@ console.log(status); // 'passed'`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบ Race Condition Fix ด้วยการรันจริง (concurrent increment)...");
-      const clean = stripComments(code);
-      if (!/await/.test(clean)) {
-        throw new Error("increment() ต้องมี await gap ตามที่โจทย์กำหนดจริง (ถ้าเขียนแบบ synchronous ล้วนไม่มี await เลย = หลบเลี่ยงปัญหา concurrency ทั้งหมด ไม่ได้แก้ race condition จริงตามที่โจทย์สอน)");
+      const keywordCheck = blankStringLiterals(stripComments(code));
+      // Mandate the EXACT vulnerable shape the task specifies (read this.count into a
+      // variable, THEN await, THEN write back using that variable) — not just "await appears
+      // somewhere". A one-liner `this.count++` (no read-await-write split) or a decoy string
+      // literal containing the word "await" would otherwise slip through: the former never
+      // creates a race window in the first place (JS can't interleave inside one synchronous
+      // statement), so it "passes" without demonstrating the fix the lesson is about.
+      const readMatch = /(?:const|let)\s+(\w+)\s*=\s*this\.count\b/.exec(keywordCheck);
+      if (!readMatch) {
+        throw new Error("increment() ต้องอ่านค่า this.count เก็บไว้ในตัวแปรก่อน (เช่น const cur = this.count;) ตามที่โจทย์จำลอง 'อ่านช้า' ไว้ — เขียน this.count++ ตรงๆ บรรทัดเดียวไม่มีช่วงเวลาเสี่ยง race condition ให้ต้องแก้เลย จึงไม่ได้แสดงว่าแก้ปัญหาจริง");
+      }
+      const varName = readMatch[1];
+      const afterRead = keywordCheck.slice(readMatch.index + readMatch[0].length);
+      if (!/\bawait\b/.test(afterRead)) {
+        throw new Error("ต้องมี await หลังจากอ่านค่า this.count เก็บไว้ในตัวแปร (จำลอง 'อ่านช้า' ตามที่โจทย์กำหนด)");
+      }
+      const afterAwait = afterRead.slice(afterRead.search(/\bawait\b/));
+      if (!new RegExp(`this\\.count\\s*=\\s*[^;]*\\b${varName}\\b`).test(afterAwait)) {
+        throw new Error(`ต้องเขียนค่ากลับที่ this.count โดยใช้ตัวแปร ${varName} ที่อ่านไว้ก่อนหน้า (เช่น this.count = ${varName} + 1;) หลังจาก await เสร็จ ตามที่โจทย์จำลอง 'อ่านช้า' ไว้`);
       }
       const SafeCounter = getLearnerClass(code, "SafeCounter");
       const counter = new SafeCounter();
@@ -614,18 +695,29 @@ console.log(counter.count); // 3 (ไม่ใช่ 1)`,
           reject(err);
           return;
         }
-        setTimeout(() => {
-          try {
-            const expected = ['start', 'end', 'promise', 'timeout'];
-            if (JSON.stringify(order) !== JSON.stringify(expected)) {
-              throw new Error(`ลำดับที่ได้คือ ${JSON.stringify(order)} แต่ควรเป็น ${JSON.stringify(expected)} — microtask (Promise.then) ต้องทำงานก่อน macrotask (setTimeout) เสมอ ไม่ว่า setTimeout จะถูกเรียกก่อนในโค้ดก็ตาม`);
+        // Flush the microtask queue ONCE (via a bare Promise.then) before any real macrotask
+        // can fire — per spec the microtask queue always drains completely (including any
+        // chained .then()s the learner's code enqueued) before the next macrotask runs. If
+        // 'timeout' already shows up here, the learner logged it from inside a microtask
+        // chain instead of a real setTimeout callback — the whole point of this lesson.
+        Promise.resolve().then(() => {
+          const afterMicrotasks = [...order];
+          setTimeout(() => {
+            try {
+              if (afterMicrotasks.includes('timeout')) {
+                throw new Error(`'timeout' ถูก log ไปแล้วก่อนที่ macrotask จริงจะทำงาน (สถานะตอนเช็ค microtask queue: ${JSON.stringify(afterMicrotasks)}) — ต้อง log 'timeout' จากใน setTimeout callback จริงๆ ห้ามซ่อนไว้ใน Promise.then()`);
+              }
+              const expected = ['start', 'end', 'promise', 'timeout'];
+              if (JSON.stringify(order) !== JSON.stringify(expected)) {
+                throw new Error(`ลำดับที่ได้คือ ${JSON.stringify(order)} แต่ควรเป็น ${JSON.stringify(expected)} — microtask (Promise.then) ต้องทำงานก่อน macrotask (setTimeout) เสมอ ไม่ว่า setTimeout จะถูกเรียกก่อนในโค้ดก็ตาม`);
+              }
+              log(`✓ ลำดับ event loop ถูกต้อง: ${JSON.stringify(order)}`);
+              resolve();
+            } catch (err) {
+              reject(err);
             }
-            log(`✓ ลำดับ event loop ถูกต้อง: ${JSON.stringify(order)}`);
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        }, 20);
+          }, 20);
+        });
       });
     },
     hint: "function logOrder(log) { log('start'); setTimeout(() => log('timeout'), 0); Promise.resolve().then(() => log('promise')); log('end'); } — setTimeout ถูกเรียกก่อนในโค้ด แต่ macrotask ต้องรอ microtask queue ว่างก่อนเสมอ",
@@ -719,47 +811,39 @@ onmessage = (event) => {
       }
       const fn = getLearnerFn(code, "runSuite");
 
-      const run = (probe, testCases) => Promise.resolve(fn(testCases)).then((summary) => {
-        if (!summary || typeof summary.total !== "number" || typeof summary.passed !== "number") {
-          throw new Error("runSuite() ต้องคืนค่า object { total, passed } ที่เป็นตัวเลข");
-        }
-        return { summary, peak: probe.state.peak };
-      });
+      // Random pass/fail pattern (and random length) every run — a lookup table keyed by
+      // testCases.length can't survive fresh random values every run.
+      const runRandomSuite = () => {
+        // Wide length range so a hardcoded 2-branch lookup table (e.g. "n===4 ? A : B") has
+        // negligible odds of coincidentally matching both the random length AND the random
+        // pass-count on any given run — narrower ranges were empirically shown to collide
+        // often enough to matter (see PLAYBOOK CASE-005 addendum).
+        const n = 5 + Math.floor(Math.random() * 8);
+        const probe = makeConcurrencyProbe();
+        const pattern = Array.from({ length: n }, () => Math.random() > 0.5);
+        const testCases = pattern.map((p, i) => ({ name: 'test_' + i, run: () => probe.runCheck(p) }));
+        const expectedPassed = pattern.filter(Boolean).length;
 
-      const probe1 = makeConcurrencyProbe();
-      const testCases1 = [
-        { name: 'login_test', run: () => probe1.runCheck(true) },
-        { name: 'logout_test', run: () => probe1.runCheck(false) },
-        { name: 'signup_test', run: () => probe1.runCheck(true) },
-        { name: 'search_test', run: () => probe1.runCheck(true) },
-      ];
-
-      return run(probe1, testCases1).then(({ summary, peak }) => {
-        if (summary.total !== 4) {
-          throw new Error(`total ต้องเท่ากับจำนวน testCases ทั้งหมด (4) แต่ได้ ${summary.total}`);
-        }
-        if (summary.passed !== 3) {
-          throw new Error(`passed ต้องเท่ากับจำนวนที่ run() คืนค่า true (3) แต่ได้ ${summary.passed}`);
-        }
-        if (peak <= 1) {
-          throw new Error(`testCases.run() ทุกตัวถูกเรียกทีละตัว (peak concurrent = ${peak}) — ต้องรันพร้อมกันจริงผ่าน Promise.all`);
-        }
-
-        // Second, different fixture (different length + pass count) — closes the
-        // "hardcode { total: 4, passed: 3 }" loophole a single fixed fixture can't catch.
-        const probe2 = makeConcurrencyProbe();
-        const testCases2 = [
-          { name: 'a', run: () => probe2.runCheck(false) },
-          { name: 'b', run: () => probe2.runCheck(false) },
-          { name: 'c', run: () => probe2.runCheck(true) },
-        ];
-        return run(probe2, testCases2).then(({ summary: summary2 }) => {
-          if (summary2.total !== 3 || summary2.passed !== 1) {
-            throw new Error(`runSuite() กับชุด testCases อื่น (3 ตัว, ผ่าน 1) ต้องได้ { total: 3, passed: 1 } แต่ได้ ${JSON.stringify(summary2)} — ต้องคำนวณจริงจาก testCases ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
+        return Promise.resolve(fn(testCases)).then((summary) => {
+          if (!summary || typeof summary.total !== "number" || typeof summary.passed !== "number") {
+            throw new Error("runSuite() ต้องคืนค่า object { total, passed } ที่เป็นตัวเลข");
           }
-          log(`✓ runSuite() รันพร้อมกันจริง (peak concurrent = ${peak}) และสรุปผลถูกต้องทั้งสองชุดข้อมูล: ${JSON.stringify(summary)}, ${JSON.stringify(summary2)}`);
+          if (summary.total !== n) {
+            throw new Error(`total ต้องเท่ากับจำนวน testCases ทั้งหมด (${n}) แต่ได้ ${summary.total}`);
+          }
+          if (summary.passed !== expectedPassed) {
+            throw new Error(`passed ต้องเท่ากับจำนวนที่ run() คืนค่า true (${expectedPassed}) แต่ได้ ${summary.passed}`);
+          }
+          if (probe.state.peak <= 1) {
+            throw new Error(`testCases.run() ทุกตัวถูกเรียกทีละตัว (peak concurrent = ${probe.state.peak}) — ต้องรันพร้อมกันจริงผ่าน Promise.all`);
+          }
+          return summary;
         });
-      });
+      };
+
+      return runRandomSuite().then((summary1) => runRandomSuite().then((summary2) => runRandomSuite().then((summary3) => {
+        log(`✓ runSuite() รันพร้อมกันจริงและสรุปผลถูกต้องทั้งสามชุดข้อมูลสุ่ม: ${JSON.stringify(summary1)}, ${JSON.stringify(summary2)}, ${JSON.stringify(summary3)}`);
+      })));
     },
     hint: "async function runSuite(testCases) { const results = await Promise.all(testCases.map(tc => tc.run())); const passed = results.reduce((count, r) => count + (r ? 1 : 0), 0); return { total: testCases.length, passed }; }",
     solution: `async function runSuite(testCases) {
