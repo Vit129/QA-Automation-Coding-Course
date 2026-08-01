@@ -20,6 +20,7 @@
       --accent-orange: #f97316;
       --accent-emerald: #10b981;
       --accent-amber: #f59e0b;
+      --accent-fuchsia: #d946ef;
       --accent-violet: #8b5cf6;
       --accent-gold: #eab308;
       --accent-teal: #14b8a6;
@@ -233,6 +234,10 @@
       background: var(--accent-emerald);
     }
 
+    .card-pp:hover::before {
+      background: var(--accent-fuchsia);
+    }
+
     .course-icon {
       font-size: 3rem;
       margin-bottom: 24px;
@@ -412,6 +417,16 @@
     .btn-oop:hover {
       background-color: #059669;
       box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-pp {
+      background-color: var(--accent-fuchsia);
+      color: white;
+    }
+
+    .btn-pp:hover {
+      background-color: #c026d3;
+      box-shadow: 0 0 16px rgba(217, 70, 239, 0.4);
     }
 
     footer {
@@ -616,6 +631,7 @@
     .card-framework .track-progress-fill { background-color: var(--accent-lime); }
     .card-dsa .track-progress-fill { background-color: var(--accent-amber); }
     .card-oop .track-progress-fill { background-color: var(--accent-emerald); }
+    .card-pp .track-progress-fill { background-color: var(--accent-fuchsia); }
 
     .track-progress-text {
       font-size: 0.75rem;
@@ -797,7 +813,7 @@
     <div class="completion-banner" id="completion-banner" style="display:none;">
       <div class="completion-banner-icon">🏆</div>
       <h2>เรียนจบครบทุกบทแล้ว!</h2>
-      <p id="completion-intro">คุณผ่านบทเรียนทั้งหมดครบทั้ง 12 สาย QA Automation:</p>
+      <p id="completion-intro">คุณผ่านบทเรียนทั้งหมดครบทั้ง 13 สาย QA Automation:</p>
       <ul>
         <li>✅ Playwright API Testing — ทดสอบ Backend API ด้วย Request Context, Auth, Schema Validation</li>
         <li>✅ Playwright UI Testing — POM, API Mocking, TypeScript</li>
@@ -810,6 +826,7 @@
         <li>✅ CI/CD Pipeline — GitHub Actions, Matrix Strategy, Caching</li>
         <li>✅ Test Automation Framework Design — Fixtures, DRY, Reporting</li>
         <li>✅ OOP Fundamentals for QA — 4 Pillars, SOLID, Design Patterns</li>
+        <li>✅ Programming Paradigms for QA — Functional Programming, Concurrency</li>
         <li>✅ Data Structures & Algorithms for QA — Big-O, Search/Sort, Complexity Analysis</li>
       </ul>
     </div>
@@ -829,7 +846,7 @@
       <div class="exam-cta-icon">🎯</div>
       <div class="exam-cta-text">
         <div class="exam-cta-title">Mixed Mock Exam — จับเวลา แยกเลือกหมวดเนื้อหาได้</div>
-        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 12 สาย (248 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
+        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 13 สาย (260 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
       </div>
       <div class="exam-cta-arrow">→</div>
     </a>
@@ -849,6 +866,7 @@
         <li><a href="#card-cicd">🔴 CI/CD</a></li>
         <li><a href="#card-framework">🔴 Framework Design</a></li>
         <li><a href="#card-oop">🔴 OOP Fundamentals</a></li>
+        <li><a href="#card-pp">🔴 Programming Paradigms</a></li>
         <li><a href="#card-dsa">🔴 DS&A (Elective)</a></li>
       </ol>
     </div>
@@ -1086,6 +1104,26 @@
         <a href="./OOP-Fundamentals/index.html" class="btn btn-oop">เข้าสู่บทเรียน →</a>
       </div>
 
+      <!-- Programming Paradigms for QA Course Card -->
+      <div class="course-card card-pp" id="card-pp">
+        <span class="course-icon">🧵</span>
+        <h2 class="course-title">Programming Paradigms for QA</h2>
+        <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
+        <p class="course-desc">
+          Functional Programming (Pure Function, Immutability, Composition, Currying) และ Concurrency (async/await, Promise.all Parallelism, Race Condition, Event Loop) — พิสูจน์พฤติกรรม concurrency จริงด้วยการนับ concurrent call ไม่ใช่แค่ keyword-match
+        </p>
+        <div class="tags">
+          <span class="tag">Functional</span>
+          <span class="tag">Concurrency</span>
+          <span class="tag">12 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-pp">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/12 บทเรียน (0%)</span>
+        </div>
+        <a href="./Programming-Paradigms/index.html" class="btn btn-pp">เข้าสู่บทเรียน →</a>
+      </div>
+
       <!-- Data Structures & Algorithms for QA Course Card -->
       <div class="course-card card-dsa" id="card-dsa">
         <span class="course-icon">🧩</span>
@@ -1128,6 +1166,7 @@
   <script src="./CI-CD-Pipeline/course.js"></script>
   <script src="./Framework-Design/course.js"></script>
   <script src="./OOP-Fundamentals/course.js"></script>
+  <script src="./Programming-Paradigms/course.js"></script>
   <script src="./Data-Structures-Algorithms/course.js"></script>
 
   <script>
@@ -1143,6 +1182,7 @@
       { key: 'cicd', registryId: 'ci-cd-pipeline', prefix: 'cicd', label: 'CI/CD Pipeline' },
       { key: 'framework', registryId: 'framework-design', prefix: 'fwk', label: 'Test Automation Framework Design' },
       { key: 'oop', registryId: 'oop-fundamentals', prefix: 'oop', label: 'OOP Fundamentals for QA' },
+      { key: 'pp', registryId: 'programming-paradigms', prefix: 'pp', label: 'Programming Paradigms for QA' },
       { key: 'dsa', registryId: 'data-structures-algorithms', prefix: 'dsa', label: 'Data Structures & Algorithms for QA' },
     ].map(track => ({ ...track, total: (window.QA_TRACKS[track.registryId] || {}).lessons?.length || 0 }));
     const XP_PER_LESSON = 10;
@@ -1313,7 +1353,7 @@
     // Update-available check for people who cloned the repo (read-only, no push back)
     // instead of using the always-fresh GitHub Pages URL. Bump this alongside version.json
     // whenever new content ships.
-    const CURRENT_VERSION = 7;
+    const CURRENT_VERSION = 8;
     const VERSION_CHECK_URL = 'https://raw.githubusercontent.com/Vit129/QA-Automation-Coding-Course/main/version.json';
     const PAGES_URL = 'https://vit129.github.io/QA-Automation-Coding-Course/';
     const DISMISS_KEY = 'qa_course_update_dismissed_version';
