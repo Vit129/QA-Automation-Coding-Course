@@ -31,6 +31,7 @@ const TRACKS = [
   'Visual-Regression-Testing',
   'CI-CD-Pipeline',
   'Framework-Design',
+  'OOP-Fundamentals',
   'Data-Structures-Algorithms',
   'Final-Project',
 ];

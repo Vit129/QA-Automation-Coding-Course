@@ -19,6 +19,7 @@
       --accent-blue: #3b82f6;
       --accent-orange: #f97316;
       --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
       --accent-violet: #8b5cf6;
       --accent-gold: #eab308;
       --accent-teal: #14b8a6;
@@ -229,6 +230,10 @@
     }
 
     .card-dsa:hover::before {
+      background: var(--accent-amber);
+    }
+
+    .card-oop:hover::before {
       background: var(--accent-emerald);
     }
 
@@ -404,11 +409,21 @@
     }
 
     .btn-dsa {
+      background-color: var(--accent-amber);
+      color: #451a03;
+    }
+
+    .btn-dsa:hover {
+      background-color: #d97706;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-oop {
       background-color: var(--accent-emerald);
       color: white;
     }
 
-    .btn-dsa:hover {
+    .btn-oop:hover {
       background-color: #059669;
       box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
     }
@@ -614,7 +629,8 @@
     .card-visual .track-progress-fill { background-color: var(--accent-pink); }
     .card-cicd .track-progress-fill { background-color: var(--accent-cyan); }
     .card-framework .track-progress-fill { background-color: var(--accent-lime); }
-    .card-dsa .track-progress-fill { background-color: var(--accent-emerald); }
+    .card-dsa .track-progress-fill { background-color: var(--accent-amber); }
+    .card-oop .track-progress-fill { background-color: var(--accent-emerald); }
 
     .track-progress-text {
       font-size: 0.75rem;
@@ -796,7 +812,7 @@
     <div class="completion-banner" id="completion-banner" style="display:none;">
       <div class="completion-banner-icon">🏆</div>
       <h2>เรียนจบครบทุกบทแล้ว!</h2>
-      <p id="completion-intro">คุณผ่านบทเรียนทั้งหมดครบทั้ง 12 สาย QA Automation:</p>
+      <p id="completion-intro">คุณผ่านบทเรียนทั้งหมดครบทั้ง 13 สาย QA Automation:</p>
       <ul>
         <li>✅ Playwright API Testing — ทดสอบ Backend API ด้วย Request Context, Auth, Schema Validation</li>
         <li>✅ Playwright UI Testing — POM, API Mocking, TypeScript</li>
@@ -828,7 +844,7 @@
       <div class="exam-cta-icon">🎯</div>
       <div class="exam-cta-text">
         <div class="exam-cta-title">Mixed Mock Exam — จับเวลา แยกเลือกหมวดเนื้อหาได้</div>
-        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 12 สาย (236 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
+        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 13 สาย (251 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
       </div>
       <div class="exam-cta-arrow">→</div>
     </a>
@@ -848,6 +864,7 @@
         <li><a href="#card-perf">🟡 Performance</a></li>
         <li><a href="#card-cicd">🔴 CI/CD</a></li>
         <li><a href="#card-framework">🔴 Framework Design</a></li>
+        <li><a href="#card-oop">🟣 OOP Fundamentals</a></li>
         <li><a href="#card-dsa">🔴 DS&A (Elective)</a></li>
       </ol>
     </div>
@@ -1085,6 +1102,26 @@
         <a href="./Framework-Design/index.html" class="btn btn-framework">เข้าสู่บทเรียน →</a>
       </div>
 
+      <!-- OOP Fundamentals for QA Course Card -->
+      <div class="course-card card-oop" id="card-oop">
+        <span class="course-icon">🧬</span>
+        <h2 class="course-title">OOP Fundamentals for QA</h2>
+        <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
+        <p class="course-desc">
+          เข้าใจ 4 เสาหลักของ OOP (Encapsulation, Inheritance, Polymorphism, Abstraction) และ Design Pattern ที่ใช้บ่อยในงาน QA automation (Factory, Singleton, Builder) — บทที่เน้นพฤติกรรมจริงตรวจด้วยการรันโค้ดจริง ไม่ใช่แค่ regex
+        </p>
+        <div class="tags">
+          <span class="tag">Encapsulation</span>
+          <span class="tag">Design Patterns</span>
+          <span class="tag">15 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-oop">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/15 บทเรียน (0%)</span>
+        </div>
+        <a href="./OOP-Fundamentals/index.html" class="btn btn-oop">เข้าสู่บทเรียน →</a>
+      </div>
+
       <!-- Data Structures & Algorithms for QA Course Card -->
       <div class="course-card card-dsa" id="card-dsa">
         <span class="course-icon">🧩</span>
@@ -1127,6 +1164,7 @@
   <script src="./Visual-Regression-Testing/course.js"></script>
   <script src="./CI-CD-Pipeline/course.js"></script>
   <script src="./Framework-Design/course.js"></script>
+  <script src="./OOP-Fundamentals/course.js"></script>
   <script src="./Data-Structures-Algorithms/course.js"></script>
 
   <script>
@@ -1142,6 +1180,7 @@
       { key: 'visual', registryId: 'visual-regression-testing', prefix: 'visual', label: 'Visual Regression Testing' },
       { key: 'cicd', registryId: 'ci-cd-pipeline', prefix: 'cicd', label: 'CI/CD Pipeline' },
       { key: 'framework', registryId: 'framework-design', prefix: 'fwk', label: 'Test Automation Framework Design' },
+      { key: 'oop', registryId: 'oop-fundamentals', prefix: 'oop', label: 'OOP Fundamentals for QA' },
       { key: 'dsa', registryId: 'data-structures-algorithms', prefix: 'dsa', label: 'Data Structures & Algorithms for QA' },
     ].map(track => ({ ...track, total: (window.QA_TRACKS[track.registryId] || {}).lessons?.length || 0 }));
     const XP_PER_LESSON = 10;

@@ -8,7 +8,7 @@ set -euo pipefail
 # copy directly, it will be overwritten.
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TRACKS=(API-Testing Playwright Robot-Framework Performance-Testing DB-Design-SQL CLI-Essentials Security-Testing Accessibility-Testing Visual-Regression-Testing CI-CD-Pipeline Framework-Design Data-Structures-Algorithms Final-Project)
+TRACKS=(API-Testing Playwright Robot-Framework Performance-Testing DB-Design-SQL CLI-Essentials Security-Testing Accessibility-Testing Visual-Regression-Testing CI-CD-Pipeline Framework-Design OOP-Fundamentals Data-Structures-Algorithms Final-Project)
 FILES=(engine.js editor-autocomplete.js gamification.js editor-enhancements.js editor-highlight.js)
 
 for track in "${TRACKS[@]}"; do
