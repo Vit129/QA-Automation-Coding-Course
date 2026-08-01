@@ -138,6 +138,97 @@ function createPhase4Env() {
   return { request, page, dom };
 }
 
+// Minimal Robot Framework Browser-library interpreter for Phase 5 — not a real RF
+// parser, just enough keywords (New Page/Open Browser, Get Text, Should Contain,
+// Element Should Be Visible) to run the learner's flow against a fake page instead of
+// regex-matching the text. Unsupported keywords (e.g. "Set Variable" to fake a value
+// without ever reading the page) are deliberately left unimplemented — a variable that
+// never flowed through a real Get Text stays unset and fails Should Contain naturally.
+function runRobotFrameworkLikeTest(code) {
+  const PAGE_CONTENT = { '/mobile/e-ticket': 'Japan Concert E-Ticket' };
+  const dom = { currentUrl: null, opened: false };
+  const vars = {};
+  let sawGetText = false;
+  let checkedContains = false;
+
+  const resolveVar = (token) => {
+    const m = /^\$\{(\w+)\}$/.exec(token || '');
+    return m ? vars[m[1]] : token;
+  };
+
+  // No inline trailing-comment stripping here — this course's pseudo-RF selectors
+  // (e.g. "#ticket-title") start with '#' just like a real RF comment marker would,
+  // and every AC comment in the template is already on its own full line.
+  const lines = code.split('\n');
+  for (const rawLine of lines) {
+    let line = rawLine.trim();
+    if (!line || line.startsWith('#') || line.startsWith('***') || /^(Documentation|Library)\b/i.test(line)) continue;
+    if (/^FP-\d+:/.test(line)) continue;
+
+    let tokens = line.split(/\s{2,}|\t/).map(t => t.trim()).filter(Boolean);
+    if (!tokens.length) continue;
+
+    let assignTo = null;
+    const assignMatch = /^\$\{(\w+)\}=$/.exec(tokens[0]);
+    if (assignMatch) {
+      assignTo = assignMatch[1];
+      tokens = tokens.slice(1);
+    }
+    if (!tokens.length) continue;
+
+    const [keywordRaw, ...args] = tokens;
+    const keyword = keywordRaw.toLowerCase();
+    const resolvedArgs = args.map(resolveVar);
+
+    if (keyword === 'new page' || keyword === 'open browser') {
+      dom.currentUrl = resolvedArgs[0];
+      dom.opened = true;
+    } else if (keyword === 'get text') {
+      const selector = resolvedArgs[0];
+      if (!dom.opened) {
+        throw new Error('Mock RF: เรียก Get Text ก่อนเปิดหน้าเว็บด้วย New Page/Open Browser');
+      }
+      if (selector !== '#ticket-title') {
+        throw new Error(`Mock RF: Get Text ใช้ selector ที่ไม่รู้จัก (${selector})`);
+      }
+      const text = PAGE_CONTENT[dom.currentUrl] || '';
+      sawGetText = true;
+      if (assignTo) vars[assignTo] = text;
+      if (resolvedArgs[1] === '==') {
+        if (!text.includes(resolvedArgs[2])) {
+          throw new Error(`Mock RF: Get Text ${selector} == ล้มเหลว — ได้ "${text}" ไม่มีคำว่า "${resolvedArgs[2]}"`);
+        }
+        checkedContains = true;
+      }
+    } else if (keyword === 'should contain') {
+      const actual = resolveVar(args[0]);
+      const expected = args[1];
+      if (typeof actual !== 'string' || !actual.includes(expected)) {
+        throw new Error(`Mock RF: Should Contain ล้มเหลว — "${actual}" ไม่มีคำว่า "${expected}"`);
+      }
+      checkedContains = true;
+    } else if (keyword === 'element should be visible') {
+      if (!dom.opened) {
+        throw new Error('Mock RF: เรียก Element Should Be Visible ก่อนเปิดหน้าเว็บ');
+      }
+      if (!resolvedArgs.some(a => /ticket-title|Japan Concert E-Ticket/.test(a))) {
+        throw new Error('Mock RF: Element Should Be Visible ไม่ได้ตรวจ element ที่เกี่ยวกับ E-Ticket');
+      }
+      checkedContains = true;
+    }
+  }
+
+  if (!dom.opened) {
+    throw new Error("ไม่ผ่านเกณฑ์ [AC-501]: ยังไม่พบคำสั่งเปิดหน้าแอปมือถือ");
+  }
+  if (dom.currentUrl !== '/mobile/e-ticket') {
+    throw new Error(`ไม่ผ่านเกณฑ์ [AC-501]: เปิดหน้าผิด URL (${dom.currentUrl}) ต้องเป็น /mobile/e-ticket`);
+  }
+  if (!checkedContains) {
+    throw new Error("ไม่ผ่านเกณฑ์ [AC-502]: ยังไม่พบการตรวจสอบว่าข้อความบนหน้าจอมีคำว่า 'Japan Concert E-Ticket' (ต้องดึงข้อความจริงด้วย Get Text ก่อน)");
+  }
+}
+
 function stripComments(code) {
   const clean = code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '');
   if (/\.(GET|POST|PUT|DELETE|PATCH)\s*\(/.test(clean)) {
@@ -413,19 +504,9 @@ FP-4006: ตรวจสอบ E-Ticket QR Code บนแอปมือถื�
 
 `,
     validate: (code, log) => {
-      const clean = stripComments(code);
-      log("🔍 [Phase 5 PRD Validation] กำลังตรวจสอบ Mobile Client App...");
-      if (/New Page\s+https?:.*\/mobile\/e-ticket/i.test(clean) || /New Page\s+\/mobile\/e-ticket/i.test(clean) || /Open Browser\s+.*\/mobile\/e-ticket/i.test(clean)) {
-        log("✓ [AC-501 Passed]: เปิดหน้าแอปมือถือ /mobile/e-ticket ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-501]: ยังไม่พบคำสั่งเปิดหน้าแอปมือถือตามที่ระบุในโจทย์");
-      }
-
-      if (/Get Text\s+.*contains\s+Japan Concert E-Ticket/i.test(clean) || /Should Contain\s+.*Japan Concert E-Ticket/i.test(clean) || /Get Text\s+#ticket-title\s+==\s+Japan Concert E-Ticket/i.test(clean) || /Element Should Be Visible\s+.*Japan Concert E-Ticket/i.test(clean)) {
-        log("✓ [AC-502 Passed]: ตรวจพบตั๋ว 'Japan Concert E-Ticket' บนหน้าจอแอปมือถือ");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-502]: ยังไม่พบการตรวจสอบข้อความบนหน้าจอ E-Ticket ตามที่ระบุในโจทย์");
-      }
+      log("🔍 [Phase 5 PRD Validation] กำลังรันโค้ดจริงผ่าน Mock Mobile Page...");
+      runRobotFrameworkLikeTest(code);
+      log("✓ [AC-501+502 Passed]: เปิดหน้า /mobile/e-ticket และตรวจพบข้อความ 'Japan Concert E-Ticket' จริง (รันจริงผ่าน Mock)");
     },
     hint: "ใช้ New Page  /mobile/e-ticket  แล้วเช็ค Get Text  #ticket-title  ==  Japan Concert E-Ticket",
     solution: `*** Settings ***
@@ -618,8 +699,8 @@ function findBestTicketPrice(prices, targetPrice) {
 
   while (left <= right) {
     const mid = Math.floor((left + right) / 2);
-    // AC-801: คืนค่า index (mid) เมื่อ prices[mid] === targetPrice — ห้ามคืนแค่ true/false
-    // AC-802: ปรับขอบเขต left = mid + 1 (เมื่อน้อยกว่า) และ right = mid - 1 (เมื่อมากกว่า)
+    // AC-801: ถ้าเจอราคาเป้าหมายพอดี ต้องคืนค่า "ตำแหน่ง" ของมัน — ห้ามคืนแค่ true/false
+    // AC-802: ถ้ายังไม่เจอ ต้องขยับขอบเขตการค้นหาเข้าหากึ่งกลางใหม่ ตามหลัก Binary Search
     // WRITE YOUR BINARY SEARCH LOGIC HERE
 
   }
@@ -678,7 +759,7 @@ function findBestTicketPrice(prices, targetPrice) {
         throw new Error(`ไม่ผ่านเกณฑ์ [AC-802]: เข้าถึง array ${accessCount} ครั้งจาก 1024 ตัว — นี่คือ Linear Scan ไม่ใช่ Binary Search O(log n) (ต้องเข้าถึงไม่เกิน ~40 ครั้ง แม้จะ access prices[mid] ซ้ำในเงื่อนไข if/else if ก็ตาม)`);
       }
     },
-    hint: "ถ้า prices[mid] === targetPrice คืนค่า mid (ไม่ใช่ true), ถ้า prices[mid] < targetPrice ปรับ left = mid + 1, ไม่งั้นปรับ right = mid - 1, สุดท้ายถ้าหลุด loop คืน -1",
+    hint: "เทียบ prices[mid] กับ targetPrice: ตรงกันให้คืนค่าตำแหน่งนั้นเลย (ไม่ใช่ boolean) ไม่ตรงกันให้ตัดสินใจว่าครึ่งไหนของ array ยังมีโอกาสเจอ แล้วขยับขอบเขต left/right เข้าหากึ่งกลางใหม่ฝั่งนั้น เหมือนหลักการ Binary Search ทั่วไป",
     solution: `function findBestTicketPrice(prices, targetPrice) {
   let left = 0;
   let right = prices.length - 1;
