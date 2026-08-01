@@ -70,15 +70,18 @@ for (const track of TRACKS) {
   let fail = 0;
 
   for (const lesson of lessons) {
+    // validate() may return a Promise (Final-Project's Phase 3/4 execute real async
+    // Playwright-style code) — await it so a later rejection is still caught here,
+    // same as a synchronous throw.
     try {
-      lesson.validate(lesson.solution, () => {});
+      await Promise.resolve(lesson.validate(lesson.solution, () => {}));
       pass++;
     } catch (e) {
       fail++;
       failures.push(`${track} :: ${lesson.id} — SOLUTION FAILED: ${e.message}`);
     }
     try {
-      lesson.validate(lesson.template, () => {});
+      await Promise.resolve(lesson.validate(lesson.template, () => {}));
       fail++;
       failures.push(`${track} :: ${lesson.id} — TEMPLATE SHOULD HAVE THROWN BUT DIDN'T`);
     } catch (e) {
