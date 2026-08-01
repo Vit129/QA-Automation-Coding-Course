@@ -19,6 +19,216 @@ function priorPhaseCompleted(lessonId) {
   return typeof isLessonCompleted === 'function' ? isLessonCompleted(lessonId) : true;
 }
 
+// Real execution harness for Phase 3/4's Playwright-style code (mirrors the pattern
+// already used for Phase 8's binary search — new Function() against a mock, not regex
+// on the text). Phase 5 stays regex-based (Robot Framework syntax, deferred).
+function prepareExecutableCode(code) {
+  return stripComments(code).replace(/^\s*import\s.*?;\s*$/gm, '');
+}
+
+function createMockExpect() {
+  return function expect(actual) {
+    const resolved = (actual && typeof actual === 'object' && '__mockLocatorText' in actual)
+      ? actual.__mockLocatorText
+      : actual;
+    return {
+      toBe(expected) {
+        if (resolved !== expected) {
+          throw new Error(`expect ได้ ${JSON.stringify(resolved)} แต่ต้องการ ${JSON.stringify(expected)}`);
+        }
+      },
+      toContainText(expected) {
+        if (typeof resolved !== 'string' || !resolved.includes(expected)) {
+          throw new Error(`ข้อความหน้าจอควรมีคำว่า "${expected}" แต่ได้ ${JSON.stringify(resolved)}`);
+        }
+      }
+    };
+  };
+}
+
+async function runPlaywrightLikeTest(code, fixtures) {
+  const executable = prepareExecutableCode(code);
+  let capturedFn = null;
+  const mockTest = (name, fn) => { capturedFn = fn; };
+  let runner;
+  try {
+    runner = new Function('test', 'expect', executable);
+  } catch (e) {
+    throw new Error(`โค้ดมี Syntax Error รันไม่ได้ — ${e.message}`);
+  }
+  runner(mockTest, createMockExpect());
+  if (typeof capturedFn !== 'function') {
+    throw new Error("ไม่พบการเรียก test('...', async (...) => {...}) ที่ถูกต้องในโค้ด");
+  }
+  await capturedFn(fixtures);
+}
+
+function createBookingBackend() {
+  const calls = { book: null, visa: null };
+  const post = async (url, opts) => {
+    const data = opts && opts.data;
+    if (url === '/api/japan-trip/book') {
+      calls.book = data || null;
+      if (!data || !data.passportNo) {
+        throw new Error('Mock backend: POST /api/japan-trip/book payload ไม่ถูกต้อง (ขาด passportNo)');
+      }
+      return { status: () => 200, json: async () => ({ status: 'CONFIRMED' }) };
+    }
+    if (url === '/api/japan-trip/verify-visa') {
+      calls.visa = data || null;
+      if (!data || typeof data.stayDays !== 'number') {
+        throw new Error('Mock backend: POST /api/japan-trip/verify-visa payload ต้องมี stayDays เป็นตัวเลข (คำนวณเองจากวันบิน/วันกลับ)');
+      }
+      if (data.stayDays !== 4) {
+        throw new Error(`Mock backend: stayDays คำนวณผิด — ควรได้ 4 วัน (14-18 ต.ค.) แต่ได้ ${data.stayDays}`);
+      }
+      return { status: () => 200, json: async () => ({ visaRequired: false }) };
+    }
+    throw new Error(`Mock backend: ไม่รู้จัก endpoint ${url}`);
+  };
+  return { request: { post }, calls };
+}
+
+function createPhase4Env() {
+  const dom = { currentUrl: null, departureDate: null, bookingStatus: '', visaVerified: false, visaCallMade: false };
+  const request = {
+    post: async (url, opts) => {
+      if (url !== '/api/japan-trip/verify-visa') {
+        throw new Error(`Mock backend: Phase 4 ต้องเรียกเฉพาะ /api/japan-trip/verify-visa (ซ้ำจาก Phase 3) แต่เรียก ${url}`);
+      }
+      dom.visaCallMade = true;
+      const data = opts && opts.data;
+      if (!data || data.stayDays !== 4) {
+        throw new Error('Mock backend: verify-visa payload ต้องมี stayDays: 4 เหมือน Phase 3 (คำนวณจาก 14-18 ต.ค.)');
+      }
+      dom.visaVerified = true;
+      return { status: () => 200, json: async () => ({ visaRequired: false }) };
+    }
+  };
+  const page = {
+    goto: async (url) => { dom.currentUrl = url; },
+    fill: async (selector, value) => {
+      if (selector !== '#departure-date') {
+        throw new Error(`Mock page: ไม่รู้จัก selector ${selector} สำหรับ fill()`);
+      }
+      dom.departureDate = value;
+    },
+    click: async (selector) => {
+      if (selector !== '#confirm-booking-btn') {
+        throw new Error(`Mock page: ไม่รู้จัก selector ${selector} สำหรับ click()`);
+      }
+      if (dom.currentUrl !== '/japan-trip') {
+        throw new Error("Mock page: ต้อง page.goto('/japan-trip') ก่อนคลิกยืนยันการจอง");
+      }
+      if (!dom.visaVerified) {
+        throw new Error('Mock page: ต้องเรียก verify-visa API ยืนยัน visaRequired เป็น false ก่อนคลิกยืนยันการจอง (AC-401 ต้องมาก่อน AC-402)');
+      }
+      dom.bookingStatus = dom.departureDate === '2026-10-14' ? 'Booking Successful' : 'Booking Failed: invalid date';
+    },
+    locator: (selector) => {
+      if (selector === '#booking-status') {
+        return { __mockLocatorText: dom.bookingStatus };
+      }
+      if (selector === '#departure-date') {
+        return { fill: async (value) => { dom.departureDate = value; } };
+      }
+      throw new Error(`Mock page: ไม่รู้จัก selector ${selector}`);
+    }
+  };
+  return { request, page, dom };
+}
+
+// Minimal Robot Framework Browser-library interpreter for Phase 5 — not a real RF
+// parser, just enough keywords (New Page/Open Browser, Get Text, Should Contain,
+// Element Should Be Visible) to run the learner's flow against a fake page instead of
+// regex-matching the text. Unsupported keywords (e.g. "Set Variable" to fake a value
+// without ever reading the page) are deliberately left unimplemented — a variable that
+// never flowed through a real Get Text stays unset and fails Should Contain naturally.
+function runRobotFrameworkLikeTest(code) {
+  const PAGE_CONTENT = { '/mobile/e-ticket': 'Japan Concert E-Ticket' };
+  const dom = { currentUrl: null, opened: false };
+  const vars = {};
+  let sawGetText = false;
+  let checkedContains = false;
+
+  const resolveVar = (token) => {
+    const m = /^\$\{(\w+)\}$/.exec(token || '');
+    return m ? vars[m[1]] : token;
+  };
+
+  // No inline trailing-comment stripping here — this course's pseudo-RF selectors
+  // (e.g. "#ticket-title") start with '#' just like a real RF comment marker would,
+  // and every AC comment in the template is already on its own full line.
+  const lines = code.split('\n');
+  for (const rawLine of lines) {
+    let line = rawLine.trim();
+    if (!line || line.startsWith('#') || line.startsWith('***') || /^(Documentation|Library)\b/i.test(line)) continue;
+    if (/^FP-\d+:/.test(line)) continue;
+
+    let tokens = line.split(/\s{2,}|\t/).map(t => t.trim()).filter(Boolean);
+    if (!tokens.length) continue;
+
+    let assignTo = null;
+    const assignMatch = /^\$\{(\w+)\}=$/.exec(tokens[0]);
+    if (assignMatch) {
+      assignTo = assignMatch[1];
+      tokens = tokens.slice(1);
+    }
+    if (!tokens.length) continue;
+
+    const [keywordRaw, ...args] = tokens;
+    const keyword = keywordRaw.toLowerCase();
+    const resolvedArgs = args.map(resolveVar);
+
+    if (keyword === 'new page' || keyword === 'open browser') {
+      dom.currentUrl = resolvedArgs[0];
+      dom.opened = true;
+    } else if (keyword === 'get text') {
+      const selector = resolvedArgs[0];
+      if (!dom.opened) {
+        throw new Error('Mock RF: เรียก Get Text ก่อนเปิดหน้าเว็บด้วย New Page/Open Browser');
+      }
+      if (selector !== '#ticket-title') {
+        throw new Error(`Mock RF: Get Text ใช้ selector ที่ไม่รู้จัก (${selector})`);
+      }
+      const text = PAGE_CONTENT[dom.currentUrl] || '';
+      sawGetText = true;
+      if (assignTo) vars[assignTo] = text;
+      if (resolvedArgs[1] === '==') {
+        if (!text.includes(resolvedArgs[2])) {
+          throw new Error(`Mock RF: Get Text ${selector} == ล้มเหลว — ได้ "${text}" ไม่มีคำว่า "${resolvedArgs[2]}"`);
+        }
+        checkedContains = true;
+      }
+    } else if (keyword === 'should contain') {
+      const actual = resolveVar(args[0]);
+      const expected = args[1];
+      if (typeof actual !== 'string' || !actual.includes(expected)) {
+        throw new Error(`Mock RF: Should Contain ล้มเหลว — "${actual}" ไม่มีคำว่า "${expected}"`);
+      }
+      checkedContains = true;
+    } else if (keyword === 'element should be visible') {
+      if (!dom.opened) {
+        throw new Error('Mock RF: เรียก Element Should Be Visible ก่อนเปิดหน้าเว็บ');
+      }
+      if (!resolvedArgs.some(a => /ticket-title|Japan Concert E-Ticket/.test(a))) {
+        throw new Error('Mock RF: Element Should Be Visible ไม่ได้ตรวจ element ที่เกี่ยวกับ E-Ticket');
+      }
+      checkedContains = true;
+    }
+  }
+
+  if (!dom.opened) {
+    throw new Error("ไม่ผ่านเกณฑ์ [AC-501]: ยังไม่พบคำสั่งเปิดหน้าแอปมือถือ");
+  }
+  if (dom.currentUrl !== '/mobile/e-ticket') {
+    throw new Error(`ไม่ผ่านเกณฑ์ [AC-501]: เปิดหน้าผิด URL (${dom.currentUrl}) ต้องเป็น /mobile/e-ticket`);
+  }
+  if (!checkedContains) {
+    throw new Error("ไม่ผ่านเกณฑ์ [AC-502]: ยังไม่พบการตรวจสอบว่าข้อความบนหน้าจอมีคำว่า 'Japan Concert E-Ticket' (ต้องดึงข้อความจริงด้วย Get Text ก่อน)");
+  }
+}
+
 function stripComments(code) {
   const clean = code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '');
   if (/\.(GET|POST|PUT|DELETE|PATCH)\s*\(/.test(clean)) {
@@ -153,34 +363,20 @@ test('FP-4003: จองทริปญี่ปุ่นผ่าน API แล
 
 });`,
     validate: (code, log) => {
-      const clean = stripComments(code);
-      log("🔍 [Phase 3 PRD Validation] กำลังตรวจสอบ Booking + Visa Integration Flow...");
+      log("🔍 [Phase 3 PRD Validation] กำลังรันโค้ดจริงผ่าน Mock Backend...");
       if (!priorPhaseCompleted('fp_db_schema')) {
         throw new Error("ไม่ผ่านเกณฑ์: ต้องผ่าน Phase 2 (Database Schema) ก่อน — Phase 3 ต่อยอดโครงสร้างข้อมูลจาก Phase 2 โดยตรง");
       }
-      if (/await\s+request\.post\(['"]\/api\/japan-trip\/book['"]/.test(clean)) {
-        log("✓ [AC-301a Passed]: ยิง request.post('/api/japan-trip/book') ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ยังไม่พบการเรียก HTTP POST ไปยัง endpoint การจองตั๋วตามที่ระบุในโจทย์");
-      }
-
-      if (/expect\([\w]+\.status\(\)\)\.toBe\(200\)/.test(clean) && /\.status\)\.toBe\(\s*['"]CONFIRMED['"]\s*\)/.test(clean)) {
-        log("✓ [AC-301b Passed]: ได้รับ HTTP 200 OK และ body.status เป็น 'CONFIRMED'");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ต้องตรวจสอบทั้ง status code และค่าผลลัพธ์การจองให้ตรงกับที่ระบุในโจทย์");
-      }
-
-      if (/await\s+request\.post\(['"]\/api\/japan-trip\/verify-visa['"]/.test(clean)) {
-        log("✓ [AC-302a Passed]: ยิง request.post('/api/japan-trip/verify-visa') ต่อในเทสเดียวกัน ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ยังไม่พบการเรียก HTTP POST ไปยัง endpoint ตรวจสอบวีซ่า ต่อในเทสเดียวกันกับการจอง");
-      }
-
-      if (/expect\([\w]+\.visaRequired\)\.toBe\(false\)/.test(clean)) {
-        log("✓ [AC-302b Passed]: ได้รับสิทธิ์ยกเว้นวีซ่า (visaRequired: false) ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ต้องตรวจสอบผลลัพธ์การยกเว้นวีซ่าให้ตรงกับที่ระบุในโจทย์");
-      }
+      const backend = createBookingBackend();
+      return runPlaywrightLikeTest(code, { request: backend.request }).then(() => {
+        if (!backend.calls.book) {
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ยังไม่พบการเรียก POST /api/japan-trip/book ตามที่ระบุในโจทย์");
+        }
+        if (!backend.calls.visa) {
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ยังไม่พบการเรียก POST /api/japan-trip/verify-visa ต่อในเทสเดียวกัน");
+        }
+        log("✓ [AC-301+302 Passed]: จองตั๋วผ่าน API แล้วตรวจสอบวีซ่าต่อในเทสเดียวกัน สำเร็จทั้ง flow (รันจริงผ่าน Mock Backend)");
+      });
     },
     hint: "หนึ่ง test() เดียว ยิง POST /book ก่อน เช็ค response แล้วแปลง json เก็บตัวแปร จากนั้นยิง POST /verify-visa ต่อ (คำนวณ stayDays เองจาก 14-18 ต.ค. = 4 วัน) แล้วเช็ค response ที่สอง",
     solution: `import { test, expect } from '@playwright/test';
@@ -242,28 +438,20 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
 
 });`,
     validate: (code, log) => {
-      const clean = stripComments(code);
-      log("🔍 [Phase 4 PRD Validation] กำลังตรวจสอบ Web UI E2E Journey...");
+      log("🔍 [Phase 4 PRD Validation] กำลังรันโค้ดจริงผ่าน Mock Backend + Mock Page...");
       if (!priorPhaseCompleted('fp_booking_visa_integration')) {
         throw new Error("ไม่ผ่านเกณฑ์: ต้องผ่าน Phase 3 (Booking + Visa Integration) ก่อน — Phase 4 reuse API เดียวกับ Phase 3 จริง ไม่ใช่แค่พิมพ์ซ้ำ");
       }
-      if (/await\s+request\.post\(['"]\/api\/japan-trip\/verify-visa['"]/.test(clean) && /expect\([\w]+\.visaRequired\)\.toBe\(false\)/.test(clean)) {
-        log("✓ [AC-401 Passed]: เรียกใช้ verify-visa API ซ้ำจาก Phase 3 และยืนยัน visaRequired เป็น false ก่อนกรอกฟอร์ม");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-401]: ยังไม่พบการเรียก API ตรวจสอบวีซ่าซ้ำจาก Phase 3 ก่อนไปกรอกฟอร์ม (ใช้ fixture request ร่วมกับ page)");
-      }
-
-      if (/await\s+page\.goto\(['"]\/japan-trip['"]\)/.test(clean) && (/fill\(['"]#departure-date['"]\s*,\s*['"]2026-10-14['"]\)/.test(clean) || /locator\(['"]#departure-date['"]\)\.fill\(['"]2026-10-14['"]\)/.test(clean))) {
-        log("✓ [AC-402a Passed]: เปิดหน้า /japan-trip และกรอกวันเดินทาง #departure-date ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่พบการเปิดหน้าเว็บและกรอกวันเดินทางตามที่ระบุในโจทย์");
-      }
-
-      if ((/click\(['"]#confirm-booking-btn['"]\)/.test(clean) || /locator\(['"]#confirm-booking-btn['"]\)\s*\.click\(\)/.test(clean)) && /toContainText\(['"]Booking Successful['"]\)/.test(clean)) {
-        log("✓ [AC-402b Passed]: คลิกปุ่มยืนยันและได้รับการยืนยัน 'Booking Successful' บนหน้าจอ");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่พบการคลิกยืนยันการจองและตรวจข้อความแจ้งผลบนหน้าจอตามที่ระบุในโจทย์");
-      }
+      const env = createPhase4Env();
+      return runPlaywrightLikeTest(code, { page: env.page, request: env.request }).then(() => {
+        if (!env.dom.visaCallMade) {
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-401]: ยังไม่พบการเรียก verify-visa API ซ้ำจาก Phase 3 ก่อนไปกรอกฟอร์ม");
+        }
+        if (env.dom.bookingStatus !== 'Booking Successful') {
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่ยืนยันว่าหน้าจอแสดงข้อความ 'Booking Successful' สำเร็จ");
+        }
+        log("✓ [AC-401+402 Passed]: ยืนยัน visa ผ่าน API แล้วกรอกฟอร์มจองบนหน้าเว็บสำเร็จทั้ง flow (รันจริง)");
+      });
     },
     hint: "test ต้องรับทั้ง { page, request } — ยิง request.post('/api/japan-trip/verify-visa', ...) เช็ค visaRequired false ก่อน แล้วค่อย page.goto('/japan-trip'); page.fill('#departure-date', '2026-10-14'); page.click('#confirm-booking-btn'); expect(page.locator('#booking-status')).toContainText('Booking Successful');",
     solution: `import { test, expect } from '@playwright/test';
@@ -316,19 +504,9 @@ FP-4006: ตรวจสอบ E-Ticket QR Code บนแอปมือถื�
 
 `,
     validate: (code, log) => {
-      const clean = stripComments(code);
-      log("🔍 [Phase 5 PRD Validation] กำลังตรวจสอบ Mobile Client App...");
-      if (/New Page\s+https?:.*\/mobile\/e-ticket/i.test(clean) || /New Page\s+\/mobile\/e-ticket/i.test(clean) || /Open Browser\s+.*\/mobile\/e-ticket/i.test(clean)) {
-        log("✓ [AC-501 Passed]: เปิดหน้าแอปมือถือ /mobile/e-ticket ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-501]: ยังไม่พบคำสั่งเปิดหน้าแอปมือถือตามที่ระบุในโจทย์");
-      }
-
-      if (/Get Text\s+.*contains\s+Japan Concert E-Ticket/i.test(clean) || /Should Contain\s+.*Japan Concert E-Ticket/i.test(clean) || /Get Text\s+#ticket-title\s+==\s+Japan Concert E-Ticket/i.test(clean) || /Element Should Be Visible\s+.*Japan Concert E-Ticket/i.test(clean)) {
-        log("✓ [AC-502 Passed]: ตรวจพบตั๋ว 'Japan Concert E-Ticket' บนหน้าจอแอปมือถือ");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-502]: ยังไม่พบการตรวจสอบข้อความบนหน้าจอ E-Ticket ตามที่ระบุในโจทย์");
-      }
+      log("🔍 [Phase 5 PRD Validation] กำลังรันโค้ดจริงผ่าน Mock Mobile Page...");
+      runRobotFrameworkLikeTest(code);
+      log("✓ [AC-501+502 Passed]: เปิดหน้า /mobile/e-ticket และตรวจพบข้อความ 'Japan Concert E-Ticket' จริง (รันจริงผ่าน Mock)");
     },
     hint: "ใช้ New Page  /mobile/e-ticket  แล้วเช็ค Get Text  #ticket-title  ==  Japan Concert E-Ticket",
     solution: `*** Settings ***
@@ -521,8 +699,8 @@ function findBestTicketPrice(prices, targetPrice) {
 
   while (left <= right) {
     const mid = Math.floor((left + right) / 2);
-    // AC-801: คืนค่า index (mid) เมื่อ prices[mid] === targetPrice — ห้ามคืนแค่ true/false
-    // AC-802: ปรับขอบเขต left = mid + 1 (เมื่อน้อยกว่า) และ right = mid - 1 (เมื่อมากกว่า)
+    // AC-801: ถ้าเจอราคาเป้าหมายพอดี ต้องคืนค่า "ตำแหน่ง" ของมัน — ห้ามคืนแค่ true/false
+    // AC-802: ถ้ายังไม่เจอ ต้องขยับขอบเขตการค้นหาเข้าหากึ่งกลางใหม่ ตามหลัก Binary Search
     // WRITE YOUR BINARY SEARCH LOGIC HERE
 
   }
@@ -581,7 +759,7 @@ function findBestTicketPrice(prices, targetPrice) {
         throw new Error(`ไม่ผ่านเกณฑ์ [AC-802]: เข้าถึง array ${accessCount} ครั้งจาก 1024 ตัว — นี่คือ Linear Scan ไม่ใช่ Binary Search O(log n) (ต้องเข้าถึงไม่เกิน ~40 ครั้ง แม้จะ access prices[mid] ซ้ำในเงื่อนไข if/else if ก็ตาม)`);
       }
     },
-    hint: "ถ้า prices[mid] === targetPrice คืนค่า mid (ไม่ใช่ true), ถ้า prices[mid] < targetPrice ปรับ left = mid + 1, ไม่งั้นปรับ right = mid - 1, สุดท้ายถ้าหลุด loop คืน -1",
+    hint: "เทียบ prices[mid] กับ targetPrice: ตรงกันให้คืนค่าตำแหน่งนั้นเลย (ไม่ใช่ boolean) ไม่ตรงกันให้ตัดสินใจว่าครึ่งไหนของ array ยังมีโอกาสเจอ แล้วขยับขอบเขต left/right เข้าหากึ่งกลางใหม่ฝั่งนั้น เหมือนหลักการ Binary Search ทั่วไป",
     solution: `function findBestTicketPrice(prices, targetPrice) {
   let left = 0;
   let right = prices.length - 1;
@@ -630,46 +808,63 @@ function runSandboxCode() {
     <div class="terminal-line text-muted">Validating spec: ${lesson.title}...</div>
   `;
 
-  setTimeout(() => {
-    try {
-      lesson.validate(code, appendLog);
+  const onSuccess = () => {
+    terminal.innerHTML += logs.map(l => `<div class="terminal-line success">${escapeHtml(l)}</div>`).join('');
+    terminal.innerHTML += `
+      <div class="terminal-line info">---------------------------------------------------</div>
+      <div class="terminal-line success">✓ <strong>ผลการตรวจ PRD Spec: ผ่านทุกข้อกำหนด (All AC Passed)</strong></div>
+      <div class="terminal-line success">1 passed (24ms)</div>
+    `;
 
-      terminal.innerHTML += logs.map(l => `<div class="terminal-line success">${escapeHtml(l)}</div>`).join('');
-      terminal.innerHTML += `
-        <div class="terminal-line info">---------------------------------------------------</div>
-        <div class="terminal-line success">✓ <strong>ผลการตรวจ PRD Spec: ผ่านทุกข้อกำหนด (All AC Passed)</strong></div>
-        <div class="terminal-line success">1 passed (24ms)</div>
-      `;
+    setLessonCompleted(lesson.id);
 
-      setLessonCompleted(lesson.id);
-
-      const nextBtn = document.getElementById('next-lesson-btn');
-      if (nextBtn) {
-        if (currentLessonIndex < LESSONS.length - 1) {
-          nextBtn.innerText = 'ลุยไป Phase ถัดไป →';
-          nextBtn.onclick = () => {
-            selectLesson(currentLessonIndex + 1);
-          };
-        } else {
-          nextBtn.innerText = '🎓 สำเร็จโปรเจกต์จบ!';
-          nextBtn.onclick = () => {
-            if (overlay) overlay.classList.remove('show');
-            showGraduationMessage();
-          };
-        }
+    const nextBtn = document.getElementById('next-lesson-btn');
+    if (nextBtn) {
+      if (currentLessonIndex < LESSONS.length - 1) {
+        nextBtn.innerText = 'ลุยไป Phase ถัดไป →';
+        nextBtn.onclick = () => {
+          selectLesson(currentLessonIndex + 1);
+        };
+      } else {
+        nextBtn.innerText = '🎓 สำเร็จโปรเจกต์จบ!';
+        nextBtn.onclick = () => {
+          if (overlay) overlay.classList.remove('show');
+          showGraduationMessage();
+        };
       }
-
-      if (overlay) overlay.classList.add('show');
-    } catch (err) {
-      terminal.innerHTML += logs.map(l => `<div class="terminal-line success">${escapeHtml(l)}</div>`).join('');
-      terminal.innerHTML += `
-        <div class="terminal-line info">---------------------------------------------------</div>
-        <div class="terminal-line error">✕ <strong>ผลการตรวจ PRD Spec: ไม่ผ่าน (AC Failed)</strong></div>
-        <div class="terminal-line error">${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
-        <div class="terminal-line error">1 failed (38ms)</div>
-      `;
     }
+
+    if (overlay) overlay.classList.add('show');
     terminal.scrollTop = terminal.scrollHeight;
+  };
+
+  const onFailure = (err) => {
+    terminal.innerHTML += logs.map(l => `<div class="terminal-line success">${escapeHtml(l)}</div>`).join('');
+    terminal.innerHTML += `
+      <div class="terminal-line info">---------------------------------------------------</div>
+      <div class="terminal-line error">✕ <strong>ผลการตรวจ PRD Spec: ไม่ผ่าน (AC Failed)</strong></div>
+      <div class="terminal-line error">${escapeHtml(err.message).replace(/\n/g, '<br/>')}</div>
+      <div class="terminal-line error">1 failed (38ms)</div>
+    `;
+    terminal.scrollTop = terminal.scrollHeight;
+  };
+
+  setTimeout(() => {
+    let result;
+    try {
+      result = lesson.validate(code, appendLog);
+    } catch (err) {
+      onFailure(err);
+      return;
+    }
+    // Phase 3/4 validators execute the learner's async Playwright-style code for real
+    // and return a Promise — every other phase's validate() throws synchronously and
+    // returns undefined here, so this branch is a no-op for them.
+    if (result && typeof result.then === 'function') {
+      result.then(onSuccess).catch(onFailure);
+    } else {
+      onSuccess();
+    }
   }, 300);
 }
 
