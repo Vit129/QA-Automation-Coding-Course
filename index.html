@@ -213,10 +213,6 @@
       background: var(--accent-red);
     }
 
-    .card-a11y:hover::before {
-      background: var(--accent-indigo);
-    }
-
     .card-visual:hover::before {
       background: var(--accent-pink);
     }
@@ -366,16 +362,6 @@
     .btn-security:hover {
       background-color: #dc2626;
       box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
-    }
-
-    .btn-a11y {
-      background-color: var(--accent-indigo);
-      color: white;
-    }
-
-    .btn-a11y:hover {
-      background-color: #6366f1;
-      box-shadow: 0 0 16px rgba(129, 140, 248, 0.4);
     }
 
     .btn-visual {
@@ -625,7 +611,6 @@
     .card-sql .track-progress-fill { background-color: var(--accent-teal); }
     .card-cli .track-progress-fill { background-color: var(--accent-slate); }
     .card-security .track-progress-fill { background-color: var(--accent-red); }
-    .card-a11y .track-progress-fill { background-color: var(--accent-indigo); }
     .card-visual .track-progress-fill { background-color: var(--accent-pink); }
     .card-cicd .track-progress-fill { background-color: var(--accent-cyan); }
     .card-framework .track-progress-fill { background-color: var(--accent-lime); }
@@ -812,7 +797,7 @@
     <div class="completion-banner" id="completion-banner" style="display:none;">
       <div class="completion-banner-icon">🏆</div>
       <h2>เรียนจบครบทุกบทแล้ว!</h2>
-      <p id="completion-intro">คุณผ่านบทเรียนทั้งหมดครบทั้ง 13 สาย QA Automation:</p>
+      <p id="completion-intro">คุณผ่านบทเรียนทั้งหมดครบทั้ง 12 สาย QA Automation:</p>
       <ul>
         <li>✅ Playwright API Testing — ทดสอบ Backend API ด้วย Request Context, Auth, Schema Validation</li>
         <li>✅ Playwright UI Testing — POM, API Mocking, TypeScript</li>
@@ -844,7 +829,7 @@
       <div class="exam-cta-icon">🎯</div>
       <div class="exam-cta-text">
         <div class="exam-cta-title">Mixed Mock Exam — จับเวลา แยกเลือกหมวดเนื้อหาได้</div>
-        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 13 สาย (251 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
+        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 12 สาย (248 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
       </div>
       <div class="exam-cta-arrow">→</div>
     </a>
@@ -859,7 +844,6 @@
         <li><a href="#card-playwright">🟡 Playwright UI</a></li>
         <li><a href="#card-robot">🟡 Robot Framework</a></li>
         <li><a href="#card-security">🟡 Security</a></li>
-        <li><a href="#card-a11y">🟡 Accessibility</a></li>
         <li><a href="#card-visual">🟡 Visual Regression</a></li>
         <li><a href="#card-perf">🟡 Performance</a></li>
         <li><a href="#card-cicd">🔴 CI/CD</a></li>
@@ -1018,27 +1002,6 @@
         <a href="./Security-Testing/index.html" class="btn btn-security">เข้าสู่บทเรียน →</a>
       </div>
 
-      <!-- Accessibility Testing Course Card -->
-      <div class="course-card card-a11y" id="card-a11y">
-        <span class="course-icon">♿</span>
-        <h2 class="course-title">Accessibility (a11y) Testing</h2>
-        <span class="level-badge level-intermediate">🟡 ปานกลาง</span>
-        <p class="course-desc">
-          ทดสอบว่าผู้ใช้ที่มีข้อจำกัดทางร่างกายใช้งานได้จริง — axe-core Scan, Alt Text, ARIA Label, Keyboard Navigation, Semantic Heading (เช็คลำดับจริงไม่ใช่แค่มี), Color Contrast อิงจาก aria-label/alt จริงในโปรเจก My-Investment-Port (InvestmentTimeline.jsx, AiTeamTab.jsx)
-        </p>
-        <div class="tags">
-          <span class="tag">axe-core</span>
-          <span class="tag">ARIA</span>
-          <span class="tag">WCAG</span>
-          <span class="tag">13 Lessons</span>
-        </div>
-        <div class="track-progress" id="progress-a11y">
-          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/13 บทเรียน (0%)</span>
-        </div>
-        <a href="./Accessibility-Testing/index.html" class="btn btn-a11y">เข้าสู่บทเรียน →</a>
-      </div>
-
       <!-- Visual Regression Testing Course Card -->
       <div class="course-card card-visual" id="card-visual">
         <span class="course-icon">🖼️</span>
@@ -1108,16 +1071,17 @@
         <h2 class="course-title">OOP Fundamentals for QA</h2>
         <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
         <p class="course-desc">
-          เข้าใจ 4 เสาหลักของ OOP (Encapsulation, Inheritance, Polymorphism, Abstraction) และ Design Pattern ที่ใช้บ่อยในงาน QA automation (Factory, Singleton, Builder) — บทที่เน้นพฤติกรรมจริงตรวจด้วยการรันโค้ดจริง ไม่ใช่แค่ regex
+          เข้าใจ 4 เสาหลักของ OOP (Encapsulation, Inheritance, Polymorphism, Abstraction), SOLID Principles ครบ 5 ข้อ, TypeScript Interface/Abstract Class และ Design Pattern ที่ใช้บ่อยในงาน QA automation (Factory, Singleton, Builder, Observer, Strategy, Adapter, Decorator) — บทที่เน้นพฤติกรรมจริงตรวจด้วยการรันโค้ดจริง ไม่ใช่แค่ regex
         </p>
         <div class="tags">
           <span class="tag">Encapsulation</span>
+          <span class="tag">SOLID</span>
           <span class="tag">Design Patterns</span>
-          <span class="tag">15 Lessons</span>
+          <span class="tag">25 Lessons</span>
         </div>
         <div class="track-progress" id="progress-oop">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/15 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/25 บทเรียน (0%)</span>
         </div>
         <a href="./OOP-Fundamentals/index.html" class="btn btn-oop">เข้าสู่บทเรียน →</a>
       </div>
@@ -1160,7 +1124,6 @@
   <script src="./DB-Design-SQL/course.js"></script>
   <script src="./CLI-Essentials/course.js"></script>
   <script src="./Security-Testing/course.js"></script>
-  <script src="./Accessibility-Testing/course.js"></script>
   <script src="./Visual-Regression-Testing/course.js"></script>
   <script src="./CI-CD-Pipeline/course.js"></script>
   <script src="./Framework-Design/course.js"></script>
@@ -1176,7 +1139,6 @@
       { key: 'sql', registryId: 'db-design-sql', prefix: 'sql', label: 'Database Design & SQL' },
       { key: 'cli', registryId: 'cli-essentials', prefix: 'cli', label: 'Git, Vim & Unix Cheat Sheet' },
       { key: 'security', registryId: 'security-testing', prefix: 'sec', label: 'Security Testing' },
-      { key: 'a11y', registryId: 'accessibility-testing', prefix: 'a11y', label: 'Accessibility (a11y) Testing' },
       { key: 'visual', registryId: 'visual-regression-testing', prefix: 'visual', label: 'Visual Regression Testing' },
       { key: 'cicd', registryId: 'ci-cd-pipeline', prefix: 'cicd', label: 'CI/CD Pipeline' },
       { key: 'framework', registryId: 'framework-design', prefix: 'fwk', label: 'Test Automation Framework Design' },

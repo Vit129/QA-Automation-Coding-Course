@@ -44,6 +44,37 @@ code), so it's a known, tested pattern, not new engineering risk.
 | 14 | `oop_static_members` | Static members | `static totalCreated` increments per instance | **real execution** — verify the counter's actual value after N instantiations |
 | 15 | `oop_capstone_mini` | Mini capstone (track-closer, not the course Final-Project) | combine Factory + Singleton + Builder into one small `TestSuiteRunner` | **real execution** |
 
+## Scope expansion (2026-08-01, post-ship follow-up)
+
+User asked to deepen the track to match DSA/DB depth: add all 5 SOLID principles, 4 more
+patterns (Observer/Strategy/Adapter/Decorator), and a TypeScript interface/abstract-class
+lesson. Track grew from 15 to 25 lessons (renumbered `บทที่ 1`-`24` + capstone). New lessons,
+inserted in this order:
+
+| # | id | Concept | validate() |
+|---|----|---------|-----------|
+| 10 | `oop_typescript_interface_abstract` | TS `interface` + `abstract class implements` | regex — TS isn't executable in this JS-only sandbox, same as Framework-Design's TS-flavored regex lessons |
+| 12 | `oop_solid_srp` | Single Responsibility — split a validate+write class into two | regex (structural, no runtime behavior to prove) |
+| 13 | `oop_solid_ocp` | Open/Closed — extend via new subclass instead of editing base | real execution (same shape as Polymorphism — must prove differing output) |
+| 14 | `oop_solid_lsp` | Liskov Substitution — subclass must honor base's return-shape contract | real execution — the whole point is a runtime shape check |
+| 15 | `oop_solid_isp` | Interface Segregation — split a fat interface into small ones | regex (structural) |
+| 16 | `oop_solid_dip` | Dependency Inversion — constructor-inject collaborator instead of hardcoding `new` | real execution — spy-injects a fake logger, proves it's actually called |
+| 20 | `oop_observer_pattern` | Observer — subscribe/notify | real execution — proves all subscribers get called |
+| 21 | `oop_strategy_pattern` | Strategy — swappable algorithm via injected object | real execution — proves behavior actually changes per strategy |
+| 22 | `oop_adapter_pattern` | Adapter — wrap incompatible interface | real execution — proves the call is forwarded and the result passed through |
+| 23 | `oop_decorator_pattern` | Decorator — wrap a function, add behavior transparently | real execution — proves original behavior + wrapping both hold |
+
+Also hid `Accessibility-Testing` from all learner-facing surfaces (homepage nav/card/script
+tag/TRACKS array, exam pool script tag, `shared/selftest.mjs` TRACKS array) per user request —
+files/course content on disk are untouched, only display + regression-test coverage removed.
+
+Bug caught and fixed during this expansion: `getLearnerClass` re-executes the whole code
+string per class name, so pulling `TestRunner`/`SmokeTestRunner` (LSP) or
+`ReportFormatter`/`XmlReportFormatter` (OCP) via separate calls would give unrelated class
+references — `instanceof` always false even for correct solutions. Reused the existing
+`getLearnerClasses` fix (extract all related classes from one execution) already applied to
+Polymorphism/Abstraction.
+
 ## File changes
 
 1. **New**: `OOP-Fundamentals/index.html`, `course.js`, `style.css` — copy Framework-Design's

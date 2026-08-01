@@ -11,4 +11,17 @@ See `design.md` in this folder for the full plan (lesson list, validate() strate
 - [x] `DESIGN.md`: update accent palette section (already generic, accent-amber already documented — no per-track mapping needed)
 - [x] `node shared/selftest.mjs` — 0 failures across all 13 tracks (259 lessons, 518 passed — caught+fixed a real bug: getLearnerClass re-executed code per class name, giving separate class references so instanceof/extends checks always failed; fixed with getLearnerClasses extracting all classes from one execution)
 - [x] Manually verify a real-execution lesson (Singleton) rejects a plausible-but-wrong solution (verified: `getInstance() { return new ConfigManager(); }` without caching correctly fails identity check)
-- [ ] Commit on a feature branch, open PR
+- [x] Commit on a feature branch, open PR — https://github.com/Vit129/QA-Automation-Coding-Course/pull/15
+
+## Scope expansion (2026-08-01)
+
+- [x] Add SOLID principles ×5 (SRP/OCP/LSP/ISP/DIP) to OOP-Fundamentals/course.js
+- [x] Add Observer/Strategy/Adapter/Decorator patterns (4 lessons)
+- [x] Add TypeScript interface/abstract class lesson (regex-only, TS not executable in sandbox)
+- [x] Renumber all lesson meta (บทที่ 1-24 + capstone), track now 25 lessons total
+- [x] Hide Accessibility-Testing from homepage (nav/card/CSS/script tag/TRACKS array), exam pool, and shared/selftest.mjs — files on disk untouched
+- [x] Update homepage OOP card (desc/tags/lesson count) and static fallback lesson-count text
+- [x] `node shared/selftest.mjs` — 256 lessons, 512 checks, 0 failed (12 tracks, a11y excluded)
+- [x] Verified LSP lesson rejects plausible-but-wrong solution (subclass returning wrong shape `"ok"` instead of `{passed: boolean}`)
+- [x] Reused getLearnerClasses fix for OCP/LSP multi-class extraction (same bug class as original Polymorphism/Abstraction fix)
+- [ ] Commit + push expansion, update PR #15
