@@ -14,3 +14,9 @@
 
 | File | Domain | Tags | Added |
 |------|--------|------|-------|
+| `knowledge/course-structure.md` | Course Design | tracks, extend-not-rebuild | 2026-08-01 |
+| `knowledge/final-project-capstone-redesign.md` | Course Design | capstone, phases, redesign | 2026-08-01 |
+| `knowledge/grounding-verification.md` | Process/Feedback | grounded-claim, verification | 2026-08-01 |
+| `knowledge/common-failure-lessons-backlog.md` | Course Design | root-cause, timeout, PR#2 | 2026-08-01 |
+| `knowledge/claude-code-fleetview-bg-session-bug.md` | Tooling/Reference | Claude Code, FleetView, background-session | 2026-08-01 |
+| `knowledge/agy-reliability.md` | Process/Feedback | agy, delegation, accuracy | 2026-08-01 |
