@@ -247,7 +247,7 @@ function renderLessonList() {
     const lockedClass = locked ? 'locked' : '';
 
     return `
-      <button class="lesson-item ${activeClass} ${completedClass} ${lockedClass}" ${locked ? 'disabled' : `onclick="selectLesson(${idx})"`}>
+      <button class="lesson-item ${activeClass} ${completedClass} ${lockedClass}" onclick="selectLesson(${idx})">
         <div class="lesson-item-meta">
           <span>${lesson.meta}</span>
           <span class="check-icon">✓ ผ่านการประเมิน</span>
