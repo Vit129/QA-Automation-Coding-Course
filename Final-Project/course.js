@@ -948,9 +948,13 @@ function showGraduationMessage() {
 // Final-Project-only reward — a playful autumn-foliage boarding pass instead of the generic
 // showTrackCertificate() every other track gets (shared/gamification.js), since this course's
 // own capstone story is literally "book a Japan trip" (14-18 ต.ค. = koyo/momiji season).
+// Autumn-leaves background pattern — inline SVG data URI (no external asset/network fetch,
+// works offline on a static file:// page like every other track's index.html).
+const KOYO_LEAF_PATTERN = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill-opacity='0.16'%3E%3Cpath fill='%23fb923c' d='M20 15c4 3 6 8 5 13-1-4-4-7-8-8-3 5-2 11 2 15-5-1-9-5-10-10-1 5 1 10 5 13-6 0-11-4-13-9 0 6 3 11 8 14-6 1-12-2-15-7 2 6 7 10 13 11-5 3-11 2-15-1 4 4 10 6 15 4-3 4-8 6-13 5 5 3 11 2 15-2-1 4 0 9 3 12 1-5 0-10-3-13 5 1 9 5 11 10 1-5-1-10-5-13 6 0 11 4 13 10-1-6-5-10-11-12 6-1 11 2 14 7-2-6-7-10-13-11 5-2 10 0 13 5-3-6-8-9-14-9 4-3 9-4 14-2-4-4-10-6-15-4 3-4 4-9 3-13-2 4-6 8-11 9 2-5 1-11-2-15-1 5-4 9-8 11 0-5 2-10 6-13-5 1-9 5-11 10-1-5 1-11 5-14-6 1-10 5-12 10 0-5 3-10 8-12z'/%3E%3Cpath fill='%23dc2626' transform='translate(70 70)' d='M20 15c4 3 6 8 5 13-1-4-4-7-8-8-3 5-2 11 2 15-5-1-9-5-10-10-1 5 1 10 5 13-6 0-11-4-13-9 0 6 3 11 8 14-6 1-12-2-15-7 2 6 7 10 13 11-5 3-11 2-15-1 4 4 10 6 15 4-3 4-8 6-13 5 5 3 11 2 15-2-1 4 0 9 3 12 1-5 0-10-3-13 5 1 9 5 11 10 1-5-1-10-5-13 6 0 11 4 13 10-1-6-5-10-11-12 6-1 11 2 14 7-2-6-7-10-13-11 5-2 10 0 13 5-3-6-8-9-14-9 4-3 9-4 14-2-4-4-10-6-15-4 3-4 4-9 3-13-2 4-6 8-11 9 2-5 1-11-2-15-1 5-4 9-8 11 0-5 2-10 6-13-5 1-9 5-11 10-1-5 1-11 5-14-6 1-10 5-12 10 0-5 3-10 8-12z'/%3E%3Cpath fill='%23eab308' transform='translate(35 90) scale(0.7)' d='M20 15c4 3 6 8 5 13-1-4-4-7-8-8-3 5-2 11 2 15-5-1-9-5-10-10-1 5 1 10 5 13-6 0-11-4-13-9 0 6 3 11 8 14-6 1-12-2-15-7 2 6 7 10 13 11-5 3-11 2-15-1 4 4 10 6 15 4-3 4-8 6-13 5 5 3 11 2 15-2-1 4 0 9 3 12 1-5 0-10-3-13 5 1 9 5 11 10 1-5-1-10-5-13 6 0 11 4 13 10-1-6-5-10-11-12 6-1 11 2 14 7-2-6-7-10-13-11 5-2 10 0 13 5-3-6-8-9-14-9 4-3 9-4 14-2-4-4-10-6-15-4 3-4 4-9 3-13-2 4-6 8-11 9 2-5 1-11-2-15-1 5-4 9-8 11 0-5 2-10 6-13-5 1-9 5-11 10-1-5 1-11 5-14-6 1-10 5-12 10 0-5 3-10 8-12z'/%3E%3C/g%3E%3C/svg%3E";
+
 function showJapanTripTicket() {
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.65) url("${KOYO_LEAF_PATTERN}");background-repeat:repeat;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;`;
   overlay.innerHTML = `
     <div style="background:linear-gradient(135deg,#7c2d12,#c2410c 45%,#f59e0b);color:#fff7ed;border-radius:16px;padding:0;max-width:460px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.5);overflow:hidden;font-family:inherit;">
       <div style="padding:24px 28px 16px;">
@@ -967,11 +971,15 @@ function showJapanTripTicket() {
           <div style="font-size:26px;font-weight:800;">BKK</div>
           <div style="font-size:11px;opacity:.75;">Bangkok</div>
         </div>
-        <div style="font-size:20px;opacity:.8;">✈️ ─ ─ ─ ─</div>
+        <div style="flex:1;margin:0 12px;display:flex;align-items:center;">
+          <div style="flex:1;border-top:2px dashed rgba(255,247,237,.6);"></div>
+          <span style="font-size:18px;margin:0 4px;transform:rotate(-45deg);display:inline-block;">✈️</span>
+          <div style="flex:1;border-top:2px dashed rgba(255,247,237,.6);"></div>
+        </div>
         <div style="text-align:right;">
           <div style="font-size:11px;opacity:.75;">TO</div>
           <div style="font-size:26px;font-weight:800;">TYO</div>
-          <div style="font-size:11px;opacity:.75;">Tokyo</div>
+          <div style="font-size:11px;opacity:.75;">Tokyo (NRT/HND)</div>
         </div>
       </div>
       <div style="padding:16px 28px 8px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:13px;">
