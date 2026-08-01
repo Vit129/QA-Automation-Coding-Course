@@ -136,7 +136,14 @@ const LESSONS = [
       if (JSON.stringify(result1) !== JSON.stringify(result2)) {
         throw new Error("เรียก toSeconds() ด้วย input เดิมซ้ำ ต้องได้ผลลัพธ์เดิมทุกครั้ง (deterministic) — pure function ห้ามขึ้นกับ state ภายนอก");
       }
-      log(`✓ toSeconds() เป็น pure function จริง: ไม่แก้ไข input, ผลลัพธ์ deterministic (${JSON.stringify(result1)})`);
+      // Second, different input — closes the "hardcode the expected output" loophole a fixed
+      // single input can't catch.
+      const input2 = [500, 4000];
+      const result3 = fn(input2);
+      if (JSON.stringify(result3) !== JSON.stringify([0.5, 4])) {
+        throw new Error(`toSeconds([500,4000]) ต้องคืนค่า [0.5,4] แต่ได้ ${JSON.stringify(result3)} — ต้องคำนวณจริงจาก input ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
+      }
+      log(`✓ toSeconds() เป็น pure function จริง: ไม่แก้ไข input, ผลลัพธ์ deterministic และคำนวณจริง (${JSON.stringify(result1)}, ${JSON.stringify(result3)})`);
     },
     hint: "ใช้ msValues.map(ms => ms / 1000) — .map() คืนค่า array ใหม่เสมอ ไม่แตะ array เดิม ต่างจากการวนลูปด้วย for แล้ว mutate ค่าเดิมทีละตัว",
     solution: `function toSeconds(msValues) {
@@ -187,7 +194,12 @@ console.log(seconds); // [0.5, 1.5]`,
       if (JSON.stringify(result) !== JSON.stringify(['smoke', 'regression', 'critical'])) {
         throw new Error(`addTag(['smoke','regression'], 'critical') ต้องคืนค่า ['smoke','regression','critical'] แต่ได้ ${JSON.stringify(result)}`);
       }
-      log(`✓ addTag() คืนค่า array ใหม่ถูกต้อง โดยไม่แก้ไข array เดิม: ${JSON.stringify(result)}`);
+      // Second, different input — closes the "hardcode the expected output" loophole.
+      const result2 = fn(['auth'], 'nightly');
+      if (JSON.stringify(result2) !== JSON.stringify(['auth', 'nightly'])) {
+        throw new Error(`addTag(['auth'], 'nightly') ต้องคืนค่า ['auth','nightly'] แต่ได้ ${JSON.stringify(result2)} — ต้องประกอบผลลัพธ์จริงจาก tags/newTag ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
+      }
+      log(`✓ addTag() คืนค่า array ใหม่ถูกต้อง โดยไม่แก้ไข array เดิม: ${JSON.stringify(result)}, ${JSON.stringify(result2)}`);
     },
     hint: "return [...tags, newTag]; — spread operator กระจายค่าเดิมทั้งหมดลง array ใหม่ แล้วต่อท้ายด้วยค่าใหม่ ไม่แตะ array เดิมเลย",
     solution: `function addTag(tags, newTag) {
@@ -270,6 +282,9 @@ checkStrict(100); // true`,
       if (/\bfor\s*\(|\bwhile\s*\(/.test(clean)) {
         throw new Error("ห้ามใช้ for/while loop — ให้ใช้ .filter()/.map()/.reduce() แทน (โจทย์นี้เน้นสไตล์ functional ไม่ใช่ imperative)");
       }
+      if (!/\.filter\s*\(|\.map\s*\(|\.reduce\s*\(/.test(clean)) {
+        throw new Error("ต้องใช้อย่างน้อยหนึ่งใน .filter()/.map()/.reduce() จริง ไม่ใช่แค่คืนค่าที่คำนวณไว้ล่วงหน้า");
+      }
       const fn = getLearnerFn(code, "summarize");
 
       const results = [
@@ -288,7 +303,19 @@ checkStrict(100); // true`,
       if (summary.total !== 2) {
         throw new Error(`total ต้องเท่ากับจำนวน test ที่ passed:true คือ 2 แต่ได้ ${summary.total}`);
       }
-      log(`✓ summarize() ใช้ filter/map/reduce ได้ผลลัพธ์ถูกต้อง: ${JSON.stringify(summary)}`);
+      // Second, different input — closes the "hardcode the expected output" loophole a fixed
+      // single input can't catch.
+      const results2 = [
+        { name: 'a', passed: false },
+        { name: 'b', passed: true },
+        { name: 'c', passed: true },
+        { name: 'd', passed: true },
+      ];
+      const summary2 = fn(results2);
+      if (JSON.stringify(summary2.passedNames) !== JSON.stringify(['b', 'c', 'd']) || summary2.total !== 3) {
+        throw new Error(`summarize() กับข้อมูลชุดอื่น ต้องได้ passedNames=['b','c','d'], total=3 แต่ได้ ${JSON.stringify(summary2)} — ต้องคำนวณจริงจาก results ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
+      }
+      log(`✓ summarize() ใช้ filter/map/reduce ได้ผลลัพธ์ถูกต้อง: ${JSON.stringify(summary)}, ${JSON.stringify(summary2)}`);
     },
     hint: "const passedNames = results.filter(r => r.passed).map(r => r.name); const total = passedNames.length; (หรือใช้ .reduce() นับก็ได้) return { passedNames, total };",
     solution: `function summarize(results) {
@@ -513,11 +540,18 @@ console.log(status); // 'passed'`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบ Race Condition Fix ด้วยการรันจริง (concurrent increment)...");
+      const clean = stripComments(code);
+      if (!/await/.test(clean)) {
+        throw new Error("increment() ต้องมี await gap ตามที่โจทย์กำหนดจริง (ถ้าเขียนแบบ synchronous ล้วนไม่มี await เลย = หลบเลี่ยงปัญหา concurrency ทั้งหมด ไม่ได้แก้ race condition จริงตามที่โจทย์สอน)");
+      }
       const SafeCounter = getLearnerClass(code, "SafeCounter");
       const counter = new SafeCounter();
       const N = 5;
 
       const calls = Array.from({ length: N }, () => counter.increment());
+      if (!calls.every((c) => c && typeof c.then === "function")) {
+        throw new Error("increment() ต้องคืนค่าเป็น Promise (thenable) ทุกครั้ง — ถ้า increment() เป็น synchronous function ธรรมดา แปลว่าไม่ได้แก้ปัญหา async race condition ตามที่โจทย์ตั้งใจสอน");
+      }
       return Promise.all(calls).then(() => {
         if (counter.count !== N) {
           throw new Error(`เรียก increment() พร้อมกัน ${N} ครั้ง count สุดท้ายต้องเท่ากับ ${N} พอดี (ไม่เสีย update จาก race condition) แต่ได้ ${counter.count} — ต้องเรียงคิว increment() ไม่ให้ read-modify-write ของแต่ละครั้งทับซ้อนกัน (promise-chain mutex)`);
@@ -677,30 +711,54 @@ onmessage = (event) => {
       if (/\bfor\s*\(|\bwhile\s*\(/.test(clean)) {
         throw new Error("ห้ามใช้ for/while loop — ทั้งการรัน testCases (ต้องพร้อมกันผ่าน Promise.all) และการสรุปผล (ต้องใช้ map/reduce)");
       }
+      if (!/\.map\s*\(/.test(clean) || !/\.reduce\s*\(/.test(clean)) {
+        throw new Error("ต้องใช้ทั้ง .map() และ .reduce() จริง (ตามที่โจทย์ระบุ) ไม่ใช่แค่คืนค่าที่คำนวณไว้ล่วงหน้า");
+      }
+      if (!/Promise\.all\s*\(/.test(clean)) {
+        throw new Error("ต้องใช้ Promise.all(...) จริงในการรัน testCases พร้อมกัน");
+      }
       const fn = getLearnerFn(code, "runSuite");
-      const probe = makeConcurrencyProbe();
 
-      const testCases = [
-        { name: 'login_test', run: () => probe.runCheck(true) },
-        { name: 'logout_test', run: () => probe.runCheck(false) },
-        { name: 'signup_test', run: () => probe.runCheck(true) },
-        { name: 'search_test', run: () => probe.runCheck(true) },
-      ];
-
-      return Promise.resolve(fn(testCases)).then((summary) => {
+      const run = (probe, testCases) => Promise.resolve(fn(testCases)).then((summary) => {
         if (!summary || typeof summary.total !== "number" || typeof summary.passed !== "number") {
           throw new Error("runSuite() ต้องคืนค่า object { total, passed } ที่เป็นตัวเลข");
         }
+        return { summary, peak: probe.state.peak };
+      });
+
+      const probe1 = makeConcurrencyProbe();
+      const testCases1 = [
+        { name: 'login_test', run: () => probe1.runCheck(true) },
+        { name: 'logout_test', run: () => probe1.runCheck(false) },
+        { name: 'signup_test', run: () => probe1.runCheck(true) },
+        { name: 'search_test', run: () => probe1.runCheck(true) },
+      ];
+
+      return run(probe1, testCases1).then(({ summary, peak }) => {
         if (summary.total !== 4) {
           throw new Error(`total ต้องเท่ากับจำนวน testCases ทั้งหมด (4) แต่ได้ ${summary.total}`);
         }
         if (summary.passed !== 3) {
           throw new Error(`passed ต้องเท่ากับจำนวนที่ run() คืนค่า true (3) แต่ได้ ${summary.passed}`);
         }
-        if (probe.state.peak <= 1) {
-          throw new Error(`testCases.run() ทุกตัวถูกเรียกทีละตัว (peak concurrent = ${probe.state.peak}) — ต้องรันพร้อมกันจริงผ่าน Promise.all`);
+        if (peak <= 1) {
+          throw new Error(`testCases.run() ทุกตัวถูกเรียกทีละตัว (peak concurrent = ${peak}) — ต้องรันพร้อมกันจริงผ่าน Promise.all`);
         }
-        log(`✓ runSuite() รันพร้อมกันจริง (peak concurrent = ${probe.state.peak}) และสรุปผลถูกต้อง: ${JSON.stringify(summary)}`);
+
+        // Second, different fixture (different length + pass count) — closes the
+        // "hardcode { total: 4, passed: 3 }" loophole a single fixed fixture can't catch.
+        const probe2 = makeConcurrencyProbe();
+        const testCases2 = [
+          { name: 'a', run: () => probe2.runCheck(false) },
+          { name: 'b', run: () => probe2.runCheck(false) },
+          { name: 'c', run: () => probe2.runCheck(true) },
+        ];
+        return run(probe2, testCases2).then(({ summary: summary2 }) => {
+          if (summary2.total !== 3 || summary2.passed !== 1) {
+            throw new Error(`runSuite() กับชุด testCases อื่น (3 ตัว, ผ่าน 1) ต้องได้ { total: 3, passed: 1 } แต่ได้ ${JSON.stringify(summary2)} — ต้องคำนวณจริงจาก testCases ไม่ใช่คืนค่าที่จำไว้ตายตัว`);
+          }
+          log(`✓ runSuite() รันพร้อมกันจริง (peak concurrent = ${peak}) และสรุปผลถูกต้องทั้งสองชุดข้อมูล: ${JSON.stringify(summary)}, ${JSON.stringify(summary2)}`);
+        });
       });
     },
     hint: "async function runSuite(testCases) { const results = await Promise.all(testCases.map(tc => tc.run())); const passed = results.reduce((count, r) => count + (r ? 1 : 0), 0); return { total: testCases.length, passed }; }",

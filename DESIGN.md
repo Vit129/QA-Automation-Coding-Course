@@ -8,7 +8,7 @@ Source: per-track `style.css` + `index.html` CSS custom properties (not perfectl
 - Background: `--bg-primary: #0a0d14` / `#080b11`, `--bg-secondary`
 - Border: `--border-color: rgba(255,255,255,0.08)`
 - Text: `--text-primary: #f3f4f6`, `--text-secondary: #9ca3af`
-- Accent palette: `--accent-blue #3b82f6`, `--accent-emerald #10b981`, `--accent-amber/orange`, `--accent-rose/red`, plus violet/gold/teal/indigo/pink/cyan/lime variants used per-track for identity
+- Accent palette: `--accent-blue #3b82f6`, `--accent-emerald #10b981`, `--accent-amber/orange`, `--accent-rose/red`, `--accent-fuchsia #d946ef`, plus violet/gold/teal/indigo/pink/cyan/lime variants used per-track for identity
 
 ## Typography
 - UI: Inter (`--font-sans`, Google Fonts)
