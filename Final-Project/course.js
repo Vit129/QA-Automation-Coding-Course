@@ -942,7 +942,59 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพิสูจน์แล้วว่ามีความสามารถระดับ Senior/Staff QA Engineer ในการอ่านและสร้างระบบจริงตามสเปก PRD & Acceptance Criteria ตั้งแต่ Config ➔ DB ➔ Booking+Visa Integration ➔ Web (reuse Visa API) ➔ Mobile ➔ Performance+SLA ➔ CI/CD ➔ DS&A Algorithm!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
-  showTrackCertificate('Japan Concert Trip Capstone Architecture');
+  showJapanTripTicket();
+}
+
+// Final-Project-only reward — a playful autumn-foliage boarding pass instead of the generic
+// showTrackCertificate() every other track gets (shared/gamification.js), since this course's
+// own capstone story is literally "book a Japan trip" (14-18 ต.ค. = koyo/momiji season).
+function showJapanTripTicket() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:linear-gradient(135deg,#7c2d12,#c2410c 45%,#f59e0b);color:#fff7ed;border-radius:16px;padding:0;max-width:460px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.5);overflow:hidden;font-family:inherit;">
+      <div style="padding:24px 28px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;letter-spacing:2px;opacity:.85;">🍁 KOYO SEASON BOARDING PASS 🍁</span>
+          <span style="font-size:22px;">✈️</span>
+        </div>
+        <div style="margin-top:14px;font-size:20px;font-weight:700;">QA Airlines — Japan Concert Trip</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Capstone Architecture · ${formatPhaseProgress()} Phases Cleared</div>
+      </div>
+      <div style="background:rgba(255,255,255,.12);margin:0 20px;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="text-align:left;">
+          <div style="font-size:11px;opacity:.75;">FROM</div>
+          <div style="font-size:26px;font-weight:800;">BKK</div>
+          <div style="font-size:11px;opacity:.75;">Bangkok</div>
+        </div>
+        <div style="font-size:20px;opacity:.8;">✈️ ─ ─ ─ ─</div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;opacity:.75;">TO</div>
+          <div style="font-size:26px;font-weight:800;">TYO</div>
+          <div style="font-size:11px;opacity:.75;">Tokyo</div>
+        </div>
+      </div>
+      <div style="padding:16px 28px 8px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:13px;">
+        <div><div style="opacity:.7;font-size:11px;">DEPARTURE</div><div style="font-weight:700;">14 Oct 2026</div></div>
+        <div><div style="opacity:.7;font-size:11px;">RETURN</div><div style="font-weight:700;">18 Oct 2026</div></div>
+        <div><div style="opacity:.7;font-size:11px;">EVENT</div><div style="font-weight:700;">🎤 Tokyo Dome, 16 Oct</div></div>
+        <div><div style="opacity:.7;font-size:11px;">SEASON</div><div style="font-weight:700;">🍁 Koyo (Autumn Leaves)</div></div>
+        <div><div style="opacity:.7;font-size:11px;">PASSENGER</div><div style="font-weight:700;">Senior/Staff QA Engineer</div></div>
+        <div><div style="opacity:.7;font-size:11px;">STATUS</div><div style="font-weight:700;">✅ CONFIRMED</div></div>
+      </div>
+      <div style="position:relative;margin:16px 0 0;border-top:2px dashed rgba(255,255,255,.5);"></div>
+      <div style="padding:14px 28px 22px;text-align:center;">
+        <p style="font-size:12px;opacity:.85;margin:0 0 14px;">ผ่านครบทุก Phase (Config ➔ DB ➔ Booking+Visa ➔ Web POM ➔ Mobile ➔ Performance ➔ CI/CD ➔ DS&A) — ${new Date().toLocaleDateString('th-TH')}</p>
+        <button id="ticket-close-btn" style="background:#fff7ed;color:#7c2d12;border:none;border-radius:6px;padding:10px 24px;font-weight:700;cursor:pointer;">รับตั๋วขึ้นเครื่อง 🎉</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#ticket-close-btn').onclick = () => overlay.remove();
+}
+
+function formatPhaseProgress() {
+  return `${LESSONS.filter(l => isLessonCompleted(l.id)).length}/${LESSONS.length}`;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
