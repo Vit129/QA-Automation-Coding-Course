@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.11.1] - 2026-08-01
+
+### Fixed
+- 5 hardcode-bypass holes found by independent review (advisor) ([`b9b9ae0`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/b9b9ae054a2878f37c7d90fd4d17c94dddd03154))
+
 ## [0.11.0] - 2026-08-01
 
 ### Added
