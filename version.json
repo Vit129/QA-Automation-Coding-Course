@@ -1,6 +1,6 @@
 {
-  "version": 6,
-  "tag": "v0.9.5",
-  "updated": "2026-07-31",
-  "summary": "Exam page now has the same editor features as the tracks: syntax highlight, autocomplete, dedent, comment-toggle"
+  "version": 7,
+  "tag": "v0.10.0",
+  "updated": "2026-08-01",
+  "summary": "New OOP-Fundamentals track (25 lessons: 4 pillars, SOLID, Factory/Singleton/Builder/Observer/Strategy/Adapter/Decorator), Final-Project Phase 4 now enforces real Page Object OOP structure, Accessibility-Testing hidden from learner-facing surfaces"
 }
