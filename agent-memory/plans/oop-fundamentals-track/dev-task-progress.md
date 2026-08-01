@@ -24,4 +24,4 @@ See `design.md` in this folder for the full plan (lesson list, validate() strate
 - [x] `node shared/selftest.mjs` — 256 lessons, 512 checks, 0 failed (12 tracks, a11y excluded)
 - [x] Verified LSP lesson rejects plausible-but-wrong solution (subclass returning wrong shape `"ok"` instead of `{passed: boolean}`)
 - [x] Reused getLearnerClasses fix for OCP/LSP multi-class extraction (same bug class as original Polymorphism/Abstraction fix)
-- [ ] Commit + push expansion, update PR #15
+- [x] Commit + push expansion, update PR #15
