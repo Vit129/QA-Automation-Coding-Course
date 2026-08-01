@@ -27,10 +27,10 @@ const TRACKS = [
   'DB-Design-SQL',
   'CLI-Essentials',
   'Security-Testing',
-  'Accessibility-Testing',
   'Visual-Regression-Testing',
   'CI-CD-Pipeline',
   'Framework-Design',
+  'OOP-Fundamentals',
   'Data-Structures-Algorithms',
   'Final-Project',
 ];

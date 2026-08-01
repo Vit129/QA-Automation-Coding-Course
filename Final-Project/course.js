@@ -424,23 +424,63 @@ expect(b2.visaRequired).toBe(false);`,
   },
   {
     id: "fp_web_ui_e2e",
-    meta: "Phase 4 จาก 8: Web UI + Visa Reuse (Page Object Model)",
+    meta: "Phase 4 จาก 8: Web UI + Visa Reuse (Page Object Model / OOP)",
     title: "4. [Phase 4] Frontend Web E2E User Journey Specification",
     template: `import { test, expect } from '@playwright/test';
 
-// [Phase 4 Spec] ก่อนกรอกฟอร์มจอง ต้องเรียกใช้ API เดียวกับ Phase 3 เพื่อยืนยัน visa compliance ในเทสเดียวกันก่อน
-test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองบนเว็บ', async ({ page, request }) => {
+// [Phase 4 Spec] Page Object Model = OOP จริงในงาน automation — encapsulate การเข้าถึงหน้าเว็บ
+// ไว้ใน class แทนที่จะเรียก page.fill/page.click ตรงๆ กระจายอยู่ใน test (ตามที่เรียนใน OOP-Fundamentals:
+// Encapsulation + Inheritance)
+class BasePage {
+  constructor(page) {
+    this.page = page;
+  }
+}
+
+// 1. เขียน class JapanTripPage extends BasePage โดยมี:
+//    - method fillDepartureDate(date): เรียก this.page.fill('#departure-date', date)
+//    - method confirmBooking(): เรียก this.page.click('#confirm-booking-btn')
+//    - method bookingStatusText(): return ค่าจาก this.page.locator('#booking-status')
+// WRITE YOUR CODE HERE
+
+
+test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองผ่าน Page Object', async ({ page, request }) => {
   // AC-401: เรียก request.post('/api/japan-trip/verify-visa') ซ้ำแบบ Phase 3 -> ต้องได้ body.visaRequired เป็น false ก่อนไปต่อ
   // WRITE YOUR CODE HERE
 
 
-  // AC-402: page.goto('/japan-trip') กรอกวันเดินทาง 2026-10-14 ใน #departure-date คลิก #confirm-booking-btn และตรวจ #booking-status มีคำว่า 'Booking Successful'
+  // AC-402: ใช้ JapanTripPage เท่านั้น (ห้ามเรียก page.fill/page.click ตรงๆ ใน test นี้) —
+  //         page.goto('/japan-trip') แล้ว fillDepartureDate('2026-10-14'), confirmBooking(),
+  //         ตรวจ bookingStatusText() มีคำว่า 'Booking Successful'
 
 });`,
     validate: (code, log) => {
-      log("🔍 [Phase 4 PRD Validation] กำลังรันโค้ดจริงผ่าน Mock Backend + Mock Page...");
+      log("🔍 [Phase 4 PRD Validation] กำลังตรวจ Page Object structure แล้วรันโค้ดจริงผ่าน Mock Backend + Mock Page...");
       if (!priorPhaseCompleted('fp_booking_visa_integration')) {
         throw new Error("ไม่ผ่านเกณฑ์: ต้องผ่าน Phase 3 (Booking + Visa Integration) ก่อน — Phase 4 reuse API เดียวกับ Phase 3 จริง ไม่ใช่แค่พิมพ์ซ้ำ");
+      }
+      const clean = stripComments(code);
+      if (!/class\s+BasePage\b/.test(clean)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: ไม่พบ class BasePage — ต้องคงโครงสร้าง Page Object ที่ให้มาในเทมเพลตไว้");
+      }
+      if (!/class\s+JapanTripPage\s+extends\s+BasePage\b/.test(clean)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: ไม่พบ class JapanTripPage extends BasePage — ต้อง encapsulate การเข้าถึงหน้าเว็บผ่าน Page Object ไม่ใช่เรียก page.fill/page.click ตรงๆ");
+      }
+      const pageObjectMatch = /class\s+JapanTripPage\s+extends\s+BasePage\s*\{([\s\S]*?)\n\}/.exec(clean);
+      const pageObjectBody = pageObjectMatch ? pageObjectMatch[1] : '';
+      if (!/fillDepartureDate\s*\(/.test(pageObjectBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: JapanTripPage ต้องมี method fillDepartureDate(date)");
+      }
+      if (!/confirmBooking\s*\(/.test(pageObjectBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: JapanTripPage ต้องมี method confirmBooking()");
+      }
+      if (!/bookingStatusText\s*\(/.test(pageObjectBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: JapanTripPage ต้องมี method bookingStatusText()");
+      }
+      const testBodyMatch = /test\(\s*['"][^'"]*['"]\s*,\s*async[\s\S]*?=>\s*\{([\s\S]*)\}\s*\)\s*;?\s*$/.exec(clean.trim());
+      const testBody = testBodyMatch ? testBodyMatch[1] : clean;
+      if (/\bpage\.fill\s*\(|\bpage\.click\s*\(/.test(testBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [POM]: test นี้ห้ามเรียก page.fill(...)/page.click(...) ตรงๆ — ต้องเรียกผ่าน method ของ JapanTripPage เท่านั้น (encapsulation)");
       }
       const env = createPhase4Env();
       return runPlaywrightLikeTest(code, { page: env.page, request: env.request }).then(() => {
@@ -448,15 +488,35 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
           throw new Error("ไม่ผ่านเกณฑ์ [AC-401]: ยังไม่พบการเรียก verify-visa API ซ้ำจาก Phase 3 ก่อนไปกรอกฟอร์ม");
         }
         if (env.dom.bookingStatus !== 'Booking Successful') {
-          throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่ยืนยันว่าหน้าจอแสดงข้อความ 'Booking Successful' สำเร็จ");
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่ยืนยันว่าหน้าจอแสดงข้อความ 'Booking Successful' สำเร็จผ่าน Page Object");
         }
-        log("✓ [AC-401+402 Passed]: ยืนยัน visa ผ่าน API แล้วกรอกฟอร์มจองบนหน้าเว็บสำเร็จทั้ง flow (รันจริง)");
+        log("✓ [AC-401+402 + POM Passed]: ยืนยัน visa ผ่าน API แล้วกรอกฟอร์มจองผ่าน JapanTripPage สำเร็จทั้ง flow (รันจริง)");
       });
     },
-    hint: "test ต้องรับทั้ง { page, request } — ยิง request.post('/api/japan-trip/verify-visa', ...) เช็ค visaRequired false ก่อน แล้วค่อย page.goto('/japan-trip'); page.fill('#departure-date', '2026-10-14'); page.click('#confirm-booking-btn'); expect(page.locator('#booking-status')).toContainText('Booking Successful');",
+    hint: "JapanTripPage extends BasePage — constructor ใช้ตัวที่ BasePage ให้มาแล้ว (this.page). fillDepartureDate(date) { return this.page.fill('#departure-date', date); } confirmBooking() { return this.page.click('#confirm-booking-btn'); } bookingStatusText() { return this.page.locator('#booking-status'); } แล้วใน test สร้าง const jpPage = new JapanTripPage(page); เรียก method เหล่านี้แทน page.fill/page.click ตรงๆ",
     solution: `import { test, expect } from '@playwright/test';
 
-test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองบนเว็บ', async ({ page, request }) => {
+class BasePage {
+  constructor(page) {
+    this.page = page;
+  }
+}
+
+class JapanTripPage extends BasePage {
+  fillDepartureDate(date) {
+    return this.page.fill('#departure-date', date);
+  }
+
+  confirmBooking() {
+    return this.page.click('#confirm-booking-btn');
+  }
+
+  bookingStatusText() {
+    return this.page.locator('#booking-status');
+  }
+}
+
+test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน แล้วค่อยกรอกฟอร์มจองผ่าน Page Object', async ({ page, request }) => {
   const visaResponse = await request.post('/api/japan-trip/verify-visa', {
     data: {
       passportCountry: 'THA',
@@ -466,25 +526,25 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
   const visaBody = await visaResponse.json();
   expect(visaBody.visaRequired).toBe(false);
 
+  const jpPage = new JapanTripPage(page);
   await page.goto('/japan-trip');
-  await page.fill('#departure-date', '2026-10-14');
-  await page.click('#confirm-booking-btn');
-  await expect(page.locator('#booking-status')).toContainText('Booking Successful');
+  await jpPage.fillDepartureDate('2026-10-14');
+  await jpPage.confirmBooking();
+  await expect(jpPage.bookingStatusText()).toContainText('Booking Successful');
 });`,
     theory: `📌 <strong>1. Business & Architectural Context (บริบทระบบ):</strong><br/>
-    ต่อยอดจาก Phase 3 โดยตรง — ทีม Frontend UX/UI และ Web QA สร้างระบบ E2E Automation บนเบราว์เซอร์จริง แต่ก่อนกรอกฟอร์มจองต้อง "reuse" API เดียวกับ Phase 3 เพื่อยืนยัน compliance ก่อน สะท้อนว่า UI flow จริงต้องพึ่งพา backend check เดิม ไม่ใช่แยกจากกัน<br/><br/>
+    ต่อยอดจาก Phase 3 โดยตรง — ทีม Frontend UX/UI และ Web QA สร้างระบบ E2E Automation บนเบราว์เซอร์จริง แต่ก่อนกรอกฟอร์มจองต้อง "reuse" API เดียวกับ Phase 3 เพื่อยืนยัน compliance ก่อน สะท้อนว่า UI flow จริงต้องพึ่งพา backend check เดิม ไม่ใช่แยกจากกัน — และครั้งนี้ยังบังคับใช้ <strong>Page Object Model</strong> ตัวจริง (ไม่ใช่แค่ชื่อ) ผ่านหลัก OOP ที่เรียนมาจาก OOP-Fundamentals: <code>BasePage</code> เก็บ <code>page</code> ไว้ (encapsulation), <code>JapanTripPage extends BasePage</code> (inheritance) แล้ว test เรียกผ่าน method ของ Page Object เท่านั้น ไม่แตะ <code>page.fill</code>/<code>page.click</code> ตรงๆ<br/><br/>
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
     • <code>[AC-401]</code>: เรียก API <code>/api/japan-trip/verify-visa</code> ซ้ำจาก Phase 3 ในเทสนี้ (ใช้ fixture <code>request</code> ร่วมกับ <code>page</code>) แล้วต้องได้ <code>visaRequired: false</code> ก่อนไปกรอกฟอร์ม<br/>
-    • <code>[AC-402]</code>: เปิดหน้าเว็บ <code>/japan-trip</code> ระบุวันออกเดินทาง <code>2026-10-14</code> ในช่อง <code>#departure-date</code> คลิกปุ่มยืนยัน <code>#confirm-booking-btn</code> และตรวจ <code>#booking-status</code> ต้องมีคำว่า <code>'Booking Successful'</code><br/><br/>
-    🏗️ <strong>3. Production Constraints:</strong> สคริปต์ต้องรอการตอบกลับจาก API (Auto-waiting) โดยไม่ใช้คำสั่งหลับแบบช้า <code>waitForTimeout</code> และห้ามข้ามขั้นตอนยืนยัน visa ไปกรอกฟอร์มตรงๆ`,
-    example: `const r = await request.post('/api/example/verify-visa', { data: { ... } });
-const b = await r.json();
-expect(b.visaRequired).toBe(false);
-
+    • <code>[AC-402]</code>: ผ่าน <code>JapanTripPage</code> เท่านั้น — เปิดหน้าเว็บ <code>/japan-trip</code>, <code>fillDepartureDate('2026-10-14')</code>, <code>confirmBooking()</code>, ตรวจ <code>bookingStatusText()</code> ต้องมีคำว่า <code>'Booking Successful'</code><br/>
+    • <code>[POM]</code>: <code>JapanTripPage extends BasePage</code> ต้องมี <code>fillDepartureDate</code>, <code>confirmBooking</code>, <code>bookingStatusText</code> และ test ต้องไม่เรียก <code>page.fill</code>/<code>page.click</code> ตรงๆ เลย<br/><br/>
+    🏗️ <strong>3. Production Constraints:</strong> สคริปต์ต้องรอการตอบกลับจาก API (Auto-waiting) โดยไม่ใช้คำสั่งหลับแบบช้า <code>waitForTimeout</code> ห้ามข้ามขั้นตอนยืนยัน visa ไปกรอกฟอร์มตรงๆ และห้าม bypass Page Object ไปเรียก page method ตรงๆ ใน test`,
+    example: `const jpPage = new JapanTripPage(page);
 await page.goto('/japan-trip');
-await page.fill('#departure-date', '2026-10-14');
-await page.click('#confirm-booking-btn');`,
-    task: `จงเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วค่อยทำ E2E บนหน้าเว็บ ตามเกณฑ์ <code>[AC-401]</code> และ <code>[AC-402]</code>`
+await jpPage.fillDepartureDate('2026-10-14');
+await jpPage.confirmBooking();
+await expect(jpPage.bookingStatusText()).toContainText('Booking Successful');`,
+    task: `จงเขียน <code>class JapanTripPage extends BasePage</code> พร้อม method <code>fillDepartureDate/confirmBooking/bookingStatusText</code> แล้วเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วทำ E2E ผ่าน Page Object เท่านั้น ตามเกณฑ์ <code>[AC-401]</code> <code>[AC-402]</code> และ <code>[POM]</code>`
   },
   {
     id: "fp_mobile_eticket",
@@ -882,7 +942,67 @@ function showGraduationMessage() {
     <div class="terminal-line text-muted">คุณพิสูจน์แล้วว่ามีความสามารถระดับ Senior/Staff QA Engineer ในการอ่านและสร้างระบบจริงตามสเปก PRD & Acceptance Criteria ตั้งแต่ Config ➔ DB ➔ Booking+Visa Integration ➔ Web (reuse Visa API) ➔ Mobile ➔ Performance+SLA ➔ CI/CD ➔ DS&A Algorithm!</div>
   `;
   terminal.scrollTop = terminal.scrollHeight;
-  showTrackCertificate('Japan Concert Trip Capstone Architecture');
+  showJapanTripTicket();
+}
+
+// Final-Project-only reward — a playful autumn-foliage boarding pass instead of the generic
+// showTrackCertificate() every other track gets (shared/gamification.js), since this course's
+// own capstone story is literally "book a Japan trip" (14-18 ต.ค. = koyo/momiji season).
+// Autumn-leaves background pattern — inline SVG data URI (no external asset/network fetch,
+// works offline on a static file:// page like every other track's index.html).
+const KOYO_LEAF_PATTERN = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill-opacity='0.16'%3E%3Cpath fill='%23fb923c' d='M20 15c4 3 6 8 5 13-1-4-4-7-8-8-3 5-2 11 2 15-5-1-9-5-10-10-1 5 1 10 5 13-6 0-11-4-13-9 0 6 3 11 8 14-6 1-12-2-15-7 2 6 7 10 13 11-5 3-11 2-15-1 4 4 10 6 15 4-3 4-8 6-13 5 5 3 11 2 15-2-1 4 0 9 3 12 1-5 0-10-3-13 5 1 9 5 11 10 1-5-1-10-5-13 6 0 11 4 13 10-1-6-5-10-11-12 6-1 11 2 14 7-2-6-7-10-13-11 5-2 10 0 13 5-3-6-8-9-14-9 4-3 9-4 14-2-4-4-10-6-15-4 3-4 4-9 3-13-2 4-6 8-11 9 2-5 1-11-2-15-1 5-4 9-8 11 0-5 2-10 6-13-5 1-9 5-11 10-1-5 1-11 5-14-6 1-10 5-12 10 0-5 3-10 8-12z'/%3E%3Cpath fill='%23dc2626' transform='translate(70 70)' d='M20 15c4 3 6 8 5 13-1-4-4-7-8-8-3 5-2 11 2 15-5-1-9-5-10-10-1 5 1 10 5 13-6 0-11-4-13-9 0 6 3 11 8 14-6 1-12-2-15-7 2 6 7 10 13 11-5 3-11 2-15-1 4 4 10 6 15 4-3 4-8 6-13 5 5 3 11 2 15-2-1 4 0 9 3 12 1-5 0-10-3-13 5 1 9 5 11 10 1-5-1-10-5-13 6 0 11 4 13 10-1-6-5-10-11-12 6-1 11 2 14 7-2-6-7-10-13-11 5-2 10 0 13 5-3-6-8-9-14-9 4-3 9-4 14-2-4-4-10-6-15-4 3-4 4-9 3-13-2 4-6 8-11 9 2-5 1-11-2-15-1 5-4 9-8 11 0-5 2-10 6-13-5 1-9 5-11 10-1-5 1-11 5-14-6 1-10 5-12 10 0-5 3-10 8-12z'/%3E%3Cpath fill='%23eab308' transform='translate(35 90) scale(0.7)' d='M20 15c4 3 6 8 5 13-1-4-4-7-8-8-3 5-2 11 2 15-5-1-9-5-10-10-1 5 1 10 5 13-6 0-11-4-13-9 0 6 3 11 8 14-6 1-12-2-15-7 2 6 7 10 13 11-5 3-11 2-15-1 4 4 10 6 15 4-3 4-8 6-13 5 5 3 11 2 15-2-1 4 0 9 3 12 1-5 0-10-3-13 5 1 9 5 11 10 1-5-1-10-5-13 6 0 11 4 13 10-1-6-5-10-11-12 6-1 11 2 14 7-2-6-7-10-13-11 5-2 10 0 13 5-3-6-8-9-14-9 4-3 9-4 14-2-4-4-10-6-15-4 3-4 4-9 3-13-2 4-6 8-11 9 2-5 1-11-2-15-1 5-4 9-8 11 0-5 2-10 6-13-5 1-9 5-11 10-1-5 1-11 5-14-6 1-10 5-12 10 0-5 3-10 8-12z'/%3E%3C/g%3E%3C/svg%3E";
+
+function showJapanTripTicket() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.65) url("${KOYO_LEAF_PATTERN}");background-repeat:repeat;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;`;
+  overlay.innerHTML = `
+    <div style="background:linear-gradient(135deg,#7c2d12,#c2410c 45%,#f59e0b);color:#fff7ed;border-radius:16px;padding:0;max-width:460px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.5);overflow:hidden;font-family:inherit;">
+      <div style="padding:24px 28px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;letter-spacing:2px;opacity:.85;">🍁 KOYO SEASON BOARDING PASS 🍁</span>
+          <span style="font-size:22px;">✈️</span>
+        </div>
+        <div style="margin-top:14px;font-size:20px;font-weight:700;">QA Airlines — Japan Concert Trip</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Capstone Architecture · ${formatPhaseProgress()} Phases Cleared</div>
+      </div>
+      <div style="background:rgba(255,255,255,.12);margin:0 20px;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="text-align:left;">
+          <div style="font-size:11px;opacity:.75;">FROM</div>
+          <div style="font-size:26px;font-weight:800;">BKK</div>
+          <div style="font-size:11px;opacity:.75;">Bangkok</div>
+        </div>
+        <div style="flex:1;margin:0 12px;display:flex;align-items:center;">
+          <div style="flex:1;border-top:2px dashed rgba(255,247,237,.6);"></div>
+          <span style="font-size:18px;margin:0 4px;transform:rotate(-45deg);display:inline-block;">✈️</span>
+          <div style="flex:1;border-top:2px dashed rgba(255,247,237,.6);"></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;opacity:.75;">TO</div>
+          <div style="font-size:26px;font-weight:800;">TYO</div>
+          <div style="font-size:11px;opacity:.75;">Tokyo (NRT/HND)</div>
+        </div>
+      </div>
+      <div style="padding:16px 28px 8px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:13px;">
+        <div><div style="opacity:.7;font-size:11px;">DEPARTURE</div><div style="font-weight:700;">14 Oct 2026</div></div>
+        <div><div style="opacity:.7;font-size:11px;">RETURN</div><div style="font-weight:700;">18 Oct 2026</div></div>
+        <div><div style="opacity:.7;font-size:11px;">EVENT</div><div style="font-weight:700;">🎤 Tokyo Dome, 16 Oct</div></div>
+        <div><div style="opacity:.7;font-size:11px;">SEASON</div><div style="font-weight:700;">🍁 Koyo (Autumn Leaves)</div></div>
+        <div><div style="opacity:.7;font-size:11px;">PASSENGER</div><div style="font-weight:700;">Senior/Staff QA Engineer</div></div>
+        <div><div style="opacity:.7;font-size:11px;">STATUS</div><div style="font-weight:700;">✅ CONFIRMED</div></div>
+      </div>
+      <div style="position:relative;margin:16px 0 0;border-top:2px dashed rgba(255,255,255,.5);"></div>
+      <div style="padding:14px 28px 22px;text-align:center;">
+        <p style="font-size:12px;opacity:.85;margin:0 0 14px;">ผ่านครบทุก Phase (Config ➔ DB ➔ Booking+Visa ➔ Web POM ➔ Mobile ➔ Performance ➔ CI/CD ➔ DS&A) — ${new Date().toLocaleDateString('th-TH')}</p>
+        <button id="ticket-close-btn" style="background:#fff7ed;color:#7c2d12;border:none;border-radius:6px;padding:10px 24px;font-weight:700;cursor:pointer;">รับตั๋วขึ้นเครื่อง 🎉</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#ticket-close-btn').onclick = () => overlay.remove();
+}
+
+function formatPhaseProgress() {
+  return `${LESSONS.filter(l => isLessonCompleted(l.id)).length}/${LESSONS.length}`;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
