@@ -936,11 +936,14 @@ runner.run();`,
 `,
     validate: (code, log) => {
       log("🔍 ตรวจสอบ Factory Pattern ด้วยการรันจริง...");
-      const TestUserFactory = getLearnerClass(code, "TestUserFactory");
+      const [TestUser, TestUserFactory] = getLearnerClasses(code, ["TestUser", "TestUserFactory"]);
 
       const admin = TestUserFactory.create('admin');
       const guest = TestUserFactory.create('guest');
 
+      if (!(admin instanceof TestUser) || !(guest instanceof TestUser)) {
+        throw new Error("TestUserFactory.create() ต้องคืนค่าเป็น instance ของ TestUser จริง (new TestUser(...)) ไม่ใช่ plain object ที่หน้าตาคล้ายกัน");
+      }
       if (!admin || admin.role !== 'admin') {
         throw new Error(`TestUserFactory.create('admin') ต้องคืนค่า user ที่มี role เป็น 'admin' แต่ได้ ${admin && admin.role}`);
       }
@@ -950,7 +953,7 @@ runner.run();`,
       if (admin.username === guest.username) {
         throw new Error("create('admin') และ create('guest') ต้องคืนค่า user คนละคนกัน (username ต้องไม่เหมือนกัน)");
       }
-      log(`✓ TestUserFactory.create() สร้าง user ต่างชนิดกันจริงตาม type: admin=${admin.username}, guest=${guest.username}`);
+      log(`✓ TestUserFactory.create() สร้าง TestUser instance ต่างชนิดกันจริงตาม type: admin=${admin.username}, guest=${guest.username}`);
     },
     hint: "static create(type) { if (type === 'admin') return new TestUser('admin_user', 'admin'); if (type === 'guest') return new TestUser('guest_user', 'guest'); }",
     solution: `class TestUser {
@@ -1005,6 +1008,9 @@ const guest = TestUserFactory.create('guest');`,
       const b = ConfigManager.getInstance();
       const c = ConfigManager.getInstance();
 
+      if (!(a instanceof ConfigManager)) {
+        throw new Error("ConfigManager.getInstance() ต้องคืนค่าเป็น instance ของ ConfigManager จริง (new ConfigManager()) — ไม่ใช่ undefined/null/object อื่น");
+      }
       if (a !== b || b !== c) {
         throw new Error("ConfigManager.getInstance() ต้องคืนค่า instance เดียวกันทุกครั้ง (===) แต่ได้ instance คนละตัวกัน — ต้องเก็บ instance ที่สร้างแล้วไว้ใช้ซ้ำ ไม่สร้างใหม่ทุกครั้ง");
       }
