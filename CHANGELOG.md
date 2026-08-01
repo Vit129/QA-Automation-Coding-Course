@@ -3,6 +3,19 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.10.0] - 2026-08-01
+
+### Added
+- Execute Phase 3/4 code for real via mock Playwright harness ([`8361356`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/8361356f4054ae7ef82220219d6ffba9eb4bc293))
+- Execute Phase 5 for real, reduce Phase 8 answer-leak ([`daa749b`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/daa749b771a9144a96552fe944ae275185fee9c4))
+- Sequential lesson lock + resume-to-first-incomplete on load ([`dcf0bfe`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/dcf0bfe7ffdbb2e785474a0cf115421894683cd3))
+- Add OOP-Fundamentals track (14th course) ([#15](https://github.com/Vit129/QA-Automation-Coding-Course/pull/15)) ([`daba89c`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/daba89cbc592494dab404f25d88eef6c09ab7b84))
+
+### Fixed
+- Close skip-ahead gaps and shallow validation in capstone ([`256e58d`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/256e58dece12d79c46c85937b533cb09284ffc30))
+- Locked lessons show the warning alert instead of doing nothing ([`49a8e50`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/49a8e50a54c05606a2075b39b809ec55bc48f06f))
+- Actually propagate lock/resume feature to all 13 track engine.js copies ([`2d41df9`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/2d41df946e0d0c045b3509a1ae5a81318e67e5a1))
+
 ## [0.9.5] - 2026-07-31
 
 ### Added
