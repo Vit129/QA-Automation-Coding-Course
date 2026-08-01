@@ -13,6 +13,12 @@
 const PREFIX = 'final_project';
 const TAB_WIDTH = 2;
 
+// selftest.mjs runs course.js without engine.js loaded (no isLessonCompleted global) —
+// treat "prior phase completed" as true there so the solution/template invariant still holds.
+function priorPhaseCompleted(lessonId) {
+  return typeof isLessonCompleted === 'function' ? isLessonCompleted(lessonId) : true;
+}
+
 function stripComments(code) {
   const clean = code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '');
   if (/\.(GET|POST|PUT|DELETE|PATCH)\s*\(/.test(clean)) {
@@ -149,13 +155,16 @@ test('FP-4003: จองทริปญี่ปุ่นผ่าน API แล
     validate: (code, log) => {
       const clean = stripComments(code);
       log("🔍 [Phase 3 PRD Validation] กำลังตรวจสอบ Booking + Visa Integration Flow...");
+      if (!priorPhaseCompleted('fp_db_schema')) {
+        throw new Error("ไม่ผ่านเกณฑ์: ต้องผ่าน Phase 2 (Database Schema) ก่อน — Phase 3 ต่อยอดโครงสร้างข้อมูลจาก Phase 2 โดยตรง");
+      }
       if (/await\s+request\.post\(['"]\/api\/japan-trip\/book['"]/.test(clean)) {
         log("✓ [AC-301a Passed]: ยิง request.post('/api/japan-trip/book') ถูกต้อง");
       } else {
         throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ยังไม่พบการเรียก HTTP POST ไปยัง endpoint การจองตั๋วตามที่ระบุในโจทย์");
       }
 
-      if (/expect\([\w]+\.status\(\)\)\.toBe\(200\)/.test(clean) && /expect\([\w]+\.status\)\.toBe\(['"]CONFIRMED['"]\)/.test(clean)) {
+      if (/expect\([\w]+\.status\(\)\)\.toBe\(200\)/.test(clean) && /\.status\)\.toBe\(\s*['"]CONFIRMED['"]\s*\)/.test(clean)) {
         log("✓ [AC-301b Passed]: ได้รับ HTTP 200 OK และ body.status เป็น 'CONFIRMED'");
       } else {
         throw new Error("ไม่ผ่านเกณฑ์ [AC-301]: ต้องตรวจสอบทั้ง status code และค่าผลลัพธ์การจองให้ตรงกับที่ระบุในโจทย์");
@@ -235,6 +244,9 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
     validate: (code, log) => {
       const clean = stripComments(code);
       log("🔍 [Phase 4 PRD Validation] กำลังตรวจสอบ Web UI E2E Journey...");
+      if (!priorPhaseCompleted('fp_booking_visa_integration')) {
+        throw new Error("ไม่ผ่านเกณฑ์: ต้องผ่าน Phase 3 (Booking + Visa Integration) ก่อน — Phase 4 reuse API เดียวกับ Phase 3 จริง ไม่ใช่แค่พิมพ์ซ้ำ");
+      }
       if (/await\s+request\.post\(['"]\/api\/japan-trip\/verify-visa['"]/.test(clean) && /expect\([\w]+\.visaRequired\)\.toBe\(false\)/.test(clean)) {
         log("✓ [AC-401 Passed]: เรียกใช้ verify-visa API ซ้ำจาก Phase 3 และยืนยัน visaRequired เป็น false ก่อนกรอกฟอร์ม");
       } else {
@@ -247,7 +259,7 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
         throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่พบการเปิดหน้าเว็บและกรอกวันเดินทางตามที่ระบุในโจทย์");
       }
 
-      if (/click\(['"]#confirm-booking-btn['"]\)/.test(clean) && /toContainText\(['"]Booking Successful['"]\)/.test(clean)) {
+      if ((/click\(['"]#confirm-booking-btn['"]\)/.test(clean) || /locator\(['"]#confirm-booking-btn['"]\)\s*\.click\(\)/.test(clean)) && /toContainText\(['"]Booking Successful['"]\)/.test(clean)) {
         log("✓ [AC-402b Passed]: คลิกปุ่มยืนยันและได้รับการยืนยัน 'Booking Successful' บนหน้าจอ");
       } else {
         throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่พบการคลิกยืนยันการจองและตรวจข้อความแจ้งผลบนหน้าจอตามที่ระบุในโจทย์");
@@ -436,6 +448,11 @@ jobs:
     validate: (code, log) => {
       const clean = stripComments(code);
       log("🔍 [Phase 7 PRD Validation] กำลังตรวจสอบ CI/CD Pipeline YAML...");
+      const prerequisitePhases = ['fp_booking_visa_integration', 'fp_web_ui_e2e', 'fp_mobile_eticket'];
+      const missingPrereq = prerequisitePhases.find(id => !priorPhaseCompleted(id));
+      if (missingPrereq) {
+        throw new Error(`ไม่ผ่านเกณฑ์: ต้องผ่าน Phase 3, 4, 5 ให้ครบก่อน — Pipeline นี้รันเทสที่มัดรวมจากทุก Phase ก่อนหน้า (ยังขาด: ${missingPrereq})`);
+      }
       if (/uses:\s*actions\/checkout@v4/.test(clean) || /uses:\s*actions\/checkout@v3/.test(clean)) {
         log("✓ [AC-701 Passed]: กำหนดสเต็ป uses: actions/checkout@v4 ถูกต้อง");
       } else {
@@ -514,23 +531,54 @@ function findBestTicketPrice(prices, targetPrice) {
 }`,
     validate: (code, log) => {
       const clean = stripComments(code);
-      log("🔍 [Phase 8 PRD Validation] กำลังตรวจสอบ Binary Search Optimization...");
-      if (/return\s+mid\s*;/.test(clean) && /prices\[mid\]\s*===?\s*targetPrice/.test(clean)) {
-        log("✓ [AC-801 Passed]: คืนค่า index (mid) เมื่อพบราคาเป้าหมาย ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-801]: เมื่อเจอราคาเป้าหมาย ยังไม่ได้คืนค่าตำแหน่ง index ตามที่ระบุในโจทย์ (ห้ามคืนค่า boolean)");
+      log("🔍 [Phase 8 PRD Validation] กำลังรันโค้ดจริงเพื่อตรวจสอบ Binary Search Optimization...");
+
+      // Static pre-check before executing anything: the loop skeleton (while (left <= right))
+      // is given, so code missing the bound updates would spin forever once run for real.
+      // Catch that here instead of hanging the tab.
+      if (!/left\s*=\s*mid\s*\+\s*1/.test(clean) || !/right\s*=\s*mid\s*-\s*1/.test(clean)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-802]: ยังไม่พบการปรับขอบเขต left = mid + 1 และ right = mid - 1 ให้ครบทั้งสองทิศทาง (ไม่รันโค้ดต่อเพราะ loop จะไม่มีวันจบ)");
       }
 
-      if (/left\s*=\s*mid\s*\+\s*1/.test(clean) && /right\s*=\s*mid\s*-\s*1/.test(clean)) {
-        log("✓ [AC-802 Passed]: การปรับขอบเขต Binary Search O(log n) ถูกต้อง");
-      } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-802]: การปรับขอบเขตค้นหาทั้งสองทิศทางยังไม่ครบตามที่ระบุในโจทย์");
+      const buildFn = () => new Function('prices', 'targetPrice', `${clean}\nreturn findBestTicketPrice(prices, targetPrice);`);
+
+      let fn;
+      try {
+        fn = buildFn();
+      } catch (e) {
+        throw new Error(`ไม่ผ่านเกณฑ์: โค้ดมี Syntax Error รันไม่ได้ — ${e.message}`);
       }
 
-      if (/return\s+-1\s*;/.test(clean)) {
-        log("✓ [AC-803 Passed]: คืนค่า -1 เมื่อไม่พบ ถูกต้องตามธรรมเนียม index-based search");
+      const found = fn([10, 20, 30, 40, 50], 30);
+      if (found === 2) {
+        log("✓ [AC-801 Passed]: findBestTicketPrice([10,20,30,40,50], 30) คืนค่า index 2 ถูกต้อง (รันจริง ไม่ใช่แค่ตรวจข้อความ)");
       } else {
-        throw new Error("ไม่ผ่านเกณฑ์ [AC-803]: เมื่อหาไม่เจอเลย ยังไม่ได้คืนค่าตามธรรมเนียม index-based search ที่ระบุในโจทย์");
+        throw new Error(`ไม่ผ่านเกณฑ์ [AC-801]: findBestTicketPrice([10,20,30,40,50], 30) ควรคืนค่า index 2 แต่ได้ ${JSON.stringify(found)} — ห้ามคืนค่า boolean หรือ index ผิดตำแหน่ง`);
+      }
+
+      const missing = fn([10, 20, 30, 40, 50], 25);
+      if (missing === -1) {
+        log("✓ [AC-803 Passed]: findBestTicketPrice([10,20,30,40,50], 25) คืนค่า -1 เมื่อไม่พบ ถูกต้อง");
+      } else {
+        throw new Error(`ไม่ผ่านเกณฑ์ [AC-803]: เมื่อหาไม่เจอ ควรคืนค่า -1 แต่ได้ ${JSON.stringify(missing)}`);
+      }
+
+      let accessCount = 0;
+      const bigArr = Array.from({ length: 1024 }, (_, i) => i * 2);
+      const countedArr = new Proxy(bigArr, {
+        get(target, prop) {
+          if (typeof prop === 'string' && /^\d+$/.test(prop)) accessCount++;
+          return target[prop];
+        }
+      });
+      const bigResult = buildFn()(countedArr, 1000);
+      if (bigResult !== 500) {
+        throw new Error(`ไม่ผ่านเกณฑ์ [AC-801]: บน array ขนาด 1024 ตัว หา targetPrice=1000 ควรได้ index 500 แต่ได้ ${JSON.stringify(bigResult)}`);
+      }
+      if (accessCount <= 40) {
+        log(`✓ [AC-802 Passed]: ใช้ Binary Search จริง — เข้าถึง array แค่ ${accessCount} ครั้งจาก 1024 ตัว (O(log n))`);
+      } else {
+        throw new Error(`ไม่ผ่านเกณฑ์ [AC-802]: เข้าถึง array ${accessCount} ครั้งจาก 1024 ตัว — นี่คือ Linear Scan ไม่ใช่ Binary Search O(log n) (ต้องเข้าถึงไม่เกิน ~40 ครั้ง แม้จะ access prices[mid] ซ้ำในเงื่อนไข if/else if ก็ตาม)`);
       }
     },
     hint: "ถ้า prices[mid] === targetPrice คืนค่า mid (ไม่ใช่ true), ถ้า prices[mid] < targetPrice ปรับ left = mid + 1, ไม่งั้นปรับ right = mid - 1, สุดท้ายถ้าหลุด loop คืน -1",
