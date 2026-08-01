@@ -31,6 +31,7 @@ const TRACKS = [
   'CI-CD-Pipeline',
   'Framework-Design',
   'OOP-Fundamentals',
+  'Programming-Paradigms',
   'Data-Structures-Algorithms',
   'Final-Project',
 ];
@@ -58,6 +59,8 @@ for (const track of TRACKS) {
     console,
     document: { getElementById: () => null, addEventListener: () => {}, querySelector: () => null },
     localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+    setTimeout,
+    clearTimeout,
   };
   sandbox.window = sandbox;
   if (track === 'DB-Design-SQL') {
