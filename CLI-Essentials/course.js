@@ -9,8 +9,235 @@
 
 const LESSONS = [
   {
-    id: "git_stash",
+    id: "git_init",
     meta: "บทนำ",
+    title: "Git Init: เริ่มต้น Repository ใหม่",
+    template: `# สถานการณ์: มีโฟลเดอร์โปรเจคใหม่ ยังไม่มี git track อยู่เลย
+# 1. เริ่มต้น git repository ในโฟลเดอร์ปัจจุบัน
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git init...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasInit = /git init\b/.test(activeCode);
+      if (hasInit) {
+        log("✓ ใช้ git init ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่งเริ่มต้น git repository ใหม่ในโฟลเดอร์ปัจจุบัน");
+      }
+    },
+    hint: "นึกถึงคำสั่งพื้นฐานที่สุดของ git ที่ใช้เริ่มสร้าง repository ใหม่เอี่ยมในโฟลเดอร์ปัจจุบัน ไม่ต้องมี flag หรือ argument ใดๆ เพิ่ม",
+    solution: `git init`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน หลัง <code>git init</code> repo จะยังไม่มี commit ใดๆ เลย (<code>git status</code> จะบอกว่า "No commits yet") — git สมัยใหม่ (2.28+) จะตั้งชื่อ default branch เป็น <code>main</code> ให้อัตโนมัติ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git init</code><br/>
+    <code>git status</code>  # เช็คว่าเพิ่ง init เสร็จ<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าโปรเจคมี remote (GitHub/GitLab) อยู่แล้วและต้องการโค้ดที่มีอยู่ ให้ใช้ <code>git clone &lt;url&gt;</code> แทน — ไม่ใช่ <code>git init</code> ตามด้วย <code>git remote add</code> เอง (clone ทำสองอย่างในคำสั่งเดียว: init + ผูก remote + ดึงโค้ดมาครบ)`,
+    example: `# เช็คว่า repo เพิ่ง init เสร็จ ยังไม่มี commit ใดๆ
+git status`,
+    task: `จงเขียนคำสั่งเริ่มต้น git repository ใหม่ในโฟลเดอร์ปัจจุบัน`
+  },
+  {
+    id: "git_status",
+    meta: "บทที่ 1",
+    title: "Git Status: เช็คสถานะ Working Directory ก่อนลงมือทำอะไรต่อ",
+    template: `# สถานการณ์: เพิ่งแก้ไฟล์ไปหลายไฟล์ ไม่แน่ใจว่าไฟล์ไหน stage ไว้แล้ว ไฟล์ไหนยังไม่ได้ track เลย
+# 1. เช็คสถานะปัจจุบันของ working directory
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git status...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasStatus = /git status\b/.test(activeCode);
+      if (hasStatus) {
+        log("✓ ใช้ git status ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่งตรวจสอบสถานะปัจจุบันของ working directory");
+      }
+    },
+    hint: "คำสั่งพื้นฐานที่สุดที่ควรพิมพ์ก่อนทำอะไรก็ตามใน git เพื่อดูภาพรวมของ working directory ตอนนี้",
+    solution: `git status`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git status</strong> คือคำสั่งที่ควรพิมพ์เป็นอันดับแรกก่อน commit/add ทุกครั้ง แสดงสถานะไฟล์ทั้งหมดแบ่งเป็น 3 กลุ่ม:<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>1. <strong>Staged</strong> (จะเข้าไปใน commit ถัดไป) — ไฟล์ที่ <code>git add</code> ไปแล้ว 2. <strong>Modified/Unstaged</strong> — ไฟล์ที่แก้ไปแล้วแต่ยังไม่ได้ <code>git add</code> 3. <strong>Untracked</strong> — ไฟล์ใหม่ที่ git ยังไม่เคยรู้จักเลย<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git status</code><br/>
+    <code>git status -s</code>  # short format อ่านเร็วกว่า<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เช็ค <code>git status</code> ก่อน commit ทุกครั้ง — ไฟล์ที่อยู่ใน Untracked จะ<strong>ไม่ถูก commit ไปด้วย</strong>แม้จะรัน <code>git commit -a</code> ก็ตาม (<code>-a</code> stage เฉพาะไฟล์ที่ track อยู่แล้วเท่านั้น) พลาดตรงนี้บ่อยจนลืม add ไฟล์ใหม่เข้า commit`,
+    example: `# แบบย่อ (short format) กระชับกว่า อ่านเร็วกว่าตอนไฟล์เยอะ
+git status -s`,
+    task: `จงเช็คสถานะปัจจุบันของ working directory ด้วย <code>git status</code>`
+  },
+  {
+    id: "git_log",
+    meta: "บทที่ 2",
+    title: "Git Log: ดูประวัติ Commit แบบกระชับ",
+    template: `# สถานการณ์: อยากดูประวัติ commit ล่าสุด 5 รายการ แบบกระชับบรรทัดเดียวต่อ commit
+# 1. แสดงประวัติ 5 commit ล่าสุด แบบย่อบรรทัดเดียว
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git log...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasLog = /git log\s+--oneline\s+-5\b/.test(activeCode);
+      if (hasLog) {
+        log("✓ ใช้ git log --oneline -5 ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่งดูประวัติ commit แบบย่อ จำนวน 5 รายการล่าสุด");
+      }
+    },
+    hint: "git log เฉยๆ แสดงรายละเอียดยาวทีละ commit — มี flag ที่ย่อให้เหลือบรรทัดเดียวต่อ commit แล้วใส่เลขจำกัดจำนวน commit ที่จะแสดงต่อท้าย",
+    solution: `git log --oneline -5`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Log: ดูประวัติ Commit แบบกระชับ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git log</code> เฉยๆ แสดงประวัติ commit ทั้งหมดแบบละเอียด (hash เต็ม, ผู้เขียน, วันที่, ข้อความ) ยาวมากถ้า repo มี commit เยอะ<br/><br/>
+    • <code>--oneline</code> — ย่อแต่ละ commit เหลือบรรทัดเดียว (hash ย่อ + ข้อความ)<br/>
+    • <code>-N</code> (เช่น <code>-5</code>) — จำกัดแสดงแค่ N commit ล่าสุด<br/>
+    • <code>--graph --all</code> — วาดเส้น branch แบบ ASCII ให้เห็นว่า commit ไหนอยู่ branch ไหนบ้าง มีประโยชน์มากตอน branch เยอะ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git log --oneline -5</code><br/>
+    <code>git log --oneline --graph --all</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>-5</code> จำกัดแค่<strong>จำนวน</strong> commit ที่แสดง ไม่ใช่กรองตามช่วงเวลาหรือ branch — ถ้าอยู่ branch อื่นที่ไม่ใช่ branch หลัก commit ล่าสุด 5 อันที่เห็นอาจไม่ใช่ 5 อันล่าสุดของทั้ง repo ต้องเติม <code>--all</code> ถ้าต้องการดูทุก branch พร้อมกัน`,
+    example: `# ดูทุก branch พร้อมเส้นกราฟ
+git log --oneline --graph --all`,
+    task: `จงแสดงประวัติ 5 commit ล่าสุดแบบย่อบรรทัดเดียวด้วย <code>git log --oneline -5</code>`
+  },
+  {
+    id: "git_diff",
+    meta: "บทที่ 3",
+    title: "Git Diff: ดูว่าเปลี่ยนอะไรไปบ้างก่อน Commit",
+    template: `# สถานการณ์: แก้ไฟล์ไปแล้วยังไม่ได้ add อยากดูว่าเปลี่ยนอะไรไปบ้างก่อน แล้วพอ add แล้วอยากเช็คซ้ำว่า staged ไว้ถูกต้อง
+# 1. ดู diff ของไฟล์ที่แก้แต่ยังไม่ได้ stage
+# WRITE YOUR CODE HERE
+
+
+# 2. หลัง git add แล้ว ดู diff ของสิ่งที่ staged ไว้ (จะเข้าไปใน commit ถัดไป)
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git diff...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasDiff = /^git diff\s*$/m.test(activeCode);
+      const hasCachedDiff = /git diff\s+--cached\b/.test(activeCode);
+      if (!hasDiff) {
+        throw new Error("ยังไม่พบคำสั่งดูการเปลี่ยนแปลงที่ยังไม่ได้ stage (unstaged changes)");
+      }
+      if (!hasCachedDiff) {
+        throw new Error("ยังไม่พบคำสั่งดูการเปลี่ยนแปลงที่ stage ไว้แล้ว (staged changes)");
+      }
+      log("✓ ใช้ git diff แล้ว git diff --cached ถูกต้อง");
+    },
+    hint: "git diff เฉยๆ เทียบ working directory กับ staging area ส่วนอีก flag หนึ่งเทียบ staging area กับ commit ล่าสุดแทน (ดูว่า staged ไว้ถูกต้องมั้ยก่อนจะ commit จริง)",
+    solution: `git diff
+git diff --cached`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Diff: ดูว่าเปลี่ยนอะไรไปบ้างก่อน Commit และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git diff</code> เปรียบเทียบไฟล์ได้หลายคู่ต่างกัน ขึ้นอยู่กับ flag:<br/><br/>
+    • <code>git diff</code> (เปล่าๆ) — เทียบ <strong>working directory vs staging area</strong> คือดูว่าแก้อะไรไปแล้วที่ยังไม่ได้ <code>add</code><br/>
+    • <code>git diff --cached</code> (เท่ากับ <code>--staged</code>) — เทียบ <strong>staging area vs commit ล่าสุด</strong> คือดูว่า <code>add</code> ไว้อะไรบ้างที่จะเข้า commit ถัดไปจริงๆ<br/>
+    • <code>git diff HEAD</code> — เทียบ working directory กับ commit ล่าสุดตรงๆ (รวมทั้ง staged และ unstaged ในทีเดียว)<br/><br/>
+    เช็ค <code>git diff --cached</code> ก่อน commit ทุกครั้งช่วยกันไม่ให้ commit อะไรที่ไม่ตั้งใจ add ไปด้วย<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git diff</code>  # unstaged<br/>
+    <code>git diff --cached</code>  # staged<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> หลัง <code>git add</code> ไฟล์ไปแล้ว <code>git diff</code> เปล่าๆ จะ<strong>ไม่โชว์การเปลี่ยนแปลงนั้นอีก</strong> (เพราะย้ายไป staging area แล้ว) หลายคนพิมพ์ <code>git diff</code> ซ้ำแล้วงงว่าทำไมว่างเปล่า ทั้งที่ต้องดูด้วย <code>git diff --cached</code> แทน`,
+    example: `# เทียบ working directory กับ commit ล่าสุดตรงๆ (รวม staged+unstaged)
+git diff HEAD`,
+    task: `จงดู <code>git diff</code> (unstaged) แล้วดู <code>git diff --cached</code> (staged) ตามลำดับ`
+  },
+  {
+    id: "git_add_patch",
+    meta: "บทที่ 4",
+    title: "Git Add -p: Stage เฉพาะบางส่วนของไฟล์ (Patch Mode)",
+    template: `# สถานการณ์: ไฟล์ login.ts มีทั้งการแก้บั๊กจริง และบรรทัด console.log ที่ใช้ debug ทิ้งไว้ ไม่อยากให้ทั้งสองอย่างอยู่ commit เดียวกัน
+# 1. เข้าโหมด patch เพื่อเลือก stage เฉพาะบาง hunk ของไฟล์ login.ts
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git add -p...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasAddP = /git add\s+-p\s+login\.ts\b/.test(activeCode);
+      if (hasAddP) {
+        log("✓ ใช้ git add -p login.ts ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่ง add แบบเลือกทีละส่วน (interactive/patch mode) สำหรับไฟล์ที่โจทย์กำหนด");
+      }
+    },
+    hint: "git add ธรรมดา stage ทั้งไฟล์เท่านั้น มี flag ตัวย่อ (patch mode) ที่ทำให้เลือก stage ได้ทีละส่วน (hunk) ของไฟล์แทน",
+    solution: `git add -p login.ts`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Add -p: Stage เฉพาะบางส่วนของไฟล์ (Patch Mode) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git add &lt;ไฟล์&gt;</code> ธรรมดา stage ทั้งไฟล์รวดเดียว — ถ้าไฟล์มีทั้งการแก้ที่ตั้งใจ commit จริงๆ ปนกับโค้ด debug ที่ลืมลบ จะแยกไม่ได้ว่าอะไรควรอยู่ commit ไหน<br/><br/>
+    <code>git add -p &lt;ไฟล์&gt;</code> (patch mode) แบ่งการแก้ไขออกเป็น "hunk" (กลุ่มบรรทัดที่เปลี่ยนติดกัน) แล้วถามทีละ hunk ว่าจะ stage มั้ย (<code>y</code>=ใช่, <code>n</code>=ไม่, <code>s</code>=แบ่ง hunk นี้ให้ย่อยลงอีก, <code>q</code>=หยุดถามที่เหลือ) — ทำให้แยก commit ได้ละเอียดกว่าระดับไฟล์ เป็นเทคนิคที่ทำให้แต่ละ commit โฟกัสเรื่องเดียวจริงๆ<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git add -p login.ts</code><br/>
+    <code>y / n / s / q</code>  # stage / skip / แบ่ง hunk ย่อย / หยุดถาม<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>git add -p</code> ทำงานได้เฉพาะไฟล์ที่ git <strong>track อยู่แล้ว</strong> (มี diff เทียบกับ commit เดิม) — ถ้าไฟล์เป็น untracked ใหม่เอี่ยม จะไม่มี hunk ให้เลือกเลย ต้อง <code>git add -N &lt;ไฟล์&gt;</code> (intent-to-add) ก่อน ถึงจะเริ่ม patch mode ได้`,
+    example: `# ทำแบบเดียวกันตอน commit แทนที่จะ add ก่อน (สลับไป patch mode ตอน commit ได้เลย)
+git commit -p`,
+    task: `จงเข้าโหมด patch ของ <code>git add</code> เพื่อเลือก stage บาง hunk ของไฟล์ <code>login.ts</code>`
+  },
+  {
+    id: "git_clone",
+    meta: "บทที่ 5",
+    title: "Git Clone: ดึง Repository ที่มีอยู่แล้วมาไว้ในเครื่อง",
+    template: `# สถานการณ์: มี repo อยู่แล้วบน GitHub (https://github.com/acme/webapp.git) ต้องการโค้ดทั้งหมดมาไว้ในเครื่องเพื่อเริ่มทำงาน
+# 1. clone repo นี้มาไว้ในเครื่อง
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git clone...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasClone = /git clone\s+https:\/\/github\.com\/acme\/webapp\.git\b/.test(activeCode);
+      if (hasClone) {
+        log("✓ ใช้ git clone https://github.com/acme/webapp.git ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่ง clone repository จาก URL ที่โจทย์กำหนด");
+      }
+    },
+    hint: "คำสั่งเดียวที่ทำครบทั้ง init + ผูก remote + ดึงโค้ดทั้งหมดมาจาก URL ที่ระบุ",
+    solution: `git clone https://github.com/acme/webapp.git`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git clone &lt;url&gt;</strong> ทำครบในคำสั่งเดียว: สร้างโฟลเดอร์ใหม่ + <code>git init</code> ข้างใน + ผูก remote ชื่อ <code>origin</code> ให้ชี้ไป url ที่ระบุ + ดึงข้อมูลทั้งหมด (ทุก branch, ทุก commit) มาเก็บไว้ + checkout branch default (มักเป็น <code>main</code>) ออกมาให้ทำงานได้ทันที<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git clone &lt;url&gt;</strong> ทำครบในคำสั่งเดียว: สร้างโฟลเดอร์ใหม่ + <code>git init</code> ข้างใน + ผูก remote ชื่อ <code>origin</code> ให้ชี้ไป url ที่ระบุ + ดึงข้อมูลทั้งหมด (ทุก branch, ทุก commit) มาเก็บไว้ + checkout branch default (มักเป็น <code>main</code>) ออกมาให้ทำงานได้ทันที<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git clone https://github.com/acme/webapp.git</code><br/>
+    <code>git clone &lt;url&gt; my-local-webapp</code>  # ตั้งชื่อโฟลเดอร์เอง<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ค่า default ชื่อโฟลเดอร์ที่ได้จะตรงกับชื่อ repo (ในตัวอย่างนี้คือ <code>webapp/</code>) ถ้าอยากตั้งชื่อโฟลเดอร์เองต้องใส่ argument ที่สองต่อท้าย ไม่งั้นถ้า clone repo ชื่อซ้ำกันหลายอันในโฟลเดอร์เดียวกันจะ error ทับกันทันที`,
+    example: `# clone แล้วตั้งชื่อโฟลเดอร์เองแทนใช้ชื่อ repo เดิม
+git clone https://github.com/acme/webapp.git my-local-webapp`,
+    task: `จง clone repo <code>https://github.com/acme/webapp.git</code> มาไว้ในเครื่อง`
+  },
+  {
+    id: "git_remote",
+    meta: "บทที่ 6",
+    title: "Git Remote: ผูก Local Repo เข้ากับ Remote บน GitHub",
+    template: `# สถานการณ์: เพิ่งสร้าง repo ใหม่ในเครื่องด้วย git init แล้วสร้าง repo เปล่าไว้บน GitHub รอแล้ว ต้องการผูกทั้งสองเข้าด้วยกัน
+# 1. ผูก remote ชื่อ 'origin' ให้ชี้ไปที่ https://github.com/acme/webapp.git
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง git remote add...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasRemote = /git remote add\s+origin\s+https:\/\/github\.com\/acme\/webapp\.git\b/.test(activeCode);
+      if (hasRemote) {
+        log("✓ ใช้ git remote add origin https://github.com/acme/webapp.git ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่งเพิ่ม remote ชื่อ origin ที่ชี้ไปยัง URL ตามที่โจทย์กำหนด");
+      }
+    },
+    hint: "คำสั่งย่อยของ remote ที่ใช้เพิ่ม remote ใหม่ ตามด้วยชื่อที่จะเรียก (ตามธรรมเนียมมักใช้ origin) แล้วตามด้วย URL ของ repo",
+    solution: `git remote add origin https://github.com/acme/webapp.git`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>remote</strong> คือชื่อเล่นที่ผูกไว้กับ URL ของ repo อื่น (ปกติอยู่บน GitHub/GitLab) — <code>origin</code> เป็นแค่<strong>ชื่อตามธรรมเนียม</strong> ที่ทุกคนใช้กัน ไม่ใช่ชื่อบังคับของ git<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>remote</strong> คือชื่อเล่นที่ผูกไว้กับ URL ของ repo อื่น (ปกติอยู่บน GitHub/GitLab) — <code>origin</code> เป็นแค่<strong>ชื่อตามธรรมเนียม</strong> ที่ทุกคนใช้กัน ไม่ใช่ชื่อบังคับของ git<br/><br/>
+    <code>git remote add &lt;ชื่อ&gt; &lt;url&gt;</code> ผูก remote ใหม่เข้ากับ local repo — จำเป็นเฉพาะตอนที่ repo เริ่มจาก <code>git init</code> เอง (ถ้าใช้ <code>git clone</code> จะได้ remote <code>origin</code> ผูกมาให้อัตโนมัติแล้ว)<br/><br/>
+    หนึ่ง repo มีได้หลาย remote พร้อมกัน (เช่น <code>origin</code> ชี้ไป fork ของตัวเอง + <code>upstream</code> ชี้ไป repo ต้นฉบับ) ใช้ <code>git remote -v</code> ดูรายชื่อ remote ทั้งหมดพร้อม URL<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>git remote add origin https://github.com/acme/webapp.git</code><br/>
+    <code>git remote -v</code>  # เช็ค remote ทั้งหมดพร้อม URL<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า remote ชื่อ <code>origin</code> มีอยู่แล้ว <code>git remote add origin</code> จะ <strong>error ทันที</strong> (<code>remote origin already exists</code>) — ต้องใช้ <code>git remote set-url origin &lt;url&gt;</code> แทนถ้าต้องการเปลี่ยน URL ของ remote เดิม ไม่ใช่ <code>add</code> ซ้ำ`,
+    example: `# ดู remote ทั้งหมดที่ผูกไว้ พร้อม URL (v = verbose)
+git remote -v`,
+    task: `จงผูก remote ชื่อ <code>origin</code> ให้ชี้ไปที่ <code>https://github.com/acme/webapp.git</code>`
+  },
+  {
+    id: "git_stash",
+    meta: "บทที่ 7",
     title: "Git Stash: เก็บงานค้างไว้ชั่วคราวแบบมีป้ายกำกับ",
     template: `# สถานการณ์: กำลังแก้ไฟล์ค้างอยู่ แต่ต้องสลับไปทำ hotfix ด่วนก่อน
 # 1. เก็บงานที่ทำค้างไว้ชั่วคราว (รวมไฟล์ untracked ด้วย -u) พร้อมป้ายกำกับชื่อ 'wip-login-fix'
@@ -43,7 +270,7 @@ git stash apply <sha-ที่เจอ>`,
   },
   {
     id: "git_hooks",
-    meta: "บทที่ 1",
+    meta: "บทที่ 8",
     title: "Git Hooks: เปิดใช้งาน Custom Hooks Directory",
     template: `# หมายเหตุ: repo จริงของ kouen-terminal มี custom hook อยู่ใน .githooks/
 #           (commit-msg กันคอมมิต Info.plist หลุดมือโดยไม่ตั้งใจ)
@@ -79,38 +306,8 @@ fi`,
     1. ตั้งค่า <code>core.hooksPath</code> ให้ชี้ไปที่โฟลเดอร์ <code>.githooks</code> แทน default`
   },
   {
-    id: "git_init",
-    meta: "บทที่ 2",
-    title: "Git Init: เริ่มต้น Repository ใหม่",
-    template: `# สถานการณ์: มีโฟลเดอร์โปรเจคใหม่ ยังไม่มี git track อยู่เลย
-# 1. เริ่มต้น git repository ในโฟลเดอร์ปัจจุบัน
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง git init...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasInit = /git init\b/.test(activeCode);
-      if (hasInit) {
-        log("✓ ใช้ git init ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่งเริ่มต้น git repository ใหม่ในโฟลเดอร์ปัจจุบัน");
-      }
-    },
-    hint: "นึกถึงคำสั่งพื้นฐานที่สุดของ git ที่ใช้เริ่มสร้าง repository ใหม่เอี่ยมในโฟลเดอร์ปัจจุบัน ไม่ต้องมี flag หรือ argument ใดๆ เพิ่ม",
-    solution: `git init`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git init</strong> สร้างโฟลเดอร์ <code>.git/</code> ซ้อนในโฟลเดอร์ปัจจุบัน เริ่มต้น tracking repo ใหม่ตั้งแต่ศูนย์ — ทำครั้งเดียวตอนเริ่มโปรเจคใหม่ที่ยังไม่มี git มาก่อน หลัง <code>git init</code> repo จะยังไม่มี commit ใดๆ เลย (<code>git status</code> จะบอกว่า "No commits yet") — git สมัยใหม่ (2.28+) จะตั้งชื่อ default branch เป็น <code>main</code> ให้อัตโนมัติ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>git init</code><br/>
-    <code>git status</code>  # เช็คว่าเพิ่ง init เสร็จ<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าโปรเจคมี remote (GitHub/GitLab) อยู่แล้วและต้องการโค้ดที่มีอยู่ ให้ใช้ <code>git clone &lt;url&gt;</code> แทน — ไม่ใช่ <code>git init</code> ตามด้วย <code>git remote add</code> เอง (clone ทำสองอย่างในคำสั่งเดียว: init + ผูก remote + ดึงโค้ดมาครบ)`,
-    example: `# เช็คว่า repo เพิ่ง init เสร็จ ยังไม่มี commit ใดๆ
-git status`,
-    task: `จงเขียนคำสั่งเริ่มต้น git repository ใหม่ในโฟลเดอร์ปัจจุบัน`
-  },
-  {
     id: "git_fetch",
-    meta: "บทที่ 3",
+    meta: "บทที่ 9",
     title: "Git Fetch: ดึงข้อมูลใหม่จาก Remote แบบปลอดภัย (ไม่ Merge อัตโนมัติ)",
     template: `# สถานการณ์: อยากรู้ว่า origin/main มีการเปลี่ยนแปลงใหม่มั้ย ก่อนจะ merge เข้าโค้ดตัวเอง
 # 1. ดึงข้อมูลล่าสุดของ branch main จาก origin (ไม่ merge เข้า branch ปัจจุบัน)
@@ -141,7 +338,7 @@ git log HEAD..origin/main --oneline  # ดูว่า main มี commit ให
   },
   {
     id: "git_pull",
-    meta: "บทที่ 4",
+    meta: "บทที่ 10",
     title: "Git Pull: Fetch + Rebase ในคำสั่งเดียว",
     template: `# สถานการณ์: push ถูก remote ปฏิเสธเพราะมีคนอื่น push ก่อน ต้องดึงงานใหม่มารวมก่อนค่อย push ซ้ำ
 # 1. pull จาก origin branch ชื่อ 'feature/login-fix' แบบ rebase (ไม่สร้าง merge commit)
@@ -174,7 +371,7 @@ git rebase --abort`,
   },
   {
     id: "git_switch",
-    meta: "บทที่ 5",
+    meta: "บทที่ 11",
     title: "Git Switch: สลับ/สร้าง Branch แบบสมัยใหม่",
     template: `# สถานการณ์: ต้องเริ่มงานฟีเจอร์ใหม่ อยากสร้าง branch แยกจาก main แล้วสลับเข้าไปทำทันที
 # 1. สร้าง branch ใหม่ชื่อ 'feature/login-fix' แล้วสลับเข้าไปทำในคำสั่งเดียว
@@ -206,7 +403,7 @@ git rebase --abort`,
   },
   {
     id: "git_merge",
-    meta: "บทที่ 6",
+    meta: "บทที่ 12",
     title: "Git Merge: รวม Branch เข้าด้วยกัน",
     template: `# สถานการณ์: ทำงานใน feature/login-fix เสร็จแล้ว (สมมติสลับมาอยู่ main แล้ว) ต้องการรวมกลับเข้า main
 # 1. merge เอา feature/login-fix เข้ามาที่ branch ปัจจุบัน
@@ -237,7 +434,7 @@ git merge --abort  # ยกเลิกถ้าแค่อยากลอง�
   },
   {
     id: "git_push",
-    meta: "บทที่ 7",
+    meta: "บทที่ 13",
     title: "Git Push: ส่ง Commit ขึ้น Remote พร้อมตั้ง Upstream ครั้งแรก",
     template: `# สถานการณ์: push branch 'feature/login-fix' ขึ้น origin เป็นครั้งแรก (ยังไม่เคยตั้ง upstream)
 # 1. push พร้อมตั้งค่า upstream ในคำสั่งเดียว
@@ -269,7 +466,7 @@ git push`,
   },
   {
     id: "git_amend",
-    meta: "บทที่ 8",
+    meta: "บทที่ 14",
     title: "Git Commit --amend: แก้ไข Commit ล่าสุดโดยไม่สร้างใหม่",
     template: `# สถานการณ์: เพิ่ง commit ไปแล้วนึกขึ้นได้ว่าพิมพ์ commit message ผิด (ยังไม่ได้ push ออกไปไหน)
 # 1. แก้ไข commit ล่าสุดให้ใช้ข้อความใหม่ว่า 'fix: correct login validation logic' แทนข้อความเดิม
@@ -300,7 +497,7 @@ git commit --amend --no-edit`,
   },
   {
     id: "git_tag_release",
-    meta: "บทที่ 9",
+    meta: "บทที่ 15",
     title: "Git Tag: ติด Tag เวอร์ชัน (Semantic Versioning) สำหรับ Release",
     template: `# สถานการณ์: โค้ดบน main พร้อม release เป็นเวอร์ชัน v1.2.0 แล้ว ต้องการติด annotated tag พร้อมข้อความอธิบาย
 # 1. สร้าง annotated tag ชื่อ 'v1.2.0' พร้อมข้อความ 'Release v1.2.0: add login retry logic'
@@ -342,7 +539,7 @@ git push origin --delete v1.2.0`,
   },
   {
     id: "git_lazygit_intro",
-    meta: "บทที่ 10",
+    meta: "บทที่ 16",
     title: "lazygit: ครอบคำสั่ง git ที่เรียนมาทั้งหมดด้วย TUI",
     template: `# สถานการณ์: อยู่ในโฟลเดอร์ repo แล้ว อยากเปิด lazygit ขึ้นมาดูสถานะแบบเห็นภาพ แทนพิมพ์ git status/log ทีละคำสั่ง
 # 1. เปิด lazygit
@@ -375,7 +572,7 @@ lazygit`,
   },
   {
     id: "vim_survival",
-    meta: "บทที่ 11",
+    meta: "บทที่ 17",
     title: "Vim Survival: ติดอยู่ใน Editor ตอน git commit ทำไง",
     template: `# สถานการณ์: พิมพ์ git commit เฉยๆ (ไม่ใส่ -m) แล้วหลุดเข้า Vim โดยไม่ได้ตั้งใจ
 # 1. เข้าสู่โหมด Insert แล้วพิมพ์ข้อความ commit message ว่า 'fix: correct typo'
@@ -432,7 +629,7 @@ fix: correct typo
   },
   {
     id: "vim_navigation",
-    meta: "บทที่ 12",
+    meta: "บทที่ 18",
     title: "Vim การเคลื่อนที่พื้นฐาน: h j k l, gg, G, w, b",
     template: `# สถานการณ์: เปิดไฟล์ log ยาวหลายร้อยบรรทัดอยู่ ต้องกระโดดไปดูบรรทัดแรกสุด แล้วไปดูบรรทัดสุดท้ายสุดของไฟล์
 # 1. กระโดดไปบรรทัดแรกสุดของไฟล์
@@ -470,7 +667,7 @@ G`,
   },
   {
     id: "vim_search_replace",
-    meta: "บทที่ 13",
+    meta: "บทที่ 19",
     title: "Vim Search & Replace: แก้ Config ไฟล์เร็วๆ ผ่าน SSH",
     template: `# สถานการณ์: ต้องเปลี่ยนค่า port ทุกจุดในไฟล์ config จาก 3000 เป็น 3001 ผ่าน SSH (ไม่มี GUI editor)
 # 1. เขียนคำสั่ง Vim แบบ Ex command แทนที่คำว่า 3000 เป็น 3001 ทุกจุด ทั้งไฟล์
@@ -501,7 +698,7 @@ G`,
   },
   {
     id: "vim_delete_yank",
-    meta: "บทที่ 14",
+    meta: "บทที่ 20",
     title: "Vim ลบ/คัดลอกบรรทัด: dd, yy, p",
     template: `# สถานการณ์: cursor อยู่บรรทัดที่ไม่ต้องการ อยากลบทิ้งแล้ววางกลับที่อื่น
 # 1. ลบทั้งบรรทัดที่ cursor อยู่ (เก็บเข้า register อัตโนมัติ)
@@ -544,7 +741,7 @@ p`,
   },
   {
     id: "vim_visual_mode",
-    meta: "บทที่ 15",
+    meta: "บทที่ 21",
     title: "Vim Visual Mode: เลือกข้อความก่อนแก้ไข",
     template: `# สถานการณ์: ต้องการลบ 3 บรรทัดติดกันพร้อมกัน แทนที่จะกด dd ทีละบรรทัด 3 รอบ
 # 1. เข้าสู่ Visual Line mode (เลือกทีละบรรทัด)
@@ -594,7 +791,7 @@ y`,
   },
   {
     id: "vim_undo_redo",
-    meta: "บทที่ 16",
+    meta: "บทที่ 22",
     title: "Vim Undo/Redo: ย้อนกลับเมื่อพิมพ์ผิด",
     template: `# สถานการณ์: เพิ่งลบ/แก้ไขผิดบรรทัด อยากย้อนกลับ แล้วเปลี่ยนใจอยากทำต่อใหม่
 # 1. ย้อนกลับการแก้ไขล่าสุด (undo)
@@ -633,7 +830,7 @@ Ctrl+r`,
   },
   {
     id: "unix_safe_script",
-    meta: "บทที่ 17",
+    meta: "บทที่ 23",
     title: "Unix Shell: Safe Script Header ที่ควรมีทุกไฟล์",
     template: `#!/usr/bin/env bash
 # 1. เพิ่ม safety header ที่ทำให้ script หยุดทันทีเมื่อเจอ error, ตัวแปรไม่ได้ประกาศ, หรือ pipe ล้มเหลว
@@ -669,7 +866,7 @@ cd "$ROOT"
   },
   {
     id: "unix_grep_pipe",
-    meta: "บทที่ 18",
+    meta: "บทที่ 24",
     title: "Unix Pipe + grep: เช็คว่าไฟล์อันตรายถูก Stage ไว้ไหม",
     template: `# หมายเหตุ: บรรทัดนี้ปรับจาก .githooks/commit-msg จริงของ kouen-terminal
 # 1. เช็คว่าไฟล์ที่ staged ไว้ (git diff --cached --name-only) มีคำว่า "Info.plist" อยู่หรือไม่
@@ -704,7 +901,7 @@ fi`,
   },
   {
     id: "unix_find_files",
-    meta: "บทที่ 19",
+    meta: "บทที่ 25",
     title: "Unix find: ค้นหาไฟล์ตามชื่อ/ประเภท (ใช้จริงใน Kouen Build Scripts)",
     template: `# หมายเหตุ: Scripts/run.sh จริงของ kouen-terminal ใช้ find ลบไฟล์ .html ที่ generate ไว้ในโฟลเดอร์ graphify-out ทั้งหมด
 # 1. ค้นหาไฟล์ (-type f) ที่ชื่อลงท้าย .html ในโฟลเดอร์ graphify-out แล้วลบทิ้งทันที (-delete)
@@ -738,7 +935,7 @@ find graphify-out -type f -name '*.html' -print`,
   },
   {
     id: "unix_chmod",
-    meta: "บทที่ 20",
+    meta: "บทที่ 26",
     title: "Unix chmod: ให้สิทธิ์ Execute กับ Script",
     template: `# สถานการณ์: เพิ่งเขียน deploy.sh เสร็จ พอสั่งรัน ./deploy.sh กลับเจอ "Permission denied"
 # 1. ให้สิทธิ์ execute กับไฟล์ deploy.sh
@@ -771,8 +968,73 @@ chmod 755 deploy.sh`,
     task: `จงให้สิทธิ์ execute กับไฟล์ <code>deploy.sh</code> ด้วย <code>chmod +x</code>`
   },
   {
+    id: "unix_ls",
+    meta: "บทที่ 27",
+    title: "Unix ls: ดูรายชื่อไฟล์ทั้งหมดรวมไฟล์ซ่อน พร้อมรายละเอียด",
+    template: `# สถานการณ์: เพิ่ง cd เข้าโฟลเดอร์โปรเจกต์ อยากดูว่ามีไฟล์อะไรบ้าง รวมไฟล์ซ่อน (dotfiles เช่น .env, .gitignore) พร้อมสิทธิ์/ขนาด/วันที่แก้ไข
+# 1. แสดงรายชื่อไฟล์ทั้งหมดในโฟลเดอร์ปัจจุบัน แบบละเอียดรวมไฟล์ซ่อน
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง ls...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasLs = /ls\s+-la\b/.test(activeCode);
+      if (hasLs) {
+        log("✓ ใช้ ls -la ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่งแสดงรายการไฟล์แบบละเอียด รวมไฟล์ซ่อน");
+      }
+    },
+    hint: "ls เฉยๆ แสดงแค่ชื่อไฟล์สั้นๆ ไม่รวมไฟล์ซ่อน มี 2 flag ที่ต้องรวมกัน: แบบละเอียด (long format) และแบบรวมไฟล์ซ่อนทั้งหมด",
+    solution: `ls -la`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix ls: ดูรายชื่อไฟล์ทั้งหมดรวมไฟล์ซ่อน พร้อมรายละเอียด และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>ls</code> เฉยๆ แสดงแค่ชื่อไฟล์/โฟลเดอร์แบบสั้น และ<strong>ไม่แสดงไฟล์ซ่อน</strong> (ไฟล์ที่ชื่อขึ้นต้นด้วย <code>.</code> เช่น <code>.env</code>, <code>.gitignore</code>)<br/><br/>
+    • <code>-l</code> (long) — แสดงแบบละเอียด: สิทธิ์ (rwx), เจ้าของ, กลุ่ม, ขนาดไฟล์, วันที่แก้ไขล่าสุด<br/>
+    • <code>-a</code> (all) — แสดงไฟล์ซ่อนด้วย (รวมถึง <code>.</code> และ <code>..</code> ที่แทนโฟลเดอร์ปัจจุบัน/แม่)<br/>
+    • รวมกันเป็น <code>-la</code> หรือ <code>-al</code> ได้ผลเหมือนกัน<br/><br/>
+    เพิ่ม <code>-h</code> (human-readable) แสดงขนาดไฟล์เป็น KB/MB/GB แทนตัวเลข byte ยาวๆ อ่านยาก: <code>ls -lah</code><br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>ls -la</code><br/>
+    <code>ls -lah</code>  # + ขนาดไฟล์แบบอ่านง่าย<br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>-a</code> จะรวม <code>.</code> (โฟลเดอร์ปัจจุบัน) และ <code>..</code> (โฟลเดอร์แม่) เข้ามาในรายการด้วยเสมอ — ถ้าเอาผลลัพธ์ <code>ls -la</code> ไปนับจำนวนไฟล์ด้วยสคริปต์ (เช่น <code>wc -l</code>) จะได้ตัวเลขเกินมา 2 จากสองรายการนี้ ต้องกรองออกก่อนถ้าต้องการนับไฟล์จริงๆ`,
+    example: `# แสดงขนาดไฟล์แบบอ่านง่าย (KB/MB) แทนตัวเลข byte ดิบ
+ls -lah`,
+    task: `จงแสดงรายชื่อไฟล์ทั้งหมดในโฟลเดอร์ปัจจุบัน แบบละเอียดรวมไฟล์ซ่อนด้วย <code>ls -la</code>`
+  },
+  {
+    id: "unix_cat",
+    meta: "บทที่ 28",
+    title: "Unix cat: แสดงเนื้อหาไฟล์สั้นๆ ในเทอร์มินัลทันที",
+    template: `# สถานการณ์: อยากดูเนื้อหาไฟล์ deploy.log สั้นๆ ในเทอร์มินัลเลย ไม่อยากเปิด editor แค่เพื่อดูเฉยๆ
+# 1. แสดงเนื้อหาทั้งหมดของไฟล์ deploy.log ออกทาง terminal
+# WRITE YOUR CODE HERE
+`,
+    validate: (code, log) => {
+      log("🔍 ตรวจสอบคำสั่ง cat...");
+      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+      const hasCat = /cat\s+deploy\.log\b/.test(activeCode);
+      if (hasCat) {
+        log("✓ ใช้ cat deploy.log ถูกต้อง");
+      } else {
+        throw new Error("ยังไม่พบคำสั่งแสดงเนื้อหาไฟล์ log ตามที่โจทย์กำหนด");
+      }
+    },
+    hint: "คำสั่งพื้นฐานที่สุดสำหรับพิมพ์เนื้อหาไฟล์ออกทาง stdout ตรงๆ ไม่มี flag อะไรพิเศษ",
+    solution: `cat deploy.log`,
+    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix cat: แสดงเนื้อหาไฟล์สั้นๆ ในเทอร์มินัลทันที และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
+    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>cat</code> (concatenate) พิมพ์เนื้อหาไฟล์ออกทาง stdout ตรงๆ ทั้งไฟล์ — เหมาะกับไฟล์สั้นๆ ที่อยากดูเนื้อหาเร็วๆ โดยไม่ต้องเปิด editor<br/><br/>
+    ใส่หลายไฟล์พร้อมกันได้ จะพิมพ์ต่อกันเป็นเนื้อหาเดียว: <code>cat a.txt b.txt</code> — ที่มาของชื่อ "concatenate" (เอามาต่อกัน) นั่นเอง<br/><br/>
+    💡 <strong>Mental Model & Syntax:</strong><br/>
+    <code>cat deploy.log</code><br/>
+    <code>cat part1.txt part2.txt &gt; combined.txt</code><br/><br/>
+    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าไฟล์ยาวมาก (log เป็นหมื่นบรรทัด) <code>cat</code> จะพิมพ์รัวออกมาทั้งหมดจนล้นหน้าจอ อ่านไม่ทัน — กรณีนั้นควรใช้ <code>head</code>/<code>tail</code> (ดูเฉพาะส่วนต้น/ท้าย) หรือ <code>less</code> (เลื่อนดูทีละหน้า) แทน`,
+    example: `# ต่อหลายไฟล์เข้าด้วยกันแล้วเก็บผลรวมไว้ในไฟล์ใหม่
+cat part1.txt part2.txt > combined.txt`,
+    task: `จงแสดงเนื้อหาทั้งหมดของไฟล์ <code>deploy.log</code> ด้วย <code>cat</code>`
+  },
+  {
     id: "unix_cd_navigate",
-    meta: "บทที่ 21",
+    meta: "บทที่ 29",
     title: "Unix cd: สลับโฟลเดอร์และย้อนกลับแบบไม่ต้องพิมพ์ Path เต็ม",
     template: `# สถานการณ์: อยู่ในโฟลเดอร์ project/tests/e2e อยู่ ต้องขึ้นไปที่ root ของโปรเจกต์ (project/) เพื่อรันคำสั่งอื่นก่อน
 # 1. ขึ้นไป 2 ระดับจากโฟลเดอร์ปัจจุบันในคำสั่งเดียว
@@ -817,7 +1079,7 @@ pwd`,
   },
   {
     id: "unix_mkdir_parents",
-    meta: "บทที่ 22",
+    meta: "บทที่ 30",
     title: "Unix mkdir -p: สร้างโฟลเดอร์ซ้อนหลายชั้นในคำสั่งเดียว",
     template: `# สถานการณ์: ต้องการสร้างโครงสร้างโฟลเดอร์เก็บผลเทส tests/e2e/fixtures แต่ทั้ง tests/ และ tests/e2e/ ยังไม่มีอยู่เลยสักโฟลเดอร์
 #           (mkdir tests/e2e/fixtures เฉยๆ จะ error: No such file or directory)
@@ -849,7 +1111,7 @@ mkdir -p reports/{screenshots,logs,coverage}`,
   },
   {
     id: "unix_symlink",
-    meta: "บทที่ 23",
+    meta: "บทที่ 31",
     title: "Unix Symbolic Link: ชี้ชื่อสั้นไปยังไฟล์จริง ไม่ต้อง Copy ซ้ำ",
     template: `# สถานการณ์: มีไฟล์ config จริงอยู่ที่ config/production.env อยากให้เครื่องมือที่ root โปรเจกต์เข้าถึงผ่านชื่อ .env สั้นๆ
 #           โดยไม่ต้อง copy ไฟล์ซ้ำ (อยากแก้ที่เดียว แล้วมีผลทั้งคู่)
@@ -882,7 +1144,7 @@ ls -l .env`,
   },
   {
     id: "unix_trap_cleanup",
-    meta: "บทที่ 24",
+    meta: "บทที่ 32",
     title: "Unix trap: ล้างไฟล์ชั่วคราวอัตโนมัติแม้สคริปต์ล้มเหลว",
     template: `# หมายเหตุ: Scripts/generate-app-icon.sh จริงของ kouen-terminal สร้างโฟลเดอร์ temp ไว้ประมวลผล icon
 # แล้วต้องการลบโฟลเดอร์ temp นั้นทิ้งเสมอไม่ว่าสคริปต์จะจบแบบสำเร็จหรือ error กลางทาง
@@ -1049,205 +1311,8 @@ echo "พบไฟล์ fail ทั้งหมด $count ไฟล์"`,
     3. ถ้ามี ให้ <code>echo</code> ชื่อไฟล์นั้นออกมา`
   },
   {
-    id: "git_status",
-    meta: "บทเสริม 1",
-    title: "Git Status: เช็คสถานะ Working Directory ก่อนลงมือทำอะไรต่อ",
-    template: `# สถานการณ์: เพิ่งแก้ไฟล์ไปหลายไฟล์ ไม่แน่ใจว่าไฟล์ไหน stage ไว้แล้ว ไฟล์ไหนยังไม่ได้ track เลย
-# 1. เช็คสถานะปัจจุบันของ working directory
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง git status...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasStatus = /git status\b/.test(activeCode);
-      if (hasStatus) {
-        log("✓ ใช้ git status ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่งตรวจสอบสถานะปัจจุบันของ working directory");
-      }
-    },
-    hint: "คำสั่งพื้นฐานที่สุดที่ควรพิมพ์ก่อนทำอะไรก็ตามใน git เพื่อดูภาพรวมของ working directory ตอนนี้",
-    solution: `git status`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git status</strong> คือคำสั่งที่ควรพิมพ์เป็นอันดับแรกก่อน commit/add ทุกครั้ง แสดงสถานะไฟล์ทั้งหมดแบ่งเป็น 3 กลุ่ม:<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/>1. <strong>Staged</strong> (จะเข้าไปใน commit ถัดไป) — ไฟล์ที่ <code>git add</code> ไปแล้ว 2. <strong>Modified/Unstaged</strong> — ไฟล์ที่แก้ไปแล้วแต่ยังไม่ได้ <code>git add</code> 3. <strong>Untracked</strong> — ไฟล์ใหม่ที่ git ยังไม่เคยรู้จักเลย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>git status</code><br/>
-    <code>git status -s</code>  # short format อ่านเร็วกว่า<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> เช็ค <code>git status</code> ก่อน commit ทุกครั้ง — ไฟล์ที่อยู่ใน Untracked จะ<strong>ไม่ถูก commit ไปด้วย</strong>แม้จะรัน <code>git commit -a</code> ก็ตาม (<code>-a</code> stage เฉพาะไฟล์ที่ track อยู่แล้วเท่านั้น) พลาดตรงนี้บ่อยจนลืม add ไฟล์ใหม่เข้า commit`,
-    example: `# แบบย่อ (short format) กระชับกว่า อ่านเร็วกว่าตอนไฟล์เยอะ
-git status -s`,
-    task: `จงเช็คสถานะปัจจุบันของ working directory ด้วย <code>git status</code>`
-  },
-  {
-    id: "git_log",
-    meta: "บทเสริม 2",
-    title: "Git Log: ดูประวัติ Commit แบบกระชับ",
-    template: `# สถานการณ์: อยากดูประวัติ commit ล่าสุด 5 รายการ แบบกระชับบรรทัดเดียวต่อ commit
-# 1. แสดงประวัติ 5 commit ล่าสุด แบบย่อบรรทัดเดียว
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง git log...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasLog = /git log\s+--oneline\s+-5\b/.test(activeCode);
-      if (hasLog) {
-        log("✓ ใช้ git log --oneline -5 ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่งดูประวัติ commit แบบย่อ จำนวน 5 รายการล่าสุด");
-      }
-    },
-    hint: "git log เฉยๆ แสดงรายละเอียดยาวทีละ commit — มี flag ที่ย่อให้เหลือบรรทัดเดียวต่อ commit แล้วใส่เลขจำกัดจำนวน commit ที่จะแสดงต่อท้าย",
-    solution: `git log --oneline -5`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Log: ดูประวัติ Commit แบบกระชับ และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git log</code> เฉยๆ แสดงประวัติ commit ทั้งหมดแบบละเอียด (hash เต็ม, ผู้เขียน, วันที่, ข้อความ) ยาวมากถ้า repo มี commit เยอะ<br/><br/>
-    • <code>--oneline</code> — ย่อแต่ละ commit เหลือบรรทัดเดียว (hash ย่อ + ข้อความ)<br/>
-    • <code>-N</code> (เช่น <code>-5</code>) — จำกัดแสดงแค่ N commit ล่าสุด<br/>
-    • <code>--graph --all</code> — วาดเส้น branch แบบ ASCII ให้เห็นว่า commit ไหนอยู่ branch ไหนบ้าง มีประโยชน์มากตอน branch เยอะ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>git log --oneline -5</code><br/>
-    <code>git log --oneline --graph --all</code><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>-5</code> จำกัดแค่<strong>จำนวน</strong> commit ที่แสดง ไม่ใช่กรองตามช่วงเวลาหรือ branch — ถ้าอยู่ branch อื่นที่ไม่ใช่ branch หลัก commit ล่าสุด 5 อันที่เห็นอาจไม่ใช่ 5 อันล่าสุดของทั้ง repo ต้องเติม <code>--all</code> ถ้าต้องการดูทุก branch พร้อมกัน`,
-    example: `# ดูทุก branch พร้อมเส้นกราฟ
-git log --oneline --graph --all`,
-    task: `จงแสดงประวัติ 5 commit ล่าสุดแบบย่อบรรทัดเดียวด้วย <code>git log --oneline -5</code>`
-  },
-  {
-    id: "git_diff",
-    meta: "บทเสริม 3",
-    title: "Git Diff: ดูว่าเปลี่ยนอะไรไปบ้างก่อน Commit",
-    template: `# สถานการณ์: แก้ไฟล์ไปแล้วยังไม่ได้ add อยากดูว่าเปลี่ยนอะไรไปบ้างก่อน แล้วพอ add แล้วอยากเช็คซ้ำว่า staged ไว้ถูกต้อง
-# 1. ดู diff ของไฟล์ที่แก้แต่ยังไม่ได้ stage
-# WRITE YOUR CODE HERE
-
-
-# 2. หลัง git add แล้ว ดู diff ของสิ่งที่ staged ไว้ (จะเข้าไปใน commit ถัดไป)
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง git diff...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasDiff = /^git diff\s*$/m.test(activeCode);
-      const hasCachedDiff = /git diff\s+--cached\b/.test(activeCode);
-      if (!hasDiff) {
-        throw new Error("ยังไม่พบคำสั่งดูการเปลี่ยนแปลงที่ยังไม่ได้ stage (unstaged changes)");
-      }
-      if (!hasCachedDiff) {
-        throw new Error("ยังไม่พบคำสั่งดูการเปลี่ยนแปลงที่ stage ไว้แล้ว (staged changes)");
-      }
-      log("✓ ใช้ git diff แล้ว git diff --cached ถูกต้อง");
-    },
-    hint: "git diff เฉยๆ เทียบ working directory กับ staging area ส่วนอีก flag หนึ่งเทียบ staging area กับ commit ล่าสุดแทน (ดูว่า staged ไว้ถูกต้องมั้ยก่อนจะ commit จริง)",
-    solution: `git diff
-git diff --cached`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Diff: ดูว่าเปลี่ยนอะไรไปบ้างก่อน Commit และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git diff</code> เปรียบเทียบไฟล์ได้หลายคู่ต่างกัน ขึ้นอยู่กับ flag:<br/><br/>
-    • <code>git diff</code> (เปล่าๆ) — เทียบ <strong>working directory vs staging area</strong> คือดูว่าแก้อะไรไปแล้วที่ยังไม่ได้ <code>add</code><br/>
-    • <code>git diff --cached</code> (เท่ากับ <code>--staged</code>) — เทียบ <strong>staging area vs commit ล่าสุด</strong> คือดูว่า <code>add</code> ไว้อะไรบ้างที่จะเข้า commit ถัดไปจริงๆ<br/>
-    • <code>git diff HEAD</code> — เทียบ working directory กับ commit ล่าสุดตรงๆ (รวมทั้ง staged และ unstaged ในทีเดียว)<br/><br/>
-    เช็ค <code>git diff --cached</code> ก่อน commit ทุกครั้งช่วยกันไม่ให้ commit อะไรที่ไม่ตั้งใจ add ไปด้วย<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>git diff</code>  # unstaged<br/>
-    <code>git diff --cached</code>  # staged<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> หลัง <code>git add</code> ไฟล์ไปแล้ว <code>git diff</code> เปล่าๆ จะ<strong>ไม่โชว์การเปลี่ยนแปลงนั้นอีก</strong> (เพราะย้ายไป staging area แล้ว) หลายคนพิมพ์ <code>git diff</code> ซ้ำแล้วงงว่าทำไมว่างเปล่า ทั้งที่ต้องดูด้วย <code>git diff --cached</code> แทน`,
-    example: `# เทียบ working directory กับ commit ล่าสุดตรงๆ (รวม staged+unstaged)
-git diff HEAD`,
-    task: `จงดู <code>git diff</code> (unstaged) แล้วดู <code>git diff --cached</code> (staged) ตามลำดับ`
-  },
-  {
-    id: "git_add_patch",
-    meta: "บทเสริม 4",
-    title: "Git Add -p: Stage เฉพาะบางส่วนของไฟล์ (Patch Mode)",
-    template: `# สถานการณ์: ไฟล์ login.ts มีทั้งการแก้บั๊กจริง และบรรทัด console.log ที่ใช้ debug ทิ้งไว้ ไม่อยากให้ทั้งสองอย่างอยู่ commit เดียวกัน
-# 1. เข้าโหมด patch เพื่อเลือก stage เฉพาะบาง hunk ของไฟล์ login.ts
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง git add -p...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasAddP = /git add\s+-p\s+login\.ts\b/.test(activeCode);
-      if (hasAddP) {
-        log("✓ ใช้ git add -p login.ts ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่ง add แบบเลือกทีละส่วน (interactive/patch mode) สำหรับไฟล์ที่โจทย์กำหนด");
-      }
-    },
-    hint: "git add ธรรมดา stage ทั้งไฟล์เท่านั้น มี flag ตัวย่อ (patch mode) ที่ทำให้เลือก stage ได้ทีละส่วน (hunk) ของไฟล์แทน",
-    solution: `git add -p login.ts`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Git Add -p: Stage เฉพาะบางส่วนของไฟล์ (Patch Mode) และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>git add &lt;ไฟล์&gt;</code> ธรรมดา stage ทั้งไฟล์รวดเดียว — ถ้าไฟล์มีทั้งการแก้ที่ตั้งใจ commit จริงๆ ปนกับโค้ด debug ที่ลืมลบ จะแยกไม่ได้ว่าอะไรควรอยู่ commit ไหน<br/><br/>
-    <code>git add -p &lt;ไฟล์&gt;</code> (patch mode) แบ่งการแก้ไขออกเป็น "hunk" (กลุ่มบรรทัดที่เปลี่ยนติดกัน) แล้วถามทีละ hunk ว่าจะ stage มั้ย (<code>y</code>=ใช่, <code>n</code>=ไม่, <code>s</code>=แบ่ง hunk นี้ให้ย่อยลงอีก, <code>q</code>=หยุดถามที่เหลือ) — ทำให้แยก commit ได้ละเอียดกว่าระดับไฟล์ เป็นเทคนิคที่ทำให้แต่ละ commit โฟกัสเรื่องเดียวจริงๆ<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>git add -p login.ts</code><br/>
-    <code>y / n / s / q</code>  # stage / skip / แบ่ง hunk ย่อย / หยุดถาม<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>git add -p</code> ทำงานได้เฉพาะไฟล์ที่ git <strong>track อยู่แล้ว</strong> (มี diff เทียบกับ commit เดิม) — ถ้าไฟล์เป็น untracked ใหม่เอี่ยม จะไม่มี hunk ให้เลือกเลย ต้อง <code>git add -N &lt;ไฟล์&gt;</code> (intent-to-add) ก่อน ถึงจะเริ่ม patch mode ได้`,
-    example: `# ทำแบบเดียวกันตอน commit แทนที่จะ add ก่อน (สลับไป patch mode ตอน commit ได้เลย)
-git commit -p`,
-    task: `จงเข้าโหมด patch ของ <code>git add</code> เพื่อเลือก stage บาง hunk ของไฟล์ <code>login.ts</code>`
-  },
-  {
-    id: "git_clone",
-    meta: "บทเสริม 5",
-    title: "Git Clone: ดึง Repository ที่มีอยู่แล้วมาไว้ในเครื่อง",
-    template: `# สถานการณ์: มี repo อยู่แล้วบน GitHub (https://github.com/acme/webapp.git) ต้องการโค้ดทั้งหมดมาไว้ในเครื่องเพื่อเริ่มทำงาน
-# 1. clone repo นี้มาไว้ในเครื่อง
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง git clone...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasClone = /git clone\s+https:\/\/github\.com\/acme\/webapp\.git\b/.test(activeCode);
-      if (hasClone) {
-        log("✓ ใช้ git clone https://github.com/acme/webapp.git ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่ง clone repository จาก URL ที่โจทย์กำหนด");
-      }
-    },
-    hint: "คำสั่งเดียวที่ทำครบทั้ง init + ผูก remote + ดึงโค้ดทั้งหมดมาจาก URL ที่ระบุ",
-    solution: `git clone https://github.com/acme/webapp.git`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>git clone &lt;url&gt;</strong> ทำครบในคำสั่งเดียว: สร้างโฟลเดอร์ใหม่ + <code>git init</code> ข้างใน + ผูก remote ชื่อ <code>origin</code> ให้ชี้ไป url ที่ระบุ + ดึงข้อมูลทั้งหมด (ทุก branch, ทุก commit) มาเก็บไว้ + checkout branch default (มักเป็น <code>main</code>) ออกมาให้ทำงานได้ทันที<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>git clone &lt;url&gt;</strong> ทำครบในคำสั่งเดียว: สร้างโฟลเดอร์ใหม่ + <code>git init</code> ข้างใน + ผูก remote ชื่อ <code>origin</code> ให้ชี้ไป url ที่ระบุ + ดึงข้อมูลทั้งหมด (ทุก branch, ทุก commit) มาเก็บไว้ + checkout branch default (มักเป็น <code>main</code>) ออกมาให้ทำงานได้ทันที<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>git clone https://github.com/acme/webapp.git</code><br/>
-    <code>git clone &lt;url&gt; my-local-webapp</code>  # ตั้งชื่อโฟลเดอร์เอง<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ค่า default ชื่อโฟลเดอร์ที่ได้จะตรงกับชื่อ repo (ในตัวอย่างนี้คือ <code>webapp/</code>) ถ้าอยากตั้งชื่อโฟลเดอร์เองต้องใส่ argument ที่สองต่อท้าย ไม่งั้นถ้า clone repo ชื่อซ้ำกันหลายอันในโฟลเดอร์เดียวกันจะ error ทับกันทันที`,
-    example: `# clone แล้วตั้งชื่อโฟลเดอร์เองแทนใช้ชื่อ repo เดิม
-git clone https://github.com/acme/webapp.git my-local-webapp`,
-    task: `จง clone repo <code>https://github.com/acme/webapp.git</code> มาไว้ในเครื่อง`
-  },
-  {
-    id: "git_remote",
-    meta: "บทเสริม 6",
-    title: "Git Remote: ผูก Local Repo เข้ากับ Remote บน GitHub",
-    template: `# สถานการณ์: เพิ่งสร้าง repo ใหม่ในเครื่องด้วย git init แล้วสร้าง repo เปล่าไว้บน GitHub รอแล้ว ต้องการผูกทั้งสองเข้าด้วยกัน
-# 1. ผูก remote ชื่อ 'origin' ให้ชี้ไปที่ https://github.com/acme/webapp.git
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง git remote add...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasRemote = /git remote add\s+origin\s+https:\/\/github\.com\/acme\/webapp\.git\b/.test(activeCode);
-      if (hasRemote) {
-        log("✓ ใช้ git remote add origin https://github.com/acme/webapp.git ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่งเพิ่ม remote ชื่อ origin ที่ชี้ไปยัง URL ตามที่โจทย์กำหนด");
-      }
-    },
-    hint: "คำสั่งย่อยของ remote ที่ใช้เพิ่ม remote ใหม่ ตามด้วยชื่อที่จะเรียก (ตามธรรมเนียมมักใช้ origin) แล้วตามด้วย URL ของ repo",
-    solution: `git remote add origin https://github.com/acme/webapp.git`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจแนวคิดและหลักการของ <strong>remote</strong> คือชื่อเล่นที่ผูกไว้กับ URL ของ repo อื่น (ปกติอยู่บน GitHub/GitLab) — <code>origin</code> เป็นแค่<strong>ชื่อตามธรรมเนียม</strong> ที่ทุกคนใช้กัน ไม่ใช่ชื่อบังคับของ git<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><strong>remote</strong> คือชื่อเล่นที่ผูกไว้กับ URL ของ repo อื่น (ปกติอยู่บน GitHub/GitLab) — <code>origin</code> เป็นแค่<strong>ชื่อตามธรรมเนียม</strong> ที่ทุกคนใช้กัน ไม่ใช่ชื่อบังคับของ git<br/><br/>
-    <code>git remote add &lt;ชื่อ&gt; &lt;url&gt;</code> ผูก remote ใหม่เข้ากับ local repo — จำเป็นเฉพาะตอนที่ repo เริ่มจาก <code>git init</code> เอง (ถ้าใช้ <code>git clone</code> จะได้ remote <code>origin</code> ผูกมาให้อัตโนมัติแล้ว)<br/><br/>
-    หนึ่ง repo มีได้หลาย remote พร้อมกัน (เช่น <code>origin</code> ชี้ไป fork ของตัวเอง + <code>upstream</code> ชี้ไป repo ต้นฉบับ) ใช้ <code>git remote -v</code> ดูรายชื่อ remote ทั้งหมดพร้อม URL<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>git remote add origin https://github.com/acme/webapp.git</code><br/>
-    <code>git remote -v</code>  # เช็ค remote ทั้งหมดพร้อม URL<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้า remote ชื่อ <code>origin</code> มีอยู่แล้ว <code>git remote add origin</code> จะ <strong>error ทันที</strong> (<code>remote origin already exists</code>) — ต้องใช้ <code>git remote set-url origin &lt;url&gt;</code> แทนถ้าต้องการเปลี่ยน URL ของ remote เดิม ไม่ใช่ <code>add</code> ซ้ำ`,
-    example: `# ดู remote ทั้งหมดที่ผูกไว้ พร้อม URL (v = verbose)
-git remote -v`,
-    task: `จงผูก remote ชื่อ <code>origin</code> ให้ชี้ไปที่ <code>https://github.com/acme/webapp.git</code>`
-  },
-  {
     id: "git_reset",
-    meta: "บทเสริม 7",
+    meta: "บทเสริม 1",
     title: "Git Reset: ย้อน Commit กลับแบบยังเก็บไฟล์ที่แก้ไว้",
     template: `# สถานการณ์: เพิ่ง commit ไปแต่ยังไม่ได้ push เลย นึกขึ้นได้ว่ายังไม่อยากได้ commit นี้ อยากย้อนกลับไปก่อน commit แต่ยังเก็บไฟล์ที่แก้ไว้ (staged พร้อม commit ใหม่)
 # 1. ย้อนกลับไปก่อน commit ล่าสุด 1 อัน โดยไฟล์ที่แก้ยังอยู่และยัง staged ไว้เหมือนเดิม
@@ -1280,7 +1345,7 @@ git reset --hard HEAD~1`,
   },
   {
     id: "git_revert",
-    meta: "บทเสริม 8",
+    meta: "บทเสริม 2",
     title: "Git Revert: ย้อน Commit แบบปลอดภัยสำหรับ Commit ที่ Push ไปแล้ว",
     template: `# สถานการณ์: commit hash abc1234 ที่ push ไปแล้วและคนอื่นดึงไปใช้ต่อแล้ว ทำให้เกิดบั๊ก ห้ามแก้ history เดิม (ห้ามใช้ reset/amend)
 # 1. สร้าง commit ใหม่ที่ยกเลิกผลของ commit abc1234 โดยไม่ลบ history เดิม
@@ -1314,7 +1379,7 @@ git revert HEAD~2..HEAD`,
   },
   {
     id: "vim_quit_variants",
-    meta: "บทเสริม 9",
+    meta: "บทเสริม 3",
     title: "Vim ออกจากโปรแกรม: :q vs :q! vs :wq!",
     template: `# สถานการณ์: เปิดไฟล์ 3 สถานการณ์แยกกันด้วย Vim ต้องออกด้วยคำสั่งที่ต่างกันตามสถานการณ์
 # 1. ไฟล์ A: ยังไม่ได้แก้อะไรเลย แค่อยากออกเฉยๆ
@@ -1369,7 +1434,7 @@ git revert HEAD~2..HEAD`,
   },
   {
     id: "vim_search",
-    meta: "บทเสริม 10",
+    meta: "บทเสริม 4",
     title: "Vim Search: หาคำในไฟล์ด้วย / และเลื่อนไปผลถัดไปด้วย n",
     template: `# สถานการณ์: ไฟล์ log ยาวมาก อยากหาคำว่า ERROR อย่างเร็ว แล้วเลื่อนไปจุดที่เจอถัดไปเรื่อยๆ
 # 1. ค้นหาคำว่า ERROR เดินหน้าจากตำแหน่ง cursor ปัจจุบัน
@@ -1408,7 +1473,7 @@ n`,
   },
   {
     id: "vim_macros",
-    meta: "บทเสริม 11",
+    meta: "บทเสริม 5",
     title: "Vim Macros: บันทึกลำดับคีย์แล้วเล่นซ้ำอัตโนมัติ",
     template: `# สถานการณ์: มี 10 บรรทัดที่ต้องเติม ; ท้ายบรรทัดเหมือนกันหมด ไม่อยากพิมพ์ A;<Esc>j ทีละบรรทัดเอง 10 รอบ
 # 1. เริ่มบันทึก macro เก็บไว้ใน register ชื่อ a
@@ -1461,73 +1526,8 @@ q
     task: `จงบันทึก macro ลง register <code>a</code> ที่เติม <code>;</code> ท้ายบรรทัดแล้วเลื่อนลง แล้วเล่นซ้ำ 9 ครั้งด้วย <code>9@a</code>`
   },
   {
-    id: "unix_ls",
-    meta: "บทเสริม 12",
-    title: "Unix ls: ดูรายชื่อไฟล์ทั้งหมดรวมไฟล์ซ่อน พร้อมรายละเอียด",
-    template: `# สถานการณ์: เพิ่ง cd เข้าโฟลเดอร์โปรเจกต์ อยากดูว่ามีไฟล์อะไรบ้าง รวมไฟล์ซ่อน (dotfiles เช่น .env, .gitignore) พร้อมสิทธิ์/ขนาด/วันที่แก้ไข
-# 1. แสดงรายชื่อไฟล์ทั้งหมดในโฟลเดอร์ปัจจุบัน แบบละเอียดรวมไฟล์ซ่อน
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง ls...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasLs = /ls\s+-la\b/.test(activeCode);
-      if (hasLs) {
-        log("✓ ใช้ ls -la ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่งแสดงรายการไฟล์แบบละเอียด รวมไฟล์ซ่อน");
-      }
-    },
-    hint: "ls เฉยๆ แสดงแค่ชื่อไฟล์สั้นๆ ไม่รวมไฟล์ซ่อน มี 2 flag ที่ต้องรวมกัน: แบบละเอียด (long format) และแบบรวมไฟล์ซ่อนทั้งหมด",
-    solution: `ls -la`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix ls: ดูรายชื่อไฟล์ทั้งหมดรวมไฟล์ซ่อน พร้อมรายละเอียด และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>ls</code> เฉยๆ แสดงแค่ชื่อไฟล์/โฟลเดอร์แบบสั้น และ<strong>ไม่แสดงไฟล์ซ่อน</strong> (ไฟล์ที่ชื่อขึ้นต้นด้วย <code>.</code> เช่น <code>.env</code>, <code>.gitignore</code>)<br/><br/>
-    • <code>-l</code> (long) — แสดงแบบละเอียด: สิทธิ์ (rwx), เจ้าของ, กลุ่ม, ขนาดไฟล์, วันที่แก้ไขล่าสุด<br/>
-    • <code>-a</code> (all) — แสดงไฟล์ซ่อนด้วย (รวมถึง <code>.</code> และ <code>..</code> ที่แทนโฟลเดอร์ปัจจุบัน/แม่)<br/>
-    • รวมกันเป็น <code>-la</code> หรือ <code>-al</code> ได้ผลเหมือนกัน<br/><br/>
-    เพิ่ม <code>-h</code> (human-readable) แสดงขนาดไฟล์เป็น KB/MB/GB แทนตัวเลข byte ยาวๆ อ่านยาก: <code>ls -lah</code><br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>ls -la</code><br/>
-    <code>ls -lah</code>  # + ขนาดไฟล์แบบอ่านง่าย<br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> <code>-a</code> จะรวม <code>.</code> (โฟลเดอร์ปัจจุบัน) และ <code>..</code> (โฟลเดอร์แม่) เข้ามาในรายการด้วยเสมอ — ถ้าเอาผลลัพธ์ <code>ls -la</code> ไปนับจำนวนไฟล์ด้วยสคริปต์ (เช่น <code>wc -l</code>) จะได้ตัวเลขเกินมา 2 จากสองรายการนี้ ต้องกรองออกก่อนถ้าต้องการนับไฟล์จริงๆ`,
-    example: `# แสดงขนาดไฟล์แบบอ่านง่าย (KB/MB) แทนตัวเลข byte ดิบ
-ls -lah`,
-    task: `จงแสดงรายชื่อไฟล์ทั้งหมดในโฟลเดอร์ปัจจุบัน แบบละเอียดรวมไฟล์ซ่อนด้วย <code>ls -la</code>`
-  },
-  {
-    id: "unix_cat",
-    meta: "บทเสริม 13",
-    title: "Unix cat: แสดงเนื้อหาไฟล์สั้นๆ ในเทอร์มินัลทันที",
-    template: `# สถานการณ์: อยากดูเนื้อหาไฟล์ deploy.log สั้นๆ ในเทอร์มินัลเลย ไม่อยากเปิด editor แค่เพื่อดูเฉยๆ
-# 1. แสดงเนื้อหาทั้งหมดของไฟล์ deploy.log ออกทาง terminal
-# WRITE YOUR CODE HERE
-`,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบคำสั่ง cat...");
-      const activeCode = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-      const hasCat = /cat\s+deploy\.log\b/.test(activeCode);
-      if (hasCat) {
-        log("✓ ใช้ cat deploy.log ถูกต้อง");
-      } else {
-        throw new Error("ยังไม่พบคำสั่งแสดงเนื้อหาไฟล์ log ตามที่โจทย์กำหนด");
-      }
-    },
-    hint: "คำสั่งพื้นฐานที่สุดสำหรับพิมพ์เนื้อหาไฟล์ออกทาง stdout ตรงๆ ไม่มี flag อะไรพิเศษ",
-    solution: `cat deploy.log`,
-    theory: `🎯 <strong>เป้าหมาย (Goal):</strong> เข้าใจ Unix cat: แสดงเนื้อหาไฟล์สั้นๆ ในเทอร์มินัลทันที และสามารถนำไปประยุกต์ใช้ในการทดสอบระบบได้อย่างถูกต้อง<br/><br/>
-    ⚖️ <strong>หลักการและจุดสำคัญ (Key Concepts):</strong><br/><code>cat</code> (concatenate) พิมพ์เนื้อหาไฟล์ออกทาง stdout ตรงๆ ทั้งไฟล์ — เหมาะกับไฟล์สั้นๆ ที่อยากดูเนื้อหาเร็วๆ โดยไม่ต้องเปิด editor<br/><br/>
-    ใส่หลายไฟล์พร้อมกันได้ จะพิมพ์ต่อกันเป็นเนื้อหาเดียว: <code>cat a.txt b.txt</code> — ที่มาของชื่อ "concatenate" (เอามาต่อกัน) นั่นเอง<br/><br/>
-    💡 <strong>Mental Model & Syntax:</strong><br/>
-    <code>cat deploy.log</code><br/>
-    <code>cat part1.txt part2.txt &gt; combined.txt</code><br/><br/>
-    🚨 <strong>ข้อควรระวัง (Common Pitfall):</strong> ถ้าไฟล์ยาวมาก (log เป็นหมื่นบรรทัด) <code>cat</code> จะพิมพ์รัวออกมาทั้งหมดจนล้นหน้าจอ อ่านไม่ทัน — กรณีนั้นควรใช้ <code>head</code>/<code>tail</code> (ดูเฉพาะส่วนต้น/ท้าย) หรือ <code>less</code> (เลื่อนดูทีละหน้า) แทน`,
-    example: `# ต่อหลายไฟล์เข้าด้วยกันแล้วเก็บผลรวมไว้ในไฟล์ใหม่
-cat part1.txt part2.txt > combined.txt`,
-    task: `จงแสดงเนื้อหาทั้งหมดของไฟล์ <code>deploy.log</code> ด้วย <code>cat</code>`
-  },
-  {
     id: "unix_head_tail",
-    meta: "บทเสริม 14",
+    meta: "บทเสริม 6",
     title: "Unix head/tail: ดูแค่ต้นไฟล์หรือท้ายไฟล์ (รวมถึงแบบ Real-time)",
     template: `# สถานการณ์: ไฟล์ deploy.log มีเป็นหมื่นบรรทัด อยากดู 20 บรรทัดแรกเช็ค header ก่อน แล้วอยากดู log ใหม่ที่เขียนเพิ่มเข้ามาแบบ real-time
 # 1. แสดง 20 บรรทัดแรกของไฟล์ deploy.log
@@ -1565,7 +1565,7 @@ tail -f deploy.log | grep ERROR`,
   },
   {
     id: "unix_cp_mv",
-    meta: "บทเสริม 15",
+    meta: "บทเสริม 7",
     title: "Unix cp/mv: สำรองไฟล์ (Copy) และย้าย/เปลี่ยนชื่อไฟล์ (Move)",
     template: `# สถานการณ์: ก่อนแก้ config.yaml อยาก backup ไฟล์เดิมไว้ก่อน แล้วพอ backup เสร็จอยากย้ายไฟล์ backup นั้นไปเก็บในโฟลเดอร์ archive/
 # 1. คัดลอกไฟล์ config.yaml เป็น config.yaml.bak (backup ไว้)
@@ -1605,7 +1605,7 @@ mv old-report.json report.json`,
   },
   {
     id: "unix_rm",
-    meta: "บทเสริม 16",
+    meta: "บทเสริม 8",
     title: "Unix rm: ลบไฟล์/โฟลเดอร์ทิ้งถาวร (ไม่มีถังขยะ)",
     template: `# สถานการณ์: โฟลเดอร์ tmp-cache/ มีไฟล์ cache เก่าเต็มไปหมด อยากลบทิ้งทั้งโฟลเดอร์รวดเดียว
 # 1. ลบโฟลเดอร์ tmp-cache ทิ้งทั้งหมด (รวมไฟล์ข้างในทุกไฟล์) โดยไม่ต้องถามยืนยันทีละไฟล์
@@ -1637,7 +1637,7 @@ rm -ri tmp-cache`,
   },
   {
     id: "unix_wc",
-    meta: "บทเสริม 17",
+    meta: "บทเสริม 9",
     title: "Unix wc: นับจำนวนบรรทัด/คำ/ตัวอักษรในไฟล์",
     template: `# สถานการณ์: อยากรู้คร่าวๆ ว่าไฟล์ test-results.log มีผลการรันเทสทั้งหมดกี่บรรทัด (นับจำนวนบรรทัดในไฟล์)
 # 1. นับจำนวนบรรทัดทั้งหมดในไฟล์ test-results.log
@@ -1671,7 +1671,7 @@ grep FAIL test-results.log | wc -l`,
   },
   {
     id: "unix_redirection",
-    meta: "บทเสริม 18",
+    meta: "บทเสริม 10",
     title: "Unix Redirection: ส่ง Output ไปเก็บในไฟล์แทนพิมพ์หน้าจอ",
     template: `# สถานการณ์: รัน run-tests.sh แล้วอยากเก็บผลลัพธ์ปกติไว้ในไฟล์ ทับของเก่า, ต่อยอดเพิ่มเข้าไฟล์เดิมแบบไม่ทับ, แล้วสุดท้ายเก็บทั้งผลลัพธ์ปกติและ error รวมไฟล์เดียวกัน
 # 1. รัน run-tests.sh แล้วเก็บผลลัพธ์ปกติ (stdout) ลงไฟล์ out.log แบบทับของเดิม
@@ -1715,7 +1715,7 @@ noisy-command.sh > /dev/null 2>&1`,
   },
   {
     id: "unix_xargs",
-    meta: "บทเสริม 19",
+    meta: "บทเสริม 11",
     title: "Unix xargs: ส่งผลลัพธ์จาก Pipe ไปเป็น Argument ของคำสั่งถัดไป",
     template: `# สถานการณ์: อยากลบไฟล์ .tmp ทั้งหมดที่ find เจอ แต่อยากใช้ rm ตรงๆ แทน find -delete (เผื่อ rm มีอย่างอื่นต้องทำเพิ่ม เช่น log ก่อนลบ)
 # 1. หาไฟล์ .tmp ทั้งหมดในโฟลเดอร์ปัจจุบัน แล้วส่งรายชื่อที่เจอไปเป็น argument ให้ rm ลบทิ้ง
@@ -1746,7 +1746,7 @@ find . -name '*.tmp' -print0 | xargs -0 rm`,
   },
   {
     id: "unix_ps_kill",
-    meta: "บทเสริม 20",
+    meta: "บทเสริม 12",
     title: "Unix ps/kill: หา Process ที่ค้างอยู่แล้วปิดทิ้ง",
     template: `# สถานการณ์: dev server (node) ที่ลืมปิดค้างกิน port อยู่ ต้องการหา process ที่รันอยู่แล้วปิดทิ้ง
 # 1. แสดง process ทั้งหมดที่กำลังรันอยู่ กรองเฉพาะที่เกี่ยวกับ node
@@ -1781,7 +1781,7 @@ pkill -9 node`,
   },
   {
     id: "unix_curl",
-    meta: "บทเสริม 21",
+    meta: "บทเสริม 13",
     title: "Unix curl: ยิง Request ทดสอบ API จาก Terminal",
     template: `# สถานการณ์: อยาก smoke-test แบบเร็วๆ ว่า endpoint https://api.example.com/health ตอบ HTTP status code อะไร โดยไม่สนใจเนื้อหา response เลย
 # 1. ยิง GET ไปที่ endpoint นั้น แสดงแค่ HTTP status code ออกมา ไม่แสดงเนื้อหา response
@@ -1811,7 +1811,7 @@ curl -X POST -H "Content-Type: application/json" -d '{"user":"qa"}' https://api.
   },
   {
     id: "unix_tar",
-    meta: "บทเสริม 22",
+    meta: "บทเสริม 14",
     title: "Unix tar: บีบอัดและแตกไฟล์ Archive",
     template: `# สถานการณ์: อยากบีบอัดโฟลเดอร์ test-reports/ ทั้งหมดเป็นไฟล์เดียวก่อนอัปโหลดเป็น CI artifact แล้วอีกเครื่องนึงต้องแตกไฟล์นั้นออกมาดู
 # 1. บีบอัดโฟลเดอร์ test-reports/ เป็นไฟล์ test-reports.tar.gz (พร้อมแสดงรายชื่อไฟล์ที่บีบอัดไปด้วย)
@@ -1850,7 +1850,7 @@ tar -tzvf test-reports.tar.gz`,
   },
   {
     id: "unix_sed",
-    meta: "บทเสริม 23",
+    meta: "บทเสริม 15",
     title: "Unix sed: แทนที่ข้อความในไฟล์ตรงๆ ผ่าน Command Line",
     template: `# สถานการณ์: ต้องเปลี่ยนเลขเวอร์ชันในไฟล์ version.txt จาก 1.2.0 เป็น 1.3.0 ทุกจุดที่เจอ โดยแก้ไฟล์ตรงๆ ไม่เปิด editor
 # 1. แทนที่ 1.2.0 เป็น 1.3.0 ทุกจุด แล้วบันทึกทับไฟล์ version.txt เลย (in-place)
@@ -1880,7 +1880,7 @@ sed -i.bak 's/1.2.0/1.3.0/g' version.txt`,
   },
   {
     id: "unix_export",
-    meta: "บทเสริม 24",
+    meta: "บทเสริม 16",
     title: "Unix export: ตั้งค่า Environment Variable ให้ Subprocess มองเห็น",
     template: `# สถานการณ์: script ทดสอบต้องอ่านค่า API_URL จาก environment variable แต่ตั้งค่าตัวแปรใน shell เฉยๆ ไม่พอ เพราะ subprocess ที่ script เรียกต่อ (เช่น node) มองไม่เห็นค่านั้นเลย
 # 1. ตั้งค่า environment variable ชื่อ API_URL ให้เป็น https://staging.api.example.com แบบที่ subprocess มองเห็นได้
