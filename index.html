@@ -1155,6 +1155,7 @@
        IIFE + registry line at the bottom of each course.js). Loaded here purely so this landing
        page can read real lesson counts instead of hardcoding them — same pattern exam/index.html
        already uses for its question pool. -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="./API-Testing/course.js"></script>
   <script src="./Playwright/course.js"></script>
   <script src="./Robot-Framework/course.js"></script>
@@ -1253,21 +1254,44 @@
     }
 
     // Big "final boss" certificate shown once when every track hits 100%
+    // Downloads a DOM node as a PNG via html2canvas (loaded from CDN in <head>).
+    // A plain SVG-foreignObject→canvas rasterization taints the canvas in modern browsers
+    // (SecurityError on toBlob/toDataURL) — html2canvas avoids that by painting the DOM onto
+    // canvas itself with Canvas 2D primitives instead of rasterizing an SVG image.
+    function downloadElementAsImage(el, filename) {
+      html2canvas(el, { backgroundColor: null, scale: 2 }).then((canvas) => {
+        canvas.toBlob((blob) => {
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        });
+      });
+    }
+
     function showCourseCertificate(totalCompleted, totalLessons, badges) {
       const overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
       overlay.innerHTML = `
-        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:16px;padding:40px 48px;max-width:480px;text-align:center;border:4px double #eab308;box-shadow:0 30px 80px rgba(0,0,0,.5);">
-          <div style="font-size:56px;">🎓</div>
-          <h2 style="margin:8px 0 4px;font-size:24px;">ใบประกาศจบคอร์ส</h2>
-          <p style="margin:0 0 20px;font-size:13px;opacity:.7;">QA Automation Coding Course · Certificate of Completion</p>
-          <p style="font-size:15px;margin:0 0 20px;line-height:1.6;">เรียนจบครบทั้ง ${TRACKS.length} แทร็ก<br/>${totalCompleted}/${totalLessons} บทเรียน (${totalCompleted * XP_PER_LESSON} XP)<br/>${new Date().toLocaleDateString('th-TH')}</p>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:24px;">${badges.map(b => `<span style="background:rgba(255,255,255,.1);border:1px solid #eab308;border-radius:20px;padding:4px 12px;font-size:12px;">${b}</span>`).join('')}</div>
-          <button id="course-cert-close" style="background:#eab308;color:#1a1a2e;border:none;border-radius:6px;padding:12px 32px;font-weight:700;cursor:pointer;">🏆 รับใบประกาศ!</button>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+          <div id="course-cert-card" style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:16px;padding:40px 48px;max-width:480px;text-align:center;border:4px double #eab308;box-shadow:0 30px 80px rgba(0,0,0,.5);font-family:'Inter',sans-serif;">
+            <div style="font-size:56px;">🎓</div>
+            <h2 style="margin:8px 0 4px;font-size:24px;">ใบประกาศจบคอร์ส</h2>
+            <p style="margin:0 0 20px;font-size:13px;opacity:.7;">QA Automation Coding Course · Certificate of Completion</p>
+            <p style="font-size:15px;margin:0 0 20px;line-height:1.6;">เรียนจบครบทั้ง ${TRACKS.length} แทร็ก<br/>${totalCompleted}/${totalLessons} บทเรียน (${totalCompleted * XP_PER_LESSON} XP)<br/>${new Date().toLocaleDateString('th-TH')}</p>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">${badges.map(b => `<span style="background:rgba(255,255,255,.1);border:1px solid #eab308;border-radius:20px;padding:4px 12px;font-size:12px;">${b}</span>`).join('')}</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button id="course-cert-download" style="background:transparent;color:#eab308;border:2px solid #eab308;border-radius:6px;padding:11px 24px;font-weight:700;cursor:pointer;">📥 ดาวน์โหลด</button>
+            <button id="course-cert-close" style="background:#eab308;color:#1a1a2e;border:none;border-radius:6px;padding:12px 32px;font-weight:700;cursor:pointer;">🏆 รับใบประกาศ!</button>
+          </div>
         </div>
       `;
       document.body.appendChild(overlay);
       overlay.querySelector('#course-cert-close').onclick = () => overlay.remove();
+      overlay.querySelector('#course-cert-download').onclick = () => {
+        downloadElementAsImage(overlay.querySelector('#course-cert-card'), `certificate-QA-Automation-Course.png`);
+      };
     }
 
     // Toast any badge(s) earned since the last visit (de-duped via localStorage)
