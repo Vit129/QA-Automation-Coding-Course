@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.11.4] - 2026-08-11
+
+### Fixed
+- Teach CLI-Essentials Git/Unix commands in correct difficulty order ([`7d96216`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/7d96216df36ed069b28740c51e9545d7c89e80f5))
+
 ## [0.11.3] - 2026-08-11
 
 ### Added
