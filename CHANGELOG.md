@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.12.0] - 2026-08-25
+
+### Added
+- Add Modern CLI Tools track (18 lessons on z, fd, rg, bat, eza, fzf, jq) ([`3b48582`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/3b485821110d93c229b8704a2a35e4df471af5fc))
+
 ## [0.11.4] - 2026-08-11
 
 ### Fixed
