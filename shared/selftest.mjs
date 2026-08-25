@@ -26,6 +26,7 @@ const TRACKS = [
   'Performance-Testing',
   'DB-Design-SQL',
   'CLI-Essentials',
+  'Modern-CLI-Tools',
   'Security-Testing',
   'Visual-Regression-Testing',
   'CI-CD-Pipeline',

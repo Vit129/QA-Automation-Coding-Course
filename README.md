@@ -10,6 +10,7 @@ Browser-based code sandbox course for learning QA automation. No backend, no bui
 - **Performance-Testing** — k6 load testing
 - **DB-Design-SQL** — SQL + database design, Normal Forms (1NF-BCNF), runs real queries in-browser via AlaSQL
 - **CLI-Essentials** — Git, Vim & Unix cheat sheet
+- **Modern-CLI-Tools** — zoxide, fd, ripgrep, bat, eza, fzf, jq (Modern fast CLI productivity)
 - **Security-Testing** — auth bypass, injection awareness, XSS prevention
 - **Accessibility-Testing** — axe-core, ARIA, keyboard navigation
 - **Visual-Regression-Testing** — Playwright screenshot diffing

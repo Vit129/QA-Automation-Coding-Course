@@ -1,6 +1,6 @@
 {
-  "version": 8,
-  "tag": "v0.11.0",
-  "updated": "2026-08-01",
-  "summary": "New Programming-Paradigms track (12 lessons: Functional Programming + Concurrency) — parallel vs sequential execution and race-condition-safety proven via real concurrent-call counting, not keyword-matching"
+  "version": 9,
+  "tag": "v0.12.0",
+  "updated": "2026-08-25",
+  "summary": "New Modern-CLI-Tools track (18 lessons: zoxide, fd, ripgrep, bat, eza, fzf, jq, power combos, and local shell setup guide)"
 }

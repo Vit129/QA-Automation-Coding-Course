@@ -210,6 +210,10 @@
       background: var(--accent-slate);
     }
 
+    .card-moderncli:hover::before {
+      background: var(--accent-orange);
+    }
+
     .card-security:hover::before {
       background: var(--accent-red);
     }
@@ -357,6 +361,16 @@
     .btn-cli:hover {
       background-color: #475569;
       box-shadow: 0 0 16px rgba(100, 116, 139, 0.4);
+    }
+
+    .btn-moderncli {
+      background-color: var(--accent-orange);
+      color: white;
+    }
+
+    .btn-moderncli:hover {
+      background-color: #ea580c;
+      box-shadow: 0 0 16px rgba(249, 115, 22, 0.4);
     }
 
     .btn-security {
@@ -625,6 +639,7 @@
     .card-perf .track-progress-fill { background-color: var(--accent-gold); }
     .card-sql .track-progress-fill { background-color: var(--accent-teal); }
     .card-cli .track-progress-fill { background-color: var(--accent-slate); }
+    .card-moderncli .track-progress-fill { background-color: var(--accent-orange); }
     .card-security .track-progress-fill { background-color: var(--accent-red); }
     .card-visual .track-progress-fill { background-color: var(--accent-pink); }
     .card-cicd .track-progress-fill { background-color: var(--accent-cyan); }
@@ -999,6 +1014,31 @@
         <a href="./CLI-Essentials/index.html" class="btn btn-cli">เข้าสู่บทเรียน →</a>
       </div>
 
+      <!-- Modern CLI Tools Course Card -->
+      <div class="course-card card-moderncli" id="card-moderncli">
+        <span class="course-icon">⚡</span>
+        <h2 class="course-title">Modern CLI Tools for Dev & QA</h2>
+        <span class="level-badge level-beginner">🟢 เริ่มต้น</span>
+        <p class="course-desc">
+          เครื่องมือ Command Line ยุคใหม่ที่ช่วยให้ทำงานเร็วขึ้น 10 เท่า — zoxide (z) นำทางด้วย Frecency, fd ค้นหาไฟล์แทน find, ripgrep (rg) ค้นหาโค้ดทั้งโปรเจกต์, bat ดูไฟล์พร้อมสี, eza แสดงไฟล์พร้อม Git status, fzf Fuzzy Finder และ jq สกัด JSON สำหรับงานเทส
+        </p>
+        <div class="tags">
+          <span class="tag">zoxide</span>
+          <span class="tag">fd</span>
+          <span class="tag">ripgrep</span>
+          <span class="tag">bat</span>
+          <span class="tag">eza</span>
+          <span class="tag">fzf</span>
+          <span class="tag">jq</span>
+          <span class="tag">18 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-moderncli">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/18 บทเรียน (0%)</span>
+        </div>
+        <a href="./Modern-CLI-Tools/index.html" class="btn btn-moderncli">เข้าสู่บทเรียน →</a>
+      </div>
+
       <!-- Security Testing Course Card -->
       <div class="course-card card-security" id="card-security">
         <span class="course-icon">🔒</span>
@@ -1162,6 +1202,7 @@
   <script src="./Performance-Testing/course.js"></script>
   <script src="./DB-Design-SQL/course.js"></script>
   <script src="./CLI-Essentials/course.js"></script>
+  <script src="./Modern-CLI-Tools/course.js"></script>
   <script src="./Security-Testing/course.js"></script>
   <script src="./Visual-Regression-Testing/course.js"></script>
   <script src="./CI-CD-Pipeline/course.js"></script>
@@ -1178,6 +1219,7 @@
       { key: 'perf', registryId: 'performance-testing', prefix: 'perf', label: 'Performance Testing (k6)' },
       { key: 'sql', registryId: 'db-design-sql', prefix: 'sql', label: 'Database Design & SQL' },
       { key: 'cli', registryId: 'cli-essentials', prefix: 'cli', label: 'Git, Vim & Unix Cheat Sheet' },
+      { key: 'moderncli', registryId: 'modern-cli-tools', prefix: 'mcli', label: 'Modern CLI Tools for Developers & QA' },
       { key: 'security', registryId: 'security-testing', prefix: 'sec', label: 'Security Testing' },
       { key: 'visual', registryId: 'visual-regression-testing', prefix: 'visual', label: 'Visual Regression Testing' },
       { key: 'cicd', registryId: 'ci-cd-pipeline', prefix: 'cicd', label: 'CI/CD Pipeline' },
@@ -1377,7 +1419,7 @@
     // Update-available check for people who cloned the repo (read-only, no push back)
     // instead of using the always-fresh GitHub Pages URL. Bump this alongside version.json
     // whenever new content ships.
-    const CURRENT_VERSION = 8;
+    const CURRENT_VERSION = 9;
     const VERSION_CHECK_URL = 'https://raw.githubusercontent.com/Vit129/QA-Automation-Coding-Course/main/version.json';
     const PAGES_URL = 'https://vit129.github.io/QA-Automation-Coding-Course/';
     const DISMISS_KEY = 'qa_course_update_dismissed_version';
