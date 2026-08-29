@@ -3,6 +3,11 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.13.0] - 2026-08-29
+
+### Added
+- Add Become a Tech Builder (Agentic Engineering) track (16 lessons) ([`ae7e569`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/ae7e569bb62d70f6188e621d5da65400f6504975))
+
 ## [0.12.0] - 2026-08-25
 
 ### Added
