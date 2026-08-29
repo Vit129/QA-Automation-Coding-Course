@@ -35,6 +35,7 @@ const TRACKS = [
   'Programming-Paradigms',
   'Data-Structures-Algorithms',
   'Final-Project',
+  'Tech-Builder',
 ];
 
 function extractLessons(src, sandbox) {

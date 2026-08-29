@@ -64,11 +64,13 @@ async function runPlaywrightLikeTest(code, fixtures) {
 }
 
 function createBookingBackend() {
-  const calls = { book: null, visa: null };
+  const calls = { book: null, visa: null, visaAttempts: 0 };
   const post = async (url, opts) => {
     const data = opts && opts.data;
+    const headers = opts && opts.headers;
     if (url === '/api/japan-trip/book') {
       calls.book = data || null;
+      calls.bookHeaders = headers || null;
       if (!data || !data.passportNo) {
         throw new Error('Mock backend: POST /api/japan-trip/book payload ไม่ถูกต้อง (ขาด passportNo)');
       }
@@ -76,11 +78,16 @@ function createBookingBackend() {
     }
     if (url === '/api/japan-trip/verify-visa') {
       calls.visa = data || null;
+      calls.visaHeaders = headers || null;
       if (!data || typeof data.stayDays !== 'number') {
         throw new Error('Mock backend: POST /api/japan-trip/verify-visa payload ต้องมี stayDays เป็นตัวเลข (คำนวณเองจากวันบิน/วันกลับ)');
       }
       if (data.stayDays !== 4) {
         throw new Error(`Mock backend: stayDays คำนวณผิด — ควรได้ 4 วัน (14-18 ต.ค.) แต่ได้ ${data.stayDays}`);
+      }
+      calls.visaAttempts++;
+      if (calls.visaAttempts === 1) {
+        throw new Error('Mock backend: /verify-visa temporarily unavailable (simulated transient failure)');
       }
       return { status: () => 200, json: async () => ({ visaRequired: false }) };
     }
@@ -89,8 +96,8 @@ function createBookingBackend() {
   return { request: { post }, calls };
 }
 
-function createPhase4Env() {
-  const dom = { currentUrl: null, departureDate: null, bookingStatus: '', visaVerified: false, visaCallMade: false };
+function createPhase4Env(role = 'customer') {
+  const dom = { currentUrl: null, departureDate: null, bookingStatus: '', visaVerified: false, visaCallMade: false, agentId: null };
   const request = {
     post: async (url, opts) => {
       if (url !== '/api/japan-trip/verify-visa') {
@@ -126,6 +133,9 @@ function createPhase4Env() {
       dom.bookingStatus = dom.departureDate === '2026-10-14' ? 'Booking Successful' : 'Booking Failed: invalid date';
     },
     locator: (selector) => {
+      if (role === 'agent' && selector === '#agent-id') {
+        return { fill: async (value) => { dom.agentId = value; } };
+      }
       if (selector === '#booking-status') {
         return { __mockLocatorText: dom.bookingStatus };
       }
@@ -298,6 +308,7 @@ export default defineConfig({
 -- AC-201: สร้างตาราง japan_trip_bookings พร้อม PRIMARY KEY id
 -- AC-202: รองรับคอลัมน์ user_name, concert_date, departure_date, return_date, passport_no, status
 -- AC-203: user_name และ passport_no ห้ามเป็นค่าว่าง (NOT NULL) — จองทริปโดยไม่รู้ว่าใครจองไม่ได้
+-- AC-204: เพิ่มคอลัมน์ agent_id (INT, NULL ได้) ด้วย ALTER TABLE — สำหรับให้ Travel Agent จองแทนลูกค้าได้ในเวอร์ชันถัดไป
 -- WRITE YOUR SQL CODE HERE
 
 `,
@@ -321,8 +332,14 @@ export default defineConfig({
       } else {
         throw new Error("ไม่ผ่านเกณฑ์ [AC-203]: คอลัมน์ระบุตัวตนผู้จองยังไม่ถูกบังคับห้ามเว้นว่างตามที่ระบุในโจทย์");
       }
+
+      if (/ALTER\s+TABLE\s+japan_trip_bookings\s+ADD\s+(COLUMN\s+)?agent_id\s+INT\b/i.test(clean)) {
+        log("✓ [AC-204 Passed]: คำสั่ง ALTER TABLE เพิ่มคอลัมน์ agent_id ถูกต้อง");
+      } else {
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-204]: ยังไม่พบคำสั่ง ALTER TABLE เพิ่มคอลัมน์ agent_id (INT) ให้กับตาราง japan_trip_bookings");
+      }
     },
-    hint: "ต่อท้ายชนิดข้อมูลของ user_name และ passport_no ด้วย NOT NULL เช่น user_name VARCHAR(100) NOT NULL — type/length เลือกเองได้ ไม่มีล็อกตายตัว",
+    hint: "ต่อท้ายชนิดข้อมูลของ user_name และ passport_no ด้วย NOT NULL เช่น user_name VARCHAR(100) NOT NULL — type/length เลือกเองได้ ไม่มีล็อกตายตัว จากนั้นเพิ่มบรรทัด ALTER TABLE japan_trip_bookings ADD COLUMN agent_id INT; ต่อท้าย (ไม่ต้องระบุ NOT NULL เพราะ agent_id ต้องเป็นค่าว่างได้)",
     solution: `CREATE TABLE japan_trip_bookings (
   id INT PRIMARY KEY,
   user_name VARCHAR(100) NOT NULL,
@@ -331,20 +348,25 @@ export default defineConfig({
   return_date DATE,
   passport_no VARCHAR(20) NOT NULL,
   status VARCHAR(20)
-);`,
+);
+
+ALTER TABLE japan_trip_bookings ADD COLUMN agent_id INT NULL;`,
     theory: `📌 <strong>1. Business & Architectural Context (บริบทระบบ):</strong><br/>
     ต่อยอดจาก Phase 1 ทีม Data Engineering ออกแบบตาราง Relational Database เพื่อเป็นโครงสร้างพื้นฐานสำหรับเก็บข้อมูลทริปโตเกียว (บิน 14 ต.ค. / ดูคอน 16 ต.ค. / กลับ 18 ต.ค.)<br/><br/>
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
     • <code>[AC-201]</code>: สร้างตารางชื่อ <code>japan_trip_bookings</code> พร้อมคอลัมน์ <code>id</code> เป็น PRIMARY KEY<br/>
     • <code>[AC-202]</code>: รองรับการเก็บข้อมูล <code>user_name</code>, <code>concert_date</code>, <code>departure_date</code>, <code>return_date</code>, <code>passport_no</code>, และ <code>status</code><br/>
-    • <code>[AC-203]</code>: <code>user_name</code> และ <code>passport_no</code> ต้องเป็น <code>NOT NULL</code> เพราะเป็นข้อมูลระบุตัวตนผู้จอง<br/><br/>
-    🏗️ <strong>3. Production Constraints:</strong> คอลัมน์วันที่ต้องใช้ประเภท <code>DATE</code> เพื่อรองรับการทำ Index และคำนวณช่วงเวลาพำนักในญี่ปุ่น ชนิด/ความยาวของ VARCHAR เลือกออกแบบเองได้ตามความเหมาะสม ไม่มีคำตอบตายตัว`,
+    • <code>[AC-203]</code>: <code>user_name</code> และ <code>passport_no</code> ต้องเป็น <code>NOT NULL</code> เพราะเป็นข้อมูลระบุตัวตนผู้จอง<br/>
+    • <code>[AC-204]</code>: migration แยกต่างหาก — เพิ่มคอลัมน์ <code>agent_id</code> (INT, เป็นค่าว่างได้) ด้วย <code>ALTER TABLE</code> เพื่อรองรับ Travel Agent ที่จองแทนลูกค้าในเวอร์ชันถัดไป<br/><br/>
+    🏗️ <strong>3. Production Constraints:</strong> คอลัมน์วันที่ต้องใช้ประเภท <code>DATE</code> เพื่อรองรับการทำ Index และคำนวณช่วงเวลาพำนักในญี่ปุ่น ชนิด/ความยาวของ VARCHAR เลือกออกแบบเองได้ตามความเหมาะสม ไม่มีคำตอบตายตัว — ห้ามแก้ <code>CREATE TABLE</code> เดิมโดยตรง ต้องใช้ <code>ALTER TABLE</code> แยกเป็น migration ใหม่เท่านั้น (ตารางมีข้อมูลลูกค้าอยู่แล้วในระบบจริง)`,
     example: `CREATE TABLE example_bookings (
   id INT PRIMARY KEY,
   user_name VARCHAR(100) NOT NULL,
   booking_date DATE
-);`,
-    task: `จงเขียนคำสั่ง SQL สร้างตาราง <code>japan_trip_bookings</code> ตามเกณฑ์ <code>[AC-201]</code>, <code>[AC-202]</code> และ <code>[AC-203]</code>`
+);
+
+ALTER TABLE example_bookings ADD COLUMN notes VARCHAR(255) NULL;`,
+    task: `จงเขียนคำสั่ง SQL สร้างตาราง <code>japan_trip_bookings</code> แล้วตามด้วยคำสั่ง migration แยกต่างหาก ตามเกณฑ์ <code>[AC-201]</code>, <code>[AC-202]</code>, <code>[AC-203]</code> และ <code>[AC-204]</code>`
   },
   {
     id: "fp_booking_visa_integration",
@@ -355,11 +377,15 @@ export default defineConfig({
 // [Phase 3 Spec] หนึ่ง flow เดียว: จองตั๋วผ่าน API ก่อน แล้วต้องเช็ค Visa Compliance ต่อในเทสเดียวกัน
 // ข้อมูลทริป (จาก Phase 2): บิน 2026-10-14 / ดูคอน 2026-10-16 / กลับ 2026-10-18 / Passport TH1234567 / สัญชาติไทย
 test('FP-4003: จองทริปญี่ปุ่นผ่าน API แล้วตรวจสอบสิทธิ์ยกเว้นวีซ่าในเทสเดียวกัน', async ({ request }) => {
-  // AC-301: POST /api/japan-trip/book ด้วยข้อมูลทริปข้างต้น -> status 200 และ body.status เป็น 'CONFIRMED'
+  const correlationId = 'fp-trip-corr-001';
+
+  // AC-301: POST /api/japan-trip/book ด้วยข้อมูลทริปข้างต้น พร้อม header x-correlation-id -> status 200 และ body.status เป็น 'CONFIRMED'
   // WRITE YOUR CODE HERE
 
 
-  // AC-302: POST /api/japan-trip/verify-visa ด้วย passportCountry + จำนวนวันพำนักที่คำนวณเองจากวันบิน/วันกลับ -> status 200 และ body.visaRequired เป็น false
+  // AC-302: POST /api/japan-trip/verify-visa ด้วย passportCountry + จำนวนวันพำนักที่คำนวณเองจากวันบิน/วันกลับ พร้อม header x-correlation-id เดิม -> status 200 และ body.visaRequired เป็น false
+  // AC-303: /verify-visa จำลองความล้มเหลวชั่วคราวในการเรียกครั้งแรกเสมอ (network กระตุก) — ต้อง retry อีกครั้งจนสำเร็จ ห้ามปล่อยให้ error หลุดออกจาก test()
+  // AC-304: x-correlation-id ที่แนบไปกับ /book และ /verify-visa (ทุกครั้งที่เรียก รวมถึงตอน retry) ต้องเป็นค่าเดียวกันเสมอ ห้ามสร้างใหม่
 
 });`,
     validate: (code, log) => {
@@ -375,14 +401,30 @@ test('FP-4003: จองทริปญี่ปุ่นผ่าน API แล
         if (!backend.calls.visa) {
           throw new Error("ไม่ผ่านเกณฑ์ [AC-302]: ยังไม่พบการเรียก POST /api/japan-trip/verify-visa ต่อในเทสเดียวกัน");
         }
+        if (backend.calls.visaAttempts < 2) {
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-303]: /verify-visa จำลองความล้มเหลวชั่วคราวในครั้งแรกเสมอ ต้อง retry อีกครั้งจนสำเร็จ ไม่ใช่ปล่อยให้ error หลุดออกมาหรือยอมแพ้หลังพยายามครั้งเดียว");
+        }
+        const bookCorrId = backend.calls.bookHeaders && backend.calls.bookHeaders['x-correlation-id'];
+        const visaCorrId = backend.calls.visaHeaders && backend.calls.visaHeaders['x-correlation-id'];
+        if (!bookCorrId) {
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-304]: การเรียก /book ต้องแนบ header x-correlation-id");
+        }
+        if (!visaCorrId || visaCorrId !== bookCorrId) {
+          throw new Error("ไม่ผ่านเกณฑ์ [AC-304]: x-correlation-id ของ /book และ /verify-visa (รวมถึงตอน retry) ต้องเป็นค่าเดียวกัน ห้ามสร้าง id ใหม่ระหว่างทาง");
+        }
         log("✓ [AC-301+302 Passed]: จองตั๋วผ่าน API แล้วตรวจสอบวีซ่าต่อในเทสเดียวกัน สำเร็จทั้ง flow (รันจริงผ่าน Mock Backend)");
+        log("✓ [AC-303 Passed]: retry สำเร็จหลัง transient failure ครั้งแรกของ /verify-visa");
+        log("✓ [AC-304 Passed]: correlation ID เดียวกันถูกส่งต่อทั้งสอง call รวมถึงตอน retry");
       });
     },
-    hint: "หนึ่ง test() เดียว ยิง POST /book ก่อน เช็ค response แล้วแปลง json เก็บตัวแปร จากนั้นยิง POST /verify-visa ต่อ (คำนวณ stayDays เองจาก 14-18 ต.ค. = 4 วัน) แล้วเช็ค response ที่สอง",
+    hint: "หนึ่ง test() เดียว ยิง POST /book ก่อน (แนบ headers: { 'x-correlation-id': correlationId }) เช็ค response แล้วแปลง json เก็บตัวแปร จากนั้นครอบการเรียก POST /verify-visa ด้วย try/catch — ถ้า throw (transient failure) ให้เรียกซ้ำอีกครั้งด้วย headers เดิม (ห้ามสร้าง correlationId ใหม่)",
     solution: `import { test, expect } from '@playwright/test';
 
 test('FP-4003: จองทริปญี่ปุ่นผ่าน API แล้วตรวจสอบสิทธิ์ยกเว้นวีซ่าในเทสเดียวกัน', async ({ request }) => {
+  const correlationId = 'fp-trip-corr-001';
+
   const bookingResponse = await request.post('/api/japan-trip/book', {
+    headers: { 'x-correlation-id': correlationId },
     data: {
       departureDate: '2026-10-14',
       concertDate: '2026-10-16',
@@ -395,32 +437,48 @@ test('FP-4003: จองทริปญี่ปุ่นผ่าน API แล
   const bookingBody = await bookingResponse.json();
   expect(bookingBody.status).toBe('CONFIRMED');
 
-  const visaResponse = await request.post('/api/japan-trip/verify-visa', {
+  const visaRequestOptions = {
+    headers: { 'x-correlation-id': correlationId },
     data: {
       passportCountry: 'THA',
       stayDays: 4
     }
-  });
+  };
+
+  let visaResponse;
+  try {
+    visaResponse = await request.post('/api/japan-trip/verify-visa', visaRequestOptions);
+  } catch (e) {
+    visaResponse = await request.post('/api/japan-trip/verify-visa', visaRequestOptions);
+  }
 
   expect(visaResponse.status()).toBe(200);
   const visaBody = await visaResponse.json();
   expect(visaBody.visaRequired).toBe(false);
 });`,
     theory: `📌 <strong>1. Business & Architectural Context (บริบทระบบ):</strong><br/>
-    ต่อยอดจาก Phase 2 ทีม Backend Developer และทีม InfoSec & Compliance รวม flow การจองและการตรวจสิทธิ์วีซ่าเข้าด้วยกัน — ในระบบจริง การจองที่ยังไม่ผ่าน Visa Compliance ถือว่ายังไม่สมบูรณ์ ดังนั้นเทสต้องครอบคลุมทั้งสองขั้นตอนต่อเนื่องกันในหนึ่ง flow<br/><br/>
+    ต่อยอดจาก Phase 2 ทีม Backend Developer และทีม InfoSec & Compliance รวม flow การจองและการตรวจสิทธิ์วีซ่าเข้าด้วยกัน — ในระบบจริง การจองที่ยังไม่ผ่าน Visa Compliance ถือว่ายังไม่สมบูรณ์ ดังนั้นเทสต้องครอบคลุมทั้งสองขั้นตอนต่อเนื่องกันในหนึ่ง flow นอกจากนี้ Visa Compliance เป็นบริการภายนอก (คล้าย ERP/Compliance system จริง) ที่อาจล่มชั่วคราวได้ — ทีมต้องออกแบบให้ retry ได้ และต้อง trace request ข้าม service ด้วย correlation ID เดียวกันตลอด flow<br/><br/>
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
     • <code>[AC-301]</code>: POST <code>/api/japan-trip/book</code> ด้วยข้อมูลทริป (วันบิน/วันดูคอน/วันกลับ/Passport) แล้วต้องได้ <code>200 OK</code> และ <code>body.status === 'CONFIRMED'</code><br/>
-    • <code>[AC-302]</code>: ต่อในเทสเดียวกัน POST <code>/api/japan-trip/verify-visa</code> ด้วย <code>passportCountry: 'THA'</code> และจำนวนวันพำนัก (คำนวณเองจากช่วง 14-18 ต.ค.) แล้วต้องได้ <code>body.visaRequired === false</code><br/><br/>
-    🏗️ <strong>3. Production Constraints:</strong> ทั้งสอง Endpoint ต้องอยู่ใน flow เดียวกัน — ห้ามแยกเป็นสอง test() เพราะในระบบจริงการจองที่ยังไม่ผ่าน visa check ถือว่ายัง incomplete`,
-    example: `const r1 = await request.post('/api/example/book', { data: { ... } });
+    • <code>[AC-302]</code>: ต่อในเทสเดียวกัน POST <code>/api/japan-trip/verify-visa</code> ด้วย <code>passportCountry: 'THA'</code> และจำนวนวันพำนัก (คำนวณเองจากช่วง 14-18 ต.ค.) แล้วต้องได้ <code>body.visaRequired === false</code><br/>
+    • <code>[AC-303]</code>: <code>/verify-visa</code> ล้มเหลวชั่วคราวเสมอในการเรียกครั้งแรก (simulated transient failure) — ต้อง retry อีกครั้งจนสำเร็จ<br/>
+    • <code>[AC-304]</code>: ทุกการเรียก (ทั้ง <code>/book</code> และ <code>/verify-visa</code> รวมถึงตอน retry) ต้องแนบ header <code>x-correlation-id</code> ค่าเดียวกันตลอด flow<br/><br/>
+    🏗️ <strong>3. Production Constraints:</strong> ทั้งสอง Endpoint ต้องอยู่ใน flow เดียวกัน — ห้ามแยกเป็นสอง test() เพราะในระบบจริงการจองที่ยังไม่ผ่าน visa check ถือว่ายัง incomplete และห้ามสร้าง correlation ID ใหม่ตอน retry เพราะจะทำให้ trace เห็นเป็นคนละ request`,
+    example: `const corrId = 'example-corr-001';
+const r1 = await request.post('/api/example/book', { headers: { 'x-correlation-id': corrId }, data: { ... } });
 expect(r1.status()).toBe(200);
 const b1 = await r1.json();
 expect(b1.status).toBe('CONFIRMED');
 
-const r2 = await request.post('/api/example/verify-visa', { data: { ... } });
+let r2;
+try {
+  r2 = await request.post('/api/example/verify-visa', { headers: { 'x-correlation-id': corrId }, data: { ... } });
+} catch (e) {
+  r2 = await request.post('/api/example/verify-visa', { headers: { 'x-correlation-id': corrId }, data: { ... } });
+}
 const b2 = await r2.json();
 expect(b2.visaRequired).toBe(false);`,
-    task: `จงเขียนสคริปต์เดียวที่ยิง POST ทั้ง <code>/api/japan-trip/book</code> และ <code>/api/japan-trip/verify-visa</code> ต่อกัน ตามเกณฑ์ <code>[AC-301]</code> และ <code>[AC-302]</code>`
+    task: `จงเขียนสคริปต์เดียวที่ยิง POST ทั้ง <code>/api/japan-trip/book</code> และ <code>/api/japan-trip/verify-visa</code> ต่อกัน (พร้อม retry เมื่อ /verify-visa ล้มเหลวครั้งแรก และแนบ correlation ID เดียวกันตลอด) ตามเกณฑ์ <code>[AC-301]</code>, <code>[AC-302]</code>, <code>[AC-303]</code> และ <code>[AC-304]</code>`
   },
   {
     id: "fp_web_ui_e2e",
@@ -441,6 +499,7 @@ class BasePage {
 //    - method fillDepartureDate(date): เรียก this.page.fill('#departure-date', date)
 //    - method confirmBooking(): เรียก this.page.click('#confirm-booking-btn')
 //    - method bookingStatusText(): return ค่าจาก this.page.locator('#booking-status')
+//    - method bookForCustomer(customerName): เรียก this.page.fill('#agent-id', customerName) — สำหรับ Travel Agent จองแทนลูกค้า (AC-403)
 // WRITE YOUR CODE HERE
 
 
@@ -477,6 +536,14 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
       if (!/bookingStatusText\s*\(/.test(pageObjectBody)) {
         throw new Error("ไม่ผ่านเกณฑ์ [POM]: JapanTripPage ต้องมี method bookingStatusText()");
       }
+      if (!/bookForCustomer\s*\(/.test(pageObjectBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-403]: JapanTripPage ต้องมี method bookForCustomer(customerName)");
+      }
+      const bookForCustomerMatch = /bookForCustomer\s*\([^)]*\)\s*\{([^}]*)\}/.exec(pageObjectBody);
+      const bookForCustomerBody = bookForCustomerMatch ? bookForCustomerMatch[1] : '';
+      if (!/this\.page\.fill\s*\(\s*['"]#agent-id['"]/.test(bookForCustomerBody)) {
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-403]: bookForCustomer(customerName) ต้องเรียก this.page.fill('#agent-id', customerName)");
+      }
       const testBodyMatch = /test\(\s*['"][^'"]*['"]\s*,\s*async[\s\S]*?=>\s*\{([\s\S]*)\}\s*\)\s*;?\s*$/.exec(clean.trim());
       const testBody = testBodyMatch ? testBodyMatch[1] : clean;
       if (/\bpage\.fill\s*\(|\bpage\.click\s*\(/.test(testBody)) {
@@ -490,10 +557,10 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
         if (env.dom.bookingStatus !== 'Booking Successful') {
           throw new Error("ไม่ผ่านเกณฑ์ [AC-402]: ยังไม่ยืนยันว่าหน้าจอแสดงข้อความ 'Booking Successful' สำเร็จผ่าน Page Object");
         }
-        log("✓ [AC-401+402 + POM Passed]: ยืนยัน visa ผ่าน API แล้วกรอกฟอร์มจองผ่าน JapanTripPage สำเร็จทั้ง flow (รันจริง)");
+        log("✓ [AC-401+402 + POM + AC-403 Passed]: ยืนยัน visa ผ่าน API แล้วกรอกฟอร์มจองผ่าน JapanTripPage สำเร็จทั้ง flow (รันจริง)");
       });
     },
-    hint: "JapanTripPage extends BasePage — constructor ใช้ตัวที่ BasePage ให้มาแล้ว (this.page). fillDepartureDate(date) { return this.page.fill('#departure-date', date); } confirmBooking() { return this.page.click('#confirm-booking-btn'); } bookingStatusText() { return this.page.locator('#booking-status'); } แล้วใน test สร้าง const jpPage = new JapanTripPage(page); เรียก method เหล่านี้แทน page.fill/page.click ตรงๆ",
+    hint: "JapanTripPage extends BasePage — constructor ใช้ตัวที่ BasePage ให้มาแล้ว (this.page). fillDepartureDate(date) { return this.page.fill('#departure-date', date); } confirmBooking() { return this.page.click('#confirm-booking-btn'); } bookingStatusText() { return this.page.locator('#booking-status'); } bookForCustomer(customerName) { return this.page.fill('#agent-id', customerName); } แล้วใน test สร้าง const jpPage = new JapanTripPage(page); เรียก method เหล่านี้แทน page.fill/page.click ตรงๆ",
     solution: `import { test, expect } from '@playwright/test';
 
 class BasePage {
@@ -513,6 +580,10 @@ class JapanTripPage extends BasePage {
 
   bookingStatusText() {
     return this.page.locator('#booking-status');
+  }
+
+  bookForCustomer(customerName) {
+    return this.page.fill('#agent-id', customerName);
   }
 }
 
@@ -537,14 +608,15 @@ test('FP-4005: ยืนยัน visa compliance ผ่าน API ก่อน 
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
     • <code>[AC-401]</code>: เรียก API <code>/api/japan-trip/verify-visa</code> ซ้ำจาก Phase 3 ในเทสนี้ (ใช้ fixture <code>request</code> ร่วมกับ <code>page</code>) แล้วต้องได้ <code>visaRequired: false</code> ก่อนไปกรอกฟอร์ม<br/>
     • <code>[AC-402]</code>: ผ่าน <code>JapanTripPage</code> เท่านั้น — เปิดหน้าเว็บ <code>/japan-trip</code>, <code>fillDepartureDate('2026-10-14')</code>, <code>confirmBooking()</code>, ตรวจ <code>bookingStatusText()</code> ต้องมีคำว่า <code>'Booking Successful'</code><br/>
-    • <code>[POM]</code>: <code>JapanTripPage extends BasePage</code> ต้องมี <code>fillDepartureDate</code>, <code>confirmBooking</code>, <code>bookingStatusText</code> และ test ต้องไม่เรียก <code>page.fill</code>/<code>page.click</code> ตรงๆ เลย<br/><br/>
+    • <code>[POM]</code>: <code>JapanTripPage extends BasePage</code> ต้องมี <code>fillDepartureDate</code>, <code>confirmBooking</code>, <code>bookingStatusText</code> และ test ต้องไม่เรียก <code>page.fill</code>/<code>page.click</code> ตรงๆ เลย<br/>
+    • <code>[AC-403]</code>: <code>JapanTripPage</code> ต้องมี method <code>bookForCustomer(customerName)</code> เพิ่มด้วย เรียก <code>this.page.fill('#agent-id', customerName)</code> — รองรับ Travel Agent ที่จองแทนลูกค้า (สาขาโครงสร้างจาก Phase 2 ที่เพิ่มคอลัมน์ <code>agent_id</code> ไว้แล้ว)<br/><br/>
     🏗️ <strong>3. Production Constraints:</strong> สคริปต์ต้องรอการตอบกลับจาก API (Auto-waiting) โดยไม่ใช้คำสั่งหลับแบบช้า <code>waitForTimeout</code> ห้ามข้ามขั้นตอนยืนยัน visa ไปกรอกฟอร์มตรงๆ และห้าม bypass Page Object ไปเรียก page method ตรงๆ ใน test`,
     example: `const jpPage = new JapanTripPage(page);
 await page.goto('/japan-trip');
 await jpPage.fillDepartureDate('2026-10-14');
 await jpPage.confirmBooking();
 await expect(jpPage.bookingStatusText()).toContainText('Booking Successful');`,
-    task: `จงเขียน <code>class JapanTripPage extends BasePage</code> พร้อม method <code>fillDepartureDate/confirmBooking/bookingStatusText</code> แล้วเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วทำ E2E ผ่าน Page Object เท่านั้น ตามเกณฑ์ <code>[AC-401]</code> <code>[AC-402]</code> และ <code>[POM]</code>`
+    task: `จงเขียน <code>class JapanTripPage extends BasePage</code> พร้อม method <code>fillDepartureDate/confirmBooking/bookingStatusText/bookForCustomer</code> แล้วเขียนสคริปต์ Playwright ที่เรียก verify-visa API ก่อน แล้วทำ E2E ผ่าน Page Object เท่านั้น ตามเกณฑ์ <code>[AC-401]</code> <code>[AC-402]</code> <code>[POM]</code> และ <code>[AC-403]</code>`
   },
   {
     id: "fp_mobile_eticket",
@@ -682,6 +754,8 @@ jobs:
 
       # AC-703: รันสคริปต์ทดสอบทั้งหมดด้วย npm test
 
+      # AC-704: หลัง npm test ต้องมีสเต็ปรัน coverage gate (run: มีคำว่า coverage-gate) เพื่อ fail build ถ้า coverage ต่ำกว่าเกณฑ์
+
 `,
     validate: (code, log) => {
       const clean = stripComments(code);
@@ -699,6 +773,7 @@ jobs:
 
       const setupNodeIdx = clean.search(/uses:\s*actions\/setup-node@v4/);
       const npmTestIdx = clean.search(/run:\s*npm\s+test/);
+      const coverageGateIdx = clean.search(/run:\s*.*coverage-gate/);
       if (setupNodeIdx !== -1) {
         log("✓ [AC-702 Passed]: กำหนดสเต็ป uses: actions/setup-node@v4 ถูกต้อง");
       } else {
@@ -714,8 +789,14 @@ jobs:
       } else {
         throw new Error("ไม่ผ่านเกณฑ์ [AC-703]: ยังไม่พบสเต็ปรันเทสทั้งหมดตามที่ระบุในโจทย์");
       }
+
+      if (coverageGateIdx !== -1 && coverageGateIdx > npmTestIdx) {
+        log("✓ [AC-704 Passed]: กำหนดสเต็ป coverage gate หลัง npm test ถูกต้อง");
+      } else {
+        throw new Error("ไม่ผ่านเกณฑ์ [AC-704]: ยังไม่พบสเต็ปรัน coverage gate (run: มีคำว่า coverage-gate) หลัง npm test");
+      }
     },
-    hint: "เรียงลำดับ steps: - uses: actions/checkout@v4 แล้ว - uses: actions/setup-node@v4 แล้วค่อย - run: npm test ลำดับสำคัญ ติดตั้ง Node ก่อนรันเทสเสมอ",
+    hint: "เรียงลำดับ steps: - uses: actions/checkout@v4 แล้ว - uses: actions/setup-node@v4 แล้วค่อย - run: npm test แล้วค่อยเพิ่มสเต็ป run ที่มีคำว่า coverage-gate ต่อท้ายสุด ลำดับสำคัญ ติดตั้ง Node ก่อนรันเทสเสมอ และ coverage gate ต้องมาหลัง npm test",
     solution: `# GitHub Actions Workflow สำหรับ Final Project: Japan Concert Trip
 name: Japan Concert Trip Capstone Pipeline
 
@@ -731,21 +812,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm test`,
+      - run: npm test
+      - run: node scripts/coverage-gate.js`,
     theory: `📌 <strong>1. Business & Architectural Context (บริบทระบบ):</strong><br/>
     ทีม DevOps Engineer มัดรวมสคริปต์ทดสอบตั้งแต่ Phase 1 ถึง Phase 6 ไปผูกใน GitHub Actions Pipeline เพื่อให้ระบบตรวจสอบอัตโนมัติทุกครั้งที่มี Pull Request แต่ runner ของ GitHub Actions เป็นเครื่องเปล่า ไม่มี Node.js ติดมาด้วย ต้องติดตั้งเองก่อนรันเทส<br/><br/>
     📋 <strong>2. System Requirements & Acceptance Criteria (AC):</strong><br/>
     • <code>[AC-701]</code>: สั่งดึงซอร์สโค้ดจาก Git ด้วย action มาตรฐาน <code>uses: actions/checkout@v4</code><br/>
     • <code>[AC-702]</code>: ติดตั้ง Node.js runtime ด้วย <code>uses: actions/setup-node@v4</code> ก่อนสเต็ปรันเทสใดๆ<br/>
-    • <code>[AC-703]</code>: สั่งรันคำสั่งตรวจสอบทั้งหมดด้วย <code>run: npm test</code> โดยต้องอยู่หลัง setup-node เสมอ<br/><br/>
-    🏗️ <strong>3. Production Constraints:</strong> Pipeline ต้องรันผ่าน 100% ห้ามมี Failed step, ลำดับ step ผิดจะทำให้ npm test ล้มเหลวเพราะไม่มี Node.js ให้ใช้`,
+    • <code>[AC-703]</code>: สั่งรันคำสั่งตรวจสอบทั้งหมดด้วย <code>run: npm test</code> โดยต้องอยู่หลัง setup-node เสมอ<br/>
+    • <code>[AC-704]</code>: สั่งรันสเต็ป coverage gate (มีคำว่า <code>coverage-gate</code> ใน <code>run:</code>) หลัง <code>npm test</code> เพื่อ fail build ถ้า coverage ต่ำกว่าเกณฑ์<br/><br/>
+    🏗️ <strong>3. Production Constraints:</strong> Pipeline ต้องรันผ่าน 100% ห้ามมี Failed step, ลำดับ step ผิดจะทำให้ npm test ล้มเหลวเพราะไม่มี Node.js ให้ใช้ และ coverage gate ต้องเช็คหลังมีผล test แล้วเท่านั้น`,
     example: `steps:
   - uses: actions/checkout@v4
   - uses: actions/setup-node@v4
     with:
       node-version: '20'
-  - run: npm test`,
-    task: `จงเขียนสเต็ป YAML ตามเกณฑ์ <code>[AC-701]</code>, <code>[AC-702]</code> และ <code>[AC-703]</code> โดยเรียงลำดับให้ถูกต้อง`
+  - run: npm test
+  - run: node scripts/coverage-gate.js`,
+    task: `จงเขียนสเต็ป YAML ตามเกณฑ์ <code>[AC-701]</code>, <code>[AC-702]</code>, <code>[AC-703]</code> และ <code>[AC-704]</code> โดยเรียงลำดับให้ถูกต้อง`
   },
   {
     id: "fp_dsa_ticket_optimization",

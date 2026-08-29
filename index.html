@@ -30,6 +30,7 @@
       --accent-pink: #ec4899;
       --accent-cyan: #06b6d4;
       --accent-lime: #84cc16;
+      --accent-sky: #0ea5e9;
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -234,6 +235,10 @@
       background: var(--accent-amber);
     }
 
+    .card-tb:hover::before {
+      background: var(--accent-sky);
+    }
+
     .card-oop:hover::before {
       background: var(--accent-emerald);
     }
@@ -421,6 +426,16 @@
     .btn-dsa:hover {
       background-color: #d97706;
       box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-tb {
+      background-color: var(--accent-sky);
+      color: #0c4a6e;
+    }
+
+    .btn-tb:hover {
+      background-color: #0284c7;
+      box-shadow: 0 0 16px rgba(14, 165, 233, 0.4);
     }
 
     .btn-oop {
@@ -645,6 +660,7 @@
     .card-cicd .track-progress-fill { background-color: var(--accent-cyan); }
     .card-framework .track-progress-fill { background-color: var(--accent-lime); }
     .card-dsa .track-progress-fill { background-color: var(--accent-amber); }
+    .card-tb .track-progress-fill { background-color: var(--accent-sky); }
     .card-oop .track-progress-fill { background-color: var(--accent-emerald); }
     .card-pp .track-progress-fill { background-color: var(--accent-fuchsia); }
 
@@ -883,6 +899,7 @@
         <li><a href="#card-oop">🔴 OOP Fundamentals</a></li>
         <li><a href="#card-pp">🔴 Programming Paradigms</a></li>
         <li><a href="#card-dsa">🔴 DS&A (Elective)</a></li>
+        <li><a href="#card-tb">🔴 Tech Builder</a></li>
       </ol>
     </div>
 
@@ -1184,6 +1201,27 @@
         </div>
         <a href="./Data-Structures-Algorithms/index.html" class="btn btn-dsa">เข้าสู่บทเรียน →</a>
       </div>
+
+      <!-- Become a Tech Builder (Agentic Engineering) Course Card -->
+      <div class="course-card card-tb" id="card-tb">
+        <span class="course-icon">🏗️</span>
+        <h2 class="course-title">Become a Tech Builder (Agentic Engineering)</h2>
+        <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
+        <p class="course-desc">
+          ยกระดับจาก QA Automation สู่ Full-Cycle Tech Builder ผ่าน 4 เสาหลัก: สถาปัตยกรรมระบบและการจำลองบริการ (Gateway vs App Security Boundary, Service Virtualization, Idempotent API Design, Correlation ID Tracing), แบ็กเอนด์ที่ทนทานและวิศวกรรมข้อมูล (OAuth Interceptor, Retry + Backoff with Fallback Queue, DB Migration Versioning, Staging Table Reconciliation), Full-Stack DX สมัยใหม่ (AST Dependency Graph/Blast Radius, Offline-First Sync, Sandboxed Code Execution Engine) และ Shift-Left Security (Multi-Role Auth Testing, Permission Matrix, Error Sanitization, Coverage KPI) — ทุกบทตรวจสอบด้วยการรันโค้ดจริง ไม่ใช่แค่ regex
+        </p>
+        <div class="tags">
+          <span class="tag">System Architecture</span>
+          <span class="tag">Resilient Backend</span>
+          <span class="tag">Shift-Left Security</span>
+          <span class="tag">16 Lessons</span>
+        </div>
+        <div class="track-progress" id="progress-tb">
+          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
+          <span class="track-progress-text">0/16 บทเรียน (0%)</span>
+        </div>
+        <a href="./Tech-Builder/index.html" class="btn btn-tb">เข้าสู่บทเรียน →</a>
+      </div>
     </div>
 
     <footer>
@@ -1210,6 +1248,7 @@
   <script src="./OOP-Fundamentals/course.js"></script>
   <script src="./Programming-Paradigms/course.js"></script>
   <script src="./Data-Structures-Algorithms/course.js"></script>
+  <script src="./Tech-Builder/course.js"></script>
 
   <script>
     const TRACKS = [
@@ -1227,6 +1266,7 @@
       { key: 'oop', registryId: 'oop-fundamentals', prefix: 'oop', label: 'OOP Fundamentals for QA' },
       { key: 'pp', registryId: 'programming-paradigms', prefix: 'pp', label: 'Programming Paradigms for QA' },
       { key: 'dsa', registryId: 'data-structures-algorithms', prefix: 'dsa', label: 'Data Structures & Algorithms for QA' },
+      { key: 'tb', registryId: 'tech-builder', prefix: 'tb', label: 'Become a Tech Builder (Agentic Engineering)' },
     ].map(track => ({ ...track, total: (window.QA_TRACKS[track.registryId] || {}).lessons?.length || 0 }));
     const XP_PER_LESSON = 10;
 

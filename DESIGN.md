@@ -9,6 +9,7 @@ Source: per-track `style.css` + `index.html` CSS custom properties (not perfectl
 - Border: `--border-color: rgba(255,255,255,0.08)`
 - Text: `--text-primary: #f3f4f6`, `--text-secondary: #9ca3af`
 - Accent palette: `--accent-blue #3b82f6`, `--accent-emerald #10b981`, `--accent-amber/orange`, `--accent-rose/red`, `--accent-fuchsia #d946ef`, plus violet/gold/teal/indigo/pink/cyan/lime variants used per-track for identity
+- `Tech-Builder/style.css` (added 2026-08-29): `--accent-blue: #0ea5e9` (sky) is this track's own identity color, overriding the shared name's default value locally within that track's own stylesheet — each track's `--accent-*` set is self-contained, not globally shared, so reusing the variable name with a different hex per track is the existing convention, not a conflict
 
 ## Typography
 - UI: Inter (`--font-sans`, Google Fonts)

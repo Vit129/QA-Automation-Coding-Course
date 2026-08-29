@@ -16,7 +16,11 @@ Browser-based code sandbox course for learning QA automation. No backend, no bui
 - **Visual-Regression-Testing** — Playwright screenshot diffing
 - **CI-CD-Pipeline** — GitHub Actions YAML
 - **Framework-Design** — test automation project structure (fixtures, DRY, reporting)
+- **OOP-Fundamentals** — OOP concepts & design patterns in TypeScript/JavaScript
+- **Programming-Paradigms** — functional, imperative, declarative & reactive programming for automation
 - **Data-Structures-Algorithms** — Big-O, hash tables, stacks/queues, trees/graphs, sorting, DP — intro CS fundamentals framed around QA scenarios
+- **Tech-Builder** — Become a Tech Builder (Agentic Engineering): System architecture, resilient backends, AST dependency analysis, offline-first sync, and shift-left security
+- **Final-Project** — Capstone project integrating full-cycle automation and engineering practices
 
 Each track is a static HTML/CSS/JS page: theory → code template (`WRITE YOUR CODE HERE`) → validation → hint → solution. Progress saves to `localStorage`.
 
