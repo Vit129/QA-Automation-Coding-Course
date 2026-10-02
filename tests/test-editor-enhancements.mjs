@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const code = fs.readFileSync(path.join(__dirname, 'editor-enhancements.js'), 'utf8');
+const code = fs.readFileSync(path.join(__dirname, '../shared/editor-enhancements.js'), 'utf8');
 
 function createTextarea(value, selectionStart, selectionEnd = selectionStart) {
   return { value, selectionStart, selectionEnd, classList: { add: () => {} } };

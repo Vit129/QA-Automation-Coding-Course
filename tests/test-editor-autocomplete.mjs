@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const autocompleteCode = fs.readFileSync(path.join(__dirname, 'editor-autocomplete.js'), 'utf8');
+const autocompleteCode = fs.readFileSync(path.join(__dirname, '../shared/editor-autocomplete.js'), 'utf8');
 
 function createDOMEnvironment() {
   const elements = new Map();

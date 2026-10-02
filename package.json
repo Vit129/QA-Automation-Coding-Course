@@ -3,7 +3,7 @@
   "private": true,
   "description": "Dev-only tooling for maintaining this course (self-test harness). End users never need this - open index.html directly, no install required.",
   "scripts": {
-    "test": "node shared/selftest.mjs && node DB-Design-SQL/test-normal-forms.mjs && node Data-Structures-Algorithms/test-complexity-lessons.mjs",
+    "test": "for f in tests/*.mjs; do node \"$f\" || exit 1; done",
     "start": "bash scripts/release-cycle.sh",
     "release": "bash scripts/release.sh",
     "ship": "bash scripts/release-cycle.sh"

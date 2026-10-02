@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const engineCode = fs.readFileSync(path.join(__dirname, 'engine.js'), 'utf8');
+const engineCode = fs.readFileSync(path.join(__dirname, '../shared/engine.js'), 'utf8');
 
 function createDOMEnvironment() {
   const elements = new Map();
