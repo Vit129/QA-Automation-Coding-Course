@@ -37,7 +37,7 @@ YOUR CODE HERE`), `validate` (real AlaSQL execution + assertions, same pattern a
 `editor-autocomplete.js`, or `index.html`).
 
 ### Verification
-Same bar as every other lesson in this repo: after writing, `node shared/selftest.mjs` must show
+Same bar as every other lesson in this repo: after writing, `node tests/selftest.mjs` must show
 `DB-Design-SQL: 18 lessons, N checks passed, 0 failed` (up from the current 13 lessons / 26
 checks). No manual browser check strictly required for a `course.js`-only change, but worth one
 pass given BCNF's exercise is more elaborate than the others.
@@ -94,7 +94,7 @@ New track needs the full 11-track pattern, all mechanical:
    — scaffold from an existing plain-JS track (Framework-Design or CLI-Essentials are the closest
    templates, no external CDN dependency like AlaSQL/axe-core).
 2. `shared/sync-engine.sh` — add `Data-Structures-Algorithms` to the `TRACKS` array.
-3. `shared/selftest.mjs` — add to its `TRACKS` array so the new lessons get self-tested.
+3. `tests/selftest.mjs` — add to its `TRACKS` array so the new lessons get self-tested.
 4. `exam/index.html` — add `<script src="../Data-Structures-Algorithms/course.js"></script>` so its
    lessons are eligible for the mixed exam mode (same `window.QA_TRACKS` registry pattern every
    other track uses).

@@ -25,7 +25,7 @@ const sandbox = {
 sandbox.window = sandbox;
 vm.createContext(sandbox);
 
-const src = fs.readFileSync(path.join(__dirname, 'course.js'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '../Data-Structures-Algorithms/course.js'), 'utf8');
 vm.runInContext(src, sandbox);
 const LESSONS = vm.runInContext('LESSONS', sandbox);
 

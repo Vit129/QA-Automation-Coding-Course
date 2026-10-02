@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const highlightCode = fs.readFileSync(path.join(__dirname, 'editor-highlight.js'), 'utf8');
+const highlightCode = fs.readFileSync(path.join(__dirname, '../shared/editor-highlight.js'), 'utf8');
 
 function escapeHtml(text) {
   return String(text)

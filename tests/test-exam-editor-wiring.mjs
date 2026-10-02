@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const read = (f) => fs.readFileSync(path.join(__dirname, f), 'utf8');
+const read = (f) => fs.readFileSync(path.join(__dirname, '../shared', f), 'utf8');
 
 class MockElement {
   constructor(tagName, id = '') {
