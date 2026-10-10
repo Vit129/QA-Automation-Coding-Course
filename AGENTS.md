@@ -12,6 +12,10 @@ Static HTML/JS course site: one folder per track (`API-Testing/`, `Playwright/`,
   paths relative to `tests/`.
 - Release: `npm run release` / `npm run ship` (see `scripts/`).
 
+## Agent Memory
+
+Per-project memory lives centrally in `~/Git/Personal/agent-memory-private/agent-memory/QA-Automation-Coding-Course/` (never in this repo). Resolve path via `python3 ~/.claude/scripts/lib/memory_root.py .` or search via `python3 ~/.claude/scripts/recall.py "<query>"`.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
