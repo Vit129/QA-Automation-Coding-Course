@@ -3,6 +3,19 @@
 All notable changes to QA-Automation-Coding-Course are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and QA-Automation-Coding-Course follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.14.0] - 2026-10-25
+
+### Added
+- Expand AppSec & Cyber Defense track to 26 lessons for CompTIA Security+ and eJPT ([`525e297`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/525e2970ff1186a9ba4981e6f658f511f88c60d3))
+
+### Documentation
+- Add ARCHITECTURE.md, CONTEXT.md, ADR-0001, and agent skills docs ([`1fbef69`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/1fbef69cb857546d40bac42f710ab6687bad0e25))
+- Document agent-memory location in agent-memory-private ([`3e214a8`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/3e214a8f1186d59d99b5de214994ef2cd61ab039))
+- Update copyright notice with co-authors ([`8fb8c05`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/8fb8c058e5c4e8afa5db7c29df30cfe83ecb5c9a))
+
+### Fixed
+- Regenerate package-lock.json so `npm ci` works again ([`a992a89`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/a992a89a6ad573608827802d88c23d56e482c0d7))
+
 ## [0.13.0] - 2026-08-29
 
 ### Added
