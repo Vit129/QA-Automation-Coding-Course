@@ -894,8 +894,7 @@
         <li><a href="#card-security">🟡 Security</a></li>
         <li><a href="#card-perf">🟡 Performance</a></li>
         <li><a href="#card-cicd">🔴 CI/CD</a></li>
-        <li><a href="#card-framework">🔴 Framework Design</a></li>
-        <li><a href="#card-oop">🔴 OOP Fundamentals</a></li>
+        <li><a href="#card-oop">🔴 OOP & Framework Architecture</a></li>
         <li><a href="#card-pp">🔴 Programming Paradigms</a></li>
         <li><a href="#card-dsa">🔴 DS&A (Elective)</a></li>
         <li><a href="#card-tb">🔴 Tech Builder</a></li>
@@ -1099,44 +1098,23 @@
         <a href="./CI-CD-Pipeline/index.html" class="btn btn-cicd">เข้าสู่บทเรียน →</a>
       </div>
 
-      <!-- Test Automation Framework Design Course Card -->
-      <div class="course-card card-framework" id="card-framework">
-        <span class="course-icon">🏗️</span>
-        <h2 class="course-title">Test Automation Framework Design</h2>
-        <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
-        <p class="course-desc">
-          ออกแบบโครงสร้างโปรเจก automation ให้ไม่พังเมื่อโตขึ้น — Config, Custom Fixtures, โครงสร้างโฟลเดอร์, DRY Helper (กรณีศึกษาจริงจากการรีแฟคเตอร์คอร์สนี้เอง), Test Data Management และ Reporting
-        </p>
-        <div class="tags">
-          <span class="tag">Fixtures</span>
-          <span class="tag">DRY</span>
-          <span class="tag">Reporting</span>
-          <span class="tag">13 Lessons</span>
-        </div>
-        <div class="track-progress" id="progress-framework">
-          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/13 บทเรียน (0%)</span>
-        </div>
-        <a href="./Framework-Design/index.html" class="btn btn-framework">เข้าสู่บทเรียน →</a>
-      </div>
-
-      <!-- OOP Fundamentals for QA Course Card -->
+      <!-- OOP & Framework Architecture for QA Course Card -->
       <div class="course-card card-oop" id="card-oop">
         <span class="course-icon">🧬</span>
-        <h2 class="course-title">OOP Fundamentals for QA</h2>
+        <h2 class="course-title">OOP & Framework Architecture for QA</h2>
         <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
         <p class="course-desc">
-          เข้าใจ 4 เสาหลักของ OOP (Encapsulation, Inheritance, Polymorphism, Abstraction), SOLID Principles ครบ 5 ข้อ, TypeScript Interface/Abstract Class และ Design Pattern ที่ใช้บ่อยในงาน QA automation (Factory, Singleton, Builder, Observer, Strategy, Adapter, Decorator) — บทที่เน้นพฤติกรรมจริงตรวจด้วยการรันโค้ดจริง ไม่ใช่แค่ regex
+          เข้าใจ 4 เสาหลักของ OOP (Encapsulation, Inheritance, Polymorphism, Abstraction), SOLID Principles ครบ 5 ข้อ, Design Patterns (Factory, Singleton, Builder, Strategy, Decorator) และนำไปต่อยอดสร้าง Production Test Automation Framework (Custom Fixtures, POM, Test Data Management, Reporting, Worker Isolation) รวม 38 บทเรียน
         </p>
         <div class="tags">
-          <span class="tag">Encapsulation</span>
           <span class="tag">SOLID</span>
           <span class="tag">Design Patterns</span>
-          <span class="tag">25 Lessons</span>
+          <span class="tag">Framework Architecture</span>
+          <span class="tag">38 Lessons</span>
         </div>
         <div class="track-progress" id="progress-oop">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/25 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/38 บทเรียน (0%)</span>
         </div>
         <a href="./OOP-Fundamentals/index.html" class="btn btn-oop">เข้าสู่บทเรียน →</a>
       </div>
@@ -1223,7 +1201,6 @@
   <script src="./Modern-CLI-Tools/course.js"></script>
   <script src="./Security-Testing/course.js"></script>
   <script src="./CI-CD-Pipeline/course.js"></script>
-  <script src="./Framework-Design/course.js"></script>
   <script src="./OOP-Fundamentals/course.js"></script>
   <script src="./Programming-Paradigms/course.js"></script>
   <script src="./Data-Structures-Algorithms/course.js"></script>
@@ -1232,7 +1209,7 @@
   <script>
     const TRACKS = [
       { key: 'api', registryId: 'api-testing', prefix: 'api', label: 'Playwright API Testing' },
-      { key: 'playwright', registryId: 'playwright', prefix: 'pw', label: 'Playwright UI Testing' },
+      { key: 'playwright', registryId: 'playwright', prefix: 'pw', label: 'Playwright UI & Visual Testing' },
       { key: 'robot', registryId: 'robot-framework', prefix: 'rf', label: 'Robot Framework Native UI Testing' },
       { key: 'perf', registryId: 'performance-testing', prefix: 'perf', label: 'Performance Testing (k6)' },
       { key: 'sql', registryId: 'db-design-sql', prefix: 'sql', label: 'Database Design & SQL' },
@@ -1240,8 +1217,7 @@
       { key: 'moderncli', registryId: 'modern-cli-tools', prefix: 'mcli', label: 'Modern CLI Tools for Developers & QA' },
       { key: 'security', registryId: 'security-testing', prefix: 'sec', label: 'AppSec & Cyber Defense' },
       { key: 'cicd', registryId: 'ci-cd-pipeline', prefix: 'cicd', label: 'CI/CD Pipeline' },
-      { key: 'framework', registryId: 'framework-design', prefix: 'fwk', label: 'Test Automation Framework Design' },
-      { key: 'oop', registryId: 'oop-fundamentals', prefix: 'oop', label: 'OOP Fundamentals for QA' },
+      { key: 'oop', registryId: 'oop-fundamentals', prefix: 'oop', label: 'OOP & Framework Architecture for QA' },
       { key: 'pp', registryId: 'programming-paradigms', prefix: 'pp', label: 'Programming Paradigms for QA' },
       { key: 'dsa', registryId: 'data-structures-algorithms', prefix: 'dsa', label: 'Data Structures & Algorithms for QA' },
       { key: 'tb', registryId: 'tech-builder', prefix: 'tb', label: 'Become a Tech Builder (Agentic Engineering)' },
