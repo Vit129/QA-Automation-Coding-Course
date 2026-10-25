@@ -33,7 +33,7 @@
 ├── API-Testing/                # API test automation track
 ├── Performance-Testing/        # k6 performance testing track
 ├── DB-Design-SQL/              # Database design & AlaSQL track
-├── Security-Testing/           # Security & OWASP testing track
+├── Security-Testing/           # AppSec, Cyber Defense & CompTIA Security+ track
 ├── Accessibility-Testing/      # axe-core & accessibility track
 ├── Visual-Regression-Testing/  # Visual regression testing track
 ├── CI-CD-Pipeline/             # GitHub Actions CI/CD track

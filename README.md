@@ -11,7 +11,7 @@ Browser-based code sandbox course for learning QA automation. No backend, no bui
 - **DB-Design-SQL** — SQL + database design, Normal Forms (1NF-BCNF), runs real queries in-browser via AlaSQL
 - **CLI-Essentials** — Git, Vim & Unix cheat sheet
 - **Modern-CLI-Tools** — zoxide, fd, ripgrep, bat, eza, fzf, jq (Modern fast CLI productivity)
-- **Security-Testing** — auth bypass, injection awareness, XSS prevention
+- **Security-Testing** — AppSec & Cyber Defense: CompTIA Security+ (SY0-701) core, STRIDE, cryptography, PKI, OWASP Top 10 (SQLi, XSS, IDOR, SSRF, JWT), WAF, DevSecOps & Incident Response
 - **Accessibility-Testing** — axe-core, ARIA, keyboard navigation
 - **Visual-Regression-Testing** — Playwright screenshot diffing
 - **CI-CD-Pipeline** — GitHub Actions YAML
