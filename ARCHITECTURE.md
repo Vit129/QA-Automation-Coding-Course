@@ -39,9 +39,8 @@
 ├── Accessibility-Testing/      # axe-core & accessibility track
 ├── CI-CD-Pipeline/             # GitHub Actions CI/CD track
 ├── OOP-Fundamentals/          # OOP & Test Automation Framework Architecture track (38 lessons)
-├── Programming-Paradigms/      # Functional & reactive programming track
 ├── Data-Structures-Algorithms/ # DSA for QA engineers track
-├── Tech-Builder/               # Agentic engineering & system resilience track
+├── Tech-Builder/               # Agentic & Concurrency Engineering track (28 lessons)
 └── Final-Project/              # Multi-phase capstone project
 ```
 

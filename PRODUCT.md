@@ -14,7 +14,7 @@ Browser-based, no-backend, no-build-step interactive code sandbox for learning Q
 - Fragmented resources: rarely does a single platform bridge test automation, database design, computer science paradigms, and deep application security defense in one cohesive curriculum.
 
 ## Core Features
-- **14 Tracks (315+ Interactive Lessons):**
+- **13 Tracks (315+ Interactive Lessons):**
   1. **Playwright UI & Visual Regression Testing** — E2E automation, locators, fixtures, network mocking, pixel diffing, dynamic masking, and viewport thresholds (33 lessons)
   2. **Robot Framework Native UI Testing** — Keyword-driven automation & Appium patterns
   3. **Playwright API Testing** — REST endpoints, assertions, auth, payload schemas
@@ -26,9 +26,8 @@ Browser-based, no-backend, no-build-step interactive code sandbox for learning Q
   9. **Accessibility Testing (a11y)** — `axe-core`, WCAG 2.2, ARIA attributes, keyboard navigation
   10. **CI/CD Pipeline** — GitHub Actions YAML workflows, caching, test matrix
   11. **OOP & Test Automation Framework Architecture** — OOP principles, SOLID, design patterns (Factory, Builder, Strategy), custom fixtures, POM, test data management, and parallel worker isolation (38 lessons)
-  12. **Programming Paradigms** — Functional, imperative, declarative, and reactive patterns
-  13. **Data Structures & Algorithms** — Big-O, arrays, hash maps, queues, stacks, trees/graphs for automation
-  14. **Tech Builder** — Agentic engineering, resilient backends, AST dependency analysis, offline-first sync
+  12. **Data Structures & Algorithms** — Big-O, arrays, hash maps, queues, stacks, trees/graphs for automation
+  13. **Become a Tech Builder (Agentic & Concurrency Engineering)** — Agentic engineering, resilient backends, AST dependency analysis, offline-first sync, functional architecture, and concurrency management (28 lessons)
   - **Final Project Capstone** — Multi-phase integration project
 - **Per-lesson flow:** Theory block → interactive code template (`WRITE YOUR CODE HERE`) → client-side validation runner → hint → reference solution.
 - **Progress saved to `localStorage`** + JSON import/export for cross-device state portability (ADR 0001).
