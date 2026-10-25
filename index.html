@@ -877,7 +877,7 @@
       <div class="exam-cta-icon">🎯</div>
       <div class="exam-cta-text">
         <div class="exam-cta-title">Mixed Mock Exam — จับเวลา แยกเลือกหมวดเนื้อหาได้</div>
-        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 13 สาย (260 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
+        <div class="exam-cta-desc" id="exam-cta-desc">สุ่มโจทย์ผสมจากทั้ง 12 สาย (307 บทเรียน) เลือกได้ว่าจะรวมสายไหนบ้าง กำหนดจำนวนข้อ/เวลาเอง ตรวจจริงผ่าน validate() เดียวกับที่ใช้ในบทเรียน</div>
       </div>
       <div class="exam-cta-arrow">→</div>
     </a>
@@ -895,9 +895,8 @@
         <li><a href="#card-perf">🟡 Performance</a></li>
         <li><a href="#card-cicd">🔴 CI/CD</a></li>
         <li><a href="#card-oop">🔴 OOP & Framework Architecture</a></li>
-        <li><a href="#card-pp">🔴 Programming Paradigms</a></li>
         <li><a href="#card-dsa">🔴 DS&A (Elective)</a></li>
-        <li><a href="#card-tb">🔴 Tech Builder</a></li>
+        <li><a href="#card-tb">🔴 Tech Builder (Agentic & Concurrency)</a></li>
       </ol>
     </div>
 
@@ -1119,26 +1118,6 @@
         <a href="./OOP-Fundamentals/index.html" class="btn btn-oop">เข้าสู่บทเรียน →</a>
       </div>
 
-      <!-- Programming Paradigms for QA Course Card -->
-      <div class="course-card card-pp" id="card-pp">
-        <span class="course-icon">🧵</span>
-        <h2 class="course-title">Programming Paradigms for QA</h2>
-        <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
-        <p class="course-desc">
-          Functional Programming (Pure Function, Immutability, Composition, Currying) และ Concurrency (async/await, Promise.all Parallelism, Race Condition, Event Loop) — พิสูจน์พฤติกรรม concurrency จริงด้วยการนับ concurrent call ไม่ใช่แค่ keyword-match
-        </p>
-        <div class="tags">
-          <span class="tag">Functional</span>
-          <span class="tag">Concurrency</span>
-          <span class="tag">12 Lessons</span>
-        </div>
-        <div class="track-progress" id="progress-pp">
-          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/12 บทเรียน (0%)</span>
-        </div>
-        <a href="./Programming-Paradigms/index.html" class="btn btn-pp">เข้าสู่บทเรียน →</a>
-      </div>
-
       <!-- Data Structures & Algorithms for QA Course Card -->
       <div class="course-card card-dsa" id="card-dsa">
         <span class="course-icon">🧩</span>
@@ -1160,23 +1139,24 @@
         <a href="./Data-Structures-Algorithms/index.html" class="btn btn-dsa">เข้าสู่บทเรียน →</a>
       </div>
 
-      <!-- Become a Tech Builder (Agentic Engineering) Course Card -->
+      <!-- Become a Tech Builder (Agentic & Concurrency Engineering) Course Card -->
       <div class="course-card card-tb" id="card-tb">
         <span class="course-icon">🏗️</span>
-        <h2 class="course-title">Become a Tech Builder (Agentic Engineering)</h2>
+        <h2 class="course-title">Become a Tech Builder (Agentic & Concurrency Engineering)</h2>
         <span class="level-badge level-advanced">🔴 ขั้นสูง</span>
         <p class="course-desc">
-          ยกระดับจาก QA Automation สู่ Full-Cycle Tech Builder ผ่าน 4 เสาหลัก: สถาปัตยกรรมระบบและการจำลองบริการ (Gateway vs App Security Boundary, Service Virtualization, Idempotent API Design, Correlation ID Tracing), แบ็กเอนด์ที่ทนทานและวิศวกรรมข้อมูล (OAuth Interceptor, Retry + Backoff with Fallback Queue, DB Migration Versioning, Staging Table Reconciliation), Full-Stack DX สมัยใหม่ (AST Dependency Graph/Blast Radius, Offline-First Sync, Sandboxed Code Execution Engine) และ Shift-Left Security (Multi-Role Auth Testing, Permission Matrix, Error Sanitization, Coverage KPI) — ทุกบทตรวจสอบด้วยการรันโค้ดจริง ไม่ใช่แค่ regex
+          ยกระดับจาก QA Automation สู่ Full-Cycle Tech Builder ผ่าน 6 เสาหลัก: สถาปัตยกรรมระบบและการจำลองบริการ (Gateway Boundary, Service Virtualization, Idempotent APIs), แบ็กเอนด์ที่ทนทาน (OAuth Interceptor, Retry Queue, DB Migration), Full-Stack DX (AST Blast Radius, Sandbox Engine), Shift-Left Security (Multi-Role Auth, Permission Matrix), Functional Architecture (Pure Functions, Immutable Updates, Currying) และ Concurrency Engineering (Promise.all, Race Condition Mutex, Event Loop) — ทุกบทตรวจสอบด้วยการรันโค้ดจริง
         </p>
         <div class="tags">
           <span class="tag">System Architecture</span>
-          <span class="tag">Resilient Backend</span>
+          <span class="tag">Concurrency</span>
+          <span class="tag">Functional</span>
           <span class="tag">Shift-Left Security</span>
-          <span class="tag">16 Lessons</span>
+          <span class="tag">28 Lessons</span>
         </div>
         <div class="track-progress" id="progress-tb">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/16 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/28 บทเรียน (0%)</span>
         </div>
         <a href="./Tech-Builder/index.html" class="btn btn-tb">เข้าสู่บทเรียน →</a>
       </div>
@@ -1202,7 +1182,6 @@
   <script src="./Security-Testing/course.js"></script>
   <script src="./CI-CD-Pipeline/course.js"></script>
   <script src="./OOP-Fundamentals/course.js"></script>
-  <script src="./Programming-Paradigms/course.js"></script>
   <script src="./Data-Structures-Algorithms/course.js"></script>
   <script src="./Tech-Builder/course.js"></script>
 
@@ -1218,9 +1197,8 @@
       { key: 'security', registryId: 'security-testing', prefix: 'sec', label: 'AppSec & Cyber Defense' },
       { key: 'cicd', registryId: 'ci-cd-pipeline', prefix: 'cicd', label: 'CI/CD Pipeline' },
       { key: 'oop', registryId: 'oop-fundamentals', prefix: 'oop', label: 'OOP & Framework Architecture for QA' },
-      { key: 'pp', registryId: 'programming-paradigms', prefix: 'pp', label: 'Programming Paradigms for QA' },
       { key: 'dsa', registryId: 'data-structures-algorithms', prefix: 'dsa', label: 'Data Structures & Algorithms for QA' },
-      { key: 'tb', registryId: 'tech-builder', prefix: 'tb', label: 'Become a Tech Builder (Agentic Engineering)' },
+      { key: 'tb', registryId: 'tech-builder', prefix: 'tb', label: 'Become a Tech Builder (Agentic & Concurrency Engineering)' },
     ].map(track => ({ ...track, total: (window.QA_TRACKS[track.registryId] || {}).lessons?.length || 0 }));
     const XP_PER_LESSON = 10;
 

@@ -30,7 +30,6 @@ const TRACKS = [
   'Security-Testing',
   'CI-CD-Pipeline',
   'OOP-Fundamentals',
-  'Programming-Paradigms',
   'Data-Structures-Algorithms',
   'Final-Project',
   'Tech-Builder',
