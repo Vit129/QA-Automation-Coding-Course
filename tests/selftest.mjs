@@ -28,7 +28,6 @@ const TRACKS = [
   'CLI-Essentials',
   'Modern-CLI-Tools',
   'Security-Testing',
-  'Visual-Regression-Testing',
   'CI-CD-Pipeline',
   'Framework-Design',
   'OOP-Fundamentals',

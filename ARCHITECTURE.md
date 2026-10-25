@@ -28,7 +28,7 @@
 ├── exam/                       # Comprehensive cross-track exam engine
 ├── shared/                     # Shared editor enhancements, engine, syntax highlight
 ├── docs/                       # Architectural Decision Records (ADRs) & documentation
-├── Playwright/                 # Playwright UI test automation track
+├── Playwright/                 # Playwright UI & Visual Regression test automation track (33 lessons)
 ├── Robot-Framework/            # Robot Framework test automation track
 ├── API-Testing/                # API test automation track
 ├── Performance-Testing/        # k6 performance testing track
@@ -37,7 +37,6 @@
 ├── Modern-CLI-Tools/           # Modern fast CLI productivity track
 ├── Security-Testing/           # AppSec, Cyber Defense & CompTIA Security+ track
 ├── Accessibility-Testing/      # axe-core & accessibility track
-├── Visual-Regression-Testing/  # Visual regression testing track
 ├── CI-CD-Pipeline/             # GitHub Actions CI/CD track
 ├── Framework-Design/           # Test automation framework architecture track
 ├── OOP-Fundamentals/          # Object-oriented programming fundamentals track
