@@ -68,6 +68,11 @@ for (const track of TRACKS) {
   if (track === 'DB-Design-SQL') {
     sandbox.alasql = require('alasql');
   }
+  if (track === 'Security-Testing') {
+    sandbox.crypto = require('node:crypto');
+    sandbox.Buffer = Buffer;
+    sandbox.URL = URL;
+  }
   vm.createContext(sandbox);
 
   const lessons = extractLessons(src, sandbox);

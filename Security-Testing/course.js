@@ -10,6 +10,112 @@ function stripComments(code) {
     .replace(/(?<!:)\/\/.*$/gm, '');
 }
 
+// Sandbox execution helpers for real behavioral & attack-vector testing
+function execLearnerCode(code, params, expr) {
+  const strippedImports = code.replace(/^\s*import\s+.*?;?\s*$/gm, '');
+  const names = Object.keys(params);
+  const values = names.map((n) => params[n]);
+  const factory = new Function(...names, `${strippedImports}\nreturn (${expr});`);
+  return factory(...values);
+}
+
+// Cross-environment shims for Node & Browser sandbox execution
+const sandboxBuffer = (typeof Buffer !== 'undefined') ? Buffer : {
+  from: (str, enc) => {
+    if (enc === 'base64url' || enc === 'base64') {
+      let b64 = String(str).replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      const decoded = typeof atob === 'function' ? atob(b64) : '';
+      return {
+        toString: () => decoded,
+        length: decoded.length
+      };
+    }
+    return {
+      toString: (outEnc) => {
+        if (outEnc === 'base64url') {
+          const raw = typeof btoa === 'function' ? btoa(String(str)) : '';
+          return raw.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+        return String(str);
+      },
+      length: String(str).length
+    };
+  }
+};
+
+const sandboxCrypto = (typeof crypto !== 'undefined' && crypto.createHmac && crypto.timingSafeEqual) ? crypto : {
+  createHmac: (alg, secret) => {
+    let payload = '';
+    return {
+      update: (chunk) => {
+        payload += String(chunk);
+        return this;
+      },
+      digest: (format) => {
+        // Fast deterministic pseudo-HMAC digest for sandbox environments lacking native node:crypto
+        let hash = 0;
+        const combined = String(secret) + ':' + payload;
+        for (let i = 0; i < combined.length; i++) {
+          hash = ((hash << 5) - hash) + combined.charCodeAt(i);
+          hash |= 0;
+        }
+        const hex = Math.abs(hash).toString(16).padStart(64, 'a');
+        if (format === 'base64url') {
+          return hex.slice(0, 43);
+        }
+        return hex;
+      }
+    };
+  },
+  timingSafeEqual: (bufA, bufB) => {
+    if (bufA.length !== bufB.length) return false;
+    let diff = 0;
+    for (let i = 0; i < bufA.length; i++) {
+      const valA = typeof bufA[i] === 'number' ? bufA[i] : String(bufA).charCodeAt(i);
+      const valB = typeof bufB[i] === 'number' ? bufB[i] : String(bufB).charCodeAt(i);
+      diff |= (valA ^ valB);
+    }
+    return diff === 0;
+  }
+};
+
+const sandboxPath = (typeof path !== 'undefined' && path.resolve) ? path : {
+  resolve: (...parts) => {
+    let segments = [];
+    for (const part of parts) {
+      if (typeof part === 'string' && part.startsWith('/')) segments = [];
+      const sub = String(part).split(/[\\/]/);
+      for (const s of sub) {
+        if (!s || s === '.') continue;
+        if (s === '..') segments.pop();
+        else segments.push(s);
+      }
+    }
+    return '/' + segments.join('/');
+  }
+};
+
+function getLearnerFn(code, fnName, extraParams = {}) {
+  let fn;
+  const params = {
+    crypto: sandboxCrypto,
+    Buffer: sandboxBuffer,
+    path: sandboxPath,
+    URL: (typeof URL !== 'undefined' ? URL : (typeof globalThis !== 'undefined' ? globalThis.URL : undefined)),
+    ...extraParams
+  };
+  try {
+    fn = execLearnerCode(code, params, `typeof ${fnName} === "function" ? ${fnName} : undefined`);
+  } catch (err) {
+    throw new Error(`โค้ดมี error ขณะรัน: ${err.message}`);
+  }
+  if (typeof fn !== "function") {
+    throw new Error(`ไม่พบการประกาศ function ${fnName}()`);
+  }
+  return fn;
+}
+
 const LESSONS = [
   // ==========================================
   // MODULE 1: CYBERSECURITY FUNDAMENTALS & THREAT MODELING (Security+ Core)
@@ -28,23 +134,26 @@ const LESSONS = [
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบ Policy Guard ตามหลักการ Zero Trust...");
+      log("🔍 ตรวจสอบ Policy Guard ตามหลักการ Zero Trust (Functional Behavioral Test)...");
       const stripped = stripComments(code);
-      const hasAuthCheck = /!request\.authenticated|request\.authenticated\s*===?\s*false/.test(stripped);
-      const hasPermCheck = /permissions\.includes\(|indexOf\(/.test(stripped);
-      const hasAllowTrue = /allow\s*:\s*true/.test(stripped);
-      const hasReasonCheck = /Unauthenticated/.test(stripped) && /Least privilege/.test(stripped);
-      if (!hasAuthCheck) {
-        throw new Error("ไม่พบการตรวจสอบ authentication อย่างเคร่งครัดตามหลัก Verify Explicitly");
+      const fn = getLearnerFn(code, 'verifyZeroTrustAccess');
+
+      // 1. Verify Explicitly: Unauthenticated request must be rejected
+      const unauth = fn({ authenticated: false, requiredPermission: 'admin:read' }, { permissions: ['admin:read'] });
+      if (!unauth || unauth.allow !== false || !/Unauthenticated/i.test(unauth.reason)) {
+        throw new Error("เมื่อ request.authenticated เป็น false ต้องคืน { allow: false, reason: 'Unauthenticated: Verify explicitly failed' } ตามหลัก Verify Explicitly");
       }
-      if (!hasPermCheck) {
-        throw new Error("ไม่พบการตรวจสอบสิทธิ์ permissions ตามหลัก Least Privilege");
+
+      // 2. Least Privilege: Missing required permission must be rejected
+      const forbidden = fn({ authenticated: true, requiredPermission: 'admin:write' }, { permissions: ['user:read'] });
+      if (!forbidden || forbidden.allow !== false || !/Least privilege/i.test(forbidden.reason)) {
+        throw new Error("เมื่อ permissions ไม่ครอบคลุม requiredPermission ต้องคืน { allow: false, reason: 'Forbidden: Least privilege violation' } ตามหลัก Least Privilege");
       }
-      if (!hasAllowTrue) {
-        throw new Error("ไม่พบการคืนค่า { allow: true } เมื่อเงื่อนไขผ่าน");
-      }
-      if (!hasReasonCheck) {
-        throw new Error("ไม่พบการระบุเหตุผลการปฏิเสธที่ชัดเจนตามข้อกำหนด");
+
+      // 3. Fully authorized request must pass
+      const allowed = fn({ authenticated: true, requiredPermission: 'admin:read' }, { permissions: ['admin:read', 'user:read'] });
+      if (!allowed || allowed.allow !== true) {
+        throw new Error("เมื่อผ่านเงื่อนไข Zero Trust ครบถ้วน ต้องคืน { allow: true }");
       }
       log("✓ ยืนยันได้ว่า Policy Guard ทำงานถูกต้องตามหลัก Zero Trust (Verify Explicitly + Least Privilege)");
     },
@@ -216,23 +325,33 @@ const result = verifyZeroTrustAccess(req, user);
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบ Password Storage Policy และกลไก Hashing/Salting...");
+      log("🔍 ตรวจสอบ Password Storage Policy และกลไก Hashing/Salting (Behavioral Verification)...");
       const stripped = stripComments(code);
-      const hasInsecureThrow = /MD5|SHA1/.test(stripped) && /throw new Error/.test(stripped);
-      const hasSaltCheck = /!hasSalt|hasSalt\s*===?\s*false/.test(stripped);
-      const hasWorkFactorCheck = /workFactor\s*(<|>=)\s*10/.test(stripped);
-      const hasSecureReturn = /secure\s*:\s*true/.test(stripped);
-      if (!hasInsecureThrow) {
-        throw new Error("ไม่พบการปฏิเสธ Insecure Hash Algorithms (MD5, SHA1)");
-      }
-      if (!hasSaltCheck) {
-        throw new Error("ไม่พบการตรวจสอบบังคับใช้ Salt (ป้องกัน Rainbow Table Attack)");
-      }
-      if (!hasWorkFactorCheck) {
-        throw new Error("ไม่พบการตรวจสอบ Work Factor ขั้นต่ำ (>= 10)");
-      }
-      if (!hasSecureReturn) {
-        throw new Error("ไม่พบการคืนค่า { secure: true } เมื่อเงื่อนไขปลอดภัยสมบูรณ์");
+      const fn = getLearnerFn(code, 'validatePasswordStorage');
+
+      // 1. Insecure fast hashes must throw
+      let threwMd5 = false;
+      try { fn('MD5', true, 12); } catch (e) { threwMd5 = true; }
+      if (!threwMd5) throw new Error("อัลกอริทึม MD5 ไม่ปลอดภัยต่อ GPU brute force ต้อง throw Error ปฏิเสธ");
+
+      let threwSha1 = false;
+      try { fn('SHA1', true, 12); } catch (e) { threwSha1 = true; }
+      if (!threwSha1) throw new Error("อัลกอริทึม SHA1 ไม่ปลอดภัย ต้อง throw Error ปฏิเสธ");
+
+      // 2. Missing salt must throw
+      let threwNoSalt = false;
+      try { fn('bcrypt', false, 12); } catch (e) { threwNoSalt = true; }
+      if (!threwNoSalt) throw new Error("หากไม่มี Salt (hasSalt: false) ต้อง throw Error ป้องกัน Rainbow Table Attack");
+
+      // 3. Low work factor must throw
+      let threwLowWork = false;
+      try { fn('bcrypt', true, 8); } catch (e) { threwLowWork = true; }
+      if (!threwLowWork) throw new Error("หาก workFactor < 10 ต้อง throw Error กำหนดขั้นต่ำ");
+
+      // 4. Valid slow adaptive hash must return { secure: true }
+      const validBcrypt = fn('bcrypt', true, 12);
+      if (!validBcrypt || validBcrypt.secure !== true) {
+        throw new Error("เมื่อใช้ bcrypt/argon2id พร้อม salt และ workFactor >= 10 ต้องคืน { secure: true, ... }");
       }
       log("✓ ยืนยันได้ว่าเข้าใจความแตกต่างของ Fast Hash กับ Adaptive Salted Hash อย่างถูกต้อง");
     },
@@ -451,56 +570,123 @@ expect(res.status()).toBe(401);`,
     meta: "โมดูล 2: วิทยาการรหัสลับ",
     title: "JWT Security: ช่องโหว่ Algorithm Confusion (alg: none) และ Token Tampering",
     template: `// สถานการณ์: ตรวจสอบความปลอดภัยของ JSON Web Token (JWT) Parser
-// ช่องโหว่ยอดฮิตใน JWT: ผู้โจมตีเปลี่ยน Header เป็น {"alg":"none"} แล้วตัด Signature ทิ้ง
-// 1. เขียนฟังก์ชัน verifyJWTTokenSafely(token, allowedAlg, secret)
-// 2. แยก token ออกเป็น 3 ส่วน (header, payload, signature) ด้วย .split('.')
+// ป้องกัน 3 ช่องโหว่สำคัญ:
+// 1. Algorithm Confusion: ผู้โจมตีเปลี่ยน Header เป็น {"alg":"none"}
+// 2. Token Tampering: ผู้โจมตีแก้ไข Payload โดยไม่มี Signature ที่ถูกต้อง
+// 3. Expired Token: ผู้โจมตีนำ Token เก่าที่หมดอายุมาใช้ซ้ำ (Replay Attack)
+//
+// ข้อกำหนดฟังก์ชัน verifyJWTTokenSafely(token, allowedAlg, secret):
+// 1. นำเข้า crypto module (import crypto from 'node:crypto')
+// 2. แยก token ออกเป็น 3 ส่วน [headerB64, payloadB64, signatureB64] ด้วย .split('.')
 // 3. ถอดรหัส JSON จาก Base64Url
 // 4. หาก header.alg เป็น 'none' หรือไม่ตรงกับ allowedAlg ให้ throw Error('Rejected algorithm')
-// 5. หากไม่มี signature ให้ throw Error('Missing signature')
-// 6. หาก payload มี exp และ payload.exp * 1000 < Date.now() ให้ throw Error('Token expired')
-// 7. หากผ่าน ให้คืน { valid: true, user: payload.sub }
+// 5. หากไม่มี signatureB64 ให้ throw Error('Missing signature')
+// 6. คำนวณ HMAC-SHA256 signature จาก headerB64 + '.' + payloadB64 ด้วย secret
+//    และเปรียบเทียบกับ signatureB64 ด้วย crypto.timingSafeEqual เพื่อป้องกัน Timing Attacks
+//    หาก signature ไม่ตรง ให้ throw Error('Invalid signature')
+// 7. หาก payload มี exp และ payload.exp * 1000 < Date.now() ให้ throw Error('Token expired')
+// 8. หากผ่านทุกเงื่อนไข ให้คืน { valid: true, user: payload.sub }
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบการป้องกันช่องโหว่ JWT (alg: none attack, missing signature, expired token)...");
+      log("🔍 ตรวจสอบโครงสร้างและการทำงานจริงของ verifyJWTTokenSafely()...");
       const stripped = stripComments(code);
-      const hasSplit = /\.split\(['"]\.['"]\)/.test(stripped);
-      const hasAlgNoneCheck = /none/i.test(stripped) && /allowedAlg/.test(stripped);
-      const hasSigCheck = /!signature/.test(stripped);
-      const hasExpCheck = /exp/.test(stripped) && /Date\.now\(\)/.test(stripped);
-      const hasValidReturn = /valid\s*:\s*true/.test(stripped);
-      if (!hasSplit) {
-        throw new Error("ไม่พบการแยกชิ้นส่วน JWT (header.payload.signature) ด้วย .split('.')");
+      if (!stripped.includes('.split(')) {
+        throw new Error("ต้องใช้ .split('.') แยกส่วนประกอบของ JWT");
       }
-      if (!hasAlgNoneCheck) {
-        throw new Error("ไม่พบการตรวจสอบและปฏิเสธ algorithm 'none' หรือตรวจสอบเทียบกับ allowedAlg");
+      if (!/timingSafeEqual/.test(stripped) && !/createHmac/.test(stripped)) {
+        throw new Error("ต้องคำนวณ HMAC และเปรียบเทียบ Signature ด้วย crypto.timingSafeEqual เพื่อป้องกัน Timing Attack");
       }
-      if (!hasSigCheck) {
-        throw new Error("ไม่พบการตรวจสอบว่าต้องมี signature");
+
+      const fn = getLearnerFn(code, 'verifyJWTTokenSafely');
+      log("✓ ดึงฟังก์ชัน verifyJWTTokenSafely สำเร็จ กำลังยิง Attack Payloads จำลอง...");
+
+      const secret = 'super-secret-key-for-test-32bytes!';
+      const makeToken = (h, p, s = secret) => {
+        const hb = sandboxBuffer.from(JSON.stringify(h)).toString('base64url');
+        const pb = sandboxBuffer.from(JSON.stringify(p)).toString('base64url');
+        const sig = sandboxCrypto.createHmac('sha256', s).update(hb + '.' + pb).digest('base64url');
+        return hb + '.' + pb + '.' + sig;
+      };
+
+      // 1. Test Valid Token
+      const validTkn = makeToken({ alg: 'HS256', typ: 'JWT' }, { sub: 'alice', exp: Math.floor(Date.now() / 1000) + 3600 });
+      const res = fn(validTkn, 'HS256', secret);
+      if (!res || !res.valid || res.user !== 'alice') {
+        throw new Error("Token ที่ถูกต้องสมบูรณ์ต้องคืนค่า { valid: true, user: 'alice' }");
       }
-      if (!hasExpCheck) {
-        throw new Error("ไม่พบการตรวจสอบวันหมดอายุของ token ผ่าน payload.exp");
+
+      // 2. Test alg: none attack
+      let caughtAlgNone = false;
+      try {
+        const noneTkn = sandboxBuffer.from(JSON.stringify({ alg: 'none' })).toString('base64url') + '.' +
+                        sandboxBuffer.from(JSON.stringify({ sub: 'attacker' })).toString('base64url') + '.';
+        fn(noneTkn, 'HS256', secret);
+      } catch (e) {
+        caughtAlgNone = true;
       }
-      if (!hasValidReturn) {
-        throw new Error("ไม่พบการคืนค่า { valid: true } เมื่อ token ปลอดภัยและถูกต้อง");
+      if (!caughtAlgNone) {
+        throw new Error("ช่องโหว่: ฟังก์ชันยอมรับ Token ที่มี header alg: 'none' โดยไม่ throw Error");
       }
-      log("✓ ยืนยันได้ว่าตัวตรวจสอบ JWT ป้องกันการโจมตี Algorithm Confusion และ Token Tampering ได้รัดกุม");
+
+      // 3. Test Signature Tampering (Forged token with wrong key or altered signature)
+      let caughtTampering = false;
+      try {
+        const forgedTkn = makeToken({ alg: 'HS256', typ: 'JWT' }, { sub: 'attacker' }, 'wrong-secret-key');
+        fn(forgedTkn, 'HS256', secret);
+      } catch (e) {
+        caughtTampering = true;
+      }
+      if (!caughtTampering) {
+        throw new Error("ช่องโหว่: ฟังก์ชันยอมรับ Token ที่ถูกดัดแปลง Signature โดยไม่ throw Error");
+      }
+
+      // 4. Test Expired Token
+      let caughtExpired = false;
+      try {
+        const expTkn = makeToken({ alg: 'HS256', typ: 'JWT' }, { sub: 'bob', exp: Math.floor(Date.now() / 1000) - 3600 });
+        fn(expTkn, 'HS256', secret);
+      } catch (e) {
+        caughtExpired = true;
+      }
+      if (!caughtExpired) {
+        throw new Error("ช่องโหว่: ฟังก์ชันยอมรับ Token ที่หมดอายุ (expired) โดยไม่ throw Error");
+      }
+
+      log("✓ ผ่านการทดสอบครบทุก Attack Scenarios (Valid, Alg:none, Tampered Signature, Expired Token)");
     },
-    hint: "แยก token ด้วย const [h, p, sig] = token.split('.'); แปลง Buffer.from(h, 'base64url').toString() เป็น JSON จากนั้นเช็ค if (header.alg === 'none' || header.alg !== allowedAlg) throw Error",
-    solution: `function verifyJWTTokenSafely(token, allowedAlg, secret) {
-  const [headerB64, payloadB64, signature] = token.split('.');
-  if (!headerB64 || !payloadB64) {
+    hint: "แยก const [headerB64, payloadB64, signatureB64] = token.split('.'); คำนวณ expectedSig = crypto.createHmac('sha256', secret).update(headerB64 + '.' + payloadB64).digest('base64url'); แล้วเทียบด้วย crypto.timingSafeEqual(Buffer.from(expectedSig), Buffer.from(signatureB64))",
+    solution: `import crypto from 'node:crypto';
+
+function verifyJWTTokenSafely(token, allowedAlg, secret) {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
     throw new Error('Malformed token');
   }
+  const [headerB64, payloadB64, signatureB64] = parts;
+  if (!headerB64 || !payloadB64 || !signatureB64) {
+    throw new Error('Missing signature or payload');
+  }
+
   const header = JSON.parse(Buffer.from(headerB64, 'base64url').toString('utf8'));
   const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
 
   if (!header.alg || header.alg.toLowerCase() === 'none' || header.alg !== allowedAlg) {
     throw new Error('Rejected algorithm: ' + header.alg);
   }
-  if (!signature) {
-    throw new Error('Missing signature');
+
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(headerB64 + '.' + payloadB64)
+    .digest('base64url');
+
+  const expectedBuf = Buffer.from(expectedSig);
+  const actualBuf = Buffer.from(signatureB64);
+
+  if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
+    throw new Error('Invalid signature');
   }
+
   if (payload.exp && payload.exp * 1000 < Date.now()) {
     throw new Error('Token expired');
   }
@@ -662,20 +848,36 @@ expect(ownRes.status()).toBe(200);`,
 // 2. เรียกใช้งาน db.query(sql, [username]) และคืนผลลัพธ์ที่ได้
 // WRITE YOUR CODE HERE
 `,
-    validate: (code, log) => {
-      log("🔍 ตรวจสอบการป้องกัน SQL Injection ด้วย Parameterized Queries...");
+    validate: async (code, log) => {
+      log("🔍 ตรวจสอบการป้องกัน SQL Injection ด้วย Parameterized Queries (Execution Test)...");
       const stripped = stripComments(code);
       const hasConcatenation = /['"`]\s*\+\s*username|\$\{username\}/.test(stripped);
-      const hasPlaceholder = /WHERE\s+username\s*=\s*\?/.test(stripped);
-      const hasParamArray = /db\.query\(\s*\w+\s*,\s*\[\s*username\s*\]\s*\)/.test(stripped);
       if (hasConcatenation) {
         throw new Error("ตรวจพบการนำตัวแปร username มาต่อ string โดยตรง ซึ่งเสี่ยงต่อ SQL Injection อย่างร้ายแรง");
       }
-      if (!hasPlaceholder) {
-        throw new Error("ไม่พบการใช้ Parameterized Query Placeholder (?) ในคำสั่ง SQL");
+
+      const fn = getLearnerFn(code, 'executeSafeUserQuery');
+      let capturedSql = null;
+      let capturedParams = null;
+      const fakeDb = {
+        query: async (sql, params) => {
+          capturedSql = sql;
+          capturedParams = params;
+          return [{ id: 1, username: 'admin' }];
+        }
+      };
+
+      const attackPayload = "admin' OR '1'='1' --";
+      await fn(fakeDb, attackPayload);
+
+      if (!capturedSql || capturedSql.includes(attackPayload)) {
+        throw new Error("ช่องโหว่ SQL Injection: ตรวจพบว่าค่า username ถูกนำไปต่อใน SQL String โดยตรงแทนที่จะใช้ Parameter Placeholder (?)");
       }
-      if (!hasParamArray) {
-        throw new Error("ไม่พบการส่ง parameter แยกใน array: db.query(sql, [username])");
+      if (!capturedSql.includes('?')) {
+        throw new Error("คำสั่ง SQL ต้องมีเครื่องหมาย '?' เป็น Parameter Placeholder");
+      }
+      if (!Array.isArray(capturedParams) || capturedParams[0] !== attackPayload) {
+        throw new Error("ค่า input ต้องถูกส่งผ่าน array params ใน db.query(sql, [username])");
       }
       log("✓ ยืนยันได้ว่าคำสั่ง SQL แยกส่วนโค้ดออกจากข้อมูล ป้องกัน SQL Injection ได้ 100%");
     },
@@ -773,18 +975,42 @@ await safeHostPing('127.0.0.1; id'); // Throw Error ทันที`,
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบการป้องกัน Path Traversal ด้วย Path Canonicalization...");
+      log("🔍 ตรวจสอบการป้องกัน Path Traversal ด้วย Path Canonicalization (Attack Simulation)...");
       const stripped = stripComments(code);
-      const hasPathImport = /path/.test(stripped);
-      const hasResolve = /path\.resolve\(/.test(stripped);
-      const hasStartsWith = /\.startsWith\(/.test(stripped);
-      const hasThrow = /throw new Error/.test(stripped);
-      if (!hasPathImport || !hasResolve) {
-        throw new Error("ไม่พบการใช้งาน path.resolve เพื่อทำ Canonicalization");
+      if (!/resolve/.test(stripped) || !/\.startsWith\(/.test(stripped)) {
+        throw new Error("ต้องใช้ path.resolve เพื่อทำ Canonicalization และ .startsWith() ตรวจสอบขอบเขต");
       }
-      if (!hasStartsWith || !hasThrow) {
-        throw new Error("ไม่พบการตรวจสอบว่า resolved path ต้องขึ้นต้นด้วย base directory หรือการ throw Error เมื่อหลุดออกนอกขอบเขต");
+
+      const fn = getLearnerFn(code, 'resolveSafeFilePath');
+
+      // 1. Valid safe file inside baseDir
+      const safe = fn('/var/www/uploads', 'avatar.png');
+      if (!safe || !safe.includes('avatar.png') || !safe.includes('uploads')) {
+        throw new Error("ไม่สามารถเข้าถึงไฟล์ที่ถูกต้องภายใต้ base directory ได้");
       }
+
+      // 2. Traversal attack with ../ escape attempt
+      let caughtTraversal = false;
+      try {
+        fn('/var/www/uploads', '../../../../etc/passwd');
+      } catch (e) {
+        caughtTraversal = true;
+      }
+      if (!caughtTraversal) {
+        throw new Error("ช่องโหว่ Path Traversal: ฟังก์ชันยอมรับ '../../../../etc/passwd' โดยไม่ throw Error");
+      }
+
+      // 3. Traversal attack attempting relative jump
+      let caughtRelative = false;
+      try {
+        fn('/var/www/uploads', '../secret.env');
+      } catch (e) {
+        caughtRelative = true;
+      }
+      if (!caughtRelative) {
+        throw new Error("ช่องโหว่ Path Traversal: ฟังก์ชันยอมรับ '../secret.env' โดยไม่ throw Error");
+      }
+
       log("✓ ยืนยันได้ว่าป้องกัน Directory Traversal ด้วย Path Canonicalization สำเร็จ");
     },
     hint: "แปลง baseDir เป็น const safeBase = path.resolve(baseDir); และ const resolved = path.resolve(safeBase, userInput); จากนั้น if (!resolved.startsWith(safeBase)) throw new Error(...)",
@@ -1001,26 +1227,64 @@ validateCSRFRequest({ method: 'POST', headers: {}, session: { csrfToken: 'abc' }
 // WRITE YOUR CODE HERE
 `,
     validate: (code, log) => {
-      log("🔍 ตรวจสอบการป้องกันช่องโหว่ SSRF และ Cloud Metadata Address Guard...");
+      log("🔍 ตรวจสอบการป้องกันช่องโหว่ SSRF และ Cloud Metadata Address Guard (Attack Vectors)...");
       const stripped = stripComments(code);
-      const hasUrlParse = /new URL\(/.test(stripped);
-      const hasProtocolCheck = /protocol/.test(stripped) && /http/.test(stripped);
-      const hasMetadataCheck = /169\.254\.169\.254/.test(stripped);
-      const hasLocalhostCheck = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(stripped);
-      const hasPrivateIpCheck = /10\.|192\.168\./.test(stripped);
-      const hasThrow = /throw new Error/.test(stripped);
-      if (!hasUrlParse || !hasProtocolCheck) {
-        throw new Error("ไม่พบการ parse URL หรือตรวจสอบ protocol ว่าต้องเป็น http/https เท่านั้น");
+      if (!/new URL\(/.test(stripped)) {
+        throw new Error("ต้องใช้ new URL(urlString) เพื่อ parse และตรวจสอบ protocol/hostname");
       }
-      if (!hasMetadataCheck) {
-        throw new Error("ไม่พบการบล็อก Cloud Instance Metadata Service Address (169.254.169.254)");
+
+      const fn = getLearnerFn(code, 'validateSafeFetchUrl');
+
+      // 1. Valid public HTTPS URL
+      const valid = fn('https://api.github.com/users');
+      if (!valid || valid.safe !== true) {
+        throw new Error("URL ภายนอกที่ถูกต้อง (https://api.github.com/users) ต้องคืน { safe: true }");
       }
-      if (!hasLocalhostCheck || !hasPrivateIpCheck) {
-        throw new Error("ไม่พบการบล็อก Loopback (localhost/127.0.0.1) หรือ Private IP Subnets");
+
+      // 2. Cloud Instance Metadata Attack (169.254.169.254)
+      let caughtMetadata = false;
+      try {
+        fn('http://169.254.169.254/latest/meta-data/');
+      } catch (e) {
+        caughtMetadata = true;
       }
-      if (!hasThrow) {
-        throw new Error("ไม่พบการ throw Error เมื่อตรวจพบ URL ที่เสี่ยงต่อ SSRF");
+      if (!caughtMetadata) {
+        throw new Error("ช่องโหว่ SSRF: ฟังก์ชันยอมรับ Cloud Metadata IP (169.254.169.254) โดยไม่ throw Error");
       }
+
+      // 3. Localhost loopback
+      let caughtLocalhost = false;
+      try {
+        fn('http://localhost:8080/admin');
+      } catch (e) {
+        caughtLocalhost = true;
+      }
+      if (!caughtLocalhost) {
+        throw new Error("ช่องโหว่ SSRF: ฟังก์ชันยอมรับ Localhost loopback โดยไม่ throw Error");
+      }
+
+      // 4. RFC 1918 Private subnet (192.168.x / 10.x)
+      let caughtPrivate = false;
+      try {
+        fn('http://192.168.1.1/internal-dashboard');
+      } catch (e) {
+        caughtPrivate = true;
+      }
+      if (!caughtPrivate) {
+        throw new Error("ช่องโหว่ SSRF: ฟังก์ชันยอมรับ Private IP Subnet (192.168.1.1) โดยไม่ throw Error");
+      }
+
+      // 5. Insecure file protocol
+      let caughtProtocol = false;
+      try {
+        fn('file:///etc/passwd');
+      } catch (e) {
+        caughtProtocol = true;
+      }
+      if (!caughtProtocol) {
+        throw new Error("ช่องโหว่ SSRF: ฟังก์ชันยอมรับ protocol อื่นที่ไม่ใช่ HTTP/HTTPS โดยไม่ throw Error");
+      }
+
       log("✓ ยืนยันได้ว่า Guard สามารถสกัดกั้นการโจมตี SSRF เข้า Internal Network และ Cloud Metadata สำเร็จ");
     },
     hint: "สร้าง const url = new URL(urlString); เช็ค if (url.protocol !== 'http:' && url.protocol !== 'https:') throw... จากนั้นเช็ค hostname ด้วย blacklist IP ต้องห้าม",
@@ -1602,6 +1866,45 @@ test('Production dependencies ต้องไม่มี Critical Vulnerabiliti
 // Application state
 const PREFIX = 'sec';
 const TAB_WIDTH = 2;
+
+// Migration map from legacy 13 lesson IDs (pre-v0.14.0) to new 26 lesson IDs
+// Preserves completed checkmarks and saved code for learners from older course versions
+const LEGACY_ID_MIGRATIONS = {
+  'intro': 'cia_triad_zero_trust',
+  'injection_awareness': 'sqli_union_blind',
+  'xss_input_sanitization': 'xss_stored_reflected_dom',
+  'auth_bypass': 'auth_bypass_prevention',
+  'security_headers': 'security_headers_hardening',
+  'advanced_stack_trace_leak': 'sensitive_data_exposure',
+  'advanced_auth_coverage': 'auth_bypass_prevention',
+  'cors_reflected_origin': 'cors_misconfiguration',
+  'rate_limit_verification': 'rate_limiting_dos_defense',
+  'insecure_cookie_flags': 'session_management_cookies',
+  'idor_awareness': 'broken_access_control_idor',
+  'npm_audit_gate': 'sca_dependency_sbom'
+};
+
+function migrateLegacyProgress() {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    for (const [oldId, newId] of Object.entries(LEGACY_ID_MIGRATIONS)) {
+      const oldCompletedKey = `${PREFIX}_course_completed_${oldId}`;
+      const newCompletedKey = `${PREFIX}_course_completed_${newId}`;
+      if (localStorage.getItem(oldCompletedKey) === 'true' && !localStorage.getItem(newCompletedKey)) {
+        localStorage.setItem(newCompletedKey, 'true');
+      }
+      const oldCodeKey = `${PREFIX}_sandbox_code_${oldId}`;
+      const newCodeKey = `${PREFIX}_sandbox_code_${newId}`;
+      const oldCode = localStorage.getItem(oldCodeKey);
+      if (oldCode && !localStorage.getItem(newCodeKey)) {
+        localStorage.setItem(newCodeKey, oldCode);
+      }
+    }
+  } catch (e) {
+    // Non-blocking in headless/restricted storage environments
+  }
+}
+migrateLegacyProgress();
 
 function runSandboxCode() {
   const lesson = LESSONS[currentLessonIndex];
