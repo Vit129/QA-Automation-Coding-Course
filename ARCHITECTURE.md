@@ -38,8 +38,7 @@
 ├── Security-Testing/           # AppSec, Cyber Defense & CompTIA Security+ track
 ├── Accessibility-Testing/      # axe-core & accessibility track
 ├── CI-CD-Pipeline/             # GitHub Actions CI/CD track
-├── Framework-Design/           # Test automation framework architecture track
-├── OOP-Fundamentals/          # Object-oriented programming fundamentals track
+├── OOP-Fundamentals/          # OOP & Test Automation Framework Architecture track (38 lessons)
 ├── Programming-Paradigms/      # Functional & reactive programming track
 ├── Data-Structures-Algorithms/ # DSA for QA engineers track
 ├── Tech-Builder/               # Agentic engineering & system resilience track

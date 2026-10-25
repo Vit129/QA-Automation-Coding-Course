@@ -29,7 +29,6 @@ const TRACKS = [
   'Modern-CLI-Tools',
   'Security-Testing',
   'CI-CD-Pipeline',
-  'Framework-Design',
   'OOP-Fundamentals',
   'Programming-Paradigms',
   'Data-Structures-Algorithms',
