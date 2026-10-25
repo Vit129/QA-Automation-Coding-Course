@@ -1,6 +1,6 @@
 {
-  "version": 9,
-  "tag": "v0.12.0",
-  "updated": "2026-08-25",
-  "summary": "New Modern-CLI-Tools track (18 lessons: zoxide, fd, ripgrep, bat, eza, fzf, jq, power combos, and local shell setup guide)"
+  "version": 10,
+  "tag": "v0.15.0",
+  "updated": "2026-10-25",
+  "summary": "Overhaul AppSec & Cyber Defense track to 26 interactive lessons (CompTIA Security+ SY0-701 core, STRIDE, Cryptography, PKI, OWASP Top 10, WAF, DevSecOps SAST/Secret scanning, and NIST incident response)"
 }
