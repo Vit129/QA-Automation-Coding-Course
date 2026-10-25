@@ -889,10 +889,9 @@
         <li><a href="#card-cli">🟢 Git/Vim/Unix</a></li>
         <li><a href="#card-sql">🟢 SQL</a></li>
         <li><a href="#card-api">🟢 API Testing</a></li>
-        <li><a href="#card-playwright">🟡 Playwright UI</a></li>
+        <li><a href="#card-playwright">🟡 Playwright UI & Visual</a></li>
         <li><a href="#card-robot">🟡 Robot Framework</a></li>
         <li><a href="#card-security">🟡 Security</a></li>
-        <li><a href="#card-visual">🟡 Visual Regression</a></li>
         <li><a href="#card-perf">🟡 Performance</a></li>
         <li><a href="#card-cicd">🔴 CI/CD</a></li>
         <li><a href="#card-framework">🔴 Framework Design</a></li>
@@ -925,23 +924,23 @@
         <a href="./API-Testing/index.html" class="btn btn-api">เข้าสู่บทเรียน →</a>
       </div>
 
-      <!-- Playwright UI Testing Course Card -->
+      <!-- Playwright UI & Visual Testing Course Card -->
       <div class="course-card card-playwright" id="card-playwright">
         <img src="./assets/playwright-logo.svg" alt="Playwright Logo" style="width: 48px; height: 48px; margin-bottom: 24px;">
-        <h2 class="course-title">Playwright UI Testing</h2>
+        <h2 class="course-title">Playwright UI & Visual Testing</h2>
         <span class="level-badge level-intermediate">🟡 ปานกลาง</span>
         <p class="course-desc">
-          เรียนรู้การเขียนโค้ดทดสอบแบบ Code-first ด้วย TypeScript ครอบคลุม POM, API Mocking, และ Responsive Testing โดยอิงจากกรณีศึกษาจริงในโปรเจค My-Investment-Port
+          เรียนรู้การเขียนโค้ดทดสอบ UI แบบครบวงจร: POM, API Mocking, จัดการ Flaky Tests, Reactive States และเจาะลึก Visual Regression Testing (toHaveScreenshot, Masking, Thresholds, Snapshot Diff) รวม 33 บทเรียน
         </p>
         <div class="tags">
           <span class="tag">TypeScript</span>
-          <span class="tag">Page Object Model</span>
-          <span class="tag">API Mocking</span>
-          <span class="tag">21 Lessons</span>
+          <span class="tag">POM</span>
+          <span class="tag">Visual Regression</span>
+          <span class="tag">33 Lessons</span>
         </div>
         <div class="track-progress" id="progress-playwright">
           <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/21 บทเรียน (0%)</span>
+          <span class="track-progress-text">0/33 บทเรียน (0%)</span>
         </div>
         <a href="./Playwright/index.html" class="btn btn-playwright">เข้าสู่บทเรียน →</a>
       </div>
@@ -1078,26 +1077,6 @@
         <a href="./Security-Testing/index.html" class="btn btn-security">เข้าสู่บทเรียน →</a>
       </div>
 
-      <!-- Visual Regression Testing Course Card -->
-      <div class="course-card card-visual" id="card-visual">
-        <span class="course-icon">🖼️</span>
-        <h2 class="course-title">Visual Regression Testing</h2>
-        <span class="level-badge level-intermediate">🟡 ปานกลาง</span>
-        <p class="course-desc">
-          จับบั๊กที่ Functional Test มองไม่เห็น ด้วย Playwright toHaveScreenshot() — Masking เนื้อหาที่เปลี่ยนตลอดเวลา (ราคาหุ้น real-time จริงใน QuickBuyWatchlist.jsx), Responsive Check หลาย Viewport, Full Page Screenshot และ Threshold Tuning
-        </p>
-        <div class="tags">
-          <span class="tag">Screenshot Diff</span>
-          <span class="tag">Masking</span>
-          <span class="tag">Responsive</span>
-          <span class="tag">12 Lessons</span>
-        </div>
-        <div class="track-progress" id="progress-visual">
-          <div class="track-progress-bar"><div class="track-progress-fill"></div></div>
-          <span class="track-progress-text">0/12 บทเรียน (0%)</span>
-        </div>
-        <a href="./Visual-Regression-Testing/index.html" class="btn btn-visual">เข้าสู่บทเรียน →</a>
-      </div>
 
       <!-- CI/CD Pipeline Course Card -->
       <div class="course-card card-cicd" id="card-cicd">
@@ -1243,7 +1222,6 @@
   <script src="./CLI-Essentials/course.js"></script>
   <script src="./Modern-CLI-Tools/course.js"></script>
   <script src="./Security-Testing/course.js"></script>
-  <script src="./Visual-Regression-Testing/course.js"></script>
   <script src="./CI-CD-Pipeline/course.js"></script>
   <script src="./Framework-Design/course.js"></script>
   <script src="./OOP-Fundamentals/course.js"></script>
@@ -1261,7 +1239,6 @@
       { key: 'cli', registryId: 'cli-essentials', prefix: 'cli', label: 'Git, Vim & Unix Cheat Sheet' },
       { key: 'moderncli', registryId: 'modern-cli-tools', prefix: 'mcli', label: 'Modern CLI Tools for Developers & QA' },
       { key: 'security', registryId: 'security-testing', prefix: 'sec', label: 'AppSec & Cyber Defense' },
-      { key: 'visual', registryId: 'visual-regression-testing', prefix: 'visual', label: 'Visual Regression Testing' },
       { key: 'cicd', registryId: 'ci-cd-pipeline', prefix: 'cicd', label: 'CI/CD Pipeline' },
       { key: 'framework', registryId: 'framework-design', prefix: 'fwk', label: 'Test Automation Framework Design' },
       { key: 'oop', registryId: 'oop-fundamentals', prefix: 'oop', label: 'OOP Fundamentals for QA' },
