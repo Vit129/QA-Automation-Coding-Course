@@ -1,6 +1,6 @@
 {
   "version": 10,
-  "tag": "v0.15.0",
+  "tag": "v0.15.1",
   "updated": "2026-10-25",
-  "summary": "Overhaul AppSec & Cyber Defense track to 26 interactive lessons (CompTIA Security+ SY0-701 core, STRIDE, Cryptography, PKI, OWASP Top 10, WAF, DevSecOps SAST/Secret scanning, and NIST incident response)"
+  "summary": "Harden AppSec & Cyber Defense track with HMAC-SHA256 signature verification, timingSafeEqual comparison, legacy learner progress migration, and behavioral attack-payload validators"
 }
