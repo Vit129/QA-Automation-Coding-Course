@@ -7,6 +7,12 @@ All notable changes to QA-Automation-Coding-Course are documented here. The form
 
 ### Documentation
 - Update version.json, docs, and add Security-Testing README ([`4f15176`](https://github.com/Vit129/QA-Automation-Coding-Course/commit/4f151760e3d3e5247a1410d153b2cfaa7309af4d))
+- Clarify certification exam scope in Security-Testing README and trim index page titles
+
+### Fixed
+- Add legacy progress migration map in Security-Testing to preserve completed checkmarks and code from v0.13.0
+- Harden JWT verification reference solution with HMAC-SHA256 and `crypto.timingSafeEqual`
+- Upgrade core Security-Testing validators (JWT, SQLi, Path Traversal, SSRF, Zero Trust, Password Hashing) to real attack-payload execution
 
 ## [0.14.0] - 2026-10-25
 

@@ -1,10 +1,8 @@
 # Application Security & Cyber Defense Track
 
-Interactive, in-browser cybersecurity and application security course designed for **Developers and QA Engineers transitioning into Security / AppSec** and preparing for international certification exams:
-- **CompTIA Security+ (SY0-701)**
-- **eLearnSecurity Junior Penetration Tester (eJPT)**
-- **PortSwigger Certified Web Security Practitioner (BSCP)**
-- **ISC2 Systems Security Certified Practitioner (SSCP) / CC**
+Interactive, in-browser cybersecurity and application security course designed for **Developers and QA Engineers transitioning into Security / AppSec**. It builds deep conceptual understanding and defensive code patterns that **support preparation for industry certification exams**:
+- **CompTIA Security+ (SY0-701) & ISC2 SSCP / CC:** Directly reinforces core theoretical domains (CIA Triad, Zero Trust, STRIDE, CVSS v3.1, PKI/TLS, Cryptography, SIEM, Incident Response NIST SP 800-61).
+- **eLearnSecurity Junior Penetration Tester (eJPT) & PortSwigger BSCP:** Strengthens understanding of web vulnerability mechanics and code-level remediation (OWASP Top 10, IDOR, SQLi, RCE, Path Traversal, SSRF, XSS, JWT, WAF). *Note: While this course masters code-level root causes and mitigations, candidates should combine it with dedicated target-range labs (e.g., Hack The Box, PortSwigger Web Security Academy) for hands-on network/browser proxy exploitation.*
 
 ---
 
