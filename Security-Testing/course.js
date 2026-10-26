@@ -2917,22 +2917,28 @@ const LEGACY_ID_MIGRATIONS = {
 function migrateLegacyProgress() {
   if (typeof localStorage === 'undefined') return;
   try {
+    // 1) Carry completion flags forward from the legacy lesson ids (progress/XP intact).
     for (const [oldId, newId] of Object.entries(LEGACY_ID_MIGRATIONS)) {
       const oldCompletedKey = `${PREFIX}_course_completed_${oldId}`;
       const newCompletedKey = `${PREFIX}_course_completed_${newId}`;
       if (localStorage.getItem(oldCompletedKey) === 'true' && !localStorage.getItem(newCompletedKey)) {
         localStorage.setItem(newCompletedKey, 'true');
       }
-      // Do NOT migrate saved sandbox code: every remapped lesson changed its task and
-      // function signature, so the old code is wrong for the new lesson (shows the stale
-      // pre-v0.14.0 template). Clean up any copy an earlier migration already made — but
-      // only when it is byte-identical to the old code (i.e. the learner never edited it).
-      const oldCodeKey = `${PREFIX}_sandbox_code_${oldId}`;
-      const newCodeKey = `${PREFIX}_sandbox_code_${newId}`;
-      const oldCode = localStorage.getItem(oldCodeKey);
-      if (oldCode !== null && localStorage.getItem(newCodeKey) === oldCode) {
-        localStorage.removeItem(newCodeKey);
+    }
+    // 2) One-time reset of stale sandbox code on the remapped lessons. Every remapped lesson
+    // was rewritten in v0.14.0 with a new task and a new function signature, so any saved
+    // sandbox code there — whether carried from the old lesson or copied by an earlier
+    // migration — is wrong and shows the pre-rewrite starter (the "/api/ai/recommend" bug).
+    // We cannot reliably tell a genuine new solution from a migrated copy (the completion
+    // flag may itself have been migrated), and the old code solves a different problem
+    // regardless, so we clear it once and let the correct new template load. Completion
+    // flags above are kept. Guarded by a flag so later edits on these lessons persist.
+    const RESET_FLAG = `${PREFIX}_legacy_code_reset_v2`;
+    if (!localStorage.getItem(RESET_FLAG)) {
+      for (const newId of Object.values(LEGACY_ID_MIGRATIONS)) {
+        localStorage.removeItem(`${PREFIX}_sandbox_code_${newId}`);
       }
+      localStorage.setItem(RESET_FLAG, 'true');
     }
   } catch (e) {
     // Non-blocking in headless/restricted storage environments
