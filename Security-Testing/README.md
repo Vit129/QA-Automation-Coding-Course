@@ -6,7 +6,7 @@ Interactive, in-browser cybersecurity and application security course designed f
 
 ---
 
-## Curriculum Overview (5 Modules, 26 Interactive Lessons)
+## Curriculum Overview (9 Modules, 42 Interactive Lessons)
 
 ### Module 1: Cybersecurity Fundamentals & Threat Modeling (Security+ Core)
 1. **`cia_triad_zero_trust`** — CIA Triad (Confidentiality, Integrity, Availability) & Zero Trust Architecture (Verify Explicitly, Least Privilege, Assume Breach).
@@ -44,10 +44,34 @@ Interactive, in-browser cybersecurity and application security course designed f
 25. **`sca_dependency_sbom`** — Software Supply Chain Security: Software Composition Analysis (SCA) via `npm audit --omit=dev --json` gates and Software Bill of Materials (SBOM / CycloneDX) awareness.
 26. **`security_logging_forensics`** — Security Audit Trails & SIEM: neutralizing Log Injection (`\r\n`), formatting structured audit events, and understanding NIST SP 800-61 Incident Handling Phases (Preparation, Detection & Analysis, Containment, Eradication, Recovery, Lessons Learned).
 
+### Module 6: Governance, Risk & Compliance (Security+ Domain 5 ~20%)
+27. **`risk_ale_quantitative`** — Quantitative risk analysis: SLE = AV × EF, ALE = SLE × ARO, and cost-benefit Risk Treatment (Mitigate / Transfer / Avoid / Accept).
+28. **`bia_rto_rpo_dr`** — Business Continuity & Disaster Recovery: RTO/RPO from a BIA, Hot/Warm/Cold site selection, backup strategy (3-2-1).
+29. **`data_classification_compliance`** — Data classification, data roles (Owner/Controller/Processor/Custodian), and mapping fields to PDPA/GDPR, PCI DSS, HIPAA.
+
+### Module 7: Network Security & Identity (Security+ Domain 3/4, eJPT Recon)
+30. **`firewall_acl_rules`** — Firewall ACL engine: first-match rule ordering, CIDR matching, and Implicit Deny; IDS vs IPS, NGFW, segmentation.
+31. **`secure_protocols_ports`** — Secure protocols & ports: replacing Telnet/FTP/HTTP/LDAP with SSH/SFTP/HTTPS/LDAPS, and the port numbers exams test.
+32. **`mfa_factors_validation`** — Authentication factors (know/have/are/somewhere), real vs fake MFA, and phishing-resistant FIDO2/smart card.
+33. **`rbac_abac_sod`** — Access Control Models: combining RBAC + ABAC with Separation of Duties on a real approval workflow.
+34. **`oauth_oidc_callback`** — OAuth 2.0 / OIDC callback validation: `state`, exact `redirect_uri`, `nonce`, `aud` to stop Login CSRF, open redirect, and token confusion.
+35. **`nmap_recon_enumeration`** — Reconnaissance & Enumeration (eJPT): parse Nmap grepable output, build an attack surface, and the authorized-only pentest methodology.
+
+### Module 8: Threats & Log Investigation (Security+ Domain 2/4, CySA+ / SOC)
+36. **`malware_classification`** — Threat landscape: classify malware by behavior (ransomware, worm, trojan, rootkit, logic bomb, cryptojacking) and threat actors / vectors / IoCs.
+37. **`email_auth_spoofing_defense`** — Email authentication defense: SPF / DKIM / DMARC scoring and lookalike-domain (Levenshtein) detection in a Secure Email Gateway.
+38. **`log_bruteforce_detection`** — Log investigation: detect brute-force / password spraying from auth logs with a 60-second sliding window and critical-vs-warning severity.
+39. **`log_injection_siem_parse`** — Log correlation: stitch WAF + Auth + DB events into an attack timeline and map to the Cyber Kill Chain / MITRE ATT&CK.
+
+### Module 9: AI-Assisted Security (AI for SecOps + Securing AI)
+40. **`ai_triage_alert_enrichment`** — AI-assisted alert triage with a deterministic governance layer and human-in-the-loop for irreversible actions.
+41. **`ai_prompt_injection_defense`** — Securing AI (OWASP LLM Top 10): defend against prompt injection when feeding attacker-controlled logs/data into an LLM.
+42. **`ai_detection_rule_validation`** — Detection-as-Code: validate AI-generated detection rules (bad regex, catch-all, false negatives/positives) before deploying to production.
+
 ---
 
 ## Technical Architecture & Testing
 - Pure client-side JavaScript execution with no external backend server.
-- All 26 lessons have strict self-test invariants in `tests/selftest.mjs`:
+- All 42 lessons have strict self-test invariants in `tests/selftest.mjs`:
   - `lesson.validate(lesson.solution)` MUST pass without error.
   - `lesson.validate(lesson.template)` MUST throw an error.
