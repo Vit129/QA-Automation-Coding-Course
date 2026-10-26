@@ -25,7 +25,7 @@
 /
 ├── index.html                  # Course portal landing page
 ├── version.json                # Version check metadata
-├── exam/                       # Comprehensive cross-track exam engine
+├── exam/                       # Mixed exam page: code mode + Security+ MCQ mode (mcq-logic.js, security-plus-mcq.js)
 ├── shared/                     # Shared editor enhancements, engine, syntax highlight
 ├── docs/                       # Architectural Decision Records (ADRs) & documentation
 ├── Playwright/                 # Playwright UI & Visual Regression test automation track (33 lessons)
