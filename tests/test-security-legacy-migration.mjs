@@ -1,12 +1,13 @@
 // Regression test for Security-Testing's migrateLegacyProgress().
 //
-// Bug it guards: the migration map used to COPY each learner's saved sandbox code from a
-// legacy lesson id to the new lesson id. But every remapped lesson changed its task and
-// function signature during the v0.14.0 rewrite, so the copied code was the stale
-// pre-rewrite template (e.g. the old `/api/ai/recommend` auth test) showing up under a
-// lesson whose task is now completely different ("ยังเป็นตัวเก่า"). The fix: migrate only
-// the completion flag, and remove any stale code copy an earlier migration already made —
-// but only when it is byte-identical to the old code (learner never edited it).
+// Bug it guards: returning learners saw stale pre-v0.14.0 starter code (e.g. the old
+// `/api/ai/recommend` auth test) on lessons whose task was completely rewritten
+// ("ยังเป็นตัวเก่า"). The stale code lives in the browser's localStorage under the NEW
+// lesson id — carried from the old lesson or copied by an earlier migration. A first fix
+// that only cleared byte-identical copies missed the common case where the OLD key is no
+// longer present. The current fix does a one-time unconditional reset of saved sandbox
+// code on every remapped lesson (completion flags are kept), guarded by a flag so later
+// edits persist.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,7 +18,6 @@ import assert from 'node:assert';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const courseCode = fs.readFileSync(path.join(__dirname, '../Security-Testing/course.js'), 'utf8');
 
-// Minimal in-memory localStorage that the IIFE's migrateLegacyProgress() can drive.
 function makeLocalStorage(initial) {
   const store = { ...initial };
   return {
@@ -41,6 +41,8 @@ function runWith(localStorage) {
   return sandbox;
 }
 
+const STALE = "// old /api/ai/recommend lesson\nconst r = await request.post('/api/ai/recommend');";
+
 console.log('🧪 Running Security-Testing legacy-migration regression tests...');
 
 // Test 1: completion flag migrates from the legacy id to the new id.
@@ -54,46 +56,42 @@ console.log('🧪 Running Security-Testing legacy-migration regression tests...'
   console.log('✓ Test 1: completion flag migrates');
 }
 
-// Test 2: a stale code copy identical to the old code is REMOVED (so the new template shows).
+// Test 2 (the real bug): stale code under the new id with the OLD key ABSENT is cleared.
 {
-  const staleOldCode = "// old /api/ai/recommend lesson\nconst r = await request.post('/api/ai/recommend');";
-  const ls = makeLocalStorage({
-    'sec_sandbox_code_auth_bypass': staleOldCode,
-    'sec_sandbox_code_auth_bypass_prevention': staleOldCode, // what a prior migration copied
-  });
+  const ls = makeLocalStorage({ 'sec_sandbox_code_auth_bypass_prevention': STALE });
   runWith(ls);
   assert.strictEqual(
     ls.getItem('sec_sandbox_code_auth_bypass_prevention'), null,
-    'byte-identical stale code copy must be removed so the new lesson template is shown'
+    'stale code must be cleared even when the legacy key no longer exists'
   );
-  console.log('✓ Test 2: stale copied code is cleaned up');
+  console.log('✓ Test 2: stale code cleared when old key is absent');
 }
 
-// Test 3: code the learner actually edited on the NEW lesson is preserved (not clobbered).
+// Test 3: the reset is one-time — code edited AFTER the reset (next load) persists.
 {
-  const oldCode = "old code";
-  const learnerEdited = "function authorizeRequest(request, routeConfig) { return { status: 200 }; }";
-  const ls = makeLocalStorage({
-    'sec_sandbox_code_auth_bypass': oldCode,
-    'sec_sandbox_code_auth_bypass_prevention': learnerEdited,
-  });
-  runWith(ls);
+  const ls = makeLocalStorage({ 'sec_sandbox_code_sqli_union_blind': STALE });
+  runWith(ls);                       // first load: clears stale, sets the flag
+  assert.strictEqual(ls.getItem('sec_sandbox_code_sqli_union_blind'), null, 'first load clears stale');
+  const fresh = 'function detectSqli(){ /* learner new work */ }';
+  ls.setItem('sec_sandbox_code_sqli_union_blind', fresh);
+  runWith(ls);                       // second load: flag set, must NOT wipe new work
   assert.strictEqual(
-    ls.getItem('sec_sandbox_code_auth_bypass_prevention'), learnerEdited,
-    'learner-edited code on the new lesson must be preserved'
+    ls.getItem('sec_sandbox_code_sqli_union_blind'), fresh,
+    'reset must run only once; edits made after it must persist'
   );
-  console.log('✓ Test 3: learner-edited new code preserved');
+  console.log('✓ Test 3: reset is one-time, later edits persist');
 }
 
-// Test 4: no legacy code at all -> migration never creates a code key for the new lesson.
+// Test 4: a NON-remapped lesson's saved code is never touched.
 {
-  const ls = makeLocalStorage({ 'sec_course_completed_auth_bypass': 'true' });
+  const mine = 'function verifyZeroTrustAccess(){ return { allow: true }; }';
+  const ls = makeLocalStorage({ 'sec_sandbox_code_cvss_cve_scoring': mine });
   runWith(ls);
   assert.strictEqual(
-    ls.getItem('sec_sandbox_code_auth_bypass_prevention'), null,
-    'migration must not fabricate sandbox code for the new lesson'
+    ls.getItem('sec_sandbox_code_cvss_cve_scoring'), mine,
+    'lessons that were not remapped must keep their saved code'
   );
-  console.log('✓ Test 4: no sandbox code fabricated');
+  console.log('✓ Test 4: non-remapped lessons untouched');
 }
 
 console.log('🎉 ALL SECURITY LEGACY-MIGRATION TESTS PASSED!');
