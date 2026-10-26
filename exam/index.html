@@ -153,6 +153,41 @@
       font-size: 0.82rem; margin-top: 6px;
     }
 
+    .mode-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .mode-option {
+      display: flex; align-items: center; gap: 10px; flex: 1 1 260px;
+      padding: 12px 16px; border-radius: 10px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color); cursor: pointer; font-size: 0.92rem;
+    }
+    .mode-option:hover { background: rgba(255,255,255,0.06); }
+    .mode-option:has(input:checked) { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
+    .mcq-note {
+      font-size: 0.9rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 24px;
+      padding: 14px 18px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);
+    }
+    .mcq-note strong { color: var(--text-primary); }
+
+    #exam-mcq-choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .mcq-choice {
+      display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);
+      cursor: pointer; line-height: 1.6; font-size: 0.95rem;
+    }
+    .mcq-choice:hover { background: rgba(255,255,255,0.06); }
+    .mcq-choice:has(input:checked) { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
+    .mcq-choice input { margin-top: 5px; flex-shrink: 0; }
+
+    .domain-breakdown { max-width: 560px; margin: 16px auto 4px; font-size: 0.88rem; }
+    .domain-row {
+      display: flex; justify-content: space-between; gap: 16px; padding: 6px 0;
+      border-bottom: 1px solid var(--border-color); color: var(--text-secondary);
+    }
+    .mcq-result-line { font-size: 0.88rem; line-height: 1.6; margin-bottom: 6px; }
+    .mcq-explanation {
+      margin-top: 8px; padding: 10px 12px; border-radius: 8px; font-size: 0.86rem; line-height: 1.7;
+      background: rgba(59, 130, 246, 0.08); color: var(--text-secondary);
+    }
+
     @media (max-width: 480px) {
       body { padding: 20px 14px 60px; }
       .panel { padding: 18px; }
@@ -182,8 +217,29 @@
 
     <!-- SETUP SCREEN -->
     <div id="exam-setup-screen" class="panel">
-      <h2>เลือกหมวดเนื้อหา (แยกตามประเภท)</h2>
-      <div id="track-checklist" class="track-checklist"></div>
+      <h2>เลือกรูปแบบข้อสอบ</h2>
+      <div class="mode-row">
+        <label class="mode-option">
+          <input type="radio" name="exam-mode" value="code" checked>
+          <span>เขียนโค้ด — สุ่มโจทย์ผสมจากหลายหมวด</span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="exam-mode" value="mcq">
+          <span>MCQ ไม่ใช่โค้ด — CompTIA Security+ (SY0-701)</span>
+        </label>
+      </div>
+
+      <div id="code-setup">
+        <h2>เลือกหมวดเนื้อหา (แยกตามประเภท)</h2>
+        <div id="track-checklist" class="track-checklist"></div>
+      </div>
+
+      <div id="mcq-setup" class="mcq-note hidden">
+        <strong>ข้อสอบ MCQ สไตล์ Security+</strong> มีคลัง <span id="mcq-bank-count">0</span> ข้อ ครอบคลุม 5 domain
+        สุ่มตามสัดส่วนน้ำหนักข้อสอบจริง (12 / 22 / 18 / 28 / 20 %) มีทั้งเลือก 1 คำตอบและ "เลือก 2 ข้อ"
+        (ต้องถูกครบทุกข้อจึงได้คะแนน) ลำดับตัวเลือกสลับทุกครั้ง และหลังส่งจะเห็นเฉลยพร้อมคำอธิบายทุกข้อ
+        พร้อมคะแนนแยกตาม domain — เป็นข้อสอบฝึกที่เขียนขึ้นเอง ไม่ใช่ข้อสอบจริง และไม่รับประกันผลสอบ
+      </div>
 
       <div class="config-row">
         <div class="config-field">
@@ -210,10 +266,11 @@
       <div id="exam-question-badge"></div>
       <div id="exam-question-title"></div>
       <div id="exam-question-task"></div>
-      <div class="editor-container">
+      <div class="editor-container" id="exam-editor-container">
         <div class="editor-gutter" id="editor-gutter"></div>
         <textarea id="editor-textarea" spellcheck="false" autocomplete="off" wrap="off"></textarea>
       </div>
+      <div id="exam-mcq-choices" class="hidden"></div>
 
       <div class="exam-nav-buttons">
         <div style="display:flex; gap:10px;">
@@ -267,6 +324,10 @@
   <script src="../shared/editor-autocomplete.js"></script>
   <script src="../shared/editor-enhancements.js"></script>
   <script src="../shared/editor-highlight.js"></script>
+  <!-- MCQ mode: pure sampling/grading logic + the Security+ question bank (both same-directory
+       files, read by exam-engine.js through window.McqLogic / window.MCQ_BANKS). -->
+  <script src="mcq-logic.js"></script>
+  <script src="security-plus-mcq.js"></script>
   <script src="../shared/exam-engine.js"></script>
 </body>
 </html>

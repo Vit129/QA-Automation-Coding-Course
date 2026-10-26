@@ -52,6 +52,7 @@ const elements = new Map();
 const documentMock = {
   getElementById: (id) => elements.get(id) || null,
   createElement: (tagName) => new MockElement(tagName),
+  querySelector: () => null, // exam-engine reads the checked exam-mode radio on load
   querySelectorAll: () => [],
   body: new MockElement('body'),
   addEventListener: () => {},
