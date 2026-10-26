@@ -1,0 +1,24 @@
+exam/security-plus-mcq.js
+  s_dd44dfe08369e6::t_dbfc8f7250f275 57
+  s_dd44dfe08369e6::t_a75e1ac354c420 273-274,277
+  s_dd44dfe08369e6::t_8f3fb9d86a48e8 309,312
+  s_dd44dfe08369e6::t_b022f76c222ad5 177,180-182,185
+  s_dd44dfe08369e6::t_bc3a587fd8e58a 358,360-361,364
+  s_dd44dfe08369e6::t_41385ecc05a269 60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.3",
+  "base_commit_sha": "1041fdbfe56bc6556f84ec470f301571aab3e44b",
+  "prompts": {},
+  "sessions": {
+    "s_dd44dfe08369e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0ec1ba5b-59ff-40c5-9c6f-825fcfc1e5fe",
+        "model": "unknown"
+      },
+      "human_author": "Vit129 <vitosk129@gmail.com>"
+    }
+  }
+}
