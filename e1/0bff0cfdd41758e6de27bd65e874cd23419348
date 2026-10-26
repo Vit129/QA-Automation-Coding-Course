@@ -1,0 +1,38 @@
+exam/security-plus-mcq.js
+  s_dd44dfe08369e6::t_f310f65b5ffff5 1-556
+shared/exam-engine.js
+  s_dd44dfe08369e6::t_05cc6dfe6be1bc 1-8,11-13,15,30-33,35-56,87-88,110-130,148,154-169,206-207,212,221,252-253,259-276,283-305,308,317-320,363,369,373-425
+  s_dd44dfe08369e6::t_8609c4dbbc4952 426
+tests/test-exam-editor-wiring.mjs
+  s_dd44dfe08369e6::t_45a5be5bf47099 55
+tests/test-mcq-exam.mjs
+  s_dd44dfe08369e6::t_3415873f5c1cae 1,17
+  s_dd44dfe08369e6::t_611cc0583e1f72 2-16,18-34,39-43,45-58,60-82,86-98,100-111,113-141
+  s_dd44dfe08369e6::t_6099cae8544b8f 35-38,44,59,85,99,112
+  s_dd44dfe08369e6::t_47957c582ece58 83-84
+exam/index.html
+  s_dd44dfe08369e6::t_a32bd15a5daf65 220-242
+  s_dd44dfe08369e6::t_8283ff18f239be 327-330
+  s_dd44dfe08369e6::t_3f9067be7f2c88 156-190
+  s_dd44dfe08369e6::t_792f74d6c1e7ff 269,273
+ARCHITECTURE.md
+  s_dd44dfe08369e6::t_cb88f239c7125a 28
+exam/mcq-logic.js
+  s_dd44dfe08369e6::t_3415873f5c1cae 1-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.3",
+  "base_commit_sha": "e10bff0cfdd41758e6de27bd65e874cd23419348",
+  "prompts": {},
+  "sessions": {
+    "s_dd44dfe08369e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0ec1ba5b-59ff-40c5-9c6f-825fcfc1e5fe",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Vit129 <vitosk129@gmail.com>"
+    }
+  }
+}
