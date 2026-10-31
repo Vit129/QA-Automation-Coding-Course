@@ -44704,6 +44704,57 @@
       "norm_label": "output"
     },
     {
+      "label": "check-version.mjs",
+      "file_type": "code",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L1",
+      "end_line": 22,
+      "_origin": "ast",
+      "id": "scripts_check_version",
+      "community": 269,
+      "norm_label": "check-version.mjs"
+    },
+    {
+      "label": "root",
+      "file_type": "code",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "scripts_check_version_root",
+      "community": 269,
+      "norm_label": "root"
+    },
+    {
+      "label": "release",
+      "file_type": "code",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "scripts_check_version_release",
+      "community": 269,
+      "norm_label": "release"
+    },
+    {
+      "label": "html",
+      "file_type": "code",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "scripts_check_version_html",
+      "community": 269,
+      "norm_label": "html"
+    },
+    {
+      "label": "changelog",
+      "file_type": "code",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "scripts_check_version_changelog",
+      "community": 269,
+      "norm_label": "changelog"
+    },
+    {
       "label": "release-cycle.sh",
       "file_type": "code",
       "source_file": "scripts/release-cycle.sh",
@@ -44758,6 +44809,38 @@
       "id": "scripts_release_sh__entry",
       "community": 261,
       "norm_label": "release.sh script"
+    },
+    {
+      "label": "set-release-version.mjs",
+      "file_type": "code",
+      "source_file": "scripts/set-release-version.mjs",
+      "source_location": "L1",
+      "end_line": 30,
+      "_origin": "ast",
+      "id": "scripts_set_release_version",
+      "community": 270,
+      "norm_label": "set-release-version.mjs"
+    },
+    {
+      "label": "updateReleaseVersion()",
+      "file_type": "code",
+      "source_file": "scripts/set-release-version.mjs",
+      "source_location": "L5",
+      "end_line": 24,
+      "_origin": "ast",
+      "id": "scripts_set_release_version_updatereleaseversion",
+      "community": 270,
+      "norm_label": "updatereleaseversion()"
+    },
+    {
+      "label": "scriptPath",
+      "file_type": "code",
+      "source_file": "scripts/set-release-version.mjs",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "scripts_set_release_version_scriptpath",
+      "community": 270,
+      "norm_label": "scriptpath"
     },
     {
       "label": "editor-autocomplete.js",
@@ -45793,6 +45876,27 @@
       "id": "shared_sync_engine_sh__entry",
       "community": 263,
       "norm_label": "sync-engine.sh script"
+    },
+    {
+      "label": "release-version.test.mjs",
+      "file_type": "code",
+      "source_file": "tests/release-version.test.mjs",
+      "source_location": "L1",
+      "end_line": 27,
+      "_origin": "ast",
+      "id": "tests_release_version_test",
+      "community": 270,
+      "norm_label": "release-version.test.mjs"
+    },
+    {
+      "label": "release metadata updates semver and build surfaces together",
+      "file_type": "code",
+      "source_file": "tests/release-version.test.mjs",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "tests_release_version_test_release_metadata_updates_semver_and_build_surfaces_together_7",
+      "community": 270,
+      "norm_label": "release metadata updates semver and build surfaces together"
     },
     {
       "label": "selftest.mjs",
@@ -107793,6 +107897,50 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_check_version",
+      "target": "scripts_check_version_changelog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_check_version",
+      "target": "scripts_check_version_html",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_check_version",
+      "target": "scripts_check_version_release",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/check-version.mjs",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_check_version",
+      "target": "scripts_check_version_root",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "scripts/release-cycle.sh",
       "source_location": "L1",
       "weight": 1.0,
@@ -107810,6 +107958,52 @@
       "_origin": "ast",
       "source": "scripts_release",
       "target": "scripts_release_sh__entry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/set-release-version.mjs",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_set_release_version",
+      "target": "scripts_set_release_version_scriptpath",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/set-release-version.mjs",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_set_release_version",
+      "target": "scripts_set_release_version_updatereleaseversion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/release-version.test.mjs",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_release_version_test",
+      "target": "scripts_set_release_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/release-version.test.mjs",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_release_version_test",
+      "target": "scripts_set_release_version_updatereleaseversion",
       "confidence_score": 1.0
     },
     {
@@ -110106,6 +110300,17 @@
       "_origin": "ast",
       "source": "shared_sync_engine",
       "target": "shared_sync_engine_sh__entry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/release-version.test.mjs",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_release_version_test",
+      "target": "tests_release_version_test_release_metadata_updates_semver_and_build_surfaces_together_7",
       "confidence_score": 1.0
     },
     {
@@ -113082,5 +113287,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "700f91ee61b9b5896a1ee6e52d2cb4cf960218e6"
+  "built_at_commit": "82cee9c608a9bc3f43d3854420289a2a4e8c9c52"
 }

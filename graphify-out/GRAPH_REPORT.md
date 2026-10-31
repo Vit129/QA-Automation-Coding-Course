@@ -1,16 +1,16 @@
 # Graph Report - delivery-workflow-completion  (2026-10-31)
 
 ## Corpus Check
-- 194 files · ~306,951 words
+- 197 files · ~307,355 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4732 nodes · 5717 edges · 269 communities (237 shown, 32 thin omitted)
+- 4742 nodes · 5726 edges · 271 communities (239 shown, 32 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 204 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `700f91ee`
+- Built from commit: `82cee9c6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -49,7 +49,7 @@ node's neighbors span, not by raw edge count.
 ## Import Cycles
 - None detected.
 
-## Communities (269 total, 32 thin omitted)
+## Communities (271 total, 32 thin omitted)
 
 ### Community 0 - "style.css"
 Cohesion: 0.02
@@ -1038,8 +1038,16 @@ Nodes (3): @media (max-width: 1100px), .workspace, .panel-left
 Cohesion: 0.20
 Nodes (24): applySolution(), AUTO_CLOSE_PAIRS, closeDialog(), escapeHtml(), getFirstIncompleteIndex(), handleAutoClosePair(), handlePairBackspace(), handleSmartEnter() (+16 more)
 
+### Community 269 - "check-version.mjs"
+Cohesion: 0.40
+Nodes (4): changelog, html, release, root
+
+### Community 270 - "set-release-version.mjs"
+Cohesion: 0.50
+Nodes (3): scriptPath, updateReleaseVersion(), release metadata updates semver and build surfaces together
+
 ## Knowledge Gaps
-- **3374 isolated node(s):** `name`, `push`, `workflow_dispatch`, `contents`, `pages` (+3369 more)
+- **3380 isolated node(s):** `name`, `push`, `workflow_dispatch`, `contents`, `pages` (+3375 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **32 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 - **15 possibly unreachable function(s):** `__dirname`, `__dirname`, `__dirname`, `__dirname`, `__dirname` (+10 more)
@@ -1055,7 +1063,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `@media (max-width: 480px)` connect `@media (max-width: 480px)` to `style.css`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **What connects `name`, `push`, `workflow_dispatch` to the rest of the system?**
-  _3374 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3380 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `style.css` be split into smaller, more focused modules?**
   _Cohesion score 0.017543859649122806 - nodes in this community are weakly interconnected._
 - **Should `style.css` be split into smaller, more focused modules?**
