@@ -1,0 +1,36 @@
+package.json
+  s_53ad839a68fb1c::t_ab622e6a2d849f 7-11
+Makefile
+  s_53ad839a68fb1c::t_ab622e6a2d849f 1-18
+README.md
+  s_53ad839a68fb1c::t_5d02124ac47697 3,29
+  s_53ad839a68fb1c::t_efa225116a2e89 30
+.gitignore
+  s_53ad839a68fb1c::t_ab622e6a2d849f 3
+.github/workflows/pages.yml
+  s_53ad839a68fb1c::t_ab622e6a2d849f 25-30,34
+scripts/release.sh
+  s_53ad839a68fb1c::t_ab622e6a2d849f 14-18,44
+.github/workflows/test.yml
+  s_53ad839a68fb1c::t_ab622e6a2d849f 17,19
+scripts/release-cycle.sh
+  s_53ad839a68fb1c::t_ab622e6a2d849f 2-3,8-10
+scripts/build.mjs
+  s_53ad839a68fb1c::t_ab622e6a2d849f 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.3",
+  "base_commit_sha": "82cee9c608a9bc3f43d3854420289a2a4e8c9c52",
+  "prompts": {},
+  "sessions": {
+    "s_53ad839a68fb1c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18fb7-5316-7db2-acef-76f7f2031027",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Vit129 <vitosk129@gmail.com>"
+    }
+  }
+}
