@@ -1,16 +1,16 @@
-# Graph Report - graphify-track  (2026-10-31)
+# Graph Report - delivery-workflow-completion  (2026-10-31)
 
 ## Corpus Check
-- 193 files · ~307,025 words
+- 197 files · ~307,355 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4725 nodes · 5711 edges · 267 communities (236 shown, 31 thin omitted)
+- 4742 nodes · 5726 edges · 271 communities (239 shown, 32 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 204 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e67c72a6`
+- Built from commit: `82cee9c6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -49,7 +49,7 @@ node's neighbors span, not by raw edge count.
 ## Import Cycles
 - None detected.
 
-## Communities (267 total, 31 thin omitted)
+## Communities (271 total, 32 thin omitted)
 
 ### Community 0 - "style.css"
 Cohesion: 0.02
@@ -175,8 +175,8 @@ Cohesion: 0.03
 Nodes (67): LESSONS, Git Add -p: Stage เฉพาะบางส่วนของไฟล์ (Patch Mode), Git Commit --amend: แก้ไข Commit ล่าสุดโดยไม่สร้างใหม่, Git Bisect: หา Commit ต้นเหตุของบั๊กด้วย Binary Search, Git Cherry-pick: หยิบ Commit เดียวจาก Branch อื่นมาใช้, Git Clone: ดึง Repository ที่มีอยู่แล้วมาไว้ในเครื่อง, Git Diff: ดูว่าเปลี่ยนอะไรไปบ้างก่อน Commit, Git Fetch: ดึงข้อมูลใหม่จาก Remote แบบปลอดภัย (ไม่ Merge อัตโนมัติ) (+59 more)
 
 ### Community 18 - "exam-engine.js"
-Cohesion: 0.08
-Nodes (57): applySolution(), AUTO_CLOSE_PAIRS, closeDialog(), escapeHtml(), getFirstIncompleteIndex(), handleAutoClosePair(), handlePairBackspace(), handleSmartEnter() (+49 more)
+Cohesion: 0.14
+Nodes (33): buildQuestionPool(), confirmSubmitExam(), escapeHtmlExam(), EXAM_STATE, formatTime(), getCodePoolSize(), getExamMode(), getMcqBank() (+25 more)
 
 ### Community 19 - "LESSONS"
 Cohesion: 0.05
@@ -518,9 +518,9 @@ Nodes (11): acceptEditorAutocomplete(), acceptEditorAutocompleteClick(), BUILTIN
 Cohesion: 0.38
 Nodes (11): acceptEditorAutocomplete(), acceptEditorAutocompleteClick(), BUILTIN_KEYWORDS, getCaretPixelPosition(), getCurrentWord(), getEditorAutocompleteEl(), getKnownWords(), handleEditorAutocompleteKeydown() (+3 more)
 
-### Community 104 - "package.json"
-Cohesion: 0.17
-Nodes (11): description, devDependencies, alasql, name, private, scripts, release, ship (+3 more)
+### Community 104 - "scripts"
+Cohesion: 0.12
+Nodes (15): description, devDependencies, alasql, name, private, scripts, build, dev (+7 more)
 
 ### Community 105 - "editor-autocomplete.js"
 Cohesion: 0.38
@@ -1034,10 +1034,22 @@ Nodes (3): @media (max-width: 1100px), .workspace, .panel-left
 Cohesion: 0.67
 Nodes (3): @media (max-width: 1100px), .workspace, .panel-left
 
+### Community 267 - "engine.js"
+Cohesion: 0.20
+Nodes (24): applySolution(), AUTO_CLOSE_PAIRS, closeDialog(), escapeHtml(), getFirstIncompleteIndex(), handleAutoClosePair(), handlePairBackspace(), handleSmartEnter() (+16 more)
+
+### Community 269 - "check-version.mjs"
+Cohesion: 0.40
+Nodes (4): changelog, html, release, root
+
+### Community 270 - "set-release-version.mjs"
+Cohesion: 0.50
+Nodes (3): scriptPath, updateReleaseVersion(), release metadata updates semver and build surfaces together
+
 ## Knowledge Gaps
-- **3368 isolated node(s):** `name`, `push`, `workflow_dispatch`, `contents`, `pages` (+3363 more)
+- **3380 isolated node(s):** `name`, `push`, `workflow_dispatch`, `contents`, `pages` (+3375 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **32 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 - **15 possibly unreachable function(s):** `__dirname`, `__dirname`, `__dirname`, `__dirname`, `__dirname` (+10 more)
   Not reached from any recognized entry point - could be dead code, or dynamically dispatched/decorator-registered.
 
@@ -1051,7 +1063,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `@media (max-width: 480px)` connect `@media (max-width: 480px)` to `style.css`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **What connects `name`, `push`, `workflow_dispatch` to the rest of the system?**
-  _3368 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3380 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `style.css` be split into smaller, more focused modules?**
   _Cohesion score 0.017543859649122806 - nodes in this community are weakly interconnected._
 - **Should `style.css` be split into smaller, more focused modules?**

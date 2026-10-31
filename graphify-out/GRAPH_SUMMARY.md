@@ -1,15 +1,15 @@
-# Graph Summary — graphify-track
+# Graph Summary — delivery-workflow-completion
 _Auto-generated from GRAPH_REPORT.md · do not edit manually_
 _Regen: `graphify update .`_
 
 ## Summary
-- 4725 nodes · 5711 edges · 267 communities (236 shown, 31 thin omitted)
+- 4742 nodes · 5726 edges · 271 communities (239 shown, 32 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 204 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 
 ## Graph Freshness
-- Built from commit: `e67c72a6`
+- Built from commit: `82cee9c6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
