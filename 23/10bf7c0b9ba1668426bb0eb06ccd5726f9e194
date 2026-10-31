@@ -1,0 +1,26 @@
+graphify-out/GRAPH_REPORT.md
+  s_53ad839a68fb1c::t_dd0fb912b788e4 1,4,8,13,52,178-179,521-523,1037-1040,1042,1044,1058
+graphify-out/GRAPH_SUMMARY.md
+  s_53ad839a68fb1c::t_dd0fb912b788e4 1,6,12
+graphify-out/manifest.json
+  s_53ad839a68fb1c::t_dd0fb912b788e4 8-9,13-14,733-734,738-739,743-744,933-934,976-979
+  s_53ad839a68fb1c::t_40a9629fb21033 980
+graphify-out/graph.json
+  s_53ad839a68fb1c::t_c5b71e2640a7e7 44576,44581-44620,44629,44639,44649,44659,44669,44675-44705,45065,45076,45087,45098,45108,45119,45130,45141,45152,45163,45174,45185,45196,45207,45218,45229,45240,45251,45262,45273,45284,45295,45306,45317,45328,48374,107621,107665,107680-107691,107702-107734,107742,107764,107771-107792,112559,113085
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.3",
+  "base_commit_sha": "2310bf7c0b9ba1668426bb0eb06ccd5726f9e194",
+  "prompts": {},
+  "sessions": {
+    "s_53ad839a68fb1c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18fb7-5316-7db2-acef-76f7f2031027",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Vit129 <vitosk129@gmail.com>"
+    }
+  }
+}
