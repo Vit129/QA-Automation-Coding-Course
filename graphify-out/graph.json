@@ -44573,10 +44573,50 @@
       "norm_label": "test"
     },
     {
-      "label": "start",
+      "label": "dev",
       "file_type": "code",
       "source_file": "package.json",
       "source_location": "L7",
+      "_origin": "ast",
+      "id": "package_scripts_dev",
+      "community": 104,
+      "norm_label": "dev"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "package_scripts_build",
+      "community": 104,
+      "norm_label": "build"
+    },
+    {
+      "label": "preview",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "package_scripts_preview",
+      "community": 104,
+      "norm_label": "preview"
+    },
+    {
+      "label": "release:check",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "package_scripts_release_check",
+      "community": 104,
+      "norm_label": "release:check"
+    },
+    {
+      "label": "start",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L11",
       "_origin": "ast",
       "id": "package_scripts_start",
       "community": 104,
@@ -44586,7 +44626,7 @@
       "label": "release",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L8",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "package_scripts_release",
       "community": 104,
@@ -44596,7 +44636,7 @@
       "label": "ship",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L9",
+      "source_location": "L13",
       "_origin": "ast",
       "id": "package_scripts_ship",
       "community": 104,
@@ -44606,7 +44646,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L11",
+      "source_location": "L15",
       "_origin": "ast",
       "id": "package_devdependencies",
       "community": 104,
@@ -44616,7 +44656,7 @@
       "label": "alasql",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L12",
+      "source_location": "L16",
       "_origin": "ast",
       "id": "package_devdependencies_alasql",
       "community": 104,
@@ -44626,11 +44666,42 @@
       "label": "version",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L14",
+      "source_location": "L18",
       "_origin": "ast",
       "id": "package_version",
       "community": 104,
       "norm_label": "version"
+    },
+    {
+      "label": "build.mjs",
+      "file_type": "code",
+      "source_file": "scripts/build.mjs",
+      "source_location": "L1",
+      "end_line": 19,
+      "_origin": "ast",
+      "id": "scripts_build",
+      "community": 268,
+      "norm_label": "build.mjs"
+    },
+    {
+      "label": "roots",
+      "file_type": "code",
+      "source_file": "scripts/build.mjs",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "scripts_build_roots",
+      "community": 268,
+      "norm_label": "roots"
+    },
+    {
+      "label": "output",
+      "file_type": "code",
+      "source_file": "scripts/build.mjs",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "scripts_build_output",
+      "community": 268,
+      "norm_label": "output"
     },
     {
       "label": "release-cycle.sh",
@@ -44991,7 +45062,7 @@
       "end_line": 449,
       "_origin": "ast",
       "id": "shared_engine",
-      "community": 18,
+      "community": 267,
       "norm_label": "engine.js"
     },
     {
@@ -45002,7 +45073,7 @@
       "end_line": 22,
       "_origin": "ast",
       "id": "shared_engine_getfirstincompleteindex",
-      "community": 18,
+      "community": 267,
       "norm_label": "getfirstincompleteindex()"
     },
     {
@@ -45013,7 +45084,7 @@
       "end_line": 27,
       "_origin": "ast",
       "id": "shared_engine_islessonlocked",
-      "community": 18,
+      "community": 267,
       "norm_label": "islessonlocked()"
     },
     {
@@ -45024,7 +45095,7 @@
       "end_line": 62,
       "_origin": "ast",
       "id": "shared_engine_initapp",
-      "community": 18,
+      "community": 267,
       "norm_label": "initapp()"
     },
     {
@@ -45034,7 +45105,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "shared_engine_auto_close_pairs",
-      "community": 18,
+      "community": 267,
       "norm_label": "auto_close_pairs"
     },
     {
@@ -45045,7 +45116,7 @@
       "end_line": 101,
       "_origin": "ast",
       "id": "shared_engine_handleautoclosepair",
-      "community": 18,
+      "community": 267,
       "norm_label": "handleautoclosepair()"
     },
     {
@@ -45056,7 +45127,7 @@
       "end_line": 120,
       "_origin": "ast",
       "id": "shared_engine_handlepairbackspace",
-      "community": 18,
+      "community": 267,
       "norm_label": "handlepairbackspace()"
     },
     {
@@ -45067,7 +45138,7 @@
       "end_line": 158,
       "_origin": "ast",
       "id": "shared_engine_handlesmartenter",
-      "community": 18,
+      "community": 267,
       "norm_label": "handlesmartenter()"
     },
     {
@@ -45078,7 +45149,7 @@
       "end_line": 214,
       "_origin": "ast",
       "id": "shared_engine_handletextareakeydown",
-      "community": 18,
+      "community": 267,
       "norm_label": "handletextareakeydown()"
     },
     {
@@ -45089,7 +45160,7 @@
       "end_line": 221,
       "_origin": "ast",
       "id": "shared_engine_syncgutterscroll",
-      "community": 18,
+      "community": 267,
       "norm_label": "syncgutterscroll()"
     },
     {
@@ -45100,7 +45171,7 @@
       "end_line": 235,
       "_origin": "ast",
       "id": "shared_engine_updategutter",
-      "community": 18,
+      "community": 267,
       "norm_label": "updategutter()"
     },
     {
@@ -45111,7 +45182,7 @@
       "end_line": 260,
       "_origin": "ast",
       "id": "shared_engine_renderlessonlist",
-      "community": 18,
+      "community": 267,
       "norm_label": "renderlessonlist()"
     },
     {
@@ -45122,7 +45193,7 @@
       "end_line": 278,
       "_origin": "ast",
       "id": "shared_engine_selectlesson",
-      "community": 18,
+      "community": 267,
       "norm_label": "selectlesson()"
     },
     {
@@ -45133,7 +45204,7 @@
       "end_line": 324,
       "_origin": "ast",
       "id": "shared_engine_loadlesson",
-      "community": 18,
+      "community": 267,
       "norm_label": "loadlesson()"
     },
     {
@@ -45144,7 +45215,7 @@
       "end_line": 334,
       "_origin": "ast",
       "id": "shared_engine_escapehtml",
-      "community": 18,
+      "community": 267,
       "norm_label": "escapehtml()"
     },
     {
@@ -45155,7 +45226,7 @@
       "end_line": 340,
       "_origin": "ast",
       "id": "shared_engine_showlessonhint",
-      "community": 18,
+      "community": 267,
       "norm_label": "showlessonhint()"
     },
     {
@@ -45166,7 +45237,7 @@
       "end_line": 346,
       "_origin": "ast",
       "id": "shared_engine_showlessonsolution",
-      "community": 18,
+      "community": 267,
       "norm_label": "showlessonsolution()"
     },
     {
@@ -45177,7 +45248,7 @@
       "end_line": 371,
       "_origin": "ast",
       "id": "shared_engine_showdialog",
-      "community": 18,
+      "community": 267,
       "norm_label": "showdialog()"
     },
     {
@@ -45188,7 +45259,7 @@
       "end_line": 377,
       "_origin": "ast",
       "id": "shared_engine_closedialog",
-      "community": 18,
+      "community": 267,
       "norm_label": "closedialog()"
     },
     {
@@ -45199,7 +45270,7 @@
       "end_line": 392,
       "_origin": "ast",
       "id": "shared_engine_applysolution",
-      "community": 18,
+      "community": 267,
       "norm_label": "applysolution()"
     },
     {
@@ -45210,7 +45281,7 @@
       "end_line": 397,
       "_origin": "ast",
       "id": "shared_engine_islessoncompleted",
-      "community": 18,
+      "community": 267,
       "norm_label": "islessoncompleted()"
     },
     {
@@ -45221,7 +45292,7 @@
       "end_line": 409,
       "_origin": "ast",
       "id": "shared_engine_setlessoncompleted",
-      "community": 18,
+      "community": 267,
       "norm_label": "setlessoncompleted()"
     },
     {
@@ -45232,7 +45303,7 @@
       "end_line": 419,
       "_origin": "ast",
       "id": "shared_engine_showxptoast",
-      "community": 18,
+      "community": 267,
       "norm_label": "showxptoast()"
     },
     {
@@ -45243,7 +45314,7 @@
       "end_line": 431,
       "_origin": "ast",
       "id": "shared_engine_updateprogressbar",
-      "community": 18,
+      "community": 267,
       "norm_label": "updateprogressbar()"
     },
     {
@@ -45254,7 +45325,7 @@
       "end_line": 445,
       "_origin": "ast",
       "id": "shared_engine_resetcourse",
-      "community": 18,
+      "community": 267,
       "norm_label": "resetcourse()"
     },
     {
@@ -48300,7 +48371,7 @@
       "label": "License",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L34",
+      "source_location": "L36",
       "_origin": "ast",
       "id": "readme_license",
       "community": 181,
@@ -107547,7 +107618,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L11",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
       "source": "package",
@@ -107591,7 +107662,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L14",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast",
       "source": "package",
@@ -107606,7 +107677,18 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "package_scripts",
-      "target": "package_scripts_release",
+      "target": "package_scripts_build",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "package_scripts",
+      "target": "package_scripts_dev",
       "confidence_score": 1.0
     },
     {
@@ -107617,6 +107699,39 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "package_scripts",
+      "target": "package_scripts_preview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "package_scripts",
+      "target": "package_scripts_release",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "package_scripts",
+      "target": "package_scripts_release_check",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "package_scripts",
       "target": "package_scripts_ship",
       "confidence_score": 1.0
     },
@@ -107624,7 +107739,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L7",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
       "source": "package_scripts",
@@ -107646,11 +107761,33 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L12",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
       "source": "package_devdependencies",
       "target": "package_devdependencies_alasql",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build.mjs",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_build",
+      "target": "scripts_build_output",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build.mjs",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_build",
+      "target": "scripts_build_roots",
       "confidence_score": 1.0
     },
     {
@@ -112419,7 +112556,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_qa_automation_coding_course",
@@ -112945,5 +113082,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e67c72a67cfbe83c99387ad158e2b29085842af0"
+  "built_at_commit": "700f91ee61b9b5896a1ee6e52d2cb4cf960218e6"
 }

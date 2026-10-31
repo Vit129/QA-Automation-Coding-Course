@@ -5,13 +5,13 @@
     "semantic_hash": ""
   },
   ".github/workflows/pages.yml": {
-    "mtime": 1793423223.2340634,
-    "ast_hash": "15c4cb50d92c96c128f9db31c8d7b888",
+    "mtime": 1793424786.7373405,
+    "ast_hash": "30ae8cc34c18564f23a6e7202f607257",
     "semantic_hash": ""
   },
   ".github/workflows/test.yml": {
-    "mtime": 1793423223.2344337,
-    "ast_hash": "5e37b1c3b45c541190ae35f8e302d35a",
+    "mtime": 1793424786.736922,
+    "ast_hash": "74add9ded1a043c149e121c25a97cd34",
     "semantic_hash": ""
   },
   "API-Testing/course.js": {
@@ -730,18 +730,18 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793423223.2988539,
-    "ast_hash": "a797863f15769d5f878b54679ac62c81",
+    "mtime": 1793424786.7359188,
+    "ast_hash": "2bd1b178bd3d364a81f9db46e51421cd",
     "semantic_hash": ""
   },
   "scripts/release-cycle.sh": {
-    "mtime": 1793423223.2990818,
-    "ast_hash": "94fd6eb740609f0bb5a108488748c368",
+    "mtime": 1793424786.73773,
+    "ast_hash": "ff722f8b462c2bb48669b8116007db38",
     "semantic_hash": ""
   },
   "scripts/release.sh": {
-    "mtime": 1793423223.2992306,
-    "ast_hash": "447b45231a9af61e2d990180fe72794e",
+    "mtime": 1793424786.7380912,
+    "ast_hash": "5847007309d36caa67b6150e9d918d63",
     "semantic_hash": ""
   },
   "shared/editor-autocomplete.js": {
@@ -930,8 +930,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793423223.2694302,
-    "ast_hash": "a654fcff306cf1ee07bc8ba4a2d5eac8",
+    "mtime": 1793424792.9564068,
+    "ast_hash": "ef429ccd21b0eaeea7ceb11da2468d85",
     "semantic_hash": ""
   },
   "Security-Testing/README.md": {
@@ -972,6 +972,11 @@
   "assets/robotframework-logo.svg": {
     "mtime": 1793423223.280889,
     "ast_hash": "d6d6bf140b74e00fc091bd2fc9372bc5",
+    "semantic_hash": ""
+  },
+  "scripts/build.mjs": {
+    "mtime": 1793424786.7388122,
+    "ast_hash": "dc6d5e59690d177924c4601eadc77dfd",
     "semantic_hash": ""
   }
 }
