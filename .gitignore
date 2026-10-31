@@ -1,5 +1,6 @@
 .DS_Store
 node_modules/
+dist/
 graphify-out/
 !graphify-out/
 graphify-out/*

@@ -11,6 +11,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+if [[ "$(git branch --show-current)" != "main" ]]; then
+  echo "Release requires a reviewed main checkout; current branch is $(git branch --show-current)." >&2
+  exit 1
+fi
+
 if ! command -v git-cliff &>/dev/null; then
   echo "git-cliff not found. Install with: brew install git-cliff" >&2
   exit 1
@@ -36,6 +41,7 @@ git-cliff --tag "$TAG" --output CHANGELOG.md
 git add CHANGELOG.md
 git add "package.json"
 git commit -m "chore(release): ${TAG}"
+npm run release:check
 git tag "$TAG" -m "$TAG"
 git push origin HEAD
 git push origin "refs/tags/$TAG"

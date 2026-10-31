@@ -4,7 +4,11 @@
   "description": "Dev-only tooling for maintaining this course (self-test harness). End users never need this - open index.html directly, no install required.",
   "scripts": {
     "test": "for f in tests/*.mjs; do node \"$f\" || exit 1; done",
-    "start": "bash scripts/release-cycle.sh",
+    "dev": "python3 -m http.server 8000 --directory . --bind 127.0.0.1",
+    "build": "node scripts/build.mjs",
+    "preview": "npm run build && python3 -m http.server 4173 --directory dist --bind 127.0.0.1",
+    "release:check": "npm test && npm run build",
+    "start": "npm run dev",
     "release": "bash scripts/release.sh",
     "ship": "bash scripts/release-cycle.sh"
   },

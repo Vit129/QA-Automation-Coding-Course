@@ -1,6 +1,6 @@
 # QA Automation Coding Course
 
-Browser-based code sandbox course for learning QA automation. No backend, no build step — open `index.html` and go.
+Browser-based code sandbox course for learning QA automation. No backend; the static build copies the course into `dist/` for isolated preview and Pages packaging.
 
 ## Tracks
 
@@ -25,6 +25,8 @@ Browser-based code sandbox course for learning QA automation. No backend, no bui
 Each track is a static HTML/CSS/JS page: theory → code template (`WRITE YOUR CODE HERE`) → validation → hint → solution. Progress saves to `localStorage`.
 
 ## Run
+
+`npm start` / `make start` serves the source on loopback at port 8000. `npm run preview` builds and serves the production copy on loopback at port 4173. Run `npm run release:check` before publishing; it runs every lesson test and the static build. Pull request CI and the Pages workflow run this gate. `npm run ship` is readiness-only: it does not commit, push, merge, tag, release, or deploy.
 
 Two ways to use this course:
 
