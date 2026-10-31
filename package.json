@@ -7,7 +7,7 @@
     "dev": "python3 -m http.server 8000 --directory . --bind 127.0.0.1",
     "build": "node scripts/build.mjs",
     "preview": "npm run build && python3 -m http.server 4173 --directory dist --bind 127.0.0.1",
-    "release:check": "npm test && npm run build",
+    "release:check": "node scripts/check-version.mjs && npm test && npm run build",
     "start": "npm run dev",
     "release": "bash scripts/release.sh",
     "ship": "bash scripts/release-cycle.sh"
