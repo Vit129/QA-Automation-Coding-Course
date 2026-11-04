@@ -6,11 +6,10 @@ Static HTML/JS course site: one folder per track (`API-Testing/`, `Playwright/`,
 ## Tests
 
 - `npm test` runs every `tests/*.mjs` (self-test of all tracks' lessons, editor modules, regression tests).
-  Dependencies for the SQL track: `npm install` (CI uses `npm install`; `npm ci` fails because `package-lock.json`
-  is out of sync with `package.json`).
+  Dependencies for the SQL track: `npm ci` (also used by CI).
 - New track → add it to the `TRACKS` array in `tests/selftest.mjs`. Test files read course/shared code via
   paths relative to `tests/`.
-- Release: `npm run release` / `npm run ship` (see `scripts/`).
+- Release: stage only intended files, then use `npm run ship -- "<message>" <patch|minor|major|skip>`. The cycle runs tests before commit, prepares changelog/version metadata in a second local commit before pushing, never stages the whole repo, waits for PR checks, merges without admin bypass, and verifies the live Pages commit/version/build. `npm run release -- <patch|minor|major>` is release + deploy only; `skip` increments only the build and records changes under `Unreleased`, with no tag or GitHub Release; after a tag is pushed but release creation fails, resume the same candidate with `npm run release -- --resume`.
 
 ## Agent Memory
 
