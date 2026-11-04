@@ -88,7 +88,7 @@ prepare_candidate() {
     fi
   fi
 
-  npm test
+  npm run release:check
   CANDIDATE_COMMITTED=0
   cleanup_candidate() {
     local result=$?
@@ -147,7 +147,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 if (!/const CURRENT_VERSION = \d+;/.test(html)) throw new Error('Could not find the update-check build number in index.html');
 fs.writeFileSync('index.html', html.replace(/const CURRENT_VERSION = \d+;/, `const CURRENT_VERSION = ${meta.version};`));
 NODE
-  npm test
+  npm run release:check
   CANDIDATE_COMMITTED=1
   trap - EXIT
   echo "Prepared v${new_version} (build ${next_build}); metadata is ready to commit before push."
@@ -158,7 +158,7 @@ publish_candidate() {
   require_main "$mode"
   command -v graphify >/dev/null || { echo "graphify is required before delivery." >&2; exit 1; }
   graphify update .
-  npm test
+  npm run release:check
   current="$(node -p "require('./package.json').version")"
   tag="v${current}"
   meta_tag="$(node -p "require('./version.json').tag")"
@@ -201,7 +201,7 @@ elif [[ "${1:-}" == "--resume" ]]; then MODE="resume"; VERSION_TYPE="auto"
 else VERSION_TYPE="${1:-}"
 fi
 case "$VERSION_TYPE" in
-  patch|minor|major|skip|auto) ;;
+  patch|minor|major|skip|release|auto) ;;
   *) echo "Usage: scripts/release.sh <patch|minor|major|skip> | --prepare <type> | --publish <type> | --resume" >&2; exit 2 ;;
 esac
 command -v git-cliff >/dev/null || { echo "git-cliff is required." >&2; exit 1; }
@@ -238,7 +238,7 @@ fi
 command -v graphify >/dev/null || { echo "graphify is required before delivery." >&2; exit 1; }
 graphify update .
 require_main
-npm test
+npm run release:check
 prepare_candidate "$VERSION_TYPE"
 if [[ "$VERSION_TYPE" == "skip" ]]; then
   BUILD="$(node -p "require('./version.json').version")"

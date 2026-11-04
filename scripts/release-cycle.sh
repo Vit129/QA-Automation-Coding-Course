@@ -22,7 +22,7 @@ if [[ "${1:-}" == "--resume" ]]; then
   fi
   command -v graphify >/dev/null || { echo "graphify is required before delivery." >&2; exit 1; }
   graphify update .
-  npm test
+  npm run release:check
   PR_RECORD="$(gh pr list --state all --head "$BRANCH" --base main --json url,state,mergedAt --jq 'if length == 0 then "" else .[0] | [.url, .state, (.mergedAt // "")] | @tsv end')"
   if [[ -n "$PR_RECORD" ]]; then
     IFS=$'\t' read -r PR_URL PR_STATE PR_MERGED_AT <<< "$PR_RECORD"
@@ -44,6 +44,11 @@ if [[ "${1:-}" == "--resume" ]]; then
   git pull --ff-only origin main
   bash scripts/release.sh --publish "$VERSION_TYPE"
   exit 0
+fi
+
+if [[ "$(git branch --show-current)" == "main" ]]; then
+  echo "Ship requires a feature branch; refusing to prepare or push directly on main." >&2
+  exit 1
 fi
 
 COMMIT_MSG="${1:-}"
@@ -73,7 +78,7 @@ printf 'Current: v%s (build %s)\npatch:   v%s (build %s)\nminor:   v%s (build %s
 command -v graphify >/dev/null || { echo "graphify is required before commit." >&2; exit 1; }
 graphify update .
 echo "Running course self-tests before commit..."
-npm test
+npm run release:check
 
 STAGED="$(git diff --cached --name-only)"
 UNSTAGED="$(git diff --name-only)"
@@ -113,7 +118,8 @@ fi
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 if [[ "$BRANCH" == "main" ]]; then
-  git push origin main
+  echo "Ship requires a feature branch; refusing to push directly to main." >&2
+  exit 1
 else
   git push origin "HEAD:refs/heads/$BRANCH"
   PR_URL="$(gh pr list --head "$BRANCH" --base main --json url --jq '.[0].url // empty')"
