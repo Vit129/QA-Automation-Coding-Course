@@ -6,7 +6,9 @@
     "test": "for f in tests/*.mjs; do node \"$f\" || exit 1; done",
     "start": "bash scripts/release-cycle.sh",
     "release": "bash scripts/release.sh",
-    "ship": "bash scripts/release-cycle.sh"
+    "ship": "bash scripts/release-cycle.sh",
+    "dev": "python3 -m http.server 5173",
+    "preview": "python3 -m http.server 4173"
   },
   "devDependencies": {
     "alasql": "^4.6.4"

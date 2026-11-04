@@ -17,7 +17,7 @@
 | **In-Browser Database** | AlaSQL | Executes genuine relational SQL and normalization challenges directly in browser memory without a SQLite/PostgreSQL server. |
 | **Code Validation** | Client-side assertion runner | Evaluates learner output in real time against challenge expectations with zero latency. |
 | **State Persistence** | `localStorage` + File System Access API | Automatic local save per lesson; manual JSON export/import for multi-device sync (see ADR 0001). |
-| **Hosting & CI/CD** | GitHub Pages | Continuous deployment triggered on pushes to `main`. |
+| **Hosting & CI/CD** | GitHub Pages | GitHub Pages deploys on published releases or explicit `workflow_dispatch`; pushes to `main` run tests without publishing the site. |
 
 ## Architecture Layout
 

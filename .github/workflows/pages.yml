@@ -1,8 +1,8 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -22,6 +22,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run release gate
+        run: |
+          npm install
+          npm test
+      - name: Remove test dependencies from the static artifact
+        run: rm -rf node_modules
+      - name: Write deploy identity
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          BUILD_NUMBER="$(node -p "require('./version.json').version")"
+          printf '{"commit":"%s","version":"%s","build":%s}\n' "$GITHUB_SHA" "$PACKAGE_VERSION" "$BUILD_NUMBER" > deploy-info.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

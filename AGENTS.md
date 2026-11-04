@@ -10,7 +10,7 @@ Static HTML/JS course site: one folder per track (`API-Testing/`, `Playwright/`,
   is out of sync with `package.json`).
 - New track → add it to the `TRACKS` array in `tests/selftest.mjs`. Test files read course/shared code via
   paths relative to `tests/`.
-- Release: `npm run release` / `npm run ship` (see `scripts/`).
+- Release: stage only intended files, then use `npm run ship -- "<message>" <patch|minor|major|skip>`. The cycle runs tests before commit, prepares changelog/version metadata in a second local commit before pushing, never stages the whole repo, waits for PR checks, merges without admin bypass, and verifies the live Pages commit/version/build. `npm run release -- <patch|minor|major>` is release + deploy only; `skip` increments only the build and records changes under `Unreleased`, with no tag or GitHub Release; after a tag is pushed but release creation fails, resume the same candidate with `npm run release -- --resume`.
 
 ## Agent Memory
 
