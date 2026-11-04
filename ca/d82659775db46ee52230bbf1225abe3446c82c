@@ -1,0 +1,53 @@
+package.json
+  s_3f9beff91c01f6::t_6790785cea1290 9-11
+README.md
+  s_3f9beff91c01f6::t_6790785cea1290 29-30
+  s_3f9beff91c01f6::t_7ce59414a402ca 33
+scripts/verify-pages-deploy.sh
+  s_3f9beff91c01f6::t_eaa5e24d4c7fc8 11,28-29
+  s_3f9beff91c01f6::t_eed6313733a67b 12-27,30-51
+  s_3f9beff91c01f6::t_58583b27f6917f 1-10,52-53
+.github/workflows/pages.yml
+  s_3f9beff91c01f6::t_9d3c28ae39df16 32-33
+  s_3f9beff91c01f6::t_7ce59414a402ca 4-5
+  s_3f9beff91c01f6::t_0c40832a57b301 25-31,34-38
+AGENTS.md
+  s_3f9beff91c01f6::t_94512824ce1865 13
+scripts/release.sh
+  s_3f9beff91c01f6::t_9f03c0c3e638e4 37,47,49-65,100,152,172,184
+  s_3f9beff91c01f6::t_cccc4427af3dd9 14-15,89,119-133,138-144,247,251
+  s_3f9beff91c01f6::t_4ac48d34aecb22 106
+  s_3f9beff91c01f6::t_9d3c28ae39df16 134-137
+  s_3f9beff91c01f6::t_94512824ce1865 210-211
+  s_3f9beff91c01f6::t_ef796078878fc6 12,19-25
+  s_3f9beff91c01f6::t_6c34198f21a84d 177
+  s_3f9beff91c01f6::t_b145074dabc36a 2-6,11,26,33-34,36,38-46,48,66-88,91-99,101-105,107,150-151,153-154,156-171,173-176,178-183,185-201,203-207,209,212-233,235,238-246,248-250,253
+  s_3f9beff91c01f6::t_85ec9656e4b5f8 13,16-18,28-32,108-118,145-149,252
+ARCHITECTURE.md
+  s_3f9beff91c01f6::t_eed6313733a67b 20
+scripts/release-cycle.sh
+  s_3f9beff91c01f6::t_d02d04e565a2ea 73-74,123
+  s_3f9beff91c01f6::t_cccc4427af3dd9 64-70
+  s_3f9beff91c01f6::t_525f9ef240b289 50-57,86,91,119-120,122
+  s_3f9beff91c01f6::t_6c34198f21a84d 9-12,14-20,23-46,90,124-126
+  s_3f9beff91c01f6::t_94512824ce1865 102-105,107-108,110-111,129
+  s_3f9beff91c01f6::t_283f0e0775d537 2-4,49,59-62,72,75,78-85,87-89,92-101,114-116,118,121,128
+package-lock.json
+  s_3f9beff91c01f6::t_c5ea3a4dcf46de 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.3",
+  "base_commit_sha": "cad82659775db46ee52230bbf1225abe3446c82c",
+  "prompts": {},
+  "sessions": {
+    "s_3f9beff91c01f6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18bf3-8983-71a3-b62f-66d0cc32d15e",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Vit129 <vitosk129@gmail.com>"
+    }
+  }
+}
