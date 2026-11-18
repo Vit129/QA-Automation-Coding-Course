@@ -101,7 +101,6 @@ New track needs the full 11-track pattern, all mechanical:
 5. Root `index.html` — add a landing-page card + `./Data-Structures-Algorithms/index.html` link.
 6. `PRODUCT.md` — bump "11 tracks" → "12 tracks", add to the Core Features track list.
 7. `README.md` — add to track list if one exists there.
-8. `graphify update .` after implementation (mechanical, already established convention).
 
 ---
 
