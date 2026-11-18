@@ -156,8 +156,6 @@ NODE
 publish_candidate() {
   local type="$1" mode="${2:-strict}" current tag meta_tag build latest_tag latest_version baseline_build head_sha tag_sha notes
   require_main "$mode"
-  command -v graphify >/dev/null || { echo "graphify is required before delivery." >&2; exit 1; }
-  graphify update .
   npm run release:check
   current="$(node -p "require('./package.json').version")"
   tag="v${current}"
@@ -207,8 +205,6 @@ esac
 command -v git-cliff >/dev/null || { echo "git-cliff is required." >&2; exit 1; }
 
 if [[ "$MODE" == "prepare" ]]; then
-  command -v graphify >/dev/null || { echo "graphify is required before delivery." >&2; exit 1; }
-  graphify update .
   prepare_candidate "$VERSION_TYPE"
   exit 0
 fi
@@ -235,8 +231,6 @@ if [[ "$MODE" == "resume" ]]; then
   exit 0
 fi
 
-command -v graphify >/dev/null || { echo "graphify is required before delivery." >&2; exit 1; }
-graphify update .
 require_main
 npm run release:check
 prepare_candidate "$VERSION_TYPE"
