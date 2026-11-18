@@ -1,8 +1,6 @@
 .DS_Store
 node_modules/
 dist/
-# Code-index output (local only, never committed)
-graphify-out/
 
 .claude/*
 !.claude/CLAUDE.md
