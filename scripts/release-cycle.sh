@@ -20,8 +20,6 @@ if [[ "${1:-}" == "--resume" ]]; then
     echo "HEAD is not a prepared delivery candidate; refusing to create a new version during recovery." >&2
     exit 1
   fi
-  command -v graphify >/dev/null || { echo "graphify is required before delivery." >&2; exit 1; }
-  graphify update .
   npm run release:check
   PR_RECORD="$(gh pr list --state all --head "$BRANCH" --base main --json url,state,mergedAt --jq 'if length == 0 then "" else .[0] | [.url, .state, (.mergedAt // "")] | @tsv end')"
   if [[ -n "$PR_RECORD" ]]; then
@@ -75,8 +73,6 @@ printf 'Current: v%s (build %s)\npatch:   v%s (build %s)\nminor:   v%s (build %s
   "$CURRENT_VERSION" "$((CURRENT_BUILD + 1))" "$VERSION_TYPE"
 
 # Test the proposed source before committing or publishing it.
-command -v graphify >/dev/null || { echo "graphify is required before commit." >&2; exit 1; }
-graphify update .
 echo "Running course self-tests before commit..."
 npm run release:check
 
