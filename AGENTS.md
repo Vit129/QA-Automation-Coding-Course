@@ -13,7 +13,7 @@ Static HTML/JS course site: one folder per track (`API-Testing/`, `Playwright/`,
 
 ## Agent Memory
 
-Per-project memory lives centrally in `~/Git/Personal/unified-memory-vault/agent-memory/QA-Automation-Coding-Course/` (never in this repo). Resolve path via `python3 ~/.claude/scripts/lib/memory_root.py .` or search via `python3 ~/.claude/scripts/recall.py "<query>"`.
+Per-project memory lives centrally in `~/Git/Personal/unified-memory-vault/memory-vault/QA-Automation-Coding-Course/` (never in this repo). Resolve path via `python3 ~/.claude/scripts/lib/memory_root.py .` or search via `python3 ~/.claude/scripts/recall.py "<query>"`.
 
 ## Code search
 
