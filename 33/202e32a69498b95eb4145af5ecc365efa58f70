@@ -1,0 +1,14 @@
+AGENTS.md
+  h_d82339d8725694 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.3",
+  "base_commit_sha": "33202e32a69498b95eb4145af5ecc365efa58f70",
+  "prompts": {},
+  "humans": {
+    "h_d82339d8725694": {
+      "author": "Vit129 <vitosk129@gmail.com>"
+    }
+  }
+}
